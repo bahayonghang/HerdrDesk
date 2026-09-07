@@ -1,0 +1,5 @@
+{"type": "terminal.input", "text": "你好"}
+{"type": "terminal.input", "bytes": "Aw=="}
+{"type": "terminal.resize", "cols": 120, "rows": 40, "cell_width_px": 9, "cell_height_px": 18}
+{"type": "terminal.scroll", "direction": "up", "lines": 3, "source": "wheel", "column": 5, "row": 6, "modifiers": 0}
+{"type": "terminal.release"}

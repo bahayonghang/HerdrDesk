@@ -22,7 +22,7 @@ def validate() -> dict:
             assert (path.parent/reference.attrib['Include']).is_file(),'Missing project reference'
     for project in ET.parse(ROOT/'HerdDesk.slnx').findall('.//Project'):
         assert (ROOT/project.attrib['Path']).is_file(),'Missing solution project'
-    tasks=json.loads((ROOT/'planning/backlog.json').read_text())['tasks']
+    tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'
     visiting=set();visited=set()
@@ -34,7 +34,7 @@ def validate() -> dict:
             assert dep in by_id,'Unknown dependency';visit(dep)
         visiting.remove(key);visited.add(key)
     for key in by_id:visit(key)
-    criteria=json.loads((ROOT/'planning/acceptance.json').read_text())['criteria']
+    criteria=json.loads((ROOT/'planning/acceptance.json').read_text(encoding='utf-8'))['criteria']
     acs={c['id']:c for c in criteria}
     assert len(acs)==len(criteria)==48,'Unexpected acceptance IDs'
     for task in tasks:
@@ -44,7 +44,7 @@ def validate() -> dict:
             for key in task['acceptance_ids']:
                 assert acs[key]['status']=='passed' and acs[key].get('evidence'),'Missing acceptance evidence'
     assert (ROOT/'evidence/compatibility-baseline.json').is_file()
-    baseline=json.loads((ROOT/'evidence/compatibility-baseline.json').read_text())
+    baseline=json.loads((ROOT/'evidence/compatibility-baseline.json').read_text(encoding='utf-8'))
     assert baseline['herdr']['api_protocol']==20 and baseline['default_write_capability'] is False
     return {'structural_validation':'passed','json_files':count,'projects':len(projects),
             'tasks':len(tasks),'csharp_compiled':False,'windows_verified':False}

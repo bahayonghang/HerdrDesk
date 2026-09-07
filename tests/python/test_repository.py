@@ -1,0 +1,37 @@
+from pathlib import Path
+import hashlib
+import sys
+import unittest
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
+import validate_repository as repository
+
+
+class RepositoryPortabilityTests(unittest.TestCase):
+    def test_repository_structure(self):
+        result = repository.validate()
+        self.assertEqual(result['structural_validation'], 'passed')
+        self.assertFalse(result['windows_verified'])
+
+    def test_all_metadata_reads_use_explicit_utf8(self):
+        original = Path.read_text
+
+        def read_explicit(path, *args, **kwargs):
+            encoding = kwargs.get('encoding', args[0] if args else None)
+            self.assertEqual(encoding, 'utf-8', 'Metadata must not depend on Windows locale')
+            return original(path, *args, **kwargs)
+
+        with patch.object(Path, 'read_text', read_explicit):
+            repository.validate()
+
+    def test_fixture_bytes_are_stable_after_checkout(self):
+        data = (ROOT / 'tests/fixtures/terminal-valid.ndjson').read_bytes()
+        self.assertNotIn(b'\r\n', data)
+        self.assertEqual(hashlib.sha256(data).hexdigest(),
+                         'd206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599')
+
+
+if __name__ == '__main__':
+    unittest.main()

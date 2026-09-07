@@ -1,0 +1,121 @@
+[
+  {
+    "name": "bad-base64",
+    "kind": "frame",
+    "message": {
+      "type": "terminal.frame",
+      "seq": 1,
+      "encoding": "ansi",
+      "width": 120,
+      "height": 40,
+      "full": true,
+      "bytes": "%%%"
+    }
+  },
+  {
+    "name": "bad-width",
+    "kind": "frame",
+    "message": {
+      "type": "terminal.frame",
+      "seq": 1,
+      "encoding": "ansi",
+      "width": 0,
+      "height": 40,
+      "full": true,
+      "bytes": "G1syShtbSFN5bnRoZXRpYyBIZXJkRGVzayBmaXh0dXJlDQo="
+    }
+  },
+  {
+    "name": "bool-seq",
+    "kind": "frame",
+    "message": {
+      "type": "terminal.frame",
+      "seq": true,
+      "encoding": "ansi",
+      "width": 120,
+      "height": 40,
+      "full": true,
+      "bytes": "G1syShtbSFN5bnRoZXRpYyBIZXJkRGVzayBmaXh0dXJlDQo="
+    }
+  },
+  {
+    "name": "bad-full",
+    "kind": "frame",
+    "message": {
+      "type": "terminal.frame",
+      "seq": 1,
+      "encoding": "ansi",
+      "width": 120,
+      "height": 40,
+      "full": "true",
+      "bytes": "G1syShtbSFN5bnRoZXRpYyBIZXJkRGVzayBmaXh0dXJlDQo="
+    }
+  },
+  {
+    "name": "not-initial-full",
+    "kind": "frame",
+    "message": {
+      "type": "terminal.frame",
+      "seq": 1,
+      "encoding": "ansi",
+      "width": 120,
+      "height": 40,
+      "full": false,
+      "bytes": "G1syShtbSFN5bnRoZXRpYyBIZXJkRGVzayBmaXh0dXJlDQo="
+    }
+  },
+  {
+    "name": "wrong-encoding",
+    "kind": "frame",
+    "message": {
+      "type": "terminal.frame",
+      "seq": 1,
+      "encoding": "raw",
+      "width": 120,
+      "height": 40,
+      "full": true,
+      "bytes": "G1syShtbSFN5bnRoZXRpYyBIZXJkRGVzayBmaXh0dXJlDQo="
+    }
+  },
+  {
+    "name": "text-and-bytes",
+    "kind": "input",
+    "message": {
+      "type": "terminal.input",
+      "text": "a",
+      "bytes": "YQ=="
+    }
+  },
+  {
+    "name": "zero-resize",
+    "kind": "input",
+    "message": {
+      "type": "terminal.resize",
+      "cols": 0,
+      "rows": 40
+    }
+  },
+  {
+    "name": "unknown-command",
+    "kind": "input",
+    "message": {
+      "type": "terminal.granted"
+    }
+  },
+  {
+    "name": "empty-input",
+    "kind": "input",
+    "message": {
+      "type": "terminal.input"
+    }
+  },
+  {
+    "name": "zero-scroll",
+    "kind": "input",
+    "message": {
+      "type": "terminal.scroll",
+      "direction": "up",
+      "lines": 0
+    }
+  }
+]

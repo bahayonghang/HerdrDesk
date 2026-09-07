@@ -1,0 +1,36 @@
+{
+  "unit": "effective_person_days",
+  "phases": {
+    "G0": {
+      "min": 7.0,
+      "max": 13
+    },
+    "P1": {
+      "min": 9,
+      "max": 15
+    },
+    "P2": {
+      "min": 13,
+      "max": 22
+    },
+    "P3": {
+      "min": 10,
+      "max": 18
+    },
+    "P4": {
+      "min": 11,
+      "max": 19
+    },
+    "P5": {
+      "min": 7,
+      "max": 12
+    }
+  },
+  "total": {
+    "min": 57.0,
+    "max": 99
+  },
+  "contingency_ratio": 0.25,
+  "includes_native_renderer_replacement": false,
+  "not_a_delivery_commitment": true
+}
