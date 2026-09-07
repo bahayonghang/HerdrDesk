@@ -8,6 +8,7 @@
 
 | 路径 | 角色 |
 |---|---|
+| [harness-workflows.md](harness-workflows.md) | 五套工具入口、派发、权限核对与 CLI 缺失回退。本文件为跟踪矩阵真源；父任务 research 路径归档后不再作为依赖。五 CLI 会话加载仍为 UNVERIFIED。 |
 | [adr/0001-g0-bootstrap.md](adr/0001-g0-bootstrap.md) | 已采纳。建仓/CI/诊断代码 ≠ 跨越 G0。Python 不替换 .NET Core/Rust bridge。CI Windows job 不是 IME/herdr 验收。 |
 | [implementation-g0.md](implementation-g0.md) | 建仓前第一笔实施的历史记录。其中“未推送”“C# 未编译”已被后续托管状态取代。 |
 | [publication.md](publication.md) | 2026-09-07 首次导入 GitHub。可复查 CI run `34138627135`，commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`。 |

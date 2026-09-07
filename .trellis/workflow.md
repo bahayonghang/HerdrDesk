@@ -5,7 +5,7 @@
 ## Core Principles
 
 1. **Plan before code** — figure out what to do before you start
-2. **Specs injected, not remembered** — guidelines are injected via hook/skill, not recalled from memory
+2. **Specs in files, not memory** — load `.trellis/spec/` and task artifacts from disk. A hook or skill may inject them when that hook is installed, trusted, and enabled; injection is not guaranteed on every platform.
 3. **Persist everything** — research, decisions, and lessons all go to files; conversations get compacted, files don't
 4. **Incremental development** — one task at a time
 5. **Capture learnings** — after each task, review and write new knowledge back to spec
@@ -101,10 +101,14 @@ python ./.trellis/scripts/get_context.py --mode phase --step <X.Y>  # detailed g
 
   The [workflow-state:STATUS] blocks embedded in the ## Phase Index section
   below are the SINGLE source of truth for the per-turn `<workflow-state>`
-  breadcrumb that every supported AI platform's UserPromptSubmit hook
-  reads. inject-workflow-state.py (Python platforms) and
-  inject-workflow-state.js (OpenCode plugin) only parse them — there is no
-  fallback dict baked into the scripts after v0.5.0-rc.0.
+  breadcrumb on platforms that install a Trellis UserPromptSubmit (or
+  equivalent) hook. That is not every AI product. Grok Build, Kimi Code,
+  and other class-2 / pull-based agents do not receive this breadcrumb
+  unless such a hook is installed, trusted, and enabled. inject-workflow-state.py
+  (Python platforms) and inject-workflow-state.js (OpenCode plugin) only
+  parse the tags — there is no fallback dict baked into the scripts after
+  v0.5.0-rc.0. Platforms without the hook must read this file and the
+  active task path themselves.
 
   STATUS charset: [A-Za-z0-9_-]+. When the hook can't find a tag, it
   degrades to a generic "Refer to workflow.md for current step." line —
@@ -220,10 +224,10 @@ Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `trellis-bef
      therefore must cover every required step from implementation through
      commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
 
-Sub-agent dispatch protocol applies to all platforms and all sub-agents, including native Codex `SubagentStart` context injection with child-side pull fallback, class-2 Gemini/Qoder/Copilot/Reasonix/Trae/Grok/Kimi Code, hook-backed ZCode/Snow, and `trellis-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions. On Grok Build, use `spawn_subagent` with `subagent_type` set to the Trellis agent name (e.g. `trellis-implement`). On Kimi Code, dispatch the built-in `coder` / `explore` sub-agent with the matching `.kimi-code/skills/trellis-<role>/SKILL.md` instructions.
+Sub-agent dispatch protocol: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions. Native Codex `SubagentStart` may inject context when trusted; child-side pull is the fallback. Class-2 Gemini/Qoder/Copilot/Reasonix/Trae/Grok/Kimi Code and hook-backed ZCode/Snow must pull jsonl and artifacts unless a Trellis hook is installed, trusted, and enabled. On Grok Build, use `spawn_subagent` with `subagent_type` set to the Trellis agent name (e.g. `trellis-implement`). On Kimi Code, there is no Claude-style `trellis-implement` sub-agent type; dispatch the built-in `coder` / `explore` agent and pass the active task path plus file list in the prompt. Official Kimi supports custom agents, skills, and hooks. Local `.kimi-code/skills/` files are gitignored generated adapters and are not a tracked requirement. Do not copy a Claude `model` frontmatter field onto a Kimi agent and expect a model lock.
 
 [workflow-state:in_progress]
-Tools: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill; there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
+Tools: On Claude Code, Codex, and Grok Build, `trellis-implement` / `trellis-research` are sub-agent types (Task/Agent tool, not Skill names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes. On Kimi Code, dispatch built-in `coder`/`explore` with an explicit `Active task:` path; do not look up a skill named `trellis-implement`.
 Flow: `trellis-implement` -> `trellis-check` -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
 Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `trellis-implement`, do NOT spawn another `trellis-implement` or `trellis-check`; if already running as `trellis-check`, do NOT spawn another `trellis-check` or `trellis-implement`. Dispatch is main session only.
 Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
@@ -480,10 +484,12 @@ Spawn the implement sub-agent:
 - **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
 - **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then tell the spawned agent it is already the `trellis-implement` sub-agent and must implement directly, not spawn another `trellis-implement` / `trellis-check`.
 
-The platform hook/plugin auto-handles:
-- Reads `implement.jsonl` and injects referenced spec/research files into the agent prompt
-- Injects `prd.md`, `design.md` if present, and `implement.md` if present
-- For Codex, `SubagentStart` supplies native context injection; the agent profile keeps child-side loading as the fallback
+When a Trellis SessionStart/SubagentStart hook or plugin is installed, trusted, and enabled, it may:
+- Read `implement.jsonl` and inject referenced spec/research files into the agent prompt
+- Inject `prd.md`, `design.md` if present, and `implement.md` if present
+- For Codex, `SubagentStart` supplies native context injection when trusted; the agent profile keeps child-side loading as the fallback
+
+If the hook is missing, untrusted, disabled, or gitignored, the spawned agent must load those files itself. Hook presence is not proof of injection. Oh My Pi / Pi in this platform group still need child-side pull unless a hook has been verified in that session.
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, CodeBuddy, Droid, Pi, ZCode, Snow, Oh My Pi]
 
@@ -491,11 +497,11 @@ The platform hook/plugin auto-handles:
 
 Spawn the implement sub-agent:
 
-- **Agent type**: `trellis-implement`
+- **Agent type**: `trellis-implement` (Grok Build: `spawn_subagent` `subagent_type`. Kimi Code: built-in `coder` / `explore` with the same prompt; there is no Claude-style type by this name)
 - **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
-- **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then explicitly say the spawned agent is already `trellis-implement` and must implement directly without spawning another `trellis-implement` / `trellis-check`.
+- **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then explicitly say the spawned agent is already `trellis-implement` (or Kimi `coder` doing that role) and must implement directly without spawning another `trellis-implement` / `trellis-check`.
 
-The pull-based sub-agent definition auto-handles the context load requirement:
+The pull-based definition requires the spawned agent to load context:
 - Resolves the active task with `task.py current --source`, then reads `prd.md`, `design.md` if present, and `implement.md` if present
 - Reads `implement.jsonl` and requires the agent to load each referenced spec/research file before coding
 

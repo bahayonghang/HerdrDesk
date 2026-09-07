@@ -1,12 +1,16 @@
 # Frontend Development Guidelines
 
-> Best practices for frontend development in this project.
+**Deferred / N/A for G0.** This repository has no WinUI product window, no React app, no WebView2 renderer, and no `src/HerdDesk.App` project.
+
+The Markdown files in this folder are Trellis init templates (component / hook / React-style type safety). They are **not** live implementation contracts. Do not write React, Next.js, Vue, or generic CSS from those templates. Do not treat hook-guidelines or state-management as if a UI exists.
+
+Shared facts: [AGENTS.md](../../../AGENTS.md). Planned UI names (workspace / session, renderer) are in [CLAUDE.md](../../../CLAUDE.md) and `docs/plan/`. Current compiled types for a future UI to consume are in `src/HerdDesk.Contracts`.
 
 ---
 
 ## Overview
 
-This directory contains guidelines for frontend development. Fill in each file with your project's specific conventions.
+Product UI is planned as WinUI on Windows. That work is not started. Renderer choice (web vs native) is an unapproved spike (`tasks` HD-005 area). Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`. Remaining frontend guideline files stay placeholders until a UI task is approved.
 
 ---
 
@@ -14,26 +18,29 @@ This directory contains guidelines for frontend development. Fill in each file w
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | To fill |
-| [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | To fill |
-| [State Management](./state-management.md) | Local state, global state, server state | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
+| [Directory Structure](./directory-structure.md) | Trellis React-style template | Deferred / N/A — not a live contract |
+| [Component Guidelines](./component-guidelines.md) | Trellis component template | Deferred / N/A — not a live contract |
+| [Hook Guidelines](./hook-guidelines.md) | Trellis hook template | Deferred / N/A — not a live contract |
+| [State Management](./state-management.md) | Trellis state template | Deferred / N/A — not a live contract |
+| [Quality Guidelines](./quality-guidelines.md) | Trellis frontend quality template | Deferred / N/A — not a live contract |
+| [Type Safety](./type-safety.md) | Trellis TypeScript template | Deferred / N/A — not a live contract |
+
+Do not implement features by “filling” those templates as if they described HerdDesk.
 
 ---
 
-## How to Fill These Guidelines
+## Pre-Development Checklist
 
-For each guideline file:
-
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
-
-The goal is to help AI assistants and new team members understand how YOUR project works.
+- [ ] Confirm an approved task actually asks for UI. G0 backend/protocol/harness work must not create `HerdDesk.App`.
+- [ ] Read [AGENTS.md](../../../AGENTS.md): no live WinUI writes in the G0 gate.
+- [ ] Use Contracts types (`PaneKey`, `ConnectionEpoch`, `TerminalAccess`, `ControlVerified`) when UI work starts. Do not invent a second identity model.
 
 ---
 
-**Language**: All documentation should be written in **English**.
+## Quality Check
+
+- [ ] No React/TypeScript UI was added from these templates during G0 harness or protocol tasks.
+- [ ] No claim that frontend guidelines are complete because this index says deferred.
+- [ ] Bootstrap task `00-bootstrap-guidelines` remains `in_progress` until remaining frontend files are filled from a real UI, or a later owner changes that task.
+
+**Language**: English.

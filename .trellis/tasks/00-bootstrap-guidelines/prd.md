@@ -115,6 +115,18 @@ is a separate conversation, not a bootstrap concern.
 
 ---
 
+## Ownership handoff (2026-09-08)
+
+`09-08-harness-context-alignment` (H) is the **sole spec implementer** for this round.
+
+- H writes `.trellis/spec/backend/*` from real G0 C#/Python, and marks `.trellis/spec/frontend/index.md` as deferred for unimplemented WinUI.
+- This bootstrap task stays `in_progress`. Do not archive it. Do not mark the checklist complete because H deferred frontend templates.
+- This task only consumes H evidence. Do not open a second implementation session that edits the same spec files while H is active.
+- Remaining frontend guideline files stay pending. Index `deferred` text is not a substitute for filling those files later.
+- Protocol (`malformed_terminal_record` latch) and SDK (default-readonly setup) product work is already done; H records those rules. Publication/README serial integration belongs to P2.
+
+No concurrent spec writer is active as of this handoff.
+
 ## Completion
 
 When the developer confirms the checklist items above are done with real

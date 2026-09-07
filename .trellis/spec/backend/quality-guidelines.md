@@ -1,51 +1,67 @@
 # Quality Guidelines
 
-> Code quality standards for backend development.
+G0 quality bar for C#, Python, and the offline gate.
 
 ---
 
 ## Overview
 
-<!--
-Document your project's quality standards here.
+Target framework `net10.0`. SDK pin is `global.json` only (`10.0.400`, `rollForward=disable`). `Directory.Build.props` sets nullable, `TreatWarningsAsErrors`, deterministic build, and .NET analyzers. Python 3.10+ with the standard library only.
 
-Questions to answer:
-- What patterns are forbidden?
-- What linting rules do you enforce?
-- What are your testing requirements?
-- What code review standards apply?
--->
-
-(To be filled by the team)
+The offline gate is `just ci`. That gate is not G0 product acceptance.
 
 ---
 
 ## Forbidden Patterns
 
-<!-- Patterns that should never be used and why -->
-
-(To be filled by the team)
+- `PackageReference` in G0 C# projects. `NuGet.Config` keeps package sources empty.
+- Core referencing WinUI, WebView2, SSH, OS credentials, or process control.
+- Overwriting `src/HerdDesk.Contracts` with `docs/plan/contracts/HerdDesk.Contracts.cs`.
+- Per-frame `Encoding.UTF8.GetString` on terminal payload bytes.
+- Sending JSON RPC on herdr binary client-socket / terminal stdio.
+- Default setup calling winget or writing User `DOTNET_ROOT` / `DOTNET_MULTILEVEL_LOOKUP`. A second hardcoded SDK version besides `global.json` is not an authority.
+- Live herdr, SSH, WinUI, takeover, input replay, or `publish_github.py --publish` in this G0 gate.
+- Inventing a database or a React/WinUI UI from Trellis frontend templates.
+- Marking G0 or AC01–AC48 passed without product evidence.
 
 ---
 
 ## Required Patterns
 
-<!-- Patterns that must always be used -->
-
-(To be filled by the team)
+- Contracts depend on BCL only. Core depends on Contracts only.
+- Frame parse is one connection epoch. Reconnect uses `new TerminalFrameParser()` / a new `TerminalCaptureValidator`.
+- Canonical Base64: decode then `Convert.ToBase64String` / `b64encode` and compare to the wire string.
+- Duplicate JSON keys are errors (`CheckDuplicateKeys` / `object_pairs_hook`).
+- JSON depth 64. Limits: NDJSON line 16MiB, decoded frame 8MiB, input 64KiB. Over limit stops the connection.
+- Unpaired surrogates at JSON string/name materialization: C# `malformed_terminal_record` plus failed latch (see [error-handling.md](./error-handling.md)).
+- `just setup` / `Invoke-HerdDeskDotnetSetup.ps1` default path is read-only. Read `global.json` first. `-InstallPinnedSdk` and `-PersistUserEnvironment` are opt-in after that read.
+- Metadata JSON/Markdown reads use UTF-8. Fixtures stay LF.
 
 ---
 
 ## Testing Requirements
 
-<!-- What level of testing is expected -->
+| Suite | How to run | Scope |
+|---|---|---|
+| Python | `python -m unittest discover -s tests/python -v` | Protocol, probe gates, setup stubs, repository, publish synthetic |
+| Probe selftest | `python scripts/probe_herdr.py selftest` | Synthetic; `herdr_executed=false` |
+| Capture | `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson` | Offline NDJSON |
+| Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, UTF-8 |
+| C# smoke | `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build` | Parser and `InputPolicy`; not `dotnet test` |
 
-(To be filled by the team)
+`just ci` runs the full offline set. Counts in `implementation/status.json` may lag; use the current command output.
+
+Protocol regressions for unpaired surrogates must assert the exact C# code `malformed_terminal_record`, then `terminal_stream_not_active` on the next valid frame, and must keep a valid surrogate pair accepted. Python uses the same fixture names.
+
+Setup tests in `tests/python/test_setup.py` stub `Install-PinnedSdk` and `Set-UserDotnetEnvironment`. They must not install a real SDK or write the real User environment.
 
 ---
 
 ## Code Review Checklist
 
-<!-- What reviewers should check -->
-
-(To be filled by the team)
+- [ ] File list matches the approved task. No extra product modules.
+- [ ] Errors redacted; fail latch held.
+- [ ] `ControlVerified` not set from frame, process, or focus.
+- [ ] No live herdr/SSH/WinUI in the change.
+- [ ] `just ci` or the named subset passed.
+- [ ] Nested `CLAUDE.md` still matches the code you edited.

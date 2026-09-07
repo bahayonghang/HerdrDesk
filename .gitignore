@@ -22,6 +22,9 @@ id_ed25519*
 .DS_Store
 Thumbs.db
 
+# Local generated harness adapters. They are not a fresh-clone source of
+# project facts. Tracked workflow: AGENTS.md, CLAUDE.md, docs/harness-workflows.md.
+# Do not blanket-unignore these directories.
 .agents/
 .codex/
 .cursor/

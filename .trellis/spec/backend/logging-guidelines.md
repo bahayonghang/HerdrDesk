@@ -1,51 +1,50 @@
 # Logging Guidelines
 
-> How logging is done in this project.
+G0 has no logging framework (`ILogger`, Serilog, Python `logging` config). Diagnostics are stable exception codes and bounded JSON reports.
 
 ---
 
 ## Overview
 
-<!--
-Document your project's logging conventions here.
-
-Questions to answer:
-- What logging library do you use?
-- What are the log levels and when to use each?
-- What should be logged?
-- What should NOT be logged (PII, secrets)?
--->
-
-(To be filled by the team)
+Do not add a log package. G0 C# forbids `PackageReference`. Python stays in the standard library; the protocol module raises `ProtocolError` instead of logging payloads.
 
 ---
 
 ## Log Levels
 
-<!-- When to use each level: debug, info, warn, error -->
+There is no level schema. Use:
 
-(To be filled by the team)
+- Exception / `ProtocolError` codes for protocol and policy failures.
+- `Write-Host` on the setup script for host and SDK version lines.
+- Probe JSON objects for preflight/observe/control summaries.
+
+Do not invent debug traces that print terminal bytes.
 
 ---
 
 ## Structured Logging
 
-<!-- Log format, required fields -->
+Smoke tests print `PASS <name>` or `FAIL <name>: <ExceptionType>` and a final `N/N smoke tests passed; no live Windows/daemon validation.`
 
-(To be filled by the team)
+`probe_herdr.py` `safe_summary` keeps `returncode`, `timed_out`, `overflow`, `duration_ms`, `errors`, and byte lengths. Stderr text is added only with `--include-diagnostics`.
+
+Real probe reports go to gitignored `probe-results/`. The public tree holds synthetic fixtures only.
 
 ---
 
 ## What to Log
 
-<!-- Important events to log -->
-
-(To be filled by the team)
+- Stable error code (`malformed_terminal_record`, `terminal_stream_not_active`, `control_not_verified`, …).
+- Frame counts, decoded byte lengths, hashes of payloads when a capture report needs them (`sha256` of decoded bytes in Python frame summary).
+- SDK version and `dotnet` host path on setup (not User profile tool dirs as a pin).
 
 ---
 
 ## What NOT to Log
 
-<!-- Sensitive data, PII, secrets -->
+- Terminal payload text, ANSI bytes as strings, or JSON record bodies on the failure path.
+- Credentials, tokens, private keys, SSH host details, personal filesystem paths.
+- Unpaired surrogate characters in exception messages (C# smoke asserts the message has no `\\`, `/`, or `\uD800`).
+- Full `argv` in default probe summaries.
 
-(To be filled by the team)
+Public issues follow `SECURITY.md`: synthetic data or an isolated disposable session only.
