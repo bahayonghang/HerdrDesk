@@ -1,0 +1,8 @@
+flowchart LR
+  B[CLI stdout NDJSON] --> P[增量行解析与大小限制]
+  P --> Q[按 epoch/seq 的有界队列]
+  Q --> D[Base64 → bytes]
+  D --> W[WebView2 批量消息]
+  W --> X[xterm.write Uint8Array]
+  X --> A[解析消费回执]
+  A --> Q

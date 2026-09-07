@@ -1,0 +1,27 @@
+flowchart TB
+  subgraph W[Windows 用户会话 · 标准用户权限]
+    APP[HerdDesk.App · WinUI]
+    CORE[HerdDesk.Core · DeviceSession actor / Store / Policies]
+    VT[ITerminalRenderer · WebView2+xterm 默认 / Native 候选]
+    RPC[RpcStdioTransport · 请求连接与订阅连接分离]
+    TS[TerminalCliTransport · 长期 stdio 子进程]
+    B[自有 herddesk-bridge · 只转发 RPC 字节]
+    EXE[本地 herdr.exe terminal session]
+    SSH[ssh.exe -T]
+    APP --> CORE
+    APP --> VT
+    CORE --> RPC
+    CORE --> TS
+    RPC --> B
+    TS --> EXE
+    RPC --> SSH
+    TS --> SSH
+    TS -->|frame bytes| VT
+    VT -->|用户输入与尺寸事件| CORE
+  end
+  B -->|NDJSON / Windows named pipe| LD[本地 herdr daemon · 拥有 ConPTY/agent]
+  EXE -->|上游内部 client protocol| LD
+  SSH --> RB[远端自有 bridge · stdio ↔ Unix API socket]
+  SSH --> RT[远端 herdr terminal session]
+  RB --> RD[Linux/macOS herdr daemon · 拥有 PTY/agent]
+  RT --> RD

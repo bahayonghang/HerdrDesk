@@ -1,0 +1,10 @@
+flowchart LR
+  UI[Sources/HerdrM · macOS UI] --> HK[Packages/HerdrKit · HerdrService]
+  HK --> RPC[SocketRPC]
+  HK --> SSH[SSHTunnel]
+  RPC --> US[本地或转发的 Unix API socket]
+  SSH --> RH[远端 herdr]
+  US --> HD[herdr daemon · PTY 与持久化]
+  UI --> ST[SwiftTerm]
+  ST --> ATT[herdr agent/terminal attach]
+  ATT --> HD

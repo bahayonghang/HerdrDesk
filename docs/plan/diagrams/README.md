@@ -1,0 +1,5 @@
+# 架构图源文件
+
+本目录提供5份可编辑Mermaid源码，正文中也有对应代码块。没有生成或声称提供架构截图。使用支持Mermaid的Markdown编辑器即可渲染；离线HTML保留源码以避免CDN依赖。
+
+图中的HerdDesk模块和helper是拟建架构，上游现状图的类/组件名称则来自已读取的project.yml/HerdrService/README。

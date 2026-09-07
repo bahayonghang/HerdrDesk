@@ -15,7 +15,7 @@ import publish_github as publisher
 
 class PublisherTests(unittest.TestCase):
     def manifest(self,root,files):
-        (root/publisher.MANIFEST).write_text(json.dumps({'repository':'bahayonghang/HerdDesk',
+        (root/publisher.MANIFEST).write_text(json.dumps({'repository':'bahayonghang/HerdrDesk',
             'visibility':'public','files':files}),encoding='utf-8')
 
     def test_valid_manifest(self):
@@ -54,7 +54,7 @@ class PublisherTests(unittest.TestCase):
         command=publisher.create_command(Path('/test/source'))
         self.assertIn('--public',command);self.assertIn('--push',command)
         self.assertNotIn('--force',command);self.assertNotIn('--private',command)
-        self.assertEqual(command[3],'bahayonghang/HerdDesk')
+        self.assertEqual(command[3],'bahayonghang/HerdrDesk')
 
     def test_dry_run_never_invokes_network(self):
         with tempfile.TemporaryDirectory() as d:

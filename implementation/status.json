@@ -1,28 +1,38 @@
 {
   "phase": "G0",
   "phase_gate": "not_passed",
-  "github_repository_created": false,
-  "github_push_completed": false,
+  "github_repository": "bahayonghang/HerdrDesk",
+  "github_repository_created": true,
+  "repository_created_by": "maintainer",
+  "github_push_completed": true,
   "python_regression_tests": {
     "status": "passed",
-    "count": 70
+    "count": 73
   },
   "probe_selftest": {
     "status": "passed",
     "checks": 23
   },
-  "csharp_build": "not_run",
+  "csharp_build": "passed_ci",
   "csharp_smoke_tests": {
-    "status": "not_run",
-    "planned_count": 22
+    "status": "passed_ci",
+    "count": 22
   },
-  "github_actions": "not_run",
+  "github_actions": {
+    "status": "passed",
+    "verified_commit": "629bb01bd6bdb76e8576fd29668aa84a4894e59b",
+    "verified_run_id": 34138627135,
+    "platforms": [
+      "windows-latest",
+      "ubuntu-latest"
+    ],
+    "scope": "G0 unit/contract/build only; each later commit needs its own result"
+  },
   "windows_live_tests": "not_run",
   "verified_acceptance_ids": [],
   "blockers": [
-    "No create-repository action in the connected GitHub tool surface",
-    "No authenticated local GitHub CLI publishing environment",
-    ".NET SDK unavailable; installation download failed",
-    "Windows interactive desktop and isolated herdr session unavailable"
+    "Windows interactive desktop and isolated herdr sessions not verified",
+    "Runtime CLI/daemon/schema and endpoint/ACL evidence pending",
+    "Renderer/IME spike and product implementation pending"
   ]
 }

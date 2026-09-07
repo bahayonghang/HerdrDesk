@@ -1,0 +1,40 @@
+{
+  "document_kind": "PROPOSED CONFIGURATION EXAMPLE — NOT OBSERVED RUNTIME CAPABILITIES",
+  "application": "HerdDesk",
+  "checked_source_baseline": {
+    "herdr_tag": "v0.8.2",
+    "herdrm_reference_tag": "v0.5.3",
+    "api_schema_protocol": 20,
+    "schema_version": 1,
+    "schema_file_blob_sha1": "f9642ffa0deb4dc87052a5247d700e1dcd50a753"
+  },
+  "runtime_validation": {
+    "cli_version": null,
+    "server_version": null,
+    "schema_sha256": null,
+    "operating_system": null,
+    "verified_capabilities": []
+  },
+  "policy": {
+    "default_terminal_mode": "observe",
+    "takeover_requires_confirmation": true,
+    "replay_input_after_reconnect": false,
+    "auto_approve_agents": false,
+    "auto_start_daemon": false,
+    "allow_remote_windows_host": false
+  },
+  "budgets": {
+    "max_visible_panes": 4,
+    "max_remote_devices_initial": 3,
+    "max_ndjson_bytes": 16777216,
+    "max_decoded_frame_bytes": 8388608,
+    "max_inflight_bytes_per_pane": 25165824
+  },
+  "dependency_resolution": {
+    "dotnet_major": 10,
+    "windows_app_sdk_product_candidate": "2.4.0",
+    "windows_app_sdk_exact_nuget_version": null,
+    "xterm_exact_version": null,
+    "native_renderer_release_required": false
+  }
+}

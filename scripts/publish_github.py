@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create the public bahayonghang/HerdDesk repository using your local gh login.
+"""Create the public bahayonghang/HerdrDesk repository using your local gh login.
 
 Default: offline dry run. --publish is the explicit network/write operation.
 No tokens are requested or stored. Existing repositories are never overwritten.
@@ -17,7 +17,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 OWNER = 'bahayonghang'
-NAME = 'HerdDesk'
+NAME = 'HerdrDesk'
 MANIFEST = 'PUBLICATION_MANIFEST.json'
 
 

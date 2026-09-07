@@ -1,20 +1,27 @@
 # HerdDesk（牧台）
 
-Independent Windows client for herdr. **G0 implementation in progress — not a runnable desktop application yet.**
+Independent Windows client for herdr. **G0 实施中；尚不是可运行的桌面产品。**
 
-代码托管仓库为 [bahayonghang/HerdrDesk](https://github.com/bahayonghang/HerdrDesk)。现有 solution、项目目录和 C# namespace 仍使用规划中的 **HerdDesk**；仓库名多出的 `r` 不影响构建，本次导入不做破坏性重命名。
+仓库：[bahayonghang/HerdrDesk](https://github.com/bahayonghang/HerdrDesk)。仓库名采用你创建的 `HerdrDesk`；应用名、solution 和 C# namespace 保留规划中的 `HerdDesk`，本次导入不做无关重命名。
 
-目标技术路线：WinUI 原生外壳、.NET 10 LTS、独立 Core、可替换 WebView2/xterm 终端、Rust RPC bridge 与 OpenSSH。herdr 拥有 agent/PTY；HerdDesk 只拥有连接。本仓库不隶属于 herdr/herdrm，也不复制 herdrm 的源码、图标、字体或截图。
+目标路线：WinUI 原生外壳、.NET 10 LTS、独立 Core、可替换终端 renderer、RPC bridge 与 OpenSSH。herdr 拥有 agent/PTY，HerdDesk 只拥有连接。本项目独立于 herdr/herdrm，不复制未经授权的源码和素材。
 
-## 当前实现
+## 已实现与已验证
 
-G0 诊断工具已经实现：有界 NDJSON、严格 JSON/Base64、帧序列和输入参数校验、离线抓包检查，以及默认只读的兼容性探针。本次导入前在 Linux 环境重跑：**70 项 Python 回归测试通过，23 项 probe selftest 检查通过**。
+| 范围 | 当前结果 |
+|---|---|
+| Python 协议与安全回归 | 73 项测试通过 |
+| 只读探针 selftest | 23 项合成检查通过，不执行 herdr |
+| C# Contracts/Core | GitHub Actions 的 Windows、Linux 构建通过 |
+| C# smoke runner | 两个平台的 22 项检查通过 |
+| 实施规划 | 12 个专题、36 项任务、48 项验收及架构图源文件 |
+| 产品门禁 | G0 尚未通过；真实 herdr/SSH/GUI/中文 IME 未验收 |
 
-`src/` 包含 BCL-only C# Contracts、帧解析器和输入权限策略；`tests/HerdDesk.Core.SmokeTests` 包含 **22 项 C# smoke 用例源码**。导入环境未安装 .NET SDK，因此不宣称这些测试已经运行。GitHub Actions 定义位于 `.github/workflows/ci.yml`，实际构建结果请以对应 commit 的 [Actions 记录](https://github.com/bahayonghang/HerdrDesk/actions) 为准。
+可复查的首个双平台通过记录：[CI run 34138627135](https://github.com/bahayonghang/HerdrDesk/actions/runs/34138627135)，对应 commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`。更新提交的结果以 [Actions](https://github.com/bahayonghang/HerdrDesk/actions) 中对应 SHA 为准，不能沿用旧提交的通过状态。
 
-没有 WinUI 产品窗口、生产 RPC bridge、SSH/文件后端或安装包。**G0 门禁尚未通过，48 项产品验收保留 `not_run`。** CI 的 Windows runner 也不等于真实 herdr、中文 IME 或交互桌面验收。
+本轮发现并修复 Windows 默认编码与 checkout 换行问题：元数据显式按 UTF-8 读取，fixture 固定 LF，并补充 3 项回归。Hosted Windows runner 的构建成功不等于交互桌面验收。
 
-## 获取代码与验证
+## 获取与检查
 
 ```powershell
 git clone https://github.com/bahayonghang/HerdrDesk.git
@@ -23,32 +30,25 @@ python -m unittest discover -s tests/python -v
 python scripts/probe_herdr.py selftest
 python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson
 python scripts/validate_repository.py
-```
 
-Python 3.10+，只使用标准库。精确版本 `.NET SDK 10.0.400` 对应的构建命令：
-
-```powershell
 dotnet build HerdDesk.slnx --configuration Release
 dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
 ```
 
-C# smoke runner 是无第三方依赖的 console 测试程序，使用 `dotnet run`，不是已配置完成的 xUnit/`dotnet test` 项目。G0 暂不启用 NuGet 外部源；引入 WinUI/npm/Rust 时须重新验证并锁定依赖。
+Python 3.10+，仅标准库；C# 使用 `global.json` 固定的 SDK 10.0.400。smoke runner 是 console 测试程序，使用 `dotnet run`，不是 xUnit/`dotnet test` 项目。
 
-## 目录与实施状态
+## 开发入口
 
-| 目录 | 内容 |
-|---|---|
-| `src/` | C# Contracts 与 Core |
-| `scripts/` | Python 协议工具、只读探针与 PowerShell 入口 |
-| `tests/` | Python 回归、C# smoke 源码、合成 fixture |
-| `planning/`、`tasks/` | 当前 36 项任务、48 项验收及依赖状态 |
-| `docs/plan/` | 原始规划档案；不与活动状态混用 |
-| `evidence/`、`implementation/` | 版本基线、历史测试记录及未验证项 |
+[分章实施规划](docs/plan/README.md) · [活动任务](planning/backlog.json) · [验收标准](planning/acceptance.json) · [本次发布记录](docs/publication.md) · [执行约束](AGENTS.md)
 
-[首次 G0 实施记录](docs/implementation-g0.md) 描述的是建仓之前的历史交付；其中“未创建/未推送”的描述不代表本仓库的当前托管状态。原源码包中的 `scripts/publish_github.py` 是一次性建仓辅助工具，**不要在这个已有仓库执行 `--publish`**；后续使用正常 branch/PR 流程。
+`src/` 为 C# Contracts/Core；`scripts/` 为诊断工具；`tests/` 为回归与合成 fixture；`planning/` 和 `tasks/` 是活动状态。`docs/plan/` 保存原规划的分章正文、证据和设计草案，不重复提交合并 Markdown、HTML 或旧探针等打包副本。它不是原 ZIP 的逐字节镜像。
 
-## 安全与许可
+[首次实施记录](docs/implementation-g0.md) 保留建仓之前的历史事实；其中“未推送”“C# 未编译”不代表当前状态。最新状态见 `implementation/status.json` 和对应 CI。
 
-默认观察；可写探针要求明确标记 disposable target，输入另需 `--allow-input`。不自动 takeover、停止/升级 daemon、重放输入或绕过 agent 审批。不要把真实会话、密钥、私人路径和终端正文提交到公开仓库。
+`PUBLICATION_MANIFEST.json` 是本次源文件的 SHA-256 清单，不是签名。`scripts/publish_github.py` 默认可用于离线核验，但 `--publish` 是历史新建仓库入口，**不要对已有仓库运行**。后续正常使用 branch/PR，不 force-push。
 
-参考 [安全说明](SECURITY.md)、[许可登记](docs/licensing-register.md) 与 [执行约束](AGENTS.md)。项目许可证仍待维护者选定；公开可见不自动等于采用 MIT/Apache 等许可。
+## 安全与范围
+
+默认观察；可写探针必须明确指定 disposable target，输入另需 `--allow-input`。不自动 takeover、停止/升级 daemon、重放输入或绕过审批。真实终端内容、凭据和私人路径不得提交到公开仓库。
+
+当前没有 WinUI 产品窗口、生产 RPC/SSH/file bridge 或安装包；48 项产品 AC 没有被提前标记为完成。详见 [安全说明](SECURITY.md) 和 [许可登记](docs/licensing-register.md)。项目许可证由维护者决定；公开可见不自动等于 MIT/Apache 授权。

@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant C as DeviceSession
+  participant E as 订阅连接
+  participant R as RPC连接
+  participant S as herdr
+  C->>E: events.subscribe（按实际schema选事件）
+  E->>S: 订阅请求
+  S-->>E: 订阅确认
+  C->>R: session.snapshot
+  R->>S: snapshot
+  S-->>R: 当前状态
+  C->>C: 安装快照，清除旧epoch
+  E-->>C: 事件/脏标记
+  C->>R: 对脏实体定向读取或再取快照
+  C->>C: 进入 Ready，禁止历史完成通知补发

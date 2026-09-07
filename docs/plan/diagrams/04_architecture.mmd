@@ -1,0 +1,10 @@
+stateDiagram-v2
+  [*] --> Disconnected
+  Disconnected --> Observing: 连接并收到有效帧
+  Observing --> Acquiring: 用户点击控制
+  Acquiring --> Controlling: 上游连接接受且经能力验证
+  Acquiring --> Observing: 被占用或失败
+  Controlling --> Observing: release / 被接管
+  Controlling --> Disconnected: EOF或网络断开
+  Observing --> Disconnected: EOF或网络断开
+  Disconnected --> Observing: 重连只读
