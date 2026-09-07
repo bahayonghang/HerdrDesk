@@ -1,0 +1,33 @@
+# tests/fixtures
+
+[根索引](../../CLAUDE.md) · [tests](../CLAUDE.md) · fixtures
+
+生成日期：2026-09-08。合成数据。字段依据 herdr v0.8.2 `src/client/mod.rs:850–1220` 的源码阅读。仓库内没有真实会话抓包。
+
+## 职责
+
+为 Python 协议校验、probe `selftest`、C# 意图对齐提供稳定输入。活动副本在本目录。`docs/plan/fixtures/` 是规划档案中的同类文件，运行测试不要指向那边。`implementation/synthetic-capture.json` 是对本目录 `terminal-valid.ndjson` 的一次离线校验快照。HD-004 拟建 `real-terminal-v082/`，当前不存在。
+
+## 文件
+
+| 文件 | 用途 |
+|---|---|
+| `terminal-valid.ndjson` | 合法帧流。故意把一个中文 UTF-8 字符拆到两帧。LF 结尾。SHA-256 `d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599` |
+| `input-valid.ndjson` | 合法 stdin 命令。含 Ctrl+C 的 Base64 示例。selftest 不会把它发到真实终端 |
+| `invalid-cases.json` | 应拒绝的对象。含故意伪造的 `terminal.granted`（上游无此消息） |
+| `endpoint-cases.json` | HD-003 手工案例清单：显式 default/named、Unicode 路径、跨用户 ACL、二进制 client socket。`all_live_checks=not_run` |
+| `README.md` | 生成说明与门禁边界 |
+
+## 入口
+
+```powershell
+python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson
+```
+
+CI 运行上述命令。`probe_herdr.py selftest` 读取 invalid/valid 案例。
+
+## 约束
+
+- 客户端门禁（首帧 full、连续 seq、非空输入、大小限制）属于 HerdDesk。与真实桥差异要记证据，不能改写成“上游违规”。
+- 保持 LF。`test_repository.py` 会拒绝 CRLF。
+- 禁止提交真实终端内容、凭据、私人路径。
