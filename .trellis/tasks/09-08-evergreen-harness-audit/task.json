@@ -1,0 +1,31 @@
+{
+  "id": "evergreen-harness-audit",
+  "name": "evergreen-harness-audit",
+  "title": "常青审查与五套 harness 能力对齐",
+  "description": "只读审查 G0 源码、离线测试与失败工作流，对照五套 harness，输出待批准的四项父子改造计划；不实施代码或正式规则回写",
+  "status": "in_progress",
+  "dev_type": "review",
+  "scope": "evergreen-harness",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-08-protocol-failure-contract",
+    "09-08-harness-context-alignment",
+    "09-08-sdk-setup-boundary",
+    "09-08-evergreen-evidence-closeout"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "Audit baseline 8ae4797d0aa10559648d1ade5b7e017ff46c7a53. Four children archived under archive/2026-09/. Parent is integration only. Local just ci ran twice, both exit 0 (Python 97, probe 23, smoke 26). G0 phase_gate remains not_passed; AC01-AC48 remain not_run. Hosted Actions for HEAD UNVERIFIED. Five-CLI session load UNVERIFIED. 00-bootstrap-guidelines stays in_progress and unarchived.",
+  "meta": {}
+}
