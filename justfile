@@ -18,7 +18,11 @@ export DOTNET_SKIP_FIRST_TIME_EXPERIENCE := "1"
 default:
     @just --list
 
-# Python 3.10+, pinned SDK 10.0.400, Windows DOTNET_ROOT -> Program Files.
+# Default is read-only: Python 3.10+ and the SDK pinned in global.json.
+# Does not install the SDK or write User environment.
+# Child pwsh PATH changes stay in that process; confirm with just build.
+# Opt-in: pwsh -NoLogo -File scripts/Invoke-HerdDeskDotnetSetup.ps1 -InstallPinnedSdk
+#         pwsh -NoLogo -File scripts/Invoke-HerdDeskDotnetSetup.ps1 -PersistUserEnvironment
 [windows]
 [group('env')]
 setup:
