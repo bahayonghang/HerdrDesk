@@ -1,0 +1,31 @@
+{
+  "kind": "planned_manual_cases",
+  "all_live_checks": "not_run",
+  "cases": [
+    {
+      "id": "EP01",
+      "case": "Explicit default-session Windows API endpoint",
+      "expected": "same expected session; do not open marker as byte stream"
+    },
+    {
+      "id": "EP02",
+      "case": "Explicit named-session endpoint",
+      "expected": "no fallback to default session"
+    },
+    {
+      "id": "EP03",
+      "case": "Unicode endpoint path",
+      "expected": "preserve exact logical name; no guessed APPDATA mapping"
+    },
+    {
+      "id": "EP04",
+      "case": "Endpoint owned by another user / denied ACL",
+      "expected": "diagnosable denial; no elevation"
+    },
+    {
+      "id": "EP05",
+      "case": "Binary client socket supplied in place of JSON API socket",
+      "expected": "reject protocol mismatch; never send terminal input"
+    }
+  ]
+}

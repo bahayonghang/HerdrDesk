@@ -1,0 +1,8 @@
+{
+  "selftest_passed": true,
+  "checks": 23,
+  "platform": "linux",
+  "uses_synthetic_fixtures": true,
+  "herdr_executed": false,
+  "windows_gui_tested": false
+}

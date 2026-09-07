@@ -1,0 +1,14 @@
+{
+  "kind": "offline_terminal_capture_validation",
+  "validated": true,
+  "frame_count": 3,
+  "decoded_bytes": 41,
+  "capture_bytes": 442,
+  "capture_sha256": "d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599",
+  "last_sequence": 3,
+  "saw_terminal_closed": true,
+  "daemon_or_pane_exit_verified": false,
+  "windows_verified": false,
+  "ime_verified": false,
+  "input_execution_verified": false
+}

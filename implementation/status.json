@@ -1,0 +1,28 @@
+{
+  "phase": "G0",
+  "phase_gate": "not_passed",
+  "github_repository_created": false,
+  "github_push_completed": false,
+  "python_regression_tests": {
+    "status": "passed",
+    "count": 70
+  },
+  "probe_selftest": {
+    "status": "passed",
+    "checks": 23
+  },
+  "csharp_build": "not_run",
+  "csharp_smoke_tests": {
+    "status": "not_run",
+    "planned_count": 22
+  },
+  "github_actions": "not_run",
+  "windows_live_tests": "not_run",
+  "verified_acceptance_ids": [],
+  "blockers": [
+    "No create-repository action in the connected GitHub tool surface",
+    "No authenticated local GitHub CLI publishing environment",
+    ".NET SDK unavailable; installation download failed",
+    "Windows interactive desktop and isolated herdr session unavailable"
+  ]
+}

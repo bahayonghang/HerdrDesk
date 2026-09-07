@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "collected_at": "2026-09-07",
+  "evidence_level": "source_inspection_only",
+  "herdr": {
+    "repository": "herdrdev/herdr",
+    "tag": "v0.8.2",
+    "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
+    "api_protocol": 20,
+    "schema_version": 1,
+    "source_blobs": {
+      "src/client/mod.rs": "c33157fb0d9b7c1632562fced6bd9e439de80856",
+      "src/ipc.rs": "36e69ea2a571de096e3150779eb9cae6e803d7a8",
+      "src/server/render_stream.rs": "f14deb5e7e2f3183410020e5f36f7fb11dda6780",
+      "docs/next/api/herdr-api.schema.json": "f9642ffa0deb4dc87052a5247d700e1dcd50a753"
+    },
+    "runtime_binary_sha256": null,
+    "daemon_version": null,
+    "runtime_schema_sha256": null
+  },
+  "runtime_verification": {
+    "windows_local": "not_run",
+    "remote_linux": "not_run",
+    "named_pipe_acl": "not_run",
+    "ime": "not_run"
+  },
+  "default_write_capability": false,
+  "note": "Git blob SHA is not a binary SHA256 or a runtime/schema hash; do not conflate them."
+}

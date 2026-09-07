@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HerdDesk.Contracts/HerdDesk.Contracts.csproj" />
+    <Project Path="src/HerdDesk.Core/HerdDesk.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HerdDesk.Core.SmokeTests/HerdDesk.Core.SmokeTests.csproj" />
+  </Folder>
+</Solution>

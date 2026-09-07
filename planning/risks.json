@@ -1,0 +1,117 @@
+{
+  "note": "规划风险优先级，不是已证实上游漏洞等级",
+  "risks": [
+    {
+      "id": "R01",
+      "priority": "P1",
+      "risk": "Windows terminal bridge运行未验证",
+      "owner_task": "HD-004",
+      "mitigation": "G0失败即停止扩大可写范围",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R02",
+      "priority": "P1",
+      "risk": "IME或模式丢失使文本TUI不完整",
+      "owner_task": "HD-005",
+      "mitigation": "renderer独立且以实测决定",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R03",
+      "priority": "P1",
+      "risk": "授权不明代码/素材进入分发",
+      "owner_task": "HD-002",
+      "mitigation": "独立实现并设置发布门禁",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R04",
+      "priority": "P1",
+      "risk": "错误设备/旧epoch输入",
+      "owner_task": "HD-016",
+      "mitigation": "Host判定控制权，断线不重放",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R05",
+      "priority": "P1",
+      "risk": "GUI退出杀死daemon",
+      "owner_task": "HD-013",
+      "mitigation": "只终止自己的bridge，验证owner关系",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R06",
+      "priority": "P1",
+      "risk": "WebView消息泛化执行",
+      "owner_task": "HD-006",
+      "mitigation": "origin+schema+capability白名单",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R07",
+      "priority": "P2",
+      "risk": "帧队列无界或丢delta",
+      "owner_task": "HD-014",
+      "mitigation": "有界背压，损坏基线重建",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R08",
+      "priority": "P2",
+      "risk": "事件快照竞态与漏通知",
+      "owner_task": "HD-010",
+      "mitigation": "失效通知+权威重读；不虚构回放保证",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R09",
+      "priority": "P2",
+      "risk": "SSH身份/配置不一致",
+      "owner_task": "HD-020",
+      "mitigation": "同OpenSSH provider，显式支持矩阵",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R10",
+      "priority": "P1",
+      "risk": "文件覆盖/路径攻击/清理错误",
+      "owner_task": "HD-032",
+      "mitigation": "独占临时文件与hash/原子rename",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R11",
+      "priority": "P2",
+      "risk": "native wrapper维护成本",
+      "owner_task": "HD-005",
+      "mitigation": "不作为首发硬依赖",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R12",
+      "priority": "P2",
+      "risk": "误把preview issue当stable缺陷",
+      "owner_task": "HD-001",
+      "mitigation": "版本+路径分别登记",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R13",
+      "priority": "P1",
+      "risk": "更新/供应链完整性",
+      "owner_task": "HD-034",
+      "mitigation": "签名hash与回滚，不强改herdr",
+      "status": "open_for_validation"
+    },
+    {
+      "id": "R14",
+      "priority": "P2",
+      "risk": "未知平台被宣称支持",
+      "owner_task": "HD-026",
+      "mitigation": "每平台独立测试证据",
+      "status": "open_for_validation"
+    }
+  ]
+}

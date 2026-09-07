@@ -1,0 +1,799 @@
+{
+  "unit": "effective_person_day",
+  "status_note": "活动进度；原始规划档案在docs/plan。G0未通过，全部产品AC未验收。",
+  "tasks": [
+    {
+      "id": "HD-001",
+      "phase": "G0",
+      "title": "锁定上游事实与版本",
+      "effort_person_days": {
+        "min": 0.5,
+        "max": 1
+      },
+      "depends_on": [],
+      "acceptance_ids": [
+        "AC01"
+      ],
+      "action": "记录 tag、blob、schema、二进制 hash；整理 preview 与 stable 差异",
+      "proposed_output": "evidence/compatibility-baseline.json",
+      "risk": "错误版本导致所有后续fixture失效",
+      "rollback": "停用自动兼容判断，恢复只读诊断",
+      "status": "in_progress",
+      "implementation_note": "源码commit/blob/schema header已复核；缺运行中本地与远端证据。",
+      "progress_evidence": "docs/implementation-g0.md"
+    },
+    {
+      "id": "HD-002",
+      "phase": "G0",
+      "title": "名称和授权清点",
+      "effort_person_days": {
+        "min": 0.5,
+        "max": 1
+      },
+      "depends_on": [],
+      "acceptance_ids": [
+        "AC02"
+      ],
+      "action": "确认品牌标识、代码/素材许可；未授权内容不得进入仓库",
+      "proposed_output": "docs/licensing-register.md",
+      "risk": "直接复用未授权源码/图标",
+      "rollback": "删除候选资产并替换为独立实现",
+      "status": "in_progress",
+      "implementation_note": "已登记独立品牌/代码来源；项目许可与名称发行核验待完成。",
+      "progress_evidence": "docs/implementation-g0.md"
+    },
+    {
+      "id": "HD-003",
+      "phase": "G0",
+      "title": "API endpoint 与 pipe 映射验证",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-001"
+      ],
+      "acceptance_ids": [
+        "AC03"
+      ],
+      "action": "覆盖显式endpoint、named session、Windows命名映射与ACL；不猜路径",
+      "proposed_output": "tests/fixtures/endpoint-cases.json",
+      "risk": "连到错误session或跨用户endpoint",
+      "rollback": "要求显式配置，禁用自动发现",
+      "status": "blocked",
+      "implementation_note": "已准备endpoint案例；等待HD-001运行证据与Windows pipe/ACL真机验证。",
+      "progress_evidence": "docs/implementation-g0.md"
+    },
+    {
+      "id": "HD-004",
+      "phase": "G0",
+      "title": "终端桥协议探针",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-001"
+      ],
+      "acceptance_ids": [
+        "AC05"
+      ],
+      "action": "在隔离pane测试observe/control/resize/release/EOF并采样失败行为",
+      "proposed_output": "tests/fixtures/real-terminal-v082/",
+      "risk": "源码支持但Windows运行路径失败",
+      "rollback": "只读模式；保留本地诊断，不启动完整GUI开发",
+      "status": "blocked",
+      "implementation_note": "离线探针与合成回归已完成；等待HD-001运行证据及隔离Windows pane。",
+      "progress_evidence": "docs/implementation-g0.md"
+    },
+    {
+      "id": "HD-005",
+      "phase": "G0",
+      "title": "WinUI renderer与中文输入spike",
+      "effort_person_days": {
+        "min": 2,
+        "max": 4
+      },
+      "depends_on": [
+        "HD-004"
+      ],
+      "acceptance_ids": [
+        "AC08",
+        "AC09"
+      ],
+      "action": "在小型WinUI宿主对比WebView2/xterm与native raw-stream适配，不写产品业务",
+      "proposed_output": "docs/spikes/renderer-decision.md",
+      "risk": "IME/模式失真成为后期重写风险",
+      "rollback": "保留单壳与renderer接口；采用通过门禁的adapter",
+      "status": "planned"
+    },
+    {
+      "id": "HD-006",
+      "phase": "G0",
+      "title": "安全边界与ADR定稿",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-002",
+        "HD-003",
+        "HD-005"
+      ],
+      "acceptance_ids": [
+        "AC44"
+      ],
+      "action": "审核两条通信面、process ownership、默认控制策略与版本决策",
+      "proposed_output": "docs/adr/approved-baseline.md",
+      "risk": "过度授权或helper范围膨胀",
+      "rollback": "收缩到只读，不进入可写阶段",
+      "status": "planned"
+    },
+    {
+      "id": "HD-007",
+      "phase": "P1",
+      "title": "仓库骨架与CI",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-006"
+      ],
+      "acceptance_ids": [
+        "AC39",
+        "AC40",
+        "AC47"
+      ],
+      "action": "创建模块边界、锁定依赖、配置分析器和测试流水线",
+      "proposed_output": "src/ 与 .github/workflows/",
+      "risk": "UI/协议耦合，依赖无法还原",
+      "rollback": "先保留Contracts/Core与离线测试",
+      "status": "planned"
+    },
+    {
+      "id": "HD-008",
+      "phase": "P1",
+      "title": "RPC stdio bridge和请求层",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-003",
+        "HD-007"
+      ],
+      "acceptance_ids": [
+        "AC03",
+        "AC04"
+      ],
+      "action": "实现平台socket字节桥、request id、异步读写和取消",
+      "proposed_output": "bridge/ 与 HerdDesk.Infrastructure/Rpc",
+      "risk": "stderr污染或读写互锁",
+      "rollback": "回退snapshot诊断，不冒充实时连接",
+      "status": "planned"
+    },
+    {
+      "id": "HD-009",
+      "phase": "P1",
+      "title": "类型契约与状态投影",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-008"
+      ],
+      "acceptance_ids": [
+        "AC04",
+        "AC11"
+      ],
+      "action": "按schema映射DTO、跨设备key、unknown保留、epoch隔离",
+      "proposed_output": "HerdDesk.Contracts/ 与 HerdDesk.Core/Store",
+      "risk": "未知字段/旧epoch导致崩溃或回写",
+      "rollback": "丢弃缓存，全量重建",
+      "status": "planned"
+    },
+    {
+      "id": "HD-010",
+      "phase": "P1",
+      "title": "订阅与收敛策略",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-009"
+      ],
+      "acceptance_ids": [
+        "AC12"
+      ],
+      "action": "订阅确认+snapshot+dirty重读；有限合并和周期校准",
+      "proposed_output": "HerdDesk.Core/DeviceSession",
+      "risk": "snapshot/event竞态产生幽灵pane",
+      "rollback": "关闭增量投影，短期全量校准并标记降级",
+      "status": "planned"
+    },
+    {
+      "id": "HD-011",
+      "phase": "P1",
+      "title": "本地导航与搜索",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-009"
+      ],
+      "acceptance_ids": [
+        "AC19"
+      ],
+      "action": "设备/session/workspace/pane树、过滤、最近访问、键盘导航",
+      "proposed_output": "HerdDesk.App/Views",
+      "risk": "全局ID混淆或大量控件卡顿",
+      "rollback": "关闭最近访问缓存，使用稳定层级导航",
+      "status": "planned"
+    },
+    {
+      "id": "HD-012",
+      "phase": "P1",
+      "title": "通知与未读",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-010",
+        "HD-011"
+      ],
+      "acceptance_ids": [
+        "AC17",
+        "AC18"
+      ],
+      "action": "状态基线、转换去重、静默策略、点击跳转",
+      "proposed_output": "HerdDesk.Core/Attention",
+      "risk": "重连补发或通知指错设备",
+      "rollback": "禁用通知，仅保留侧边栏状态",
+      "status": "planned"
+    },
+    {
+      "id": "HD-013",
+      "phase": "P2",
+      "title": "TerminalCliTransport与生命周期",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-008",
+        "HD-010"
+      ],
+      "acceptance_ids": [
+        "AC05",
+        "AC06",
+        "AC15"
+      ],
+      "action": "实现长期CLI进程、单reader、stdin串行写、stderr、退出原因",
+      "proposed_output": "HerdDesk.Infrastructure/Terminal",
+      "risk": "结束桥误伤daemon、阻塞reader",
+      "rollback": "禁用control，仅observe",
+      "status": "planned"
+    },
+    {
+      "id": "HD-014",
+      "phase": "P2",
+      "title": "可交付WebView2终端adapter",
+      "effort_person_days": {
+        "min": 3,
+        "max": 5
+      },
+      "depends_on": [
+        "HD-005",
+        "HD-007",
+        "HD-013"
+      ],
+      "acceptance_ids": [
+        "AC08",
+        "AC27"
+      ],
+      "action": "打包本地xterm、字节写入、在途窗口、origin校验",
+      "proposed_output": "HerdDesk.Terminal.Web/ 与 web/terminal/",
+      "risk": "混合渲染通道注入/无界缓冲",
+      "rollback": "终止当前视图并从observe重建",
+      "status": "planned"
+    },
+    {
+      "id": "HD-015",
+      "phase": "P2",
+      "title": "输入法、键盘与选择",
+      "effort_person_days": {
+        "min": 2,
+        "max": 4
+      },
+      "depends_on": [
+        "HD-014"
+      ],
+      "acceptance_ids": [
+        "AC09",
+        "AC10"
+      ],
+      "action": "IME composition、焦点、键序列、选择复制、模式差异回归",
+      "proposed_output": "tests/Integration.Windows/Input/",
+      "risk": "双重提交与控制键失真",
+      "rollback": "关闭未经验证的快捷键扩展",
+      "status": "planned"
+    },
+    {
+      "id": "HD-016",
+      "phase": "P2",
+      "title": "控制权状态机",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-013",
+        "HD-014"
+      ],
+      "acceptance_ids": [
+        "AC07",
+        "AC14",
+        "AC16"
+      ],
+      "action": "显式申请、busy、takeover确认、release、断线回到observe",
+      "proposed_output": "HerdDesk.Core/TerminalLease",
+      "risk": "抢占/串写/输入重放",
+      "rollback": "所有pane强制只读，清空未发送队列",
+      "status": "planned"
+    },
+    {
+      "id": "HD-017",
+      "phase": "P2",
+      "title": "workspace与agent基本操作",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-009",
+        "HD-016"
+      ],
+      "acceptance_ids": [
+        "AC20"
+      ],
+      "action": "从schema验证创建/重命名/关闭和agent能力；默认保留审批",
+      "proposed_output": "HerdDesk.Core/Commands",
+      "risk": "非幂等操作重复与破坏误触",
+      "rollback": "关闭创建/删除按钮，保留浏览",
+      "status": "planned"
+    },
+    {
+      "id": "HD-018",
+      "phase": "P2",
+      "title": "断连和崩溃恢复",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-010",
+        "HD-013",
+        "HD-016"
+      ],
+      "acceptance_ids": [
+        "AC13",
+        "AC14",
+        "AC15"
+      ],
+      "action": "旧epoch隔离、state stale、终端重新observe、daemon不自动复活",
+      "proposed_output": "tests/Integration.Windows/Recovery/",
+      "risk": "假在线/自动提交旧输入",
+      "rollback": "撤销自动重连，转显式重连",
+      "status": "planned"
+    },
+    {
+      "id": "HD-019",
+      "phase": "P2",
+      "title": "本地MVP综合验收",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-012",
+        "HD-015",
+        "HD-017",
+        "HD-018"
+      ],
+      "acceptance_ids": [
+        "AC06",
+        "AC07",
+        "AC10",
+        "AC15"
+      ],
+      "action": "三类agent文本TUI、PowerShell、窗口关闭与错误注入",
+      "proposed_output": "evidence/local-mvp/",
+      "risk": "脚本通过但真实TUI失败",
+      "rollback": "标注具体不支持agent/模式，禁止发布对应能力",
+      "status": "planned"
+    },
+    {
+      "id": "HD-020",
+      "phase": "P3",
+      "title": "SSH设备配置与身份",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-019"
+      ],
+      "acceptance_ids": [
+        "AC22",
+        "AC23"
+      ],
+      "action": "解析/验证alias与参数，key/agent/host key流程",
+      "proposed_output": "HerdDesk.Infrastructure/Ssh/",
+      "risk": "引号注入与错误主机",
+      "rollback": "禁用远端写入，只读诊断",
+      "status": "planned"
+    },
+    {
+      "id": "HD-021",
+      "phase": "P3",
+      "title": "跨平台helper构建与部署",
+      "effort_person_days": {
+        "min": 2,
+        "max": 4
+      },
+      "depends_on": [
+        "HD-008",
+        "HD-020"
+      ],
+      "acceptance_ids": [
+        "AC25"
+      ],
+      "action": "多架构bridge产物、显式安装确认、校验、原子更新",
+      "proposed_output": "bridge/release/",
+      "risk": "错架构/篡改/静默安装",
+      "rollback": "保留旧helper，禁用新连接",
+      "status": "planned"
+    },
+    {
+      "id": "HD-022",
+      "phase": "P3",
+      "title": "远端RPC与terminal通道",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-020",
+        "HD-021"
+      ],
+      "acceptance_ids": [
+        "AC24",
+        "AC26"
+      ],
+      "action": "ssh-T透明stdio、remote schema、长连接与退出分类",
+      "proposed_output": "HerdDesk.Infrastructure/SshTransports",
+      "risk": "banner污染/双层PTY/失联",
+      "rollback": "断开远端会话，不影响本地",
+      "status": "planned"
+    },
+    {
+      "id": "HD-023",
+      "phase": "P3",
+      "title": "多设备聚合与搜索",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-011",
+        "HD-022"
+      ],
+      "acceptance_ids": [
+        "AC19",
+        "AC21"
+      ],
+      "action": "全局Store按设备隔离，合并搜索和通知目标",
+      "proposed_output": "HerdDesk.Core/Aggregation",
+      "risk": "同名pane串写",
+      "rollback": "关闭全局搜索，只允许设备内导航",
+      "status": "planned"
+    },
+    {
+      "id": "HD-024",
+      "phase": "P3",
+      "title": "认证异常与重连退避",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-022"
+      ],
+      "acceptance_ids": [
+        "AC22",
+        "AC26"
+      ],
+      "action": "host-key错误阻断、密码/MFA明确不支持或单独provider",
+      "proposed_output": "tests/Integration.Ssh/Auth/",
+      "risk": "后台无限重试与不可见密码提示",
+      "rollback": "停止重连，显示人工处理入口",
+      "status": "planned"
+    },
+    {
+      "id": "HD-025",
+      "phase": "P3",
+      "title": "连接与带宽预算",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-023",
+        "HD-024"
+      ],
+      "acceptance_ids": [
+        "AC27"
+      ],
+      "action": "按设备限制连接，隐藏pane停渲染；测高RTT和丢包",
+      "proposed_output": "evidence/ssh-performance/",
+      "risk": "SSH会话爆炸、低网速积压",
+      "rollback": "降低可见pane并关闭后台预览",
+      "status": "planned"
+    },
+    {
+      "id": "HD-026",
+      "phase": "P3",
+      "title": "多设备MVP验收",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-023",
+        "HD-024",
+        "HD-025"
+      ],
+      "acceptance_ids": [
+        "AC21",
+        "AC23",
+        "AC24",
+        "AC26"
+      ],
+      "action": "Windows本地+Linux远端，macOS/ARM64按独立支持表晋级",
+      "proposed_output": "evidence/multi-device-mvp/",
+      "risk": "未测试平台被误宣称支持",
+      "rollback": "仅发布已通过矩阵，其他标experimental",
+      "status": "planned"
+    },
+    {
+      "id": "HD-027",
+      "phase": "P4",
+      "title": "文件helper协议与安全设计",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-026"
+      ],
+      "acceptance_ids": [
+        "AC30",
+        "AC34"
+      ],
+      "action": "独立filebridge狭窄API、二进制/JSON界限、认证复用、威胁模型",
+      "proposed_output": "filebridge/spec/",
+      "risk": "演变为任意远程执行接口",
+      "rollback": "不发布文件面，保留terminal路径粘贴",
+      "status": "planned"
+    },
+    {
+      "id": "HD-028",
+      "phase": "P4",
+      "title": "文件枚举与传输后端",
+      "effort_person_days": {
+        "min": 2,
+        "max": 4
+      },
+      "depends_on": [
+        "HD-027"
+      ],
+      "acceptance_ids": [
+        "AC30",
+        "AC31",
+        "AC32"
+      ],
+      "action": "list/stat、独占临时写、长度/hash、取消和原子rename",
+      "proposed_output": "filebridge/ 与 Infrastructure/Files/",
+      "risk": "路径攻击/错误清理/数据损坏",
+      "rollback": "只读浏览或完全停用file helper",
+      "status": "planned"
+    },
+    {
+      "id": "HD-029",
+      "phase": "P4",
+      "title": "双栏文件界面",
+      "effort_person_days": {
+        "min": 2,
+        "max": 4
+      },
+      "depends_on": [
+        "HD-028"
+      ],
+      "acceptance_ids": [
+        "AC31",
+        "AC33"
+      ],
+      "action": "目录导航、目标选择、队列、进度、冲突确认",
+      "proposed_output": "HerdDesk.App/Files/",
+      "risk": "错设备拖放与静默覆盖",
+      "rollback": "隐藏跨设备拖放，显式选择上传目标",
+      "status": "planned"
+    },
+    {
+      "id": "HD-030",
+      "phase": "P4",
+      "title": "文件与图片投入agent",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-017",
+        "HD-029"
+      ],
+      "acceptance_ids": [
+        "AC35"
+      ],
+      "action": "能力表、上传缓存、目标租约、路径输入且不自动回车",
+      "proposed_output": "HerdDesk.Core/Attachments",
+      "risk": "把路径粘贴误标为附件成功",
+      "rollback": "仅提供复制路径，提示手动确认",
+      "status": "planned"
+    },
+    {
+      "id": "HD-031",
+      "phase": "P4",
+      "title": "剪贴板与缓存策略",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-030"
+      ],
+      "acceptance_ids": [
+        "AC36"
+      ],
+      "action": "文字/图片识别、OSC限制、多行提示、TTL和容量",
+      "proposed_output": "HerdDesk.Infrastructure/Clipboard",
+      "risk": "剪贴板窃取或缓存泄密",
+      "rollback": "禁用自动图像粘贴并清理本应用过期缓存",
+      "status": "planned"
+    },
+    {
+      "id": "HD-032",
+      "phase": "P4",
+      "title": "文件故障与安全测试",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-028",
+        "HD-029",
+        "HD-031"
+      ],
+      "acceptance_ids": [
+        "AC32",
+        "AC33",
+        "AC34",
+        "AC35"
+      ],
+      "action": "注入断网/权限拒绝/symlink/长文件名和并发冲突",
+      "proposed_output": "evidence/files/",
+      "risk": "正常路径通过但边界造成数据丢失",
+      "rollback": "发布阻断，退回多设备MVP",
+      "status": "planned"
+    },
+    {
+      "id": "HD-033",
+      "phase": "P5",
+      "title": "性能、可访问性与soak",
+      "effort_person_days": {
+        "min": 2,
+        "max": 4
+      },
+      "depends_on": [
+        "HD-026",
+        "HD-032"
+      ],
+      "acceptance_ids": [
+        "AC27",
+        "AC28",
+        "AC29",
+        "AC37",
+        "AC38",
+        "AC46"
+      ],
+      "action": "按统一负载测性能/资源/8h稳定性，修复关键问题",
+      "proposed_output": "evidence/quality/",
+      "risk": "以平均值掩盖长尾与资源增长",
+      "rollback": "降低并发/关闭实验renderer",
+      "status": "planned"
+    },
+    {
+      "id": "HD-034",
+      "phase": "P5",
+      "title": "签名、安装与更新回滚",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-007",
+        "HD-021"
+      ],
+      "acceptance_ids": [
+        "AC41",
+        "AC42"
+      ],
+      "action": "MSIX/运行时依赖、签名校验、版本降级与配置迁移",
+      "proposed_output": "packaging/",
+      "risk": "升级杀掉任务或配置不可回滚",
+      "rollback": "保留前一签名版本和配置备份",
+      "status": "planned"
+    },
+    {
+      "id": "HD-035",
+      "phase": "P5",
+      "title": "最终安全与许可审查",
+      "effort_person_days": {
+        "min": 2,
+        "max": 3
+      },
+      "depends_on": [
+        "HD-006",
+        "HD-031",
+        "HD-034"
+      ],
+      "acceptance_ids": [
+        "AC02",
+        "AC43",
+        "AC44"
+      ],
+      "action": "锁依赖扫描、license清单、渗透用例、凭据导出检查",
+      "proposed_output": "evidence/security-release/",
+      "risk": "供应链或特权边界遗漏",
+      "rollback": "撤回受影响构建，功能级禁用",
+      "status": "planned"
+    },
+    {
+      "id": "HD-036",
+      "phase": "P5",
+      "title": "发布文档与追踪归档",
+      "effort_person_days": {
+        "min": 1,
+        "max": 2
+      },
+      "depends_on": [
+        "HD-033",
+        "HD-034",
+        "HD-035"
+      ],
+      "acceptance_ids": [
+        "AC45",
+        "AC48"
+      ],
+      "action": "支持矩阵、用户手册、诊断、测试证据和hash归档",
+      "proposed_output": "docs/release/ 与 manifest",
+      "risk": "宣称未验证能力",
+      "rollback": "降级为预览，不发布stable承诺",
+      "status": "planned"
+    }
+  ]
+}

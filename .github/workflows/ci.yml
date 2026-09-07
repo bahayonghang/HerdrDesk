@@ -1,0 +1,46 @@
+name: G0 validation
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: g0-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validation:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6; resolved 2026-09-07
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6; resolved 2026-09-07
+        with:
+          python-version: '3.12'
+      - name: Python regression tests
+        run: python -m unittest discover -s tests/python -v
+      - name: Probe synthetic selftest
+        run: python scripts/probe_herdr.py selftest
+      - name: Validate synthetic terminal capture
+        run: python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson
+      - name: Validate repository structure
+        run: python scripts/validate_repository.py
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5; resolved 2026-09-07
+        with:
+          global-json-file: global.json
+      - name: Build BCL-only projects
+        run: dotnet build HerdDesk.slnx --configuration Release
+      - name: Run C# G0 smoke tests
+        run: dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
+      # No daemon installation, SSH access, terminal takeover, release publishing,
+      # UI acceptance or credentials belong to this offline G0 job.

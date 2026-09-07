@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": {
+    "json_files": 8,
+    "tasks": 36,
+    "acceptance_criteria": 48,
+    "acyclic_dependencies": true,
+    "local_links_checked": 272,
+    "manifest_hashes_checked": 76,
+    "herdr_or_windows_executed": false
+  },
+  "errors": []
+}

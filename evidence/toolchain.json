@@ -1,0 +1,12 @@
+{
+  "selected_dotnet_sdk": "10.0.400",
+  "dotnet_sdk_source": "https://dotnet.microsoft.com/en-us/download/dotnet/10.0",
+  "dotnet_installed_in_this_execution": false,
+  "dotnet_download_attempt": "failed",
+  "observed_python_version": "3.13.5",
+  "observed_platform": "linux",
+  "python_third_party_dependencies": [],
+  "csharp_third_party_package_references": [],
+  "github_actions_status": "not_run",
+  "native_windows_test_status": "not_run"
+}
