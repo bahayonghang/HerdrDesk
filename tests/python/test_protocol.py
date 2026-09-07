@@ -268,4 +268,51 @@ class CaptureTests(unittest.TestCase):
         self.assertNotIn(b'synthetic-sensitive-host',result.stdout+result.stderr)
 
 
+class SharedProtocolEdgeTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        data=json.loads((ROOT/'tests/fixtures/protocol-edge-cases.json').read_text(encoding='utf-8'))
+        cls.cases={item['name']:item['raw'].encode('utf-8') for item in data['cases']}
+        cls.valid=data['valid_next_frame'].encode('utf-8')
+
+    def reject_and_latch(self, name):
+        raw=self.cases[name]
+        with self.assertRaises(ProtocolError) as ctx:
+            strict_json_loads(raw)
+        message=str(ctx.exception)
+        self.assertEqual(message,'invalid_json')
+        self.assertIsNone(ctx.exception.__cause__)
+        self.assertNotIn(raw.decode('ascii'),message)
+        self.assertNotIn('\ud800',message)
+        self.assertNotIn('aGVsbG8=',message)
+        self.assertNotIn('hello',message)
+        validator=TerminalCaptureValidator()
+        with self.assertRaises(ProtocolError) as first:
+            validator.accept(raw)
+        self.assertEqual(str(first.exception),'invalid_json')
+        self.assertTrue(validator.failed)
+        self.assertFalse(validator.closed)
+        with self.assertRaisesRegex(ProtocolError,'terminal_stream_not_active'):
+            validator.accept(self.valid)
+
+    def test_unpaired_surrogate_type_value(self):
+        self.reject_and_latch('unpaired_surrogate_type_value')
+
+    def test_unpaired_surrogate_property_name(self):
+        self.reject_and_latch('unpaired_surrogate_property_name')
+
+    def test_unpaired_surrogate_closed_reason(self):
+        self.reject_and_latch('unpaired_surrogate_closed_reason')
+
+    def test_valid_surrogate_pair_accepted(self):
+        _,summary=validate_frame(strict_json_loads(self.cases['valid_surrogate_pair_closed_reason']))
+        self.assertEqual(summary,{'type':'terminal.closed','reason_present':True})
+        validator=TerminalCaptureValidator()
+        validator.accept(self.cases['valid_surrogate_pair_closed_reason'])
+        self.assertFalse(validator.failed)
+        self.assertTrue(validator.closed)
+        with self.assertRaisesRegex(ProtocolError,'terminal_stream_not_active'):
+            validator.accept(self.valid)
+
+
 if __name__=='__main__':unittest.main()

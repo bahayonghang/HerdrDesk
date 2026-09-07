@@ -45,7 +45,7 @@ public sealed class TerminalFrameParser
                 {
                     if (reason.ValueKind is not (JsonValueKind.String or JsonValueKind.Null))
                         throw new TerminalProtocolException("invalid_closed_reason");
-                    present = reason.ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(reason.GetString());
+                    present = reason.ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(GetString(reason));
                 }
                 closed = true;
                 return new TerminalClosed(present);
@@ -98,7 +98,32 @@ public sealed class TerminalFrameParser
     {
         if (!root.TryGetProperty(property, out var element) || element.ValueKind != JsonValueKind.String)
             throw new TerminalProtocolException("string_field_required");
-        return element.GetString()!;
+        return GetString(element);
+    }
+
+    private static string GetString(JsonElement element)
+    {
+        try
+        {
+            return element.GetString()!;
+        }
+        catch (InvalidOperationException)
+        {
+            // Unpaired UTF-16 surrogates are not JsonException.
+            throw new TerminalProtocolException("malformed_terminal_record");
+        }
+    }
+
+    private static string GetName(JsonProperty property)
+    {
+        try
+        {
+            return property.Name;
+        }
+        catch (InvalidOperationException)
+        {
+            throw new TerminalProtocolException("malformed_terminal_record");
+        }
     }
 
     private static ushort GetDimension(JsonElement root, string property)
@@ -116,7 +141,7 @@ public sealed class TerminalFrameParser
             var names = new HashSet<string>(StringComparer.Ordinal);
             foreach (var property in value.EnumerateObject())
             {
-                if (!names.Add(property.Name))
+                if (!names.Add(GetName(property)))
                     throw new TerminalProtocolException("duplicate_json_key");
                 CheckDuplicateKeys(property.Value);
             }

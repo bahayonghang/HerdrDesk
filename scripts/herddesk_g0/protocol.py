@@ -46,8 +46,24 @@ def _nonfinite(_: str) -> None:
     raise ProtocolError('nonfinite_json_number')
 
 
+def _require_unicode_scalars(value: Any) -> None:
+    # json.loads materializes every string, including unpaired UTF-16 surrogates.
+    if isinstance(value, str):
+        try:
+            value.encode('utf-8', errors='strict')
+        except UnicodeEncodeError:
+            raise ProtocolError('invalid_json') from None
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            _require_unicode_scalars(key)
+            _require_unicode_scalars(item)
+    elif isinstance(value, list):
+        for item in value:
+            _require_unicode_scalars(item)
+
+
 def strict_json_loads(raw: bytes | bytearray | str) -> Any:
-    """Reject duplicate keys, non-JSON numbers, invalid UTF-8 and deep nesting."""
+    """Reject duplicate keys, non-JSON numbers, invalid UTF-8, unpaired UTF-16 surrogates and deep nesting."""
     try:
         text = raw if isinstance(raw, str) else bytes(raw).decode('utf-8', errors='strict')
         depth = 0
@@ -69,7 +85,9 @@ def strict_json_loads(raw: bytes | bytearray | str) -> Any:
                     raise ProtocolError('json_depth_limit')
             elif char in ']}':
                 depth -= 1
-        return json.loads(text, object_pairs_hook=_unique_object, parse_constant=_nonfinite)
+        result = json.loads(text, object_pairs_hook=_unique_object, parse_constant=_nonfinite)
+        _require_unicode_scalars(result)
+        return result
     except ProtocolError:
         raise
     except (ValueError, UnicodeError, RecursionError) as exc:

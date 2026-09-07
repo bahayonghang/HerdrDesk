@@ -1,0 +1,30 @@
+{
+  "comment": "Shared C#/Python wire records. Each cases[].raw is one JSON object without LF. Unpaired surrogates appear only as JSON \\u escapes inside those raw strings so this file remains valid UTF-8.",
+  "valid_next_frame": "{\"type\":\"terminal.frame\",\"seq\":1,\"encoding\":\"ansi\",\"width\":120,\"height\":40,\"full\":true,\"bytes\":\"aGVsbG8=\"}",
+  "cases": [
+    {
+      "name": "unpaired_surrogate_type_value",
+      "site": "type_value",
+      "expect": "reject",
+      "raw": "{\"type\":\"\\uD800\"}"
+    },
+    {
+      "name": "unpaired_surrogate_property_name",
+      "site": "property_name",
+      "expect": "reject",
+      "raw": "{\"\\uD800\":1,\"type\":\"terminal.frame\",\"seq\":1,\"encoding\":\"ansi\",\"width\":80,\"height\":24,\"full\":true,\"bytes\":\"aGVsbG8=\"}"
+    },
+    {
+      "name": "unpaired_surrogate_closed_reason",
+      "site": "closed_reason",
+      "expect": "reject",
+      "raw": "{\"type\":\"terminal.closed\",\"reason\":\"\\uD800\"}"
+    },
+    {
+      "name": "valid_surrogate_pair_closed_reason",
+      "site": "closed_reason",
+      "expect": "accept",
+      "raw": "{\"type\":\"terminal.closed\",\"reason\":\"\\uD800\\uDC00\"}"
+    }
+  ]
+}

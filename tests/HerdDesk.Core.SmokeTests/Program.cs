@@ -16,11 +16,55 @@ static void Reject(Action action)
     catch (TerminalProtocolException) { return; }
     throw new Exception("expected_protocol_rejection");
 }
+static void RejectMalformedThenLatch(byte[] raw)
+{
+    var parser = new TerminalFrameParser();
+    try
+    {
+        parser.Parse(raw);
+        throw new Exception("expected_malformed_terminal_record");
+    }
+    catch (TerminalProtocolException error) when (error.Message == "malformed_terminal_record")
+    {
+        Check(error.InnerException is null);
+        Check(!error.Message.Contains('\\'));
+        Check(!error.Message.Contains('/'));
+        Check(!error.Message.Contains('\ud800'));
+    }
+    try
+    {
+        parser.Parse(Frame());
+        throw new Exception("expected_terminal_stream_not_active");
+    }
+    catch (TerminalProtocolException error) when (error.Message == "terminal_stream_not_active")
+    {
+        Check(error.InnerException is null);
+        Check(!error.Message.Contains('\\'));
+        Check(!error.Message.Contains('/'));
+        Check(!error.Message.Contains('\ud800'));
+    }
+}
+static Dictionary<string, byte[]> LoadEdgeCases()
+{
+    for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
+    {
+        var path = Path.Combine(dir.FullName, "tests", "fixtures", "protocol-edge-cases.json");
+        if (!File.Exists(path)) continue;
+        using var document = JsonDocument.Parse(File.ReadAllBytes(path));
+        var map = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        foreach (var item in document.RootElement.GetProperty("cases").EnumerateArray())
+            map[item.GetProperty("name").GetString()!] =
+                Encoding.UTF8.GetBytes(item.GetProperty("raw").GetString()!);
+        return map;
+    }
+    throw new Exception("protocol_edge_corpus_missing");
+}
 
 var pane = new PaneKey(new SessionKey(new DeviceId(Guid.NewGuid()), "test-only-api", "test"), "w1", "p1");
 var epoch = new ConnectionEpoch(1);
 var context = new InputContext(pane, epoch, TerminalAccess.Controlling, ControlVerified: true);
 var request = new RendererInput(pane, epoch, InputOrigin.CommittedText, Encoding.UTF8.GetBytes("你好"));
+var edge = LoadEdgeCases();
 var cases = new (string Name, Action Run)[]
 {
     ("parse full frame", () => Check(new TerminalFrameParser().Parse(Frame()) is TerminalFrame { Sequence: 1, Full: true })),
@@ -45,6 +89,10 @@ var cases = new (string Name, Action Run)[]
     ("oversize input denied", () => Check(!InputPolicy.Evaluate(context, request with { Bytes = new byte[InputPolicy.MaxInputBytes + 1] }).Allowed)),
     ("unknown origin denied", () => Check(!InputPolicy.Evaluate(context, request with { Origin = (InputOrigin)999 }).Allowed)),
     ("default identity denied", () => Check(!InputPolicy.Evaluate(context with { ActivePane = default }, request with { Pane = default }).Allowed)),
+    ("unpaired surrogate type value", () => RejectMalformedThenLatch(edge["unpaired_surrogate_type_value"])),
+    ("unpaired surrogate property name", () => RejectMalformedThenLatch(edge["unpaired_surrogate_property_name"])),
+    ("unpaired surrogate closed reason", () => RejectMalformedThenLatch(edge["unpaired_surrogate_closed_reason"])),
+    ("valid surrogate pair accepted", () => Check(new TerminalFrameParser().Parse(edge["valid_surrogate_pair_closed_reason"]) is TerminalClosed { ReasonPresent: true })),
 };
 int failed = 0;
 foreach (var test in cases)
