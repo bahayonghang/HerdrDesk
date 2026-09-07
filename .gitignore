@@ -21,3 +21,11 @@ id_rsa*
 id_ed25519*
 .DS_Store
 Thumbs.db
+
+.agents/
+.codex/
+.cursor/
+.kimi-code/
+.omp/
+.grok/
+.claude/
