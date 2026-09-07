@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
-"""Create the public bahayonghang/HerdrDesk repository using your local gh login.
+"""Audit the historical PUBLICATION_MANIFEST.json first-import bundle.
 
-Default: offline dry run. --publish is the explicit network/write operation.
-No tokens are requested or stored. Existing repositories are never overwritten.
-Only files listed in the reviewed publication manifest are staged.
+Default (no --publish): offline historical-bundle audit. Compare listed files
+to the frozen SHA-256 snapshot from the 2026-09-07 source import. Later
+maintenance can change listed bytes; exit 2 then reports bundle drift.
+Daily offline G0 gate is `just ci`, not this audit and not a hash refresh.
+
+--publish is the historical empty-repo create path. It refuses an existing
+GitHub repository and any checkout that already has .git. Do not run
+--publish against bahayonghang/HerdrDesk. Default never publishes and does
+not use the network.
+
+No tokens are requested or stored. Only files listed in the reviewed
+publication manifest would be staged on --publish.
 """
 from __future__ import annotations
 import argparse
@@ -62,7 +71,8 @@ def validate_manifest(root: Path) -> list[str]:
             raise PublishError(f'Publication file missing or symlink: {relative}')
         digest = hashlib.sha256(target.read_bytes()).hexdigest()
         if digest != expected:
-            raise PublishError(f'Publication file changed: {relative}; review it before publishing')
+            raise PublishError(
+                f'Publication file changed: {relative}; historical first-import bundle; daily gate is just ci')
         allowed.append(relative)
     return sorted(allowed) + [MANIFEST]
 
@@ -122,18 +132,41 @@ def publish(root: Path, files: list[str]) -> dict[str, Any]:
             'ci_status':'not_checked','windows_acceptance':'not_run'}
 
 
+def dry_run_report(*, ok: bool, files: list[str] | None = None, error: str | None = None) -> dict[str, Any]:
+    report: dict[str, Any] = {
+        'mode': 'offline_dry_run',
+        'kind': 'historical_bundle_audit',
+        'daily_gate': 'just ci',
+        'repository': f'{OWNER}/{NAME}',
+        'visibility': 'public',
+        'github_changed': False,
+        'ok': ok,
+    }
+    if files is not None:
+        report['files_to_stage'] = len(files)
+        report['command'] = create_command(ROOT)
+    if error is not None:
+        report['error'] = error
+    return report
+
+
 def main(argv: list[str] | None = None) -> int:
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--publish',action='store_true',help='Create PUBLIC repo and push reviewed files')
+    parser.add_argument('--publish',action='store_true',
+                        help='Historical empty-repo create. Refuses an existing repository. Daily gate is just ci.')
     args=parser.parse_args(argv)
     try:
         files=validate_manifest(ROOT)
+    except (PublishError,OSError,ValueError) as exc:
         if not args.publish:
-            print(json.dumps({'mode':'offline_dry_run','repository':f'{OWNER}/{NAME}',
-                              'visibility':'public','files_to_stage':len(files),
-                              'github_changed':False,'command':create_command(ROOT)},ensure_ascii=False,indent=2))
-        else:
-            print(json.dumps(publish(ROOT,files),ensure_ascii=False,indent=2))
+            print(json.dumps(dry_run_report(ok=False, error=str(exc)),ensure_ascii=False,indent=2))
+        print(f'Publish stopped: {exc}',file=sys.stderr)
+        return 2
+    try:
+        if not args.publish:
+            print(json.dumps(dry_run_report(ok=True, files=files),ensure_ascii=False,indent=2))
+            return 0
+        print(json.dumps(publish(ROOT,files),ensure_ascii=False,indent=2))
         return 0
     except (PublishError,OSError,ValueError,subprocess.SubprocessError) as exc:
         print(f'Publish stopped: {exc}',file=sys.stderr)

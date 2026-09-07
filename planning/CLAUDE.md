@@ -8,6 +8,19 @@
 
 跟踪 36 项任务与 48 项验收。`scripts/validate_repository.py` 校验：ID 数量、依赖无环、`completed` 任务的依赖必须完成且对应 AC 为 `passed` 并带 evidence。
 
+## Trellis 改造与 HD 产品
+
+两套任务并存，状态不互相复制。
+
+| 权威 | 路径 | 关系 |
+|---|---|---|
+| 产品 backlog / AC | 本目录与 [../tasks](../tasks/CLAUDE.md)、`acceptance.json` | HD-001–036 与 AC01–AC48 仍是产品进度。G0 `phase_gate=not_passed`。AC 全部 `not_run`。离线 `just ci` 不把产品 AC 标为 `passed`。 |
+| 本轮工程改造 | `.trellis/tasks/`（父 `09-08-evergreen-harness-audit` 及子任务） | 协议失败锁存、SDK 默认只读、五工具入口、历史证据语义。HD-007 与 AC39/AC40/AC47 仍按产品 backlog 记录。 |
+| 共享工程规则 | [../AGENTS.md](../AGENTS.md)、[../docs/harness-workflows.md](../docs/harness-workflows.md)、`.trellis/spec/` | 适用 Claude Code / Codex / Grok Build / Kimi Code / OMP。五 CLI 新会话加载仍为 UNVERIFIED。 |
+| 历史导入证据 | [../docs/publication.md](../docs/publication.md)、`PUBLICATION_MANIFEST.json`、Actions run `34138627135` | 证明 SHA `629bb01` 的首次导入。日常门禁是 `just ci`。 |
+
+`.trellis/tasks/00-bootstrap-guidelines` 仍为 `in_progress`；本轮不归档它。
+
 ## 文件
 
 | 文件 | 作用 |
@@ -61,7 +74,7 @@ G0 桥或 IME 失败则停止扩大可写范围。文件损坏、错设备输入
 
 改状态时同时改 `backlog.json` 与 `tasks/HD-xxx.md`。通过 AC 必须写入证据路径。G0 未通过时不要把产品 AC 标为 `passed`。
 
-当前快照：`implementation/status.json` 的 `verified_acceptance_ids=[]`，`windows_live_tests=not_run`。基线：`evidence/compatibility-baseline.json`。
+当前快照：`implementation/status.json` 的 `verified_acceptance_ids=[]`，`windows_live_tests=not_run`。其中 `github_actions.verified_run_id=34138627135` 只覆盖 commit `629bb01`；计数可能滞后于后续协议/setup 回归。基线：`evidence/compatibility-baseline.json`。当前 HEAD 的 hosted Actions 为 UNVERIFIED。
 
 ## 约束
 

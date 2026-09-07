@@ -4,6 +4,8 @@
 
 生成日期：2026-09-08。每项 `HD-xxx.md` 与 `planning/backlog.json` 对应。档案副本在 `docs/plan/tasks/`。模板：`TASK_TEMPLATE.md`。
 
+本目录是产品 backlog 正文。本轮工程改造在 `.trellis/tasks/`（父 `09-08-evergreen-harness-audit`）。完成 Trellis 子任务不改下表 HD 状态，也不把 AC01–AC48 标为 `passed`。共享入口：[AGENTS.md](../AGENTS.md)、[docs/harness-workflows.md](../docs/harness-workflows.md)。对照见 [planning/CLAUDE.md](../planning/CLAUDE.md)。
+
 状态字段：`planned` / `in_progress` / `blocked` / `accepted`。正文里的“拟建产物”是目标路径，不表示文件已存在。完成证据必须区分 synthetic 与真机；仅 mock 不能把 Windows 行为标 passed。回滚不得停止用户 herdr。
 
 ## G0

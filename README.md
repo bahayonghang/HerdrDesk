@@ -8,22 +8,33 @@ Independent Windows client for herdr. **G0 实施中；尚不是可运行的桌�
 
 ## 已实现与已验证
 
+日常离线门禁是 `just ci`（与 `.github/workflows/ci.yml` 同步骤）。`PUBLICATION_MANIFEST.json` 与默认 `python scripts/publish_github.py` 核验的是 2026-09-07 首次导入清单。`implementation/status.json` 的计数可能滞后；以本次命令输出为准。
+
 | 范围 | 当前结果 |
 |---|---|
-| Python 协议与安全回归 | 73 项测试通过 |
-| 只读探针 selftest | 23 项合成检查通过，不执行 herdr |
-| C# Contracts/Core | GitHub Actions 的 Windows、Linux 构建通过 |
-| C# smoke runner | 两个平台的 22 项检查通过 |
-| 实施规划 | 12 个专题、36 项任务、48 项验收及架构图源文件 |
+| Python 协议、探针门、setup stub、仓库与发布诊断 | 本机 97 项通过（2026-09-08，`python -m unittest discover -s tests/python -v`）。含协议 surrogate 边界、setup stub、发布诊断。 |
+| 只读探针 selftest | 23 项合成检查，不执行 herdr |
+| C# Contracts/Core | 本机 `dotnet build` 可复现；hosted Actions 只证明对应 SHA |
+| C# smoke runner | 26 项（含孤立 surrogate 失败锁存与合法 surrogate pair）；`dotnet run`，不是 `dotnet test` |
+| SDK setup | 默认 `just setup` 只读；版本以 `global.json` 为准；不调用 winget、不写 User 环境 |
+| 实施规划 | 12 个专题、36 项 HD 任务、48 项产品验收；AC01–AC48 仍为 `not_run` |
 | 产品门禁 | G0 尚未通过；真实 herdr/SSH/GUI/中文 IME 未验收 |
+| 五 CLI 新会话加载 | UNVERIFIED |
 
-可复查的首个双平台通过记录：[CI run 34138627135](https://github.com/bahayonghang/HerdrDesk/actions/runs/34138627135)，对应 commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`。更新提交的结果以 [Actions](https://github.com/bahayonghang/HerdrDesk/actions) 中对应 SHA 为准，不能沿用旧提交的通过状态。
+可复查的历史双平台记录：[CI run 34138627135](https://github.com/bahayonghang/HerdrDesk/actions/runs/34138627135)，仅覆盖 commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`。该次规模为 73 项 Python unittest、23 项 probe、22 项 C# smoke。当前 HEAD 的 hosted GitHub Actions 为 UNVERIFIED，不得沿用 run `34138627135`。
 
-本轮发现并修复 Windows 默认编码与 checkout 换行问题：元数据显式按 UTF-8 读取，fixture 固定 LF，并补充 3 项回归。Hosted Windows runner 的构建成功不等于交互桌面验收。
+2026-09-08 离线改造（适用 Claude Code / Codex / Grok Build / Kimi Code / OMP）：JSON 字符串/属性名上的孤立 UTF-16 surrogate 收口为 `malformed_terminal_record` 并锁存解析器；默认 setup 改为只读。这些改动只有本机离线证据；hosted Windows runner 未覆盖 closeout 时的工作区 HEAD。交互桌面、IME 与真实 herdr 仍未验收。
 
 ## 获取与检查
 
-Windows 本机：`just setup` 核对 Python 3.10+ 与 `global.json` 固定的 SDK 10.0.400，并把用户级 `DOTNET_ROOT` 指到 `C:\Program Files\dotnet`。离线 G0 全套与 GitHub Actions 相同：
+Windows 本机：`just setup` 核对 Python 3.10+ 与 `global.json` 固定的 SDK 10.0.400。默认只读：不调用 winget，不写 User `DOTNET_ROOT` / `DOTNET_MULTILEVEL_LOOKUP`。子进程 PATH 变更不会回到父 shell。显式 opt-in：
+
+```powershell
+pwsh -NoLogo -File scripts/Invoke-HerdDeskDotnetSetup.ps1 -InstallPinnedSdk
+pwsh -NoLogo -File scripts/Invoke-HerdDeskDotnetSetup.ps1 -PersistUserEnvironment
+```
+
+离线 G0 全套与 GitHub Actions 相同：
 
 ```powershell
 just ci
@@ -47,13 +58,20 @@ Python 3.10+，仅标准库；C# 使用 SDK 10.0.400。smoke runner 是 console 
 
 ## 开发入口
 
-[分章实施规划](docs/plan/README.md) · [活动任务](planning/backlog.json) · [验收标准](planning/acceptance.json) · [本次发布记录](docs/publication.md) · [执行约束](AGENTS.md)
+[执行约束](AGENTS.md) · [五工具派发](docs/harness-workflows.md) · [Trellis](.trellis/workflow.md) · [活动任务](planning/backlog.json) · [验收标准](planning/acceptance.json) · [HD 任务正文](tasks/CLAUDE.md) · [分章实施规划](docs/plan/README.md) · [首次导入记录](docs/publication.md)
 
-`src/` 为 C# Contracts/Core；`scripts/` 为诊断工具；`tests/` 为回归与合成 fixture；`planning/` 和 `tasks/` 是活动状态。`docs/plan/` 保存原规划的分章正文、证据和设计草案，不重复提交合并 Markdown、HTML 或旧探针等打包副本。它不是原 ZIP 的逐字节镜像。
+产品 backlog 与本轮工程改造分开记录：
 
-[首次实施记录](docs/implementation-g0.md) 保留建仓之前的历史事实；其中“未推送”“C# 未编译”不代表当前状态。最新状态见 `implementation/status.json` 和对应 CI。
+| 权威 | 路径 | 说明 |
+|---|---|---|
+| 产品 backlog / AC | `planning/`、`tasks/HD-*.md`、`planning/acceptance.json` | HD-001–036；AC01–AC48 仍为 `not_run`。离线 `just ci` 不把产品 AC 标为 `passed`。 |
+| 本轮工程改造 | `.trellis/`、`AGENTS.md`、`docs/harness-workflows.md` | 协议失败锁存、SDK 默认只读、五工具入口。HD-007 与 G0 仍按产品 backlog 记录。 |
 
-`PUBLICATION_MANIFEST.json` 是本次源文件的 SHA-256 清单，不是签名。`scripts/publish_github.py` 默认可用于离线核验，但 `--publish` 是历史新建仓库入口，**不要对已有仓库运行**。后续正常使用 branch/PR，不 force-push。
+`src/` 为 C# Contracts/Core；`scripts/` 为诊断工具；`tests/` 为回归与合成 fixture；`planning/` 和 `tasks/` 是活动产品状态。`docs/plan/` 保存原规划的分章正文、证据和设计草案，不重复提交合并 Markdown、HTML 或旧探针等打包副本。它不是原 ZIP 的逐字节镜像。
+
+[首次实施记录](docs/implementation-g0.md) 保留建仓之前的历史事实；其中“未推送”“C# 未编译”不代表当前状态。最新状态见 `implementation/status.json` 和对应 SHA 的 CI。
+
+`PUBLICATION_MANIFEST.json` 是 2026-09-07 首次导入的历史 SHA-256 清单，不是签名。默认 `python scripts/publish_github.py` 只审计该历史 bundle；工作树漂移时退出码 2（例如 `Publication file changed: .gitattributes`）是该审计的预期结果。不要刷新哈希。`--publish` 是历史空仓建仓入口，已有仓库会拒绝；不要对 `bahayonghang/HerdrDesk` 运行。后续使用 branch/PR，不 force-push。
 
 ## 安全与范围
 

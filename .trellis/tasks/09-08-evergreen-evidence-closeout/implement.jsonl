@@ -1,0 +1,4 @@
+{"file":".trellis/tasks/09-08-evergreen-harness-audit/research/audit.md","reason":"Current repository findings with evidence and failure chains"}
+{"file":".trellis/tasks/09-08-evergreen-harness-audit/research/harness-matrix.md","reason":"Official five-harness boundaries and strong versus cheaper model routing"}
+{"file":".trellis/tasks/09-08-evergreen-harness-audit/research/test-and-workflow-evidence.md","reason":"Reproducible baseline checks, CI root cause and protocol red reproduction"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Cross-language and authority boundary review; backend/frontend templates are not implementation contracts"}

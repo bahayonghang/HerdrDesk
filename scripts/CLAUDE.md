@@ -59,7 +59,7 @@ argv：`herdr [--session S] terminal session {observe|control} TARGET --cols --r
 |---|---|
 | `check_capture.py` | `analyze_capture`；`--output` 独占创建 |
 | `validate_repository.py` | UTF-8 JSON；无 `PackageReference`；36 任务无环；48 AC；baseline `api_protocol==20` 且 `default_write_capability is False` |
-| `publish_github.py` | 核验清单 SHA-256、路径不越界、login=`bahayonghang`。默认 dry-run。`--publish` 仅历史空仓建仓 |
+| `publish_github.py` | 历史 `PUBLICATION_MANIFEST.json` 审计（`kind=historical_bundle_audit`）。默认 dry-run，漂移退出码 2。日常门禁是 `just ci`。`--publish` 仅历史空仓建仓，已有仓库拒绝 |
 | `Invoke-HerdDeskPreflight.ps1` | pwsh 7 包装 `preflight`；仓库内无 Windows 执行证据 |
 
 ## 测试
