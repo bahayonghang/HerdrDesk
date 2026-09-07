@@ -23,6 +23,14 @@ Independent Windows client for herdr. **G0 实施中；尚不是可运行的桌�
 
 ## 获取与检查
 
+Windows 本机：`just setup` 核对 Python 3.10+ 与 `global.json` 固定的 SDK 10.0.400，并把用户级 `DOTNET_ROOT` 指到 `C:\Program Files\dotnet`。离线 G0 全套与 GitHub Actions 相同：
+
+```powershell
+just ci
+```
+
+分步：`just build`、`just smoke`、`just test-python`。`just` 列出全部配方。没有 `just` 时：
+
 ```powershell
 git clone https://github.com/bahayonghang/HerdrDesk.git
 cd HerdrDesk
@@ -35,7 +43,7 @@ dotnet build HerdDesk.slnx --configuration Release
 dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
 ```
 
-Python 3.10+，仅标准库；C# 使用 `global.json` 固定的 SDK 10.0.400。smoke runner 是 console 测试程序，使用 `dotnet run`，不是 xUnit/`dotnet test` 项目。
+Python 3.10+，仅标准库；C# 使用 SDK 10.0.400。smoke runner 是 console 测试程序，使用 `dotnet run`，不是 xUnit/`dotnet test` 项目。
 
 ## 开发入口
 
