@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-006",
+  "name": "windows-hd-006",
+  "title": "HD-006 安全边界与ADR定稿",
+  "description": "审核两条通信面、process ownership、默认控制策略与版本决策",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "2026-09-08 local implementation: shipped docs/adr/approved-baseline.md and approved-baseline.json (ADR-001..007 freeze plus HD-001/003/004/005 ledger). Validator scripts/herddesk_g0/adr.py; tests/python/test_adr.py. ac44_passed stays false. R5 not executed. G0/AC44 not marked passed. Status stays in_progress.",
+  "meta": {
+    "source_task": "HD-006",
+    "phase": "G0"
+  }
+}
