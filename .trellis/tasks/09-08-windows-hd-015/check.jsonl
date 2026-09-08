@@ -1,0 +1,4 @@
+{"file":"planning/acceptance.json","reason":"最终复核 AC08、AC09，并界定 AC06、AC07、AC10、AC37、AC38 的贡献"}
+{"file":"tasks/HD-015.md","reason":"核对 IME、键盘、选择与 agent 矩阵范围"}
+{"file":"docs/plan/docs/10_测试与验收.md","reason":"真实 Windows agent/IME 矩阵和 L1 至 L3 证据"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
