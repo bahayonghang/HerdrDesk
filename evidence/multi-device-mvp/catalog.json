@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd026_multi_device_mvp_catalog",
+  "simulation": true,
+  "fixture_origin": "synthetic",
+  "template": false,
+  "l1_closeout": "required; does not close product AC13, AC14, AC15, AC19, AC21, AC22, AC23, AC24, or AC26",
+  "ac13_passed": false,
+  "ac14_passed": false,
+  "ac15_passed": false,
+  "ac19_passed": false,
+  "ac21_passed": false,
+  "ac22_passed": false,
+  "ac23_passed": false,
+  "ac24_passed": false,
+  "ac26_passed": false,
+  "ac27_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "l2_live_ssh": "UNVERIFIED",
+  "live_ssh": false,
+  "live_winui": false,
+  "live_three_device": false,
+  "live_crash": false,
+  "winui_admitted": false,
+  "integration_ssh_project": false,
+  "integration_windows_project": false,
+  "third_device_id_authorized": false,
+  "two_sessions_on_one_host_are_not_three_devices": true,
+  "b_ssh_measured": false,
+  "copy_windows_fields_onto_linux": false,
+  "extrapolate_macos_arm64": false,
+  "herdr_executed": false,
+  "redaction": {
+    "host": "omitted",
+    "user": "omitted",
+    "path": "omitted",
+    "credential": "omitted",
+    "terminal_body": "omitted"
+  },
+  "missing": {
+    "isolated_windows_openssh": true,
+    "isolated_linux_herdr": true,
+    "authorized_third_device": true,
+    "live_ssh_matrix": true,
+    "winui_shell": true,
+    "supervised_gui_crash": true,
+    "network_partition": true,
+    "live_search_p95": true,
+    "measured_b_ssh": true
+  },
+  "support_matrix": "evidence/multi-device-mvp/support-matrix.json",
+  "l2_status": "implementation/hd-026-l2.json",
+  "templates": [
+    "evidence/multi-device-mvp/live-ssh.template.json",
+    "evidence/multi-device-mvp/live-winui.template.json",
+    "evidence/multi-device-mvp/live-three-device.template.json",
+    "evidence/multi-device-mvp/live-crash.template.json"
+  ],
+  "not_run_captures": [
+    "evidence/multi-device-mvp/live-ssh.not-run.json",
+    "evidence/multi-device-mvp/live-winui.not-run.json",
+    "evidence/multi-device-mvp/live-three-device.not-run.json",
+    "evidence/multi-device-mvp/live-crash.not-run.json"
+  ],
+  "execution_cards": [
+    {
+      "id": "ac21-identity-collision",
+      "title": "AC21 identity collision",
+      "ac_ids": ["AC21"],
+      "owner_children": ["HD-023"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Aggregation/WriteIntentGuard.cs",
+        "src/HerdDesk.Core/Aggregation/GlobalTargetResolver.cs",
+        "src/HerdDesk.Core/Aggregation/GlobalProjectionStore.cs",
+        "tests/Unit/HerdDesk.Core.Tests/Aggregation/PartitionIsolationTests.cs",
+        "tests/Unit/HerdDesk.Core.Tests/Aggregation/OldEpochConcurrencyTests.cs",
+        "implementation/hd-023-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_isolated_two_device_ssh_lab"
+    },
+    {
+      "id": "ac22-ac23-ssh-identity-config",
+      "title": "AC22/23 SSH identity and config",
+      "ac_ids": ["AC22", "AC23"],
+      "owner_children": ["HD-020", "HD-024"],
+      "l1_artifacts": [
+        "src/HerdDesk.Infrastructure/Ssh/OpenSshConfigResolver.cs",
+        "src/HerdDesk.Infrastructure/Ssh/HostKeyTrustStore.cs",
+        "src/HerdDesk.Infrastructure/Ssh/SshConnectionTestService.cs",
+        "src/HerdDesk.Infrastructure/Ssh/SshFailureClassifier.cs",
+        "src/HerdDesk.Contracts/SshConnectionContracts.cs",
+        "src/HerdDesk.App/Devices/EditDeviceViewModel.cs",
+        "implementation/hd-020-l2.json",
+        "implementation/hd-024-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_isolated_windows_openssh_lab"
+    },
+    {
+      "id": "ac24-transparent-stream",
+      "title": "AC24 transparent stream",
+      "ac_ids": ["AC24"],
+      "owner_children": ["HD-022"],
+      "l1_artifacts": [
+        "src/HerdDesk.Infrastructure/SshTransports/RemoteSessionTransportSet.cs",
+        "tests/Unit/HerdDesk.Infrastructure.Tests/SshTransports/RemoteSessionTransportSetTests.cs",
+        "tests/Contract/SshTransports/RemoteRpcStreamContractTests.cs",
+        "tests/Contract/SshTransports/RemoteTerminalStreamContractTests.cs",
+        "implementation/hd-022-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_live_ssh_stream_lab"
+    },
+    {
+      "id": "ac13-recovery",
+      "title": "AC13 local and remote recovery",
+      "ac_ids": ["AC13"],
+      "owner_children": ["HD-018", "HD-019", "HD-022", "HD-024"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Recovery/RecoveryPolicy.cs",
+        "src/HerdDesk.App/Recovery/RecoveryBindings.cs",
+        "tests/Unit/HerdDesk.Core.Tests/Recovery/RecoveryPolicyTests.cs",
+        "evidence/local-mvp/catalog.json",
+        "implementation/hd-018-l2.json",
+        "implementation/hd-019-l2.json",
+        "implementation/hd-022-l2.json",
+        "implementation/hd-024-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_network_partition"
+    },
+    {
+      "id": "ac14-no-replay",
+      "title": "AC14 no replay",
+      "ac_ids": ["AC14"],
+      "owner_children": ["HD-016", "HD-018", "HD-022"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/TerminalLease/ControlLeaseCoordinator.cs",
+        "src/HerdDesk.Core/InputPolicy.cs",
+        "tests/Unit/HerdDesk.Core.Tests/TerminalLease/ControlLeaseCoordinatorTests.cs",
+        "implementation/hd-016-l2.json",
+        "implementation/hd-018-l2.json",
+        "implementation/hd-022-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_input_replay_lab"
+    },
+    {
+      "id": "ac15-ownership",
+      "title": "AC15 ownership",
+      "ac_ids": ["AC15"],
+      "owner_children": ["HD-013", "HD-018", "HD-019", "HD-022"],
+      "l1_artifacts": [
+        "src/HerdDesk.App/Lifetime/AppExitCoordinator.cs",
+        "src/HerdDesk.Infrastructure/Process/OwnedChildProcess.cs",
+        "src/HerdDesk.Infrastructure/Terminal/TerminalOwnershipClassifier.cs",
+        "tests/Unit/HerdDesk.App.Tests/ActivationAndExitTests.cs",
+        "evidence/local-mvp/catalog.json",
+        "implementation/hd-013-l2.json",
+        "implementation/hd-018-l2.json",
+        "implementation/hd-019-l2.json",
+        "implementation/hd-022-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-crash.not-run.json",
+      "missing_grant": "no_authorized_supervised_gui_crash"
+    },
+    {
+      "id": "ac26-isolation-retry",
+      "title": "AC26 isolation and retry",
+      "ac_ids": ["AC26"],
+      "owner_children": ["HD-024"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/DeviceSessions/DeviceSession.cs",
+        "src/HerdDesk.Core/Recovery/RecoveryBackoff.cs",
+        "src/HerdDesk.Infrastructure/Ssh/SshFailureClassifier.cs",
+        "src/HerdDesk.Infrastructure/Ssh/SshRecoveryBlockStore.cs",
+        "src/HerdDesk.App/Devices/DeviceConnectionStatusViewModel.cs",
+        "tests/Unit/HerdDesk.Core.Tests/Recovery/RecoveryBackoffTests.cs",
+        "implementation/hd-024-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_isolated_linux_herdr"
+    },
+    {
+      "id": "ac19-search",
+      "title": "AC19 search",
+      "ac_ids": ["AC19"],
+      "owner_children": ["HD-011", "HD-023"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Aggregation/GlobalSearchIndex.cs",
+        "src/HerdDesk.App/ViewModels/GlobalSearchViewModel.cs",
+        "tests/Unit/HerdDesk.Core.Tests/Aggregation/GlobalSearchPerformanceTests.cs",
+        "tests/Unit/HerdDesk.App.Tests/SearchPaletteTests.cs",
+        "implementation/hd-011-l2.json",
+        "implementation/hd-023-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L3",
+      "live_capture": "evidence/multi-device-mvp/live-three-device.not-run.json",
+      "missing_grant": "no_authorized_third_device_id"
+    },
+    {
+      "id": "budget-platform",
+      "title": "budget and platform",
+      "ac_ids": ["AC27"],
+      "owner_children": ["HD-025", "HD-026"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Connections/ConnectionAdmissionPolicy.cs",
+        "src/HerdDesk.Core/Terminal/TerminalQueueBudget.cs",
+        "src/HerdDesk.Core/Projection/DirtySetBudget.cs",
+        "src/HerdDesk.Infrastructure/SshTransports/SshConnectionLease.cs",
+        "src/HerdDesk.App/Services/PaneVisibilityCoordinator.cs",
+        "implementation/hd-025-l2.json",
+        "implementation/hd-026-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_live_ssh_perf_lab"
+    }
+  ],
+  "live_rows": [
+    {
+      "id": "live-ssh",
+      "kind": "live_ssh",
+      "owner_children": ["HD-020", "HD-022", "HD-024", "HD-026"],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/multi-device-mvp/live-ssh.not-run.json",
+      "missing_grant": "no_authorized_isolated_windows_openssh_lab"
+    },
+    {
+      "id": "live-winui",
+      "kind": "live_winui",
+      "owner_children": ["HD-011", "HD-019", "HD-026"],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/multi-device-mvp/live-winui.not-run.json",
+      "missing_grant": "no_winui_admission"
+    },
+    {
+      "id": "live-three-device",
+      "kind": "live_three_device",
+      "owner_children": ["HD-011", "HD-023", "HD-026"],
+      "required_evidence": "L3",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/multi-device-mvp/live-three-device.not-run.json",
+      "missing_grant": "no_authorized_third_device_id"
+    },
+    {
+      "id": "live-crash",
+      "kind": "live_crash",
+      "owner_children": ["HD-013", "HD-018", "HD-019", "HD-022"],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/multi-device-mvp/live-crash.not-run.json",
+      "missing_grant": "no_authorized_supervised_gui_crash"
+    }
+  ],
+  "note": "HD-026 L1 closeout catalog. L1 paths are existing child-task artifacts. Live SSH, WinUI, three-device search, and crash stay not_run. This file is not product AC pass evidence."
+}

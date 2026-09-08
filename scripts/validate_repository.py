@@ -17,6 +17,254 @@ from herddesk_g0.licensing import validate_licensing
 from herddesk_g0.project_graph import validate_project_graph
 from herddesk_g0.renderer import validate_renderer_matrix
 
+_HD026_PASS_KEYS = (
+    'ac13_passed', 'ac14_passed', 'ac15_passed', 'ac19_passed',
+    'ac21_passed', 'ac22_passed', 'ac23_passed', 'ac24_passed',
+    'ac26_passed', 'ac27_passed', 'g0_passed',
+)
+_HD026_REQUIRED_ACS = frozenset({
+    'AC13', 'AC14', 'AC15', 'AC19', 'AC21', 'AC22', 'AC23', 'AC24', 'AC26',
+})
+_HD026_CARD_IDS = (
+    'ac21-identity-collision', 'ac22-ac23-ssh-identity-config',
+    'ac24-transparent-stream', 'ac13-recovery', 'ac14-no-replay',
+    'ac15-ownership', 'ac26-isolation-retry', 'ac19-search',
+    'budget-platform',
+)
+_HD026_CARD_ACS = {
+    'ac21-identity-collision': ('AC21',),
+    'ac22-ac23-ssh-identity-config': ('AC22', 'AC23'),
+    'ac24-transparent-stream': ('AC24',),
+    'ac13-recovery': ('AC13',),
+    'ac14-no-replay': ('AC14',),
+    'ac15-ownership': ('AC15',),
+    'ac26-isolation-retry': ('AC26',),
+    'ac19-search': ('AC19',),
+    'budget-platform': ('AC27',),
+}
+_HD026_CARD_OWNERS = {
+    'ac21-identity-collision': ['HD-023'],
+    'ac22-ac23-ssh-identity-config': ['HD-020', 'HD-024'],
+    'ac24-transparent-stream': ['HD-022'],
+    'ac13-recovery': ['HD-018', 'HD-019', 'HD-022', 'HD-024'],
+    'ac14-no-replay': ['HD-016', 'HD-018', 'HD-022'],
+    'ac15-ownership': ['HD-013', 'HD-018', 'HD-019', 'HD-022'],
+    'ac26-isolation-retry': ['HD-024'],
+    'ac19-search': ['HD-011', 'HD-023'],
+    'budget-platform': ['HD-025', 'HD-026'],
+}
+_HD026_LIVE_IDS = ('live-ssh', 'live-winui', 'live-three-device', 'live-crash')
+_HD026_LIVE_GRANTS = {
+    'live-ssh': 'no_authorized_isolated_windows_openssh_lab',
+    'live-winui': 'no_winui_admission',
+    'live-three-device': 'no_authorized_third_device_id',
+    'live-crash': 'no_authorized_supervised_gui_crash',
+}
+_HD026_SUCCESS = frozenset({'passed', 'verified', 'compatible', 'success', 'ok', 'pass'})
+_HD026_SUPPORT_PASS = frozenset({'supported', 'stable', 'passed', 'compatible', 'success'})
+_HD026_TEMPLATES = (
+    'evidence/multi-device-mvp/live-ssh.template.json',
+    'evidence/multi-device-mvp/live-winui.template.json',
+    'evidence/multi-device-mvp/live-three-device.template.json',
+    'evidence/multi-device-mvp/live-crash.template.json',
+)
+_HD026_NOT_RUN = (
+    'evidence/multi-device-mvp/live-ssh.not-run.json',
+    'evidence/multi-device-mvp/live-winui.not-run.json',
+    'evidence/multi-device-mvp/live-three-device.not-run.json',
+    'evidence/multi-device-mvp/live-crash.not-run.json',
+)
+
+
+def _hd026_token(value):
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+def _is_hd026_success(value) -> bool:
+    if value is True:
+        return True
+    return _hd026_token(value) in _HD026_SUCCESS
+
+
+def _reject_hd026_pass_claims(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key.endswith('_passed') and value is not False:
+                raise AssertionError(f'{key} must stay false')
+            if key == 'phase_gate' and _hd026_token(value) in {'passed', 'pass', 'ok'}:
+                raise AssertionError('phase_gate must stay not_passed')
+            if key == 'l2_live_ssh' and value != 'UNVERIFIED':
+                raise AssertionError('l2_live_ssh must stay UNVERIFIED')
+            if key in {'live_result', 'result', 'live_status', 'status'} and _is_hd026_success(value):
+                raise AssertionError(f'{key} must stay not_run or UNVERIFIED')
+            if key == 'support' and _hd026_token(value) in _HD026_SUPPORT_PASS:
+                raise AssertionError('support must not be a pass token')
+            if key == 'compatible' and value is True:
+                raise AssertionError('compatible must stay false')
+            if key in {
+                'live_ssh', 'live_winui', 'live_three_device', 'live_crash',
+                'winui_admitted', 'herdr_executed',
+            } and value is True:
+                raise AssertionError(f'{key} must stay false')
+            _reject_hd026_pass_claims(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd026_pass_claims(item)
+
+
+def _check_hd026_closeout(hd026: dict, mvp: dict, matrix: dict) -> None:
+    assert hd026.get('document_kind') == 'hd026_l2_status'
+    assert mvp.get('document_kind') == 'hd026_multi_device_mvp_catalog'
+    assert matrix.get('document_kind') == 'hd026_support_matrix'
+    assert hd026.get('l2_live_ssh') == 'UNVERIFIED'
+    assert mvp.get('l2_live_ssh') == 'UNVERIFIED'
+    for doc in (hd026, mvp, matrix):
+        _reject_hd026_pass_claims(doc)
+        for key in _HD026_PASS_KEYS:
+            assert doc.get(key) is False, key
+        assert doc.get('phase_gate') != 'passed'
+        if 'winui_admitted' in doc:
+            assert doc.get('winui_admitted') is False
+        if 'live_ssh' in doc:
+            assert doc.get('live_ssh') is False
+    for key in ('live_winui', 'live_three_device', 'live_crash',
+                'integration_ssh_project', 'integration_windows_project',
+                'third_device_id_authorized', 'b_ssh_measured',
+                'copy_windows_fields_onto_linux', 'extrapolate_macos_arm64'):
+        assert hd026.get(key) is False
+        if key in mvp:
+            assert mvp.get(key) is False
+    assert hd026.get('two_sessions_on_one_host_are_not_three_devices') is True
+    assert mvp.get('two_sessions_on_one_host_are_not_three_devices') is True
+    assert matrix.get('two_sessions_on_one_host_are_not_three_devices') is True
+    missing = hd026.get('missing') or {}
+    for key in ('isolated_windows_openssh', 'isolated_linux_herdr',
+                'authorized_third_device', 'live_ssh_matrix', 'winui_shell',
+                'supervised_gui_crash', 'network_partition', 'live_search_p95',
+                'measured_b_ssh'):
+        assert missing.get(key) is True
+    assert hd026.get('catalog') == 'evidence/multi-device-mvp/catalog.json'
+    assert hd026.get('support_matrix') == 'evidence/multi-device-mvp/support-matrix.json'
+    assert mvp.get('support_matrix') == 'evidence/multi-device-mvp/support-matrix.json'
+    assert mvp.get('l2_status') == 'implementation/hd-026-l2.json'
+    assert hd026.get('herdr_executed') is False
+    assert mvp.get('herdr_executed') is False
+    cards = {item['id']: item for item in mvp['execution_cards']}
+    assert tuple(cards) == _HD026_CARD_IDS
+    seen_acs = set()
+    for card in mvp['execution_cards']:
+        card_id = card['id']
+        assert card['live_status'] == 'UNVERIFIED'
+        assert card['live_result'] == 'not_run'
+        assert card['l1_status'] == 'shipped'
+        assert card['l1_status'] != 'passed'
+        assert card['missing_grant']
+        assert card['owner_children'] == _HD026_CARD_OWNERS[card_id]
+        assert tuple(card['ac_ids']) == _HD026_CARD_ACS[card_id]
+        seen_acs.update(card['ac_ids'])
+        for rel in card['l1_artifacts']:
+            assert (ROOT / rel).is_file(), rel
+        capture = ROOT / card['live_capture']
+        assert capture.is_file()
+        loaded = json.loads(capture.read_text(encoding='utf-8'))
+        _reject_hd026_pass_claims(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        assert not _is_hd026_success(loaded.get('result'))
+    assert _HD026_REQUIRED_ACS <= seen_acs
+    rows = {item['id']: item for item in mvp['live_rows']}
+    assert tuple(rows) == _HD026_LIVE_IDS
+    for row in mvp['live_rows']:
+        assert row['status'] == 'UNVERIFIED'
+        assert row['result'] == 'not_run'
+        assert row.get('template') is False
+        assert row.get('owner_children')
+        assert row['missing_grant'] == _HD026_LIVE_GRANTS[row['id']]
+        evidence = ROOT / row['evidence_path']
+        assert evidence.is_file()
+        loaded = json.loads(evidence.read_text(encoding='utf-8'))
+        _reject_hd026_pass_claims(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+    for rel in _HD026_TEMPLATES:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd026_pass_claims(doc)
+        assert doc.get('template') is True
+        assert doc.get('document_kind') == 'template'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('captured_at_utc') is None
+        assert not _is_hd026_success(doc.get('result'))
+        assert doc.get('herdr_executed') is False
+        assert 'stdout' not in doc and 'stderr' not in doc
+    for rel in _HD026_NOT_RUN:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd026_pass_claims(doc)
+        assert doc.get('template') is False
+        assert doc.get('result') == 'not_run'
+        assert doc.get('herdr_executed') is False
+        assert doc.get('evidence_level') == 'not_run'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert 'stdout' not in doc and 'stderr' not in doc
+        assert 'password' not in json.dumps(doc).lower()
+    promised = {item['id'] for item in matrix['promised_range']}
+    assert promised == {'windows-11-x64-client', 'linux-x64-remote'}
+    by_platform = {item['id']: item for item in matrix['platforms']}
+    for key in ('windows-11-x64-client', 'linux-x64-remote'):
+        row = by_platform[key]
+        assert row['promise'] == 'promised'
+        assert row['live_status'] == 'not_run'
+        assert row['live_result'] == 'not_run'
+        assert row['compatible'] is False
+        assert row['support'] == 'promised_not_run'
+    macos = by_platform['macos-x64']
+    assert macos['support'] == 'unsupported'
+    assert macos['live_status'] == 'not_run'
+    assert macos['compatible'] is False
+    for key in ('macos-arm64', 'linux-arm64', 'windows-arm64'):
+        row = by_platform[key]
+        assert row['support'] in ('unsupported', 'experimental')
+        assert row['support'] not in ('supported', 'stable', 'promised')
+        assert row['live_status'] == 'not_run'
+        assert row['compatible'] is False
+    assert by_platform['windows-11-x64-client']['missing_grant'] != \
+        by_platform['linux-x64-remote']['missing_grant']
+    auth_ids = [item['id'] for item in matrix['auth_combos']]
+    assert 'alias' in auth_ids and 'proxyjump' in auth_ids
+    assert 'password_argv_stdin' in auth_ids and 'mfa_browser' in auth_ids
+    for combo in matrix['auth_combos']:
+        assert combo['live_status'] == 'not_run'
+        assert combo['live_result'] == 'not_run'
+        if combo['id'] in {
+            'password_argv_stdin', 'keyboard_interactive', 'hidden_passphrase',
+            'mfa_browser', 'tailscale_ssh', 'pkcs11_security_key',
+        }:
+            assert combo['support'] == 'unsupported'
+    cell_keys = {(item['platform'], item['auth']) for item in matrix['cells']}
+    for platform in ('windows-11-x64-client', 'linux-x64-remote'):
+        for auth in auth_ids:
+            assert (platform, auth) in cell_keys
+    for cell in matrix['cells']:
+        assert cell['live_status'] == 'not_run'
+        assert cell['live_result'] == 'not_run'
+        assert cell['compatible'] is False
+        assert not _is_hd026_success(cell['live_result'])
+    assert matrix.get('copy_windows_fields_onto_linux') is False
+    assert matrix.get('extrapolate_macos_arm64') is False
+    assert matrix.get('compatible_by_default') == []
+    assert mvp.get('third_device_id_authorized') is False
+    search = cards['ac19-search']
+    assert search['live_result'] == 'not_run'
+    assert search['missing_grant'] == 'no_authorized_third_device_id'
+    assert rows['live-three-device']['missing_grant'] == 'no_authorized_third_device_id'
+
 
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
@@ -43,7 +291,10 @@ def validate() -> dict:
     hd023=json.loads((ROOT/'implementation/hd-023-l2.json').read_text(encoding='utf-8'))
     hd024=json.loads((ROOT/'implementation/hd-024-l2.json').read_text(encoding='utf-8'))
     hd025=json.loads((ROOT/'implementation/hd-025-l2.json').read_text(encoding='utf-8'))
+    hd026=json.loads((ROOT/'implementation/hd-026-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
+    mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
+    matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -186,6 +437,7 @@ def validate() -> dict:
     assert hd025.get('integration_ssh_project') is not True
     assert hd025.get('integration_windows_project') is not True
     assert hd025.get('phase_gate')!='passed'
+    _check_hd026_closeout(hd026, mvp, matrix)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

@@ -1,0 +1,23 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "hd026-live-ssh-2026-09-09-not-run",
+  "kind": "live_ssh_matrix",
+  "captured_at_utc": "2026-09-09T12:00:00Z",
+  "operator_scope": "no_authorized_isolated_windows_openssh_or_linux_herdr",
+  "host_fingerprint_redacted": null,
+  "command_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": "not_run",
+  "herdr_executed": false,
+  "live_ssh": false,
+  "limitations": [
+    "Independent live SSH was not authorized in this dispatch.",
+    "This record does not reuse Windows runtime hashes as Linux proof.",
+    "herdr was not executed on a remote host.",
+    "Argv and logs in a later capture must omit credentials."
+  ]
+}

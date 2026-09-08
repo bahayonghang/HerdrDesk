@@ -1,0 +1,26 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd026-live-crash-template",
+  "kind": "supervised_gui_crash",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_supervised_gui_crash_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "supervised crash sampler outside the GUI process"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "live_crash": false,
+  "winui_admitted": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "A GUI self-report on exit is not crash evidence.",
+    "Kill only owned direct child process handles. Do not stop a user herdr daemon.",
+    "Do not store host, user, path, credential, or terminal body."
+  ]
+}

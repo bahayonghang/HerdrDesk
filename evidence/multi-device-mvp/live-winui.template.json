@@ -1,0 +1,24 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd026-live-winui-template",
+  "kind": "live_winui",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_winui_product_ui_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "HerdDesk WinUI shell not admitted"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "winui_admitted": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "WinUI App.xaml is not admitted. Do not treat a console host stub as a GUI run.",
+    "Do not store host, user, path, credential, or terminal body."
+  ]
+}

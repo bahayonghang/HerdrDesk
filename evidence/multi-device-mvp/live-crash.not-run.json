@@ -1,0 +1,23 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "hd026-live-crash-2026-09-09-not-run",
+  "kind": "supervised_gui_crash",
+  "captured_at_utc": "2026-09-09T12:00:00Z",
+  "operator_scope": "no_authorized_supervised_gui_crash",
+  "host_fingerprint_redacted": null,
+  "command_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": "not_run",
+  "herdr_executed": false,
+  "live_crash": false,
+  "winui_admitted": false,
+  "limitations": [
+    "Supervised GUI crash was not authorized.",
+    "Do not stop a user herdr daemon or walk an unknown process tree.",
+    "HD-013/018/019 L1 ownership ledgers are not crash evidence."
+  ]
+}

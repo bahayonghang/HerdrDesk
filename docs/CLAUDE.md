@@ -17,6 +17,7 @@
 | [licensing/](licensing/README.md) | 机器可读 `register.json` 与候选准入模板。`admission` 与 technical/security 分栏。模板不是 approved。 |
 | [source-verification.md](source-verification.md) | 本轮重读上游 blob：`client/mod.rs`、`ipc.rs`、`render_stream.rs`、schema header。限额是 HerdDesk 客户端策略。 |
 | [plan/](plan/CLAUDE.md) | 12 专题档案。 |
+| [testing/multi-device-mvp.md](testing/multi-device-mvp.md) | HD-026 L1 收口说明。各 AC 为 `not_run`。不是 live SSH/WinUI 通过。 |
 | [spikes/](spikes/CLAUDE.md) | HD-005 renderer 决策。WebView2/xterm 基线；native 不晋级。不是 AC08/AC09 通过。 |
 
 ## 约束

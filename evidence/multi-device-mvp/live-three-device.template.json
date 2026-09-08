@@ -1,0 +1,27 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd026-live-three-device-template",
+  "kind": "live_three_device_search",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_three_independent_device_ids_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "global search over 100 projections on three DeviceId values"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "live_three_device": false,
+  "third_device_id_authorized": false,
+  "two_sessions_on_one_host_are_not_three_devices": true,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "Two named sessions on one host are not three devices.",
+    "In-memory HD-023 search is not live p95.",
+    "Do not store host, user, path, credential, or terminal body."
+  ]
+}
