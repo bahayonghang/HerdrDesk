@@ -6,7 +6,7 @@
 
 ## 职责
 
-用 `dotnet run` 执行解析、输入策略、endpoint resolver 与 terminal lease mapper 断言。不启动 WinUI，不连接 herdr。计数以本次运行为准。
+用 `dotnet run` 执行解析、输入策略、endpoint resolver、terminal lease mapper 与 renderer L1 标本断言。不启动 WinUI，不连接 herdr。计数以本次运行为准。
 
 ## 入口
 
@@ -27,6 +27,8 @@ dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no
 Endpoint：加载 `tests/fixtures/endpoint-cases.json` 七行模拟矩阵；Default 不猜 `%APPDATA%` 或常规 pipe 名；Named 不回退 default；拒绝 UNC；`PaneKey` / 标题 / agent 类型不是 endpoint 身份；其他 DeviceId 的映射忽略；fixture 不得当作 runtime pass。合成数据，不是 Windows 真机连接。
 
 Lease：加载 `tests/fixtures/lease-cases.json` 十四行模拟矩阵；首帧/进程/焦点/stdin 写入不置 `ControlVerified`；observe 不能发送输入；EOF/`terminal.closed` 不是 pane 退出；虚构 `terminal.granted` 不能授权；resize 在 EOF 或 pane 死亡后不能保持 verified；合成 fixture 不是 AC05 runtime pass。
+
+Renderer：加载 `tests/fixtures/renderer-cases.json` 十八行 L1 矩阵；跨块 UTF-8 无 U+FFFD/重复；旧 epoch 拒绝；seq 不跨 epoch 比较；预编辑不发送；observe/`EmulatorReply` 拒绝；有界 FIFO 不丢 delta，ack 对齐最旧帧；parse-consumed 不是呈现；web 未知 type/超长/错 epoch 拒绝。合成标本不是 AC08/AC09 或 IME 真机通过。
 
 ## 依赖
 

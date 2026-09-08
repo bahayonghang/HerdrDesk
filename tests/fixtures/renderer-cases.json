@@ -1,0 +1,371 @@
+{
+  "kind": "synthetic_renderer_l1_matrix",
+  "simulation": true,
+  "runtime_pass": false,
+  "windows_verified": false,
+  "ac08_passed": false,
+  "ac09_passed": false,
+  "winui_executed": false,
+  "webview2_executed": false,
+  "ime_executed": false,
+  "native_candidate_run": false,
+  "herdr_executed": false,
+  "all_live_checks": "blocked",
+  "blocked_category": "no_authorized_winui_interactive_desktop_or_ime_grant",
+  "fixture_origin": "synthetic",
+  "note": "Eighteen-row renderer L1 host specimen. Not WinUI, WebView2, IME, or native-renderer runtime proof. Not AC08/AC09 pass.",
+  "cases": [
+    {
+      "id": "RD01",
+      "scenario": "utf8_cjk_split",
+      "kind": "utf8_chunks",
+      "simulation": true,
+      "chunks_hex": ["e4", "bda0e5a5bd"],
+      "expect": {
+        "text": "你好",
+        "replacement": false,
+        "duplicated": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "CJK code point split across chunks. Decoder state, not per-chunk GetString."
+    },
+    {
+      "id": "RD02",
+      "scenario": "utf8_emoji_split",
+      "kind": "utf8_chunks",
+      "simulation": true,
+      "chunks_hex": ["f0", "9f9880"],
+      "expect": {
+        "text": "😀",
+        "replacement": false,
+        "duplicated": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Four-byte emoji split after the lead byte."
+    },
+    {
+      "id": "RD03",
+      "scenario": "utf8_combining_split",
+      "kind": "utf8_chunks",
+      "simulation": true,
+      "chunks_hex": ["65", "cc81"],
+      "expect": {
+        "text": "e\u0301",
+        "replacement": false,
+        "duplicated": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Combining acute split from the base letter."
+    },
+    {
+      "id": "RD04",
+      "scenario": "utf8_no_replacement_at_boundary",
+      "kind": "utf8_boundary",
+      "simulation": true,
+      "chunks_hex": ["e4"],
+      "expect": {
+        "text": "",
+        "replacement": false,
+        "held_incomplete": true
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Incomplete lead byte must not emit U+FFFD."
+    },
+    {
+      "id": "RD05",
+      "scenario": "control_bytes_not_normalized",
+      "kind": "raw_bytes",
+      "simulation": true,
+      "chunks_hex": ["03", "09", "1b", "1b5b41"],
+      "expect": {
+        "bytes_hex": "03091b1b5b41",
+        "text_normalized": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Ctrl+C, Tab, Esc, and CSI up stay raw bytes."
+    },
+    {
+      "id": "RD06",
+      "scenario": "old_epoch_rejected",
+      "kind": "epoch_gate",
+      "simulation": true,
+      "steps": [
+        {"action": "start", "epoch": 2},
+        {"action": "accept", "epoch": 2, "seq": 1, "full": true},
+        {"action": "accept", "epoch": 1, "seq": 2, "full": false}
+      ],
+      "expect": {
+        "code": "stale_epoch",
+        "accepted": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "A previous epoch is rejected. Seq is not compared across epochs."
+    },
+    {
+      "id": "RD07",
+      "scenario": "seq_not_compared_across_epochs",
+      "kind": "epoch_gate",
+      "simulation": true,
+      "steps": [
+        {"action": "start", "epoch": 1},
+        {"action": "accept", "epoch": 1, "seq": 1, "full": true},
+        {"action": "reconnect", "epoch": 2},
+        {"action": "accept", "epoch": 2, "seq": 1, "full": true}
+      ],
+      "expect": {
+        "code": null,
+        "accepted": true,
+        "seq": 1
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Reconnect uses a new parser. Seq 1 is valid again on epoch 2."
+    },
+    {
+      "id": "RD08",
+      "scenario": "preedit_not_sent",
+      "kind": "composition",
+      "simulation": true,
+      "ime_event": "preedit_update",
+      "origin": "committed_text",
+      "access": "controlling",
+      "control_verified": true,
+      "expect": {
+        "allowed": false,
+        "code": "preedit_not_sent"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Preedit never becomes RendererInput."
+    },
+    {
+      "id": "RD09",
+      "scenario": "commit_once_committed_text",
+      "kind": "composition",
+      "simulation": true,
+      "ime_event": "commit",
+      "origin": "committed_text",
+      "access": "controlling",
+      "control_verified": true,
+      "payload_bytes": 6,
+      "expect": {
+        "allowed": true,
+        "code": "allowed"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Commit is CommittedText and still goes through InputPolicy."
+    },
+    {
+      "id": "RD10",
+      "scenario": "observe_user_key_denied",
+      "kind": "input_policy",
+      "simulation": true,
+      "origin": "user_key",
+      "access": "observing",
+      "control_verified": false,
+      "expect": {
+        "allowed": false,
+        "code": "control_not_verified"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Observe/read-only must not forward UserKey."
+    },
+    {
+      "id": "RD11",
+      "scenario": "observe_emulator_reply_denied",
+      "kind": "input_policy",
+      "simulation": true,
+      "origin": "emulator_reply",
+      "access": "controlling",
+      "control_verified": true,
+      "expect": {
+        "allowed": false,
+        "code": "input_origin_denied"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "EmulatorReply is never a silent grant, even with verified control."
+    },
+    {
+      "id": "RD12",
+      "scenario": "queue_bounded",
+      "kind": "queue",
+      "simulation": true,
+      "epoch": 1,
+      "max_bytes": 8,
+      "max_frames": 2,
+      "steps": [
+        {"action": "enqueue", "bytes": 4},
+        {"action": "enqueue", "bytes": 5}
+      ],
+      "expect": {
+        "accepted": false,
+        "state": "backpressured",
+        "code": "queue_bytes_limit",
+        "parse_consumed_is_presented": false,
+        "requires_full_reset": false,
+        "in_flight_bytes": 4
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Over-budget enqueue is rejected. The queued delta is not dropped."
+    },
+    {
+      "id": "RD13",
+      "scenario": "overflow_requires_full_reset",
+      "kind": "queue",
+      "simulation": true,
+      "epoch": 1,
+      "max_bytes": 8,
+      "max_frames": 2,
+      "steps": [
+        {"action": "classify_drop"}
+      ],
+      "expect": {
+        "accepted": false,
+        "state": "faulted",
+        "code": "delta_drop_forbidden",
+        "parse_consumed_is_presented": false,
+        "requires_full_reset": true
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Dropping a delta to stay Ready is forbidden. Recovery is a full reset."
+    },
+    {
+      "id": "RD14",
+      "scenario": "parse_consumed_not_presented",
+      "kind": "queue",
+      "simulation": true,
+      "epoch": 1,
+      "max_bytes": 8,
+      "max_frames": 2,
+      "steps": [
+        {"action": "enqueue", "bytes": 4},
+        {"action": "ack", "bytes": 4}
+      ],
+      "expect": {
+        "accepted": true,
+        "code": "parse_consumed",
+        "parse_consumed_is_presented": false,
+        "requires_full_reset": false,
+        "in_flight_bytes": 0
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Parse-consumed is not GPU presentation."
+    },
+    {
+      "id": "RD15",
+      "scenario": "stale_ack_does_not_release",
+      "kind": "queue",
+      "simulation": true,
+      "epoch": 1,
+      "max_bytes": 8,
+      "max_frames": 2,
+      "steps": [
+        {"action": "enqueue", "bytes": 4, "epoch": 1},
+        {"action": "ack", "bytes": 4, "epoch": 2}
+      ],
+      "expect": {
+        "accepted": false,
+        "code": "stale_epoch",
+        "parse_consumed_is_presented": false,
+        "requires_full_reset": false,
+        "in_flight_bytes": 4
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "An old-epoch parse ack must not release the new window quota."
+    },
+    {
+      "id": "RD16",
+      "scenario": "web_unknown_type",
+      "kind": "web_message",
+      "simulation": true,
+      "message": {
+        "type": "host.exec",
+        "direction": "renderer_to_host",
+        "version": 1,
+        "epoch": 1,
+        "pane": "p1",
+        "payload_bytes": 1
+      },
+      "context": {
+        "epoch": 1,
+        "pane": "p1",
+        "access": "controlling",
+        "control_verified": true
+      },
+      "expect": {
+        "allowed": false,
+        "code": "unknown_web_message_type"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Unknown host-exec messages are not an allowlisted type."
+    },
+    {
+      "id": "RD17",
+      "scenario": "web_oversize",
+      "kind": "web_message",
+      "simulation": true,
+      "message": {
+        "type": "input.user_key",
+        "direction": "renderer_to_host",
+        "version": 1,
+        "epoch": 1,
+        "pane": "p1",
+        "payload_bytes": 65537
+      },
+      "context": {
+        "epoch": 1,
+        "pane": "p1",
+        "access": "controlling",
+        "control_verified": true
+      },
+      "expect": {
+        "allowed": false,
+        "code": "web_message_bytes_limit"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Oversize web payloads are rejected before InputPolicy."
+    },
+    {
+      "id": "RD18",
+      "scenario": "web_wrong_epoch",
+      "kind": "web_message",
+      "simulation": true,
+      "message": {
+        "type": "input.committed_text",
+        "direction": "renderer_to_host",
+        "version": 1,
+        "epoch": 2,
+        "pane": "p1",
+        "payload_bytes": 3
+      },
+      "context": {
+        "epoch": 1,
+        "pane": "p1",
+        "access": "controlling",
+        "control_verified": true
+      },
+      "expect": {
+        "allowed": false,
+        "code": "stale_epoch"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "A renderer message with the wrong epoch is rejected."
+    }
+  ]
+}

@@ -43,11 +43,11 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 
 | Suite | How to run | Scope |
 |---|---|---|
-| Python | `python -m unittest discover -s tests/python -v` | Protocol, probe gates, setup stubs, repository, evidence, licensing, publish synthetic |
+| Python | `python -m unittest discover -s tests/python -v` | Protocol, probe gates, setup stubs, repository, evidence, licensing, endpoint, lease, renderer, publish synthetic |
 | Probe selftest | `python scripts/probe_herdr.py selftest` | Synthetic; `herdr_executed=false` |
 | Capture | `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson` | Offline NDJSON |
-| Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, UTF-8; calls `herddesk_g0.evidence`, `herddesk_g0.endpoint`, `herddesk_g0.lease`, and `herddesk_g0.licensing`; `windows_verified`, `ac02_passed`, `ac03_passed`, and `ac05_passed` stay false |
-| C# smoke | `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build` | Parser, `InputPolicy`, `EndpointResolver`, and `TerminalLeaseProbe`; not `dotnet test` |
+| Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, UTF-8; calls `herddesk_g0.evidence`, `herddesk_g0.endpoint`, `herddesk_g0.lease`, `herddesk_g0.renderer`, and `herddesk_g0.licensing`; `windows_verified`, `ac02_passed`, `ac03_passed`, `ac05_passed`, `ac08_passed`, and `ac09_passed` stay false |
+| C# smoke | `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build` | Parser, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, and renderer L1 specimens; not `dotnet test` |
 
 `just ci` runs the full offline set. Counts in `implementation/status.json` may lag; use the current command output.
 
@@ -58,6 +58,8 @@ Licensing tests in `tests/python/test_licensing.py` must call `herddesk_g0.licen
 Endpoint tests in `tests/python/test_endpoint.py` must call `herddesk_g0.endpoint` and load `tests/fixtures/endpoint-cases.json`. Default must not guess `%APPDATA%` or conventional pipe names. Named must not fall back to default. UNC must be rejected. PaneKey is not an endpoint key. A mapping for another DeviceId is ignored. A synthetic fixture is not Windows runtime proof and does not pass AC03.
 
 Lease tests in `tests/python/test_lease.py` must call `herddesk_g0.lease` and load `tests/fixtures/lease-cases.json`. ControlVerified must not be set from first frame, process alive, or window focus. Observe must not send input. EOF must not be classified as pane exit. A fictional Granted event must not grant. A synthetic fixture is not observe/control runtime proof and does not pass AC05.
+
+Renderer tests in `tests/python/test_renderer.py` must call `herddesk_g0.renderer` and load `tests/fixtures/renderer-cases.json`. UTF-8 splits must not emit U+FFFD or duplicate text. Old epochs must be rejected. Seq must not be compared across epochs. Preedit must not be sent. Observe must not forward UserKey. EmulatorReply must be denied. The queue must be a bounded FIFO; ack must match the oldest frame; a lower-epoch reset is stale; the queue must not drop deltas to stay Ready. Parse-consumed is not presentation. Unknown, oversize, and wrong-epoch web messages must be rejected. A synthetic fixture is not WinUI/IME proof and does not pass AC08 or AC09.
 
 Protocol regressions for unpaired surrogates must assert the exact C# code `malformed_terminal_record`, then `terminal_stream_not_active` on the next valid frame, and must keep a valid surrogate pair accepted. Python uses the same fixture names.
 

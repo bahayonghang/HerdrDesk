@@ -18,7 +18,7 @@ Defined in `src/HerdDesk.Core/TerminalFrameParser.cs`. Codes include:
 
 `terminal_stream_not_active`, `line_bytes_limit`, `object_required`, `duplicate_json_key`, `unknown_terminal_type`, `unsupported_encoding`, `invalid_sequence`, `sequence_gap_or_replay`, `invalid_frame_dimensions`, `boolean_full_required`, `initial_full_frame_required`, `decoded_bytes_limit`, `noncanonical_base64`, `invalid_closed_reason`, `string_field_required`, `malformed_terminal_record`.
 
-`InputPolicy.Evaluate` returns `InputDecision` with `Allowed` and `Code`. It does not throw for a denied grant. Deny codes: `invalid_identity`, `wrong_pane`, `stale_epoch`, `control_not_verified`, `input_origin_denied`, `input_bytes_limit`. Allow code: `allowed`.
+`InputPolicy.Evaluate` returns `InputDecision` with `Allowed` and `Code`. It does not throw for a denied grant. Deny codes: `invalid_identity`, `wrong_pane`, `stale_epoch`, `control_not_verified`, `input_origin_denied`, `input_bytes_limit`. Allow code: `allowed`. `CompositionPolicy` adds `preedit_not_sent`, `ime_owns_shortcut`, `commit_origin_required`. `WebMessagePolicy` adds `unknown_web_message_type`, `unsupported_web_message_version`, `web_message_bytes_limit`. `RendererEpochGate` throws `stale_epoch` or `terminal_stream_not_active`. `RendererByteWindow` uses `queue_bytes_limit`, `queue_ack_mismatch`, and `delta_drop_forbidden`; parse-consumed is never presentation. Ack must match the oldest queued frame size. `Reset` rejects a lower epoch.
 
 `EndpointResolver.Resolve` returns `EndpointResolutionResult`. It does not throw for a mapping failure and does not connect to a pipe. Failure codes: `invalid_identity`, `invalid_preference`, `explicit_configuration_required`, `named_session_unmapped`, `endpoint_not_found`, `permission_denied`, `cross_user_denied`, `remote_unc_rejected`, `unicode_encoding_error`, `ambiguous_mapping`. Codes and `DiagnosticId` omit paths, `%APPDATA%`, and unpaired surrogates.
 
@@ -32,7 +32,11 @@ Python `herddesk_g0.endpoint.EndpointError` uses stable codes (`evidence_level_p
 
 Python `herddesk_g0.lease.LeaseError` uses stable codes (`evidence_level_promotion`, `ac05_claimed_passed`, `fictional_granted_required`, `control_verified_from_frame_process_focus`, …). `map_lease` returns a result dict and does not call herdr.
 
-C# and Python need not share every internal code string. They must share reject/accept intent on `tests/fixtures/protocol-edge-cases.json`, `tests/fixtures/endpoint-cases.json`, and `tests/fixtures/lease-cases.json`.
+`CompositionPolicy.Evaluate` and `WebMessagePolicy.Evaluate` return `InputDecision`. Deny codes include `preedit_not_sent`, `ime_owns_shortcut`, `commit_origin_required`, `unknown_web_message_type`, `unsupported_web_message_version`, `web_message_bytes_limit`, plus `InputPolicy` codes. `RendererByteWindow` returns `RendererQueueDecision` with `ParseConsumedIsPresented` always false. Overflow codes include `queue_bytes_limit` and `delta_drop_forbidden`. Ack mismatch is `queue_ack_mismatch`. A lower-epoch `reset` is `stale_epoch`.
+
+Python `herddesk_g0.renderer.RendererError` uses stable codes (`evidence_level_promotion`, `ac08_ac09_claimed_passed`, `missing_matrix_row`, …). L1 helpers do not launch WinUI or WebView2.
+
+C# and Python need not share every internal code string. They must share reject/accept intent on `tests/fixtures/protocol-edge-cases.json`, `tests/fixtures/endpoint-cases.json`, `tests/fixtures/lease-cases.json`, and `tests/fixtures/renderer-cases.json`.
 
 ---
 

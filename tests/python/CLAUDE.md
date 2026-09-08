@@ -6,7 +6,7 @@
 
 ## 职责
 
-回归 Python 协议、探针安全门、发布清单、仓库可移植性、许可台账、endpoint 矩阵、terminal lease 映射。不执行 herdr，不启动 GUI。
+回归 Python 协议、探针安全门、发布清单、仓库可移植性、许可台账、endpoint 矩阵、terminal lease 映射、renderer L1 矩阵。不执行 herdr，不启动 GUI。
 
 ## 入口
 
@@ -30,10 +30,11 @@ python -m unittest discover -s tests/python -v
 | `test_licensing.py` | `LicensingRegisterTests` | 驱动 `herddesk_g0.licensing` 与 `docs/licensing` 真实台账/模板；拒绝 pending/blocked 当 approved、herdrm 拷贝宣称、公开可见当授权；`ac02_passed` 与 `windows_verified` 恒为 false |
 | `test_endpoint.py` | `EndpointMatrixTests` | 驱动 `herddesk_g0.endpoint` 与 `tests/fixtures/endpoint-cases.json`；七行模拟矩阵；拒绝 APPDATA 猜测、常规 pipe 名猜测、named 回退、UNC、PaneKey 当身份、跨 DeviceId 映射、fixture 当 runtime/AC03 通过；`windows_verified` 与 `ac03_passed` 恒为 false |
 | `test_lease.py` | `TerminalLeaseTests` | 驱动 `herddesk_g0.lease` 与 `tests/fixtures/lease-cases.json`；十四行模拟矩阵；拒绝首帧/进程/焦点置 ControlVerified、observe 发送输入、EOF 当 pane 退出、虚构 Granted、fixture 当 runtime/AC05 通过；`windows_verified` 与 `ac05_passed` 恒为 false |
+| `test_renderer.py` | `RendererMatrixTests` | 驱动 `herddesk_g0.renderer` 与 `tests/fixtures/renderer-cases.json`；十八行 L1 矩阵；拒绝 AC08/AC09 宣称、IME 已执行宣称、L3 假通过；`windows_verified` 与 `ac08_passed`/`ac09_passed` 恒为 false |
 
 ## 依赖
 
-- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`endpoint.py`、`lease.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
+- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`endpoint.py`、`lease.py`、`renderer.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
 - 数据：[../fixtures](../fixtures/CLAUDE.md)。
 
 与 C# smoke、probe selftest 分开报告，不合并为覆盖率。hosted SHA `629bb01` 为 Python 73 / C# smoke 22 / probe 23。

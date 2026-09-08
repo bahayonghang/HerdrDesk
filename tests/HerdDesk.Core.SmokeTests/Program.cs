@@ -265,11 +265,225 @@ static void AssertLeaseCase(JsonElement item)
     if (result.ControlVerified)
         Check(result.Access == TerminalAccess.Controlling);
 }
+static byte[] FromHex(string hex) => Convert.FromHexString(hex);
+static RendererQueueState ParseQueueState(string value) => value switch
+{
+    "ready" => RendererQueueState.Ready,
+    "backpressured" => RendererQueueState.Backpressured,
+    "faulted" => RendererQueueState.Faulted,
+    _ => throw new Exception("unknown_queue_state"),
+};
+static ImeHostEvent ParseIme(string value) => value switch
+{
+    "preedit_update" => ImeHostEvent.PreeditUpdate,
+    "commit" => ImeHostEvent.Commit,
+    "key_while_composing" => ImeHostEvent.KeyWhileComposing,
+    "key_idle" => ImeHostEvent.KeyIdle,
+    _ => throw new Exception("unknown_ime_event"),
+};
+static WebMessageDirection ParseDirection(string value) => value switch
+{
+    "host_to_renderer" => WebMessageDirection.HostToRenderer,
+    "renderer_to_host" => WebMessageDirection.RendererToHost,
+    _ => throw new Exception("unknown_web_direction"),
+};
+static InputOrigin ParseOrigin(string value) => value switch
+{
+    "user_key" => InputOrigin.UserKey,
+    "committed_text" => InputOrigin.CommittedText,
+    "explicit_paste" => InputOrigin.ExplicitPaste,
+    "emulator_reply" => InputOrigin.EmulatorReply,
+    _ => throw new Exception("unknown_origin"),
+};
 
 var pane = new PaneKey(new SessionKey(new DeviceId(Guid.NewGuid()), "test-only-api", "test"), "w1", "p1");
 var epoch = new ConnectionEpoch(1);
 var context = new InputContext(pane, epoch, TerminalAccess.Controlling, ControlVerified: true);
 var request = new RendererInput(pane, epoch, InputOrigin.CommittedText, Encoding.UTF8.GetBytes("你好"));
+void AssertRendererCase(JsonElement item)
+{
+    Check(item.GetProperty("simulation").GetBoolean());
+    Check(item.GetProperty("live_result").GetString() == "blocked");
+    Check(item.GetProperty("evidence_level").GetString() == "synthetic");
+    var kind = item.GetProperty("kind").GetString();
+    var expect = item.GetProperty("expect");
+    if (kind == "utf8_chunks")
+    {
+        var assembler = new Utf8ChunkAssembler();
+        foreach (var chunk in item.GetProperty("chunks_hex").EnumerateArray())
+            assembler.Append(FromHex(chunk.GetString()!));
+        var expectedText = expect.GetProperty("text").GetString()!;
+        Check(assembler.Text == expectedText);
+        Check(assembler.Text.Contains('\uFFFD') == expect.GetProperty("replacement").GetBoolean());
+        Check((assembler.Text == expectedText + expectedText) == expect.GetProperty("duplicated").GetBoolean());
+        return;
+    }
+    if (kind == "utf8_boundary")
+    {
+        var assembler = new Utf8ChunkAssembler();
+        foreach (var chunk in item.GetProperty("chunks_hex").EnumerateArray())
+            assembler.Append(FromHex(chunk.GetString()!));
+        Check(assembler.Text == expect.GetProperty("text").GetString());
+        Check(assembler.Text.Contains('\uFFFD') == expect.GetProperty("replacement").GetBoolean());
+        Check(assembler.HeldIncomplete == expect.GetProperty("held_incomplete").GetBoolean());
+        return;
+    }
+    if (kind == "raw_bytes")
+    {
+        var joined = new List<byte>();
+        foreach (var chunk in item.GetProperty("chunks_hex").EnumerateArray())
+            joined.AddRange(FromHex(chunk.GetString()!));
+        var bytes = joined.ToArray();
+        Check(Convert.ToHexString(bytes).Equals(expect.GetProperty("bytes_hex").GetString(), StringComparison.OrdinalIgnoreCase));
+        Check(Encoding.UTF8.GetString(bytes).Contains("^C") == expect.GetProperty("text_normalized").GetBoolean());
+        return;
+    }
+    if (kind == "epoch_gate")
+    {
+        RendererEpochGate? gate = null;
+        string? code = null;
+        var accepted = true;
+        ulong? seq = null;
+        foreach (var step in item.GetProperty("steps").EnumerateArray())
+        {
+            var action = step.GetProperty("action").GetString();
+            var stepEpoch = new ConnectionEpoch(step.GetProperty("epoch").GetInt64());
+            if (action == "start")
+            {
+                gate = new RendererEpochGate(stepEpoch);
+                code = null;
+                accepted = true;
+                continue;
+            }
+            if (action == "reconnect")
+            {
+                try { gate!.Reconnect(stepEpoch); code = null; accepted = true; }
+                catch (TerminalProtocolException error) { code = error.Message; accepted = false; }
+                continue;
+            }
+            try
+            {
+                var sequence = step.GetProperty("seq").GetUInt64();
+                gate!.Accept(stepEpoch, Frame(sequence, step.GetProperty("full").GetBoolean()));
+                code = null;
+                accepted = true;
+                seq = sequence;
+            }
+            catch (TerminalProtocolException error) { code = error.Message; accepted = false; }
+        }
+        if (expect.GetProperty("code").ValueKind == JsonValueKind.Null) Check(code is null);
+        else Check(code == expect.GetProperty("code").GetString());
+        Check(accepted == expect.GetProperty("accepted").GetBoolean());
+        if (expect.TryGetProperty("seq", out var seqElement))
+            Check(seq == seqElement.GetUInt64());
+        return;
+    }
+    if (kind is "composition" or "input_policy")
+    {
+        var access = item.TryGetProperty("access", out var accessElement)
+            ? ParseTerminalAccess(accessElement.GetString()!)
+            : kind == "input_policy" ? TerminalAccess.Observing : TerminalAccess.Controlling;
+        var verified = item.TryGetProperty("control_verified", out _)
+            ? Flag(item, "control_verified")
+            : kind != "input_policy";
+        var contextEpoch = item.TryGetProperty("context_epoch", out var contextEpochElement)
+            ? new ConnectionEpoch(contextEpochElement.GetInt64())
+            : epoch;
+        var inputEpoch = item.TryGetProperty("input_epoch", out var inputEpochElement)
+            ? new ConnectionEpoch(inputEpochElement.GetInt64())
+            : epoch;
+        var policyContext = context with
+        {
+            Access = access,
+            ControlVerified = verified,
+            Epoch = contextEpoch,
+        };
+        RendererInput? proposed = null;
+        if (item.TryGetProperty("origin", out var originElement) && originElement.ValueKind == JsonValueKind.String)
+        {
+            var size = item.TryGetProperty("payload_bytes", out var sizeElement) ? sizeElement.GetInt32() : 3;
+            proposed = new RendererInput(pane, inputEpoch, ParseOrigin(originElement.GetString()!), new byte[size]);
+        }
+        var decision = kind == "composition"
+            ? CompositionPolicy.Evaluate(ParseIme(item.GetProperty("ime_event").GetString()!), policyContext, proposed)
+            : InputPolicy.Evaluate(policyContext, proposed!);
+        Check(decision.Allowed == expect.GetProperty("allowed").GetBoolean());
+        Check(decision.Code == expect.GetProperty("code").GetString());
+        AssertRedacted(decision.Code);
+        return;
+    }
+    if (kind == "queue")
+    {
+        var window = new RendererByteWindow(
+            new ConnectionEpoch(item.GetProperty("epoch").GetInt64()),
+            item.GetProperty("max_bytes").GetInt32(),
+            item.GetProperty("max_frames").GetInt32());
+        RendererQueueDecision? last = null;
+        foreach (var step in item.GetProperty("steps").EnumerateArray())
+        {
+            var action = step.GetProperty("action").GetString();
+            var stepEpoch = new ConnectionEpoch(
+                step.TryGetProperty("epoch", out var stepEpochElement)
+                    ? stepEpochElement.GetInt64()
+                    : item.GetProperty("epoch").GetInt64());
+            if (action == "reset")
+            {
+                window.Reset(stepEpoch);
+                last = new RendererQueueDecision(true, window.State, "reset", false, false);
+                continue;
+            }
+            last = action switch
+            {
+                "enqueue" => window.TryEnqueue(stepEpoch, step.GetProperty("bytes").GetInt32()),
+                "ack" => window.AcknowledgeParseConsumed(stepEpoch, step.GetProperty("bytes").GetInt32()),
+                "classify_drop" => window.ClassifyDeltaDrop(),
+                _ => throw new Exception("unknown_queue_action"),
+            };
+        }
+        Check(last is not null);
+        Check(last!.Accepted == expect.GetProperty("accepted").GetBoolean());
+        Check(last.Code == expect.GetProperty("code").GetString());
+        Check(!last.ParseConsumedIsPresented);
+        if (expect.TryGetProperty("state", out var stateElement))
+            Check(last.State == ParseQueueState(stateElement.GetString()!));
+        if (expect.TryGetProperty("requires_full_reset", out var resetElement))
+            Check(last.RequiresFullReset == resetElement.GetBoolean());
+        if (expect.TryGetProperty("in_flight_bytes", out var inflightElement))
+            Check(window.InFlightBytes == inflightElement.GetInt32());
+        AssertRedacted(last.Code);
+        return;
+    }
+    if (kind == "web_message")
+    {
+        var message = item.GetProperty("message");
+        var host = item.GetProperty("context");
+        var hostPane = pane with { PaneId = host.GetProperty("pane").GetString()! };
+        var webContext = context with
+        {
+            ActivePane = hostPane,
+            Epoch = new ConnectionEpoch(host.GetProperty("epoch").GetInt64()),
+            Access = ParseTerminalAccess(host.GetProperty("access").GetString()!),
+            ControlVerified = host.GetProperty("control_verified").GetBoolean(),
+        };
+        InputOrigin? claimed = null;
+        if (message.TryGetProperty("origin", out var claimedElement) &&
+            claimedElement.ValueKind == JsonValueKind.String)
+            claimed = ParseOrigin(claimedElement.GetString()!);
+        var decision = WebMessagePolicy.Evaluate(new WebMessage(
+            message.GetProperty("type").GetString()!,
+            message.GetProperty("version").GetInt32(),
+            new ConnectionEpoch(message.GetProperty("epoch").GetInt64()),
+            pane with { PaneId = message.GetProperty("pane").GetString()! },
+            message.GetProperty("payload_bytes").GetInt32(),
+            ParseDirection(message.GetProperty("direction").GetString()!),
+            claimed), webContext);
+        Check(decision.Allowed == expect.GetProperty("allowed").GetBoolean());
+        Check(decision.Code == expect.GetProperty("code").GetString());
+        AssertRedacted(decision.Code);
+        return;
+    }
+    throw new Exception("unknown_renderer_case_kind");
+}
 var edge = LoadEdgeCases();
 var cases = new (string Name, Action Run)[]
 {
@@ -632,6 +846,105 @@ var cases = new (string Name, Action Run)[]
         Check(stale.Code == "control_not_verified");
         Check(stale.Access != TerminalAccess.Controlling);
         Check(!stale.ControlVerified);
+    }),
+    ("renderer fixture is not runtime proof", () =>
+    {
+        using var document = LoadJsonFixture("renderer-cases.json");
+        var root = document.RootElement;
+        Check(root.GetProperty("simulation").GetBoolean());
+        Check(root.GetProperty("runtime_pass").GetBoolean() is false);
+        Check(root.GetProperty("windows_verified").GetBoolean() is false);
+        Check(root.GetProperty("ac08_passed").GetBoolean() is false);
+        Check(root.GetProperty("ac09_passed").GetBoolean() is false);
+        Check(root.GetProperty("winui_executed").GetBoolean() is false);
+        Check(root.GetProperty("webview2_executed").GetBoolean() is false);
+        Check(root.GetProperty("ime_executed").GetBoolean() is false);
+        Check(root.GetProperty("native_candidate_run").GetBoolean() is false);
+        Check(root.GetProperty("herdr_executed").GetBoolean() is false);
+        Check(root.GetProperty("all_live_checks").GetString() == "blocked");
+        Check(root.GetProperty("blocked_category").GetString() ==
+            "no_authorized_winui_interactive_desktop_or_ime_grant");
+        var count = 0;
+        foreach (var item in root.GetProperty("cases").EnumerateArray())
+        {
+            count++;
+            AssertRendererCase(item);
+        }
+        Check(count == 18);
+    }),
+    ("utf8 assembler holds incomplete sequences", () =>
+    {
+        var lead = new byte[] { 0xe4 };
+        Check(Encoding.UTF8.GetString(lead).Contains('\uFFFD'));
+        var assembler = new Utf8ChunkAssembler();
+        assembler.Append(lead);
+        Check(assembler.Text.Length == 0);
+        Check(assembler.HeldIncomplete);
+        Check(!assembler.Text.Contains('\uFFFD'));
+        assembler.Append(new byte[] { 0xbd, 0xa0, 0xe5, 0xa5, 0xbd });
+        Check(assembler.Text == "你好");
+        Check(!assembler.HeldIncomplete);
+        Check(!assembler.Text.Contains('\uFFFD'));
+    }),
+    ("epoch gate does not compare seq across reconnect", () =>
+    {
+        var gate = new RendererEpochGate(new ConnectionEpoch(1));
+        Check(gate.Accept(new ConnectionEpoch(1), Frame()) is TerminalFrame { Sequence: 1 });
+        gate.Reconnect(new ConnectionEpoch(2));
+        Check(gate.Accept(new ConnectionEpoch(2), Frame()) is TerminalFrame { Sequence: 1 });
+        try { gate.Accept(new ConnectionEpoch(1), Frame(2, false)); throw new Exception("expected_stale_epoch"); }
+        catch (TerminalProtocolException error) when (error.Message == "stale_epoch") { }
+        try { gate.Accept(new ConnectionEpoch(2), Frame(2, false)); throw new Exception("expected_terminal_stream_not_active"); }
+        catch (TerminalProtocolException error) when (error.Message == "terminal_stream_not_active") { }
+    }),
+    ("preedit is not sent and observe user key is denied", () =>
+    {
+        Check(CompositionPolicy.Evaluate(ImeHostEvent.PreeditUpdate, context, request) is { Allowed: false, Code: "preedit_not_sent" });
+        Check(CompositionPolicy.Evaluate(ImeHostEvent.Commit, context, request) is { Allowed: true, Code: "allowed" });
+        Check(CompositionPolicy.Evaluate(ImeHostEvent.KeyWhileComposing, context, request with { Origin = InputOrigin.UserKey }) is { Allowed: false, Code: "ime_owns_shortcut" });
+        Check(!InputPolicy.Evaluate(context with { Access = TerminalAccess.Observing, ControlVerified = false }, request with { Origin = InputOrigin.UserKey }).Allowed);
+        Check(InputPolicy.Evaluate(context, request with { Origin = InputOrigin.EmulatorReply }).Code == "input_origin_denied");
+    }),
+    ("bounded queue forbids delta drop and stale ack", () =>
+    {
+        var window = new RendererByteWindow(epoch, 8, 2);
+        var queued = window.TryEnqueue(epoch, 4);
+        Check(queued.Accepted && queued.Code == "queued" && !queued.ParseConsumedIsPresented);
+        var blocked = window.TryEnqueue(epoch, 5);
+        Check(!blocked.Accepted && blocked.State == RendererQueueState.Backpressured && window.InFlightBytes == 4);
+        var stale = window.AcknowledgeParseConsumed(new ConnectionEpoch(2), 4);
+        Check(!stale.Accepted && stale.Code == "stale_epoch" && window.InFlightBytes == 4 && !stale.ParseConsumedIsPresented);
+        var consumed = window.AcknowledgeParseConsumed(epoch, 4);
+        Check(consumed.Accepted && consumed.Code == "parse_consumed" && !consumed.ParseConsumedIsPresented);
+        var drop = window.ClassifyDeltaDrop();
+        Check(!drop.Accepted && drop.RequiresFullReset && drop.Code == "delta_drop_forbidden");
+        window.Reset(new ConnectionEpoch(2));
+        Check(window.State == RendererQueueState.Ready && window.InFlightBytes == 0);
+        Check(window.TryEnqueue(new ConnectionEpoch(2), 4).Accepted);
+        Check(window.TryEnqueue(new ConnectionEpoch(2), 3).Accepted);
+        var mismatch = window.AcknowledgeParseConsumed(new ConnectionEpoch(2), 3);
+        Check(!mismatch.Accepted && mismatch.Code == "queue_ack_mismatch" && window.InFlightBytes == 7);
+        Check(window.AcknowledgeParseConsumed(new ConnectionEpoch(2), 4) is { Accepted: true, Code: "parse_consumed" });
+        Check(window.InFlightBytes == 3);
+        try { window.Reset(new ConnectionEpoch(1)); throw new Exception("expected_stale_epoch"); }
+        catch (TerminalProtocolException error) when (error.Message == "stale_epoch") { }
+        Check(window.InFlightBytes == 3);
+    }),
+    ("web message allowlist rejects unknown oversize and stale epoch", () =>
+    {
+        Check(WebMessagePolicy.Evaluate(
+            new WebMessage("host.exec", 1, epoch, pane, 1, WebMessageDirection.RendererToHost),
+            context).Code == "unknown_web_message_type");
+        Check(WebMessagePolicy.Evaluate(
+            new WebMessage("input.user_key", 1, epoch, pane, InputPolicy.MaxInputBytes + 1, WebMessageDirection.RendererToHost),
+            context).Code == "web_message_bytes_limit");
+        Check(WebMessagePolicy.Evaluate(
+            new WebMessage("input.committed_text", 1, new ConnectionEpoch(2), pane, 3, WebMessageDirection.RendererToHost),
+            context).Code == "stale_epoch");
+        var observing = context with { Access = TerminalAccess.Observing, ControlVerified = false };
+        Check(WebMessagePolicy.Evaluate(
+            new WebMessage("input.user_key", 1, epoch, pane, 1, WebMessageDirection.RendererToHost),
+            observing).Code == "control_not_verified");
     }),
 };
 int failed = 0;

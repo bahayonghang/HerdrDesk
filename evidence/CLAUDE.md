@@ -24,7 +24,7 @@
 | `runtime_verification.named_pipe_acl` | `blocked`（与 Windows runtime 同一授权缺口） |
 | `runtime_verification.windows_endpoint` | `blocked`（`no_authorized_isolated_windows_endpoint_or_live_herdr_grant`；HD-001 C2 残余） |
 | `runtime_verification.windows_terminal_lease` | `blocked`（`no_authorized_isolated_pane_or_live_herdr_grant`；HD-001 C2 残余；独立于 endpoint 记录） |
-| `runtime_verification.ime` | `not_run` |
+| `runtime_verification.ime` | `blocked`（`no_authorized_winui_interactive_desktop_or_ime_grant`；HD-005 L3 未授权） |
 | `default_write_capability` | false |
 
 每条 `records[]` 含 `subject`、`environment`、`observed_at`、`evidence_level`、`version`、`hashes`、`result`、`redaction`、`limitations`、`attachments`。`hashes` 中 git blob SHA、分发 binary SHA-256、runtime schema SHA-256 分栏，禁止互推。源码字段来源在 source 记录的 `field_sources`。
@@ -46,6 +46,7 @@ UTF-8 JSON。采集记录字段：`capture_id`、`kind`、`captured_at_utc`、`o
 | `remote-runtime.not-run.json` | AC01-C3 独立 `not_run` 记录 |
 | `windows-endpoint-matrix.blocked.json` | AC03-C1 当前记录：blocked；合成矩阵不是 runtime pass |
 | `windows-terminal-lease.blocked.json` | AC05-C1 当前记录：blocked；合成 lease 矩阵不是 runtime pass；独立于 endpoint 记录 |
+| `windows-renderer-ime.blocked.json` | HD-005 IME/desktop 当前记录：blocked；L1 合成标本不是 AC08/AC09 pass；独立于 lease/endpoint 记录 |
 
 模板不是成功运行。runtime 成功结论必须指向非模板采集文件。
 

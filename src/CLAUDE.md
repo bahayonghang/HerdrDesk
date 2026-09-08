@@ -9,7 +9,7 @@
 | 项目 | 索引 |
 |---|---|
 | [HerdDesk.Contracts](HerdDesk.Contracts/CLAUDE.md) | 身份与信封类型 |
-| [HerdDesk.Core](HerdDesk.Core/CLAUDE.md) | 帧解析 + 输入策略 + endpoint 映射 + lease 映射 |
+| [HerdDesk.Core](HerdDesk.Core/CLAUDE.md) | 帧解析 + 输入策略 + endpoint 映射 + lease 映射 + renderer L1 标本 |
 
 测试项目在 [../tests/HerdDesk.Core.SmokeTests](../tests/HerdDesk.Core.SmokeTests/CLAUDE.md)。
 

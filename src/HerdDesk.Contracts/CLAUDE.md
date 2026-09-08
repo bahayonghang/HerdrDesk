@@ -6,7 +6,7 @@
 
 ## 职责
 
-提供身份、终端信封、输入上下文、决策、API endpoint 解析与终端 lease 观测类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。
+提供身份、终端信封、输入上下文、决策、API endpoint 解析、终端 lease 观测与 renderer 标本类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。`ITerminalRenderer` 仍只存在于草案，不在本目录编译。
 
 ## 已实现类型（`TerminalModels.cs`）
 
@@ -58,6 +58,18 @@
 | `TerminalLeaseResult` | `Access`, `ControlVerified`, `StreamEnd`, `PaneExitVerified`, 稳定 `Code` |
 
 首帧、进程存活、窗口焦点不是 `ControlVerified` 证据。
+
+## 已实现类型（`RendererModels.cs`）
+
+由可信 host 创建。禁止从 renderer 消息反序列化 `InputContext`。
+
+| 类型 | 作用 |
+|---|---|
+| `ImeHostEvent` | `PreeditUpdate`, `Commit`, `KeyWhileComposing`, `KeyIdle` |
+| `WebMessageDirection` | `HostToRenderer`, `RendererToHost` |
+| `RendererQueueState` | `Ready`, `Backpressured`, `Faulted` |
+| `WebMessage` | type / version / epoch / pane / payload 长度 / 方向；可选 claimed origin |
+| `RendererQueueDecision` | 有界队列结果；`ParseConsumedIsPresented` 恒为 false |
 
 ## 草案多出、src 未实现
 

@@ -17,8 +17,11 @@ class RepositoryPortabilityTests(unittest.TestCase):
         self.assertFalse(result['ac02_passed'])
         self.assertFalse(result['ac03_passed'])
         self.assertFalse(result['ac05_passed'])
+        self.assertFalse(result['ac08_passed'])
+        self.assertFalse(result['ac09_passed'])
         self.assertEqual(result['endpoint_validation'], 'passed')
         self.assertEqual(result['lease_validation'], 'passed')
+        self.assertEqual(result['renderer_validation'], 'passed')
 
     def test_all_metadata_reads_use_explicit_utf8(self):
         original = Path.read_text

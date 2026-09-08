@@ -353,6 +353,16 @@ def selftest() -> dict[str, Any]:
                        'adapter_proved_write_ownership':True})
     assert granted['code']=='fictional_granted_rejected' and granted['control_verified'] is False
     checks+=1
+    from herddesk_g0.renderer import assemble_utf8, evaluate_composition, evaluate_web_message
+    text=assemble_utf8([bytes.fromhex('e4'), bytes.fromhex('bda0e5a5bd')])
+    assert text=='你好' and '\ufffd' not in text;checks+=1
+    preedit=evaluate_composition('preedit_update', origin='committed_text')
+    assert preedit['allowed'] is False and preedit['code']=='preedit_not_sent';checks+=1
+    unknown=evaluate_web_message(
+        {'type':'host.exec','direction':'renderer_to_host','version':1,
+         'epoch':1,'pane':'p1','payload_bytes':1},
+        {'epoch':1,'pane':'p1','access':'controlling','control_verified':True})
+    assert unknown['allowed'] is False and unknown['code']=='unknown_web_message_type';checks+=1
     return {'selftest_passed':True,'checks':checks,'platform':sys.platform,
             'uses_synthetic_fixtures':True,'herdr_executed':False,'windows_gui_tested':False}
 

@@ -10,7 +10,7 @@ Shared facts: [AGENTS.md](../../../AGENTS.md). Planned UI names (workspace / ses
 
 ## Overview
 
-Product UI is planned as WinUI on Windows. That work is not started. Renderer choice (web vs native) is an unapproved spike (`tasks` HD-005 area). Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`. Remaining frontend guideline files stay placeholders until a UI task is approved.
+Product UI is planned as WinUI on Windows. That work is not started. Renderer choice is recorded in `docs/spikes/renderer-decision.md`: WebView2/xterm remains the delivery baseline; native is `UNVERIFIED` and not promoted. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`. Remaining frontend guideline files stay placeholders until a UI task is approved.
 
 ---
 

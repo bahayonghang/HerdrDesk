@@ -16,8 +16,9 @@
 | [licensing/](licensing/README.md) | 机器可读 `register.json` 与候选准入模板。`admission` 与 technical/security 分栏。模板不是 approved。 |
 | [source-verification.md](source-verification.md) | 本轮重读上游 blob：`client/mod.rs`、`ipc.rs`、`render_stream.rs`、schema header。限额是 HerdDesk 客户端策略。 |
 | [plan/](plan/CLAUDE.md) | 12 专题档案。 |
+| [spikes/](spikes/CLAUDE.md) | HD-005 renderer 决策。WebView2/xterm 基线；native 不晋级。不是 AC08/AC09 通过。 |
 
-尚未存在、由后续任务拟建：`docs/spikes/renderer-decision.md`（HD-005）、`docs/adr/approved-baseline.md`（HD-006）。
+尚未存在、由后续任务拟建：`docs/adr/approved-baseline.md`（HD-006）。
 
 ## 约束
 

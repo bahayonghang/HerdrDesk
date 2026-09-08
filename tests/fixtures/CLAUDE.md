@@ -17,6 +17,7 @@
 | `invalid-cases.json` | 应拒绝的对象。含故意伪造的 `terminal.granted`（上游无此消息） |
 | `endpoint-cases.json` | HD-003 七行模拟矩阵：explicit / default / named / Unicode / ACL denied / cross-user / remote UNC。`simulation=true`，`runtime_pass=false`，`ac03_passed=false`，`all_live_checks=blocked`。不是 Windows 真机连接 |
 | `lease-cases.json` | HD-004 十四行 lease 映射模拟。`simulation=true`，`runtime_pass=false`，`ac05_passed=false`，`fixture_origin=synthetic`。不是 observe/control 真机证据 |
+| `renderer-cases.json` | HD-005 十八行 renderer L1 模拟。`simulation=true`，`runtime_pass=false`，`ac08_passed=false`，`ac09_passed=false`。不是 WinUI/WebView2/IME 真机证据 |
 | `real-terminal-v082/` | 真机 capture 占位。`index.json` 的 `captures=[]`，`herdr_executed=false`。禁止把合成帧标成 runtime pass |
 | `README.md` | 生成说明与门禁边界 |
 

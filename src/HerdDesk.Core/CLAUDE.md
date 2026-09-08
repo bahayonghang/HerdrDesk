@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射与终端 lease 观测映射。DeviceSession actor、Store、未读、错误语义等规划能力尚未实现。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射，以及 HD-005 renderer L1 纯函数标本。DeviceSession actor、Store、未读、错误语义等规划能力尚未实现。
 
 ## 职责
 
@@ -11,6 +11,7 @@
 - 把 `DeviceId` / `SessionKey` / `EndpointPreference` 与受控配置映射到 API endpoint 候选。
 - 把已观察的 observe/control/takeover/resize/release 信号映射到 `TerminalAccess`。
 - 失败后锁存：同一 parser 实例不再接受后续记录。
+- renderer L1：跨块 UTF-8 组装、epoch/seq 门、预编辑拒绝、有界队列分类、web message allowlist。不启动 WinUI 或 WebView2。
 
 传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。
 
@@ -58,6 +59,18 @@
 
 `ClassifyStreamEnd` 区分 stdout EOF、`terminal.closed` 与桥进程退出。pane 死亡只能来自独立观测。
 
+### Renderer L1 specimens
+
+| 类型 | 说明 |
+|---|---|
+| `Utf8ChunkAssembler` | `Decoder.Convert(flush=false)` 保持不完整序列。`HeldIncomplete` 为真时不得已发出 U+FFFD。禁止逐块 `Encoding.UTF8.GetString` |
+| `RendererEpochGate` | 每 epoch 一个 `TerminalFrameParser`；旧 epoch 为 `stale_epoch` 并锁存；`Reconnect` 新建 parser，seq 不跨 epoch 比较 |
+| `CompositionPolicy` | `PreeditUpdate` → `preedit_not_sent`；`KeyWhileComposing` → `ime_owns_shortcut`；`Commit` 必须是 `CommittedText`，再走 `InputPolicy` |
+| `RendererByteWindow` | 有界 FIFO；ack 必须等于最旧帧大小；`ParseConsumedIsPresented` 恒 false；越界不丢 delta；`ClassifyDeltaDrop` → `delta_drop_forbidden` 且 `RequiresFullReset`；`Reset` 拒绝更小 epoch |
+| `WebMessagePolicy` | 版本 1 allowlist；未知 type / 超长 / 错 epoch / 错 pane 拒绝；输入走 `InputPolicy`；从不从消息构造 `InputContext` |
+
+L1 通过不是 AC08/AC09 或 IME 真机通过。
+
 ## 依赖
 
 - 项目引用：`../HerdDesk.Contracts/HerdDesk.Contracts.csproj`。
@@ -78,6 +91,7 @@
 - `InputPolicy.cs` — 纯函数策略。
 - `EndpointResolver.cs` — 受控配置到 endpoint 的纯映射。
 - `TerminalLeaseProbe.cs` — 已观察 lease 信号到 `TerminalAccess` 的纯映射。
+- `Utf8ChunkAssembler.cs` / `RendererEpochGate.cs` / `CompositionPolicy.cs` / `RendererByteWindow.cs` / `WebMessagePolicy.cs` — HD-005 L1 标本。
 - `HerdDesk.Core.csproj` — 仅 Contracts 引用。
 
 ## 约束
