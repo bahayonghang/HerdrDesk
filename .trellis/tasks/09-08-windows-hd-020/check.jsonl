@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Dependency, offline-gate and live-evidence checks"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Stable redacted failure and fail-closed review patterns"}
+{"file":".trellis/spec/frontend/index.md","reason":"Verify the approved WinUI task does not inherit placeholder React conventions"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Check claims against the verified current G0 gap"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Review argv, credential, trust-store and diagnostic redaction controls"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Verify every planned test is discovered through the shared project and gate layout"}

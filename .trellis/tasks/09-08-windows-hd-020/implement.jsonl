@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/index.md","reason":"Current G0 module and dependency boundaries that P3 work must preserve until specs are deliberately advanced"}
+{"file":".trellis/spec/frontend/index.md","reason":"Current deferred WinUI boundary and warning against treating template files as live UI contracts"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Typed UI to service to process and persistence data-flow review"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Verified current implementation gap and P3 scope boundary"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Current secret, argv, private-path and diagnostic redaction rules"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Use the single registered C# unit, contract and SSH integration test targets"}
