@@ -31,6 +31,7 @@ def validate() -> dict:
     hd012=json.loads((ROOT/'implementation/hd-012-l2.json').read_text(encoding='utf-8'))
     hd013=json.loads((ROOT/'implementation/hd-013-l2.json').read_text(encoding='utf-8'))
     hd014=json.loads((ROOT/'implementation/hd-014-l2.json').read_text(encoding='utf-8'))
+    hd015=json.loads((ROOT/'implementation/hd-015-l3.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -64,6 +65,15 @@ def validate() -> dict:
     assert hd014.get('webview2_admitted') is not True
     assert hd014.get('npm_xterm_admitted') is not True
     assert hd014.get('phase_gate')!='passed'
+    assert hd015.get('l3_ime_desktop')=='UNVERIFIED'
+    assert hd015.get('l2_webview_ime')=='UNVERIFIED'
+    assert hd015.get('ac09_passed') is not True
+    assert hd015.get('ac10_passed') is not True
+    assert hd015.get('g0_passed') is not True
+    assert hd015.get('webview2_admitted') is not True
+    assert hd015.get('npm_xterm_admitted') is not True
+    assert hd015.get('live_herdr') is not True
+    assert hd015.get('phase_gate')!='passed'
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'

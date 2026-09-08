@@ -19,7 +19,7 @@
 | 上游基线 | herdr v0.8.2 commit `9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c`，`api_protocol=20` |
 | 许可 | 项目级许可证未选定；见 `LICENSE-STATUS.md` |
 
-已通过的 CI 只证明对应 SHA。Hosted Windows runner 成功不等于交互桌面、IME 或真实 herdr 验收。HD-011 L1 ViewModels 不是 AC19 或 WinUI 通过。HD-014 L1 renderer ports 不是 AC08 或 WebView2 通过。
+已通过的 CI 只证明对应 SHA。Hosted Windows runner 成功不等于交互桌面、IME 或真实 herdr 验收。HD-011 L1 ViewModels 不是 AC19 或 WinUI 通过。HD-014 L1 renderer ports 不是 AC08 或 WebView2 通过。HD-015 L1 IME/keyboard coordinators 不是 AC09/AC10 或真机 IME 通过。
 
 ## 架构
 
@@ -35,7 +35,7 @@ flowchart TB
     Contracts["src/HerdDesk.Contracts"]
     Core["src/HerdDesk.Core"]
     Infra["src/HerdDesk.Infrastructure"]
-    WebTerm["src/HerdDesk.Terminal.Web"]
+    WebTerm["src/HerdDesk.Terminal.Web HD-014/015 L1"]
     App["src/HerdDesk.App composition stub"]
     Smoke["tests/HerdDesk.Core.SmokeTests"]
     Unit["tests/Unit + tests/Contract"]
@@ -85,8 +85,8 @@ flowchart TB
 | [src/HerdDesk.Core](src/HerdDesk.Core/CLAUDE.md) | 单 epoch 帧解析器与输入策略 | 已生成 |
 | [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断、RPC stdio | 已生成 |
 | [bridge](bridge/CLAUDE.md) | herddesk-bridge L1 字节转发 | 已生成 |
-| [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter | 已生成 |
-| [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub + HD-011 L1 ViewModels | 已生成 |
+| [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter + HD-015 L1 input coordinators | 已生成 |
+| [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub + HD-011 L1 ViewModels + HD-015 L1 focus/input | 已生成 |
 | [tests](tests/CLAUDE.md) | 检查导航 | 已生成 |
 | [tests/HerdDesk.Core.SmokeTests](tests/HerdDesk.Core.SmokeTests/CLAUDE.md) | C# G0 smoke runner | 已生成 |
 | [tests/Unit/HerdDesk.Core.Tests](tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) | Core unit runner | 已生成 |

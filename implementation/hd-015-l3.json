@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd015_l3_status",
+  "l2_webview_ime": "UNVERIFIED",
+  "l3_ime_desktop": "UNVERIFIED",
+  "webview2_admitted": false,
+  "npm_xterm_admitted": false,
+  "winui_admitted": false,
+  "windows_desktop_restore": "not_admitted",
+  "live_herdr": false,
+  "agent_matrix": "synthetic-l1",
+  "l1_input_coordinators": "required; does not close product AC09 or AC10",
+  "ac09_passed": false,
+  "ac10_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "HD-015 ships BCL IME/keyboard/selection/focus coordinators on InputPolicy and CompositionPolicy. Microsoft.Web.WebView2, WinUI, and npm xterm are not admitted. Tests drive the shipped coordinators with synthetic agent profiles for Claude Code / Codex / OpenCode. Muse stays unknown. This file is not AC pass evidence. L3 real IME desktop stays UNVERIFIED."
+}

@@ -10,6 +10,7 @@ HD-007 composition root / host stub plus HD-011 L1 navigation ViewModels and HD-
 - 注册配置、诊断、Core 可调用的 BCL 类型，以及 unavailable adapter（RPC/transport/renderer）。HD-008 的 `RpcStdioConnectionFactory` 需显式 bridge 路径；生产组合根仍不自动连接。
 - HD-011 L1：`ShellViewModel` 与 identity coordinators 消费 Store 投影和 HD-007 配置端口。不创建隐藏 terminal bridge，不编译 WinUI。
 - HD-012 L1：`NotificationCenterViewModel` 消费 Core `AttentionReducer`；`WindowsNotificationSink.Available` 恒为 false。点击只定位完整 `PaneKey`，不携带 takeover/input/command。
+- HD-015 L1：`TerminalFocusCoordinator` 在 renderer Ready 后恢复焦点；`TerminalInputViewModel` 展示观察/申请控制/控制/输入暂停/连接过期。焦点不置位 `ControlVerified`。`RequestControl` 不授予 lease。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
 - 释放顺序：renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
 

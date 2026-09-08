@@ -4,7 +4,11 @@ cases =
     .. WebMessageContractTests.All,
     .. RenderFlowControllerTests.All,
     .. WebTerminalRendererTests.All,
-    .. WebViewSecurityTests.All
+    .. WebViewSecurityTests.All,
+    .. CompositionDedupTests.All,
+    .. KeySequenceTranslatorTests.All,
+    .. FocusRaceTests.All,
+    .. SelectionMousePolicyTests.All
 ];
 
 var failed = 0;

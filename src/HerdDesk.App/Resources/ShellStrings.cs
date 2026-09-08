@@ -27,8 +27,12 @@ public static class ShellStrings
     public const string Workspace = "工作区";
     public const string Pane = "窗格";
     public const string Observing = "观察";
+    public const string AcquiringControl = "申请控制";
     public const string Controlling = "控制";
+    public const string InputPaused = "输入暂停";
+    public const string ConnectionExpired = "连接过期";
     public const string Disconnected = "未连接";
+    public const string ObserveScroll = "只读，滚动由当前控制者决定";
     public const string SshPending = "SSH 由 HD-020 提供";
     public const string FilesPending = "文件区尚未启用";
     public const string SaveFailed = "保存失败，已恢复上次有效值";

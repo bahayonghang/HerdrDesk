@@ -21,6 +21,7 @@ public sealed class ShellDependencies
     public AttentionReducer? Attention { get; init; }
     public INotificationSink? NotificationSink { get; init; }
     public IDiagnosticSink? DiagnosticSink { get; init; }
+    public TerminalInputViewModel? TerminalInput { get; init; }
 }
 
 public sealed class ShellViewModel
@@ -55,6 +56,8 @@ public sealed class ShellViewModel
             dependencies.DiagnosticSink,
             dependencies.Clock,
             dependencies.Aliases);
+        TerminalInput = dependencies.TerminalInput;
+        FocusRestore = new TerminalFocusCoordinator();
         Exit = dependencies.Exit;
         FilesAvailability = new RouteAvailability(
             RouteAvailabilityKind.Disabled, ShellCodes.FilesProviderPending, ShellStrings.FilesPending);
@@ -73,6 +76,8 @@ public sealed class ShellViewModel
     public SettingsViewModel Settings { get; }
     public DiagnosticsViewModel Diagnostics { get; }
     public NotificationCenterViewModel Notifications { get; }
+    public TerminalInputViewModel? TerminalInput { get; }
+    public TerminalFocusCoordinator FocusRestore { get; }
     public TerminalDisplayCoordinator Display { get; }
     public AppExitCoordinator Exit { get; }
     public ShellLifecycle Lifecycle { get; private set; }
@@ -206,7 +211,7 @@ public sealed class ShellViewModel
 
     public bool HandleAccelerator(ShellAccelerator accelerator)
     {
-        if (Search.IsComposing)
+        if (Search.IsComposing || TerminalInput is { IsComposing: true })
             return false;
         if (accelerator == ShellAccelerator.OpenSearch)
         {
@@ -225,7 +230,7 @@ public sealed class ShellViewModel
 
     public void OpenSearch()
     {
-        if (Search.IsComposing)
+        if (Search.IsComposing || TerminalInput is { IsComposing: true })
             return;
         if (!Search.IsOpen)
         {
@@ -488,7 +493,10 @@ public sealed class ShellViewModel
 
     private void TryFocusPane(PaneKey pane, ConnectionEpoch epoch)
     {
-        if (epoch != Catalog.Snapshot.Epoch || Catalog.FindPane(pane) is null)
+        var valid = epoch == Catalog.Snapshot.Epoch && Catalog.FindPane(pane) is not null;
+        FocusRestore.SetControlVerified(Catalog.ControlVerifiedFor(pane));
+        var result = FocusRestore.RequestFocus(pane, epoch, Catalog.RendererReadyFor(pane), valid);
+        if (!valid)
         {
             ActivationExpired = true;
             _navigation.MarkExpired();
@@ -496,7 +504,7 @@ public sealed class ShellViewModel
             return;
         }
 
-        if (!Catalog.RendererReadyFor(pane))
+        if (!result.Allowed)
         {
             _pendingFocus = new SearchHit(
                 SearchResultKind.Pane, pane.PaneId, ShellStrings.Pane, pane.Session.Device,
@@ -515,20 +523,25 @@ public sealed class ShellViewModel
     {
         if (_pendingFocus?.Pane is not { } pane)
             return;
-        if (_pendingFocus.Epoch != Catalog.Snapshot.Epoch || Catalog.FindPane(pane) is null)
+        var valid = _pendingFocus.Epoch == Catalog.Snapshot.Epoch && Catalog.FindPane(pane) is not null;
+        if (!valid)
         {
             ActivationExpired = true;
             _pendingFocus = null;
             _navigation.MarkExpired();
+            FocusRestore.Reset();
             return;
         }
 
-        if (Catalog.RendererReadyFor(pane))
-        {
-            _navigation.ContentFocused = true;
-            CurrentFocus = new FocusToken("content");
-            _pendingFocus = null;
-        }
+        if (!Catalog.RendererReadyFor(pane))
+            return;
+        var result = FocusRestore.NotifyRendererReady(pane, _pendingFocus.Epoch, true, true);
+        if (!result.Allowed)
+            return;
+        _navigation.ContentFocused = true;
+        CurrentFocus = new FocusToken("content");
+        FocusedRegion = FocusRegion.Content;
+        _pendingFocus = null;
     }
 
     private bool Resolve(SearchHit hit, out NavigationItem? item)

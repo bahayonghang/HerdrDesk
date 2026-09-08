@@ -187,7 +187,8 @@ internal static class AppTestHost
         UiPreferenceStore? ui = null,
         IDiagnosticSink? diagnostics = null,
         INotificationSink? notifications = null,
-        DiagnosticAliasProjector? aliases = null)
+        DiagnosticAliasProjector? aliases = null,
+        TerminalInputViewModel? input = null)
     {
         paths ??= AppDataPaths.FromRoot(TempRoot());
         profiles ??= new AtomicConfigurationStore(paths);
@@ -203,6 +204,7 @@ internal static class AppTestHost
             DiagnosticSink = diagnostics,
             NotificationSink = notifications,
             Aliases = aliases,
+            TerminalInput = input,
             Unavailable =
             [
                 new UnavailableCapability("rpc-connection", "rpc_bridge_unavailable"),

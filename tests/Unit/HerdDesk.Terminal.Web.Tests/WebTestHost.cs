@@ -42,6 +42,25 @@ internal static class WebTestHost
         return renderer;
     }
 
+    public static PaneKey PaneId(string paneId) => new(
+        new SessionKey(new DeviceId(Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")), "endpoint", "dev"),
+        "ws", paneId);
+
+    public static TerminalInputController Input(
+        InputContext? context = null,
+        AgentInputProfile? profile = null,
+        bool readOnly = false,
+        bool ready = true)
+    {
+        var ctx = context ?? Control();
+        var controller = new TerminalInputController(
+            ctx, CompositionPolicy.Evaluate, InputPolicy.Evaluate, profile);
+        controller.Bind(ctx.ActivePane, ctx.Epoch);
+        controller.SetReadOnly(readOnly);
+        controller.SetRendererReady(ready);
+        return controller;
+    }
+
     public static void Check(bool condition)
     {
         if (!condition)
