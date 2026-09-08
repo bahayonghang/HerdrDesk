@@ -13,7 +13,8 @@ internal static class PartitionIsolationTests
         ("remove device only clears that partition", RemoveIsLocal),
         ("rename label keeps the device key", RenameKeepsKey),
         ("search documents omit ansi and terminal bytes", NoTerminalPayload),
-        ("two sessions on one device keep independent epochs", IndependentSessionEpochs)
+        ("two sessions on one device keep independent epochs", IndependentSessionEpochs),
+        ("capacity phases are not ready", CapacityPhasesNotReady)
     ];
 
     static void NamesakeNotMerged()
@@ -234,5 +235,45 @@ internal static class PartitionIsolationTests
         AggregationHarness.Check(feeds.Any(item => item.Stamp.Epoch.Value == 2));
         var applied = reducer.ApplyAggregate(feeds, AttentionSyncKind.Live);
         AggregationHarness.Check(applied.Decisions.All(item => item.Reason != AttentionCodes.OldEpoch));
+    }
+
+    static void CapacityPhasesNotReady()
+    {
+        var store = new GlobalProjectionStore();
+        AggregationHarness.Check(store.ApplySession(
+            AggregationHarness.DeviceState(
+                AggregationHarness.DeviceA, 1, ConnectionPhase.WaitingForCapacity, DeviceFreshness.Unknown,
+                AggregationHarness.NamesakeSession(AggregationHarness.DeviceA)),
+            0, "alpha").Succeeded);
+        AggregationHarness.Check(store.TryGetPartition(AggregationHarness.DeviceA, out var waiting));
+        AggregationHarness.Check(waiting.Phase == ConnectionPhase.WaitingForCapacity);
+        AggregationHarness.Check(waiting.Readiness == PartitionReadiness.Loading);
+        AggregationHarness.Check(waiting.Readiness != PartitionReadiness.Ready);
+        AggregationHarness.Check(store.Read().ReadyCount == 0);
+        var waitWrite = WriteIntentGuard.Evaluate(
+            store,
+            new AggregationWriteIntent(
+                AggregationWriteKind.Activate, AggregationHarness.DeviceA,
+                AggregationHarness.SessionOf(AggregationHarness.DeviceA),
+                AggregationHarness.PaneKeyOf(AggregationHarness.DeviceA),
+                new ConnectionEpoch(1), AggregationHarness.PaneRef(AggregationHarness.DeviceA, 1)));
+        AggregationHarness.Check(!waitWrite.Allowed);
+        AggregationHarness.Check(store.ApplySession(
+            AggregationHarness.DeviceState(
+                AggregationHarness.DeviceA, 1, ConnectionPhase.PausedForCapacity, DeviceFreshness.Stale,
+                AggregationHarness.NamesakeSession(AggregationHarness.DeviceA)),
+            0, "alpha").Succeeded);
+        AggregationHarness.Check(store.TryGetPartition(AggregationHarness.DeviceA, out var paused));
+        AggregationHarness.Check(paused.Phase == ConnectionPhase.PausedForCapacity);
+        AggregationHarness.Check(paused.Readiness == PartitionReadiness.Stale);
+        AggregationHarness.Check(paused.Readiness != PartitionReadiness.Ready);
+        var pauseWrite = WriteIntentGuard.Evaluate(
+            store,
+            new AggregationWriteIntent(
+                AggregationWriteKind.Activate, AggregationHarness.DeviceA,
+                AggregationHarness.SessionOf(AggregationHarness.DeviceA),
+                AggregationHarness.PaneKeyOf(AggregationHarness.DeviceA),
+                new ConnectionEpoch(1), AggregationHarness.PaneRef(AggregationHarness.DeviceA, 1)));
+        AggregationHarness.Check(!pauseWrite.Allowed);
     }
 }

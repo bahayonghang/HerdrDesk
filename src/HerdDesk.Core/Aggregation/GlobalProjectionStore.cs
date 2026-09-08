@@ -335,8 +335,11 @@ public sealed class GlobalProjectionStore
             return PartitionReadiness.PermissionDenied;
         if (state.Phase == ConnectionPhase.Incompatible)
             return PartitionReadiness.Incompatible;
-        if (state.Phase is ConnectionPhase.Connecting or ConnectionPhase.Synchronizing)
+        if (state.Phase is ConnectionPhase.Connecting or ConnectionPhase.Synchronizing
+            or ConnectionPhase.WaitingForCapacity)
             return PartitionReadiness.Loading;
+        if (state.Phase == ConnectionPhase.PausedForCapacity)
+            return PartitionReadiness.Stale;
         if (state.Phase == ConnectionPhase.Offline)
             return PartitionReadiness.Offline;
         if (state.Phase == ConnectionPhase.Stale || state.Freshness == DeviceFreshness.Stale)

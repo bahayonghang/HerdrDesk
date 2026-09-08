@@ -102,7 +102,10 @@ cases =
     .. PartitionIsolationTests.All,
     .. GlobalTargetResolverTests.All,
     .. GlobalSearchPerformanceTests.All,
-    .. OldEpochConcurrencyTests.All
+    .. OldEpochConcurrencyTests.All,
+    .. ConnectionAdmissionPolicyTests.All,
+    .. TerminalQueueBudgetTests.All,
+    .. DirtySetBudgetTests.All
 ];
 
 var failed = 0;

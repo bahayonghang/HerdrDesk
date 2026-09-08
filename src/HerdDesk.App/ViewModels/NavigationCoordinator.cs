@@ -239,7 +239,7 @@ public sealed class NavigationCoordinator
         var selected = Matches(SelectionKind.Device, device.Device, null, null, null);
         var status = StatusFor(
             starting, sessions.Count == 0, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
-            _catalog.ReadinessFor(device.Device));
+            _catalog.ReadinessFor(device.Device), phase);
         return new NavigationItem(
             NavigationKind.Device,
             device.Device,
@@ -287,7 +287,7 @@ public sealed class NavigationCoordinator
         var selected = Matches(SelectionKind.Session, device.Device, session.Session, null, null);
         var status = StatusFor(
             starting, workspaces.Count == 0, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
-            _catalog.ReadinessFor(device.Device));
+            _catalog.ReadinessFor(device.Device), phase);
         var label = session.Session.SessionName ?? session.Session.EndpointKey;
         return new NavigationItem(
             NavigationKind.Session,
@@ -342,7 +342,7 @@ public sealed class NavigationCoordinator
             SelectionKind.Workspace, device.Device, session.Session, workspace.WorkspaceId, null);
         var status = StatusFor(
             starting, panes.Length == 0, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
-            _catalog.ReadinessFor(device.Device));
+            _catalog.ReadinessFor(device.Device), phase);
         return new NavigationItem(
             NavigationKind.Workspace,
             device.Device,
@@ -393,7 +393,7 @@ public sealed class NavigationCoordinator
         var expired = selected && Selection.IsExpired;
         var status = StatusFor(
             starting, false, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
-            _catalog.ReadinessFor(device.Device));
+            _catalog.ReadinessFor(device.Device), phase);
         var agent = pane.AgentKind is null
             ? new WireEnum<AgentStatusKind>(pane.AgentStatus.Raw, AgentStatusKind.Unknown)
             : pane.AgentStatus;
@@ -496,10 +496,17 @@ public sealed class NavigationCoordinator
         bool incompatible,
         bool offline,
         string? error,
-        PartitionReadiness? readiness = null)
+        PartitionReadiness? readiness = null,
+        ConnectionPhase? phase = null)
     {
         if (starting)
             return new(ShellCodes.Loading, ShellStrings.Loading, "loading", RecoveryActionKind.None, "", false);
+        if (phase == ConnectionPhase.WaitingForCapacity)
+            return new(ShellCodes.Loading, ShellStrings.WaitingForCapacity, "waiting-for-capacity",
+                RecoveryActionKind.None, "", false);
+        if (phase == ConnectionPhase.PausedForCapacity)
+            return new(ShellCodes.Stale, ShellStrings.PausedForCapacity, "paused-for-capacity",
+                RecoveryActionKind.RetryProjection, ShellStrings.Reconnect, true);
         if (readiness == PartitionReadiness.AuthRequired)
             return new(ShellCodes.AuthRequired, ShellStrings.AuthRequired, "auth",
                 RecoveryActionKind.OpenSettings, ShellStrings.Settings, true);

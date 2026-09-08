@@ -7,5 +7,7 @@ public enum ConnectionPhase
     Synchronizing,
     Ready,
     Stale,
-    Incompatible
+    Incompatible,
+    WaitingForCapacity,
+    PausedForCapacity
 }

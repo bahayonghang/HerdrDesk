@@ -11,7 +11,8 @@ internal static class DeviceConnectionStatusViewModelTests
         ("auth and host-key blocks enable the matching action", BlockedActions),
         ("retry intent stays on the same session key", NoFanOut),
         ("in-flight disables retry and cancel", InFlightDisables),
-        ("accessibility names distinguish wait and block", AutomationNames)
+        ("accessibility names distinguish wait and block", AutomationNames),
+        ("capacity wait and pause are not online", CapacityPhases)
     ];
 
     static SessionKey SessionA1() =>
@@ -155,5 +156,30 @@ internal static class DeviceConnectionStatusViewModelTests
         AppTestHost.Check(auth.AutomationName != wait.AutomationName);
         AppTestHost.Check(auth.StatusText != wait.StatusText);
         AppTestHost.Check(!auth.StatusText.Contains("password", StringComparison.OrdinalIgnoreCase));
+    }
+
+    static void CapacityPhases()
+    {
+        var wait = new DeviceConnectionStatusViewModel(SessionA1());
+        wait.Apply(State(
+            SessionA1(),
+            ConnectionPhase.WaitingForCapacity,
+            SessionRecoveryProgress.None,
+            DeviceFreshness.Unknown));
+        AppTestHost.Check(wait.StatusText == ShellStrings.WaitingForCapacity);
+        AppTestHost.Check(wait.StatusText != ShellStrings.Ready);
+        AppTestHost.Check(wait.AutomationName == "waiting-for-capacity");
+        AppTestHost.Check(!wait.RetryEnabled);
+        AppTestHost.Check(!wait.InFlight);
+        var paused = new DeviceConnectionStatusViewModel(SessionA1());
+        paused.Apply(State(
+            SessionA1(),
+            ConnectionPhase.PausedForCapacity,
+            SessionRecoveryProgress.None,
+            DeviceFreshness.Stale));
+        AppTestHost.Check(paused.StatusText == ShellStrings.PausedForCapacity);
+        AppTestHost.Check(paused.StatusText != ShellStrings.Ready);
+        AppTestHost.Check(paused.AutomationName == "paused-for-capacity");
+        AppTestHost.Check(paused.RetryEnabled);
     }
 }

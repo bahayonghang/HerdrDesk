@@ -18,7 +18,8 @@ cases =
     .. EditDeviceViewModelTests.All,
     .. HelperInstallViewModelTests.All,
     .. PartialStateTests.All,
-    .. SharedResolverTests.All
+    .. SharedResolverTests.All,
+    .. PaneVisibilityBudgetTests.All
 ];
 
 var failed = 0;

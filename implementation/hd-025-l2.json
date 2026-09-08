@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd025_l2_status",
+  "l2_live_ssh_perf": "UNVERIFIED",
+  "l2_live_ssh": "UNVERIFIED",
+  "live_ssh": false,
+  "b_ssh_measured": false,
+  "winui_admitted": false,
+  "integration_ssh_project": false,
+  "integration_windows_project": false,
+  "l1_connection_budget": "required; does not close product AC27",
+  "ac27_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "missing": {
+    "live_ssh_matrix": true,
+    "network_shaping": true,
+    "measured_b_ssh": true,
+    "isolated_windows_openssh": true
+  },
+  "note": "HD-025 ships L1 ConnectionAdmissionPolicy, TerminalQueueBudget, DirtySetBudget, SshConnectionLease, and PaneVisibilityCoordinator. B_ssh is an unmeasured internal ceiling. This file is not AC pass evidence. L2 live SSH/perf stays UNVERIFIED. Product AC27 stays with HD-033."
+}

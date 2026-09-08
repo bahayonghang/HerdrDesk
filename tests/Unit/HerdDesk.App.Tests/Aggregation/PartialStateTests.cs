@@ -7,7 +7,8 @@ internal static class PartialStateTests
     public static (string Name, Action Run)[] All =>
     [
         ("partial loading offline auth and empty stay independently reachable", MixedReadiness),
-        ("diagnostics hide host user and path", DiagnosticsRedacted)
+        ("diagnostics hide host user and path", DiagnosticsRedacted),
+        ("capacity wait and pause are not ready", CapacityPhasesNotReady)
     ];
 
     static ShellViewModel Ready(GlobalProjectionStore store, ProjectionCatalog catalog)
@@ -126,6 +127,40 @@ internal static class PartialStateTests
         AppTestHost.Check(preview.Fields.Any(item => item.Name.StartsWith("connection_", StringComparison.Ordinal)));
         AppTestHost.Check(preview.Fields.Any(item => item.Name.StartsWith("sync_", StringComparison.Ordinal)));
         AppTestHost.Check(preview.Fields.Any(item => item.Redacted));
+    }
+
+    static void CapacityPhasesNotReady()
+    {
+        var store = new GlobalProjectionStore();
+        AppTestHost.Check(store.ApplySession(
+            State(AppTestHost.DeviceA, 1, ConnectionPhase.WaitingForCapacity, DeviceFreshness.Unknown),
+            0, "alpha").Succeeded);
+        AppTestHost.Check(store.ApplySession(
+            State(AppTestHost.DeviceB, 2, ConnectionPhase.PausedForCapacity, DeviceFreshness.Stale),
+            1, "beta").Succeeded);
+        AppTestHost.Check(store.ApplySession(
+            State(AppTestHost.DeviceC, 3, ConnectionPhase.Ready, DeviceFreshness.Current),
+            2, "gamma").Succeeded);
+        var catalog = new ProjectionCatalog { DaemonAvailable = true, RendererReadyDefault = true };
+        var shell = Ready(store, catalog);
+        AppTestHost.Check(shell.MultiDevice.ReadyCount == 1);
+        var wait = shell.MultiDevice.Devices.Single(item => item.Device == AppTestHost.DeviceA);
+        AppTestHost.Check(wait.Phase == ConnectionPhase.WaitingForCapacity);
+        AppTestHost.Check(wait.Readiness != PartitionReadiness.Ready);
+        AppTestHost.Check(!wait.WritesEnabled);
+        AppTestHost.Check(wait.Status.Text == ShellStrings.WaitingForCapacity);
+        AppTestHost.Check(wait.Status.Text != ShellStrings.Ready);
+        var paused = shell.MultiDevice.Devices.Single(item => item.Device == AppTestHost.DeviceB);
+        AppTestHost.Check(paused.Phase == ConnectionPhase.PausedForCapacity);
+        AppTestHost.Check(paused.Readiness != PartitionReadiness.Ready);
+        AppTestHost.Check(!paused.WritesEnabled);
+        AppTestHost.Check(paused.Status.Text == ShellStrings.PausedForCapacity);
+        AppTestHost.Check(paused.Status.Text != ShellStrings.Ready);
+        var live = shell.VisibleItems.First(item =>
+            item.Kind == NavigationKind.Device && item.Device == AppTestHost.DeviceA);
+        AppTestHost.Check(live.Status.Text == ShellStrings.WaitingForCapacity);
+        AppTestHost.Check(live.Status.Text != ShellStrings.Ready);
+        AppTestHost.Check(!live.IsOffline);
     }
 }
 

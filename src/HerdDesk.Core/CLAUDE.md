@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本、HD-009 内存投影 Store、HD-010 每 SessionKey 一个 `DeviceSession` actor、HD-012 L1 注意力 reducer / 未读聚合、HD-016 L1 `ControlLeaseCoordinator`、HD-017 L1 `ResourceCommandCoordinator`、HD-018 L1 `RecoveryPolicy` 与跨 owner 恢复信号、HD-023 L1 多设备 partition 聚合，以及 HD-024 L1 每 SessionKey 退避与认证/host-key 阻断（无第二 RecoveryManager）。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本、HD-009 内存投影 Store、HD-010 每 SessionKey 一个 `DeviceSession` actor、HD-012 L1 注意力 reducer / 未读聚合、HD-016 L1 `ControlLeaseCoordinator`、HD-017 L1 `ResourceCommandCoordinator`、HD-018 L1 `RecoveryPolicy` 与跨 owner 恢复信号、HD-023 L1 多设备 partition 聚合、HD-024 L1 每 SessionKey 退避与认证/host-key 阻断（无第二 RecoveryManager），以及 HD-025 L1 `ConnectionAdmissionPolicy` / `TerminalQueueBudget` / `DirtySetBudget`。
 
 ## 职责
 
@@ -105,6 +105,9 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 - `Commands/ResourceCommandCoordinator.cs` — HD-017 L1 schema-gated create/rename/close：capability/freshness/confirmation gate；mutation 只发送一次；timeout 后 UnknownOutcome 并只读查询；`close_group` 不得默认带上。不借用 HD-016 lease 作 CRUD 授权。L2 live mutation 为 UNVERIFIED。
 - `Recovery/RecoveryPolicy.cs` — HD-018 L1 纯函数：failure taxonomy、1–30s backoff、不启动 daemon。`DeviceSession` 异常先发布 Stale 再单 timer 重连。`ControlLeaseCoordinator` 消费 projection-stale/ready 与 terminal/renderer 故障，只 `RecoverObserve`。L2 live disconnect 为 UNVERIFIED。HD-024 在同一 actor 上扩展远端 equal-jitter 与 `DeviceId+ProfileRevision` 认证/host-key block。Core 不引用 SSH 实现。L2 live auth 为 UNVERIFIED。
 - `Aggregation/` — HD-023 L1 `GlobalProjectionStore`、`GlobalEntityRef`、`GlobalTargetResolver`、`GlobalSearchIndex`、`WriteIntentGuard`。按 DeviceId 替换 partition，不合并同名实体。搜索只索引投影，不启动 terminal，不发起网络。L2 live 3-device p95 为 UNVERIFIED。
+- `Connections/ConnectionAdmissionPolicy.cs` — HD-025 L1 唯一连接准入：request/event 原子 pair、terminal/file/maintenance 租约、公平等待与 idle pause。`B_ssh` 未测。Core 不引用 SSH。L2 live SSH/perf 为 UNVERIFIED。
+- `Terminal/TerminalQueueBudget.cs` — HD-025 L1 每 pane 24 MiB decoded payload 账本。与 HD-014 `RendererByteWindow`（默认 256 KiB）分离。超限不丢 delta。
+- `Projection/DirtySetBudget.cs` — HD-025 L1 实体 dirty 合并；溢出转 `FullResyncRequired`。terminal pipeline 不得调用。
 
 ## 约束
 

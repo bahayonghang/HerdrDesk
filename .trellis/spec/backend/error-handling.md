@@ -58,6 +58,8 @@ HD-018 `RecoveryPolicy` classifies `RecoveryFailure` and returns `RecoveryDecisi
 
 HD-024 extends that taxonomy with `transient_network`, `transient_transport`, `authentication_blocked`, `authentication_unsupported`, `host_key_unknown`, `daemon_unavailable`, `protocol_pollution`, `incompatible`, `cancelled`, and `unknown_blocked`. Public UI codes: `reconnect_waiting`, `authentication_action_required`, `host_key_review_required`, `authentication_unsupported`, `connection_manual_retry_required`, `reconnect_cancelled`, `input_not_replayed`. Only transient network/transport auto-retry with equal-jitter delays in `[1s,30s]`. Auth and host-key failures persist a `DeviceId+ProfileRevision` block and schedule zero timers. Unknown HD-020/022 outcomes default to manual block. L2 live auth stays UNVERIFIED. Product AC22/AC26 stay not passed.
 
+HD-025 admission and queue codes: `connection_budget_exhausted`, `terminal_queue_limit`, `stale_render_ack`, `transport_cancel_timeout`, `process_start_failed`. Unknown stay fail-closed. Messages omit credentials, host/path, terminal body, and raw stderr. `WaitingForCapacity` / `PausedForCapacity` are not Ready. L2 live SSH/perf stays UNVERIFIED. `b_ssh_measured` stays false. Product AC27 stays not passed.
+
 ---
 
 ## Error Handling Patterns

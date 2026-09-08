@@ -48,5 +48,6 @@
 | `hd-022-l2.json` | L2 live SSH = `UNVERIFIED`。L1 fake `ssh -T` transport set 不能关闭产品 AC24/AC26。`phase_gate=not_passed`。 |
 | `hd-023-l2.json` | L2 live 3-device search p95 = `UNVERIFIED`。L1 in-memory 聚合不能关闭产品 AC19/AC21。`phase_gate=not_passed`。 |
 | `hd-024-l2.json` | L2 live auth = `UNVERIFIED`。L1 DeviceSession backoff/block 不能关闭产品 AC22/AC26。`phase_gate=not_passed`。 |
+| `hd-025-l2.json` | L2 live SSH/perf = `UNVERIFIED`。`b_ssh_measured=false`。L1 准入/队列政策不能关闭产品 AC27。`phase_gate=not_passed`。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。

@@ -169,6 +169,8 @@ public sealed class GlobalTargetResolver
             return ResolveStatus.Incompatible;
         if (phase == ConnectionPhase.Offline)
             return ResolveStatus.Offline;
+        if (phase is ConnectionPhase.WaitingForCapacity or ConnectionPhase.PausedForCapacity)
+            return ResolveStatus.Stale;
         if (phase == ConnectionPhase.Stale || freshness == DeviceFreshness.Stale)
             return ResolveStatus.Stale;
         var projected = _catalog?.FindDevice(device);

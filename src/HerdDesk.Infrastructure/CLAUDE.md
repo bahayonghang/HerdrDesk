@@ -17,7 +17,7 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 
 - 项目引用：Contracts、Core。
 - `Ssh/` — HD-020 L1 `OpenSshConfigResolver`、`SshProcessSpecFactory`、`HostKeyTrustStore`、`SshConnectionTestService`。HD-021 L1 helper planner/publisher。HD-024 L1 `SshFailureClassifier` 与 `SshRecoveryBlockStore`（认证/host-key block 持久化）。ViewModel 不接收 raw argv。L2 隔离 Windows/OpenSSH、live helper deploy 与 live auth 为 UNVERIFIED。
-- `SshTransports/` — HD-022 L1 `RemoteSessionTransportSet`：每 SessionKey 两个 `ssh -T` RPC child 加按需 terminal child；stdout 污染 fail-closed；stderr 单独排空；重建换 epoch。L2 live SSH 为 UNVERIFIED。
+- `SshTransports/` — HD-022 L1 `RemoteSessionTransportSet`：每 SessionKey 两个 `ssh -T` RPC child 加按需 terminal child；stdout 污染 fail-closed；stderr 单独排空；重建换 epoch。HD-025 L1 `SshConnectionLease` 在启动 pair/terminal 前取得准入租约。L2 live SSH 为 UNVERIFIED。
 - 禁止：PackageReference、WinUI、WebView2、SSH.NET、硬编码用户目录、读写 `herdr machine` catalog。
 
 ## 入口
@@ -41,4 +41,4 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 - `Terminal/TerminalCliProcessFactory.cs`、`TerminalCliTransport.cs`、stdout pump、stderr drainer、command serializer、write queue
 - `Rpc/ResourceCommandAdapter.cs` — HD-017 verified operation mapping；无 generic method/argv；`close_group` 仅在显式确认时写入。L2 live mutation 为 UNVERIFIED。
 - `Ssh/` — HD-020 L1 OpenSSH locator/resolver/spec factory/trust store/test service。HD-021 L1 `HelperDeployment/` manifest/probe/receipt/planner/publisher。L2 isolated OpenSSH 与 live helper deploy UNVERIFIED。
-- `SshTransports/` — HD-022 L1 remote session transport set。复用 HD-008 RPC 与 HD-013 terminal port，不另建 parser。L2 live SSH UNVERIFIED。
+- `SshTransports/` — HD-022 L1 remote session transport set。复用 HD-008 RPC 与 HD-013 terminal port，不另建 parser。HD-025 L1 `SshConnectionLease` 在启动子进程前向 `ConnectionAdmissionPolicy` 取 pair/terminal 租约；失败归还。L2 live SSH UNVERIFIED。

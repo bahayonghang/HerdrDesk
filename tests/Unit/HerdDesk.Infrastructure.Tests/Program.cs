@@ -436,6 +436,7 @@ cases =
     .. SshProcessChannelTests.All,
     .. RemoteCompatibilityProbeTests.All,
     .. RemoteSessionTransportSetTests.All,
+    .. SshConnectionBudgetTests.All,
     .. SshFailureClassifierTests.All,
     .. SshRecoveryBlockStoreTests.All
 ];

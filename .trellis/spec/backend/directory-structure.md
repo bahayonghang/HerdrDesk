@@ -14,7 +14,7 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 
 ```
 src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels, State projection ports)
-src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer, HD-016 ControlLeaseCoordinator, HD-017 ResourceCommandCoordinator, HD-018 RecoveryPolicy, HD-023 Aggregation
+src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer, HD-016 ControlLeaseCoordinator, HD-017 ResourceCommandCoordinator, HD-018 RecoveryPolicy, HD-023 Aggregation, HD-025 Connections/Terminal/Projection budgets
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder, TerminalCliTransport, HD-020 L1 Ssh/, HD-021 L1 HelperDeployment/, HD-022 L1 SshTransports/
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  HD-014 L1 validator + BCL renderer adapter + HD-015 L1 input coordinators (no WebView2 packages)

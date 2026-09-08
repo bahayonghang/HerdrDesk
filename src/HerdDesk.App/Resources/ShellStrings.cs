@@ -20,6 +20,10 @@ public static class ShellStrings
     public const string AwaitingUser = "等待操作";
     public const string RebuildingProjection = "正在重建投影";
     public const string ReobservingTerminal = "正在重新观察";
+    public const string WaitingForCapacity = "等待连接名额";
+    public const string PausedForCapacity = "预览已暂停";
+    public const string OverloadedReobserve = "过载后重新观察";
+    public const string SwitchPaneRequired = "请切换窗格";
     public const string Incompatible = "能力不兼容";
     public const string Loading = "加载中";
     public const string Empty = "空";

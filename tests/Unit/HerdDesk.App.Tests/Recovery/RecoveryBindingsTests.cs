@@ -11,6 +11,7 @@ internal static class RecoveryBindingsTests
         ("stale routes before observe and ready revalidates the same pane", RouteStaleThenReady),
         ("first ready does not reopen observe", FirstReadyDoesNotReobserve),
         ("commands stay disabled until fresh and labels stay grey", ViewStateGates),
+        ("capacity phases are not recovered", CapacityPhases),
         ("app stop kill ledger excludes daemon agent and pane", KillLedger)
     ];
 
@@ -153,6 +154,23 @@ internal static class RecoveryBindingsTests
             or RecoveryViewKind.ReobservingTerminal);
         AppTestHost.Check(typeof(RecoveryBindings).GetMethod("StartDaemon") is null);
         AppTestHost.Check(typeof(RecoveryBindings).GetMethod("RecoverControl") is null);
+    }
+
+    static void CapacityPhases()
+    {
+        var bindings = new RecoveryBindings();
+        bindings.Select(Pane(), "shell");
+        bindings.Apply(SessionState(ConnectionPhase.WaitingForCapacity, DeviceFreshness.Unknown));
+        AppTestHost.Check(bindings.Current.Kind != RecoveryViewKind.Fresh);
+        AppTestHost.Check(bindings.Current.Kind != RecoveryViewKind.Recovered);
+        AppTestHost.Check(!bindings.Current.CommandsEnabled);
+        AppTestHost.Check(bindings.Current.DataMayBeStale);
+        AppTestHost.Check(bindings.Current.Reason == ResourceBudgetCodes.ConnectionBudgetExhausted);
+        bindings.Apply(SessionState(ConnectionPhase.PausedForCapacity, DeviceFreshness.Stale));
+        AppTestHost.Check(bindings.Current.Kind != RecoveryViewKind.Fresh);
+        AppTestHost.Check(bindings.Current.Kind != RecoveryViewKind.Recovered);
+        AppTestHost.Check(!bindings.Current.CommandsEnabled);
+        AppTestHost.Check(bindings.Current.Reason == ResourceBudgetCodes.ConnectionBudgetExhausted);
     }
 
     static void KillLedger()

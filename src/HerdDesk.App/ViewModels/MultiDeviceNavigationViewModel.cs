@@ -112,7 +112,7 @@ public sealed class MultiDeviceNavigationViewModel
                 PartitionReadiness.Stale or PartitionReadiness.Loading => AggregationCodes.Stale,
                 _ => partition.ErrorCode ?? AggregationCodes.Error
             };
-        var status = StatusOf(partition.Readiness);
+        var status = StatusOf(partition);
         return new DeviceConnectionSummary(
             partition.Device,
             partition.DisplayLabel,
@@ -163,6 +163,19 @@ public sealed class MultiDeviceNavigationViewModel
             device.Sessions,
             []);
         return ToSummary(partition);
+    }
+
+    private static StatusPresentation StatusOf(DevicePartition partition)
+    {
+        if (partition.Phase == ConnectionPhase.WaitingForCapacity)
+            return new(
+                ShellCodes.Loading, ShellStrings.WaitingForCapacity, "waiting-for-capacity",
+                RecoveryActionKind.None, "", false);
+        if (partition.Phase == ConnectionPhase.PausedForCapacity)
+            return new(
+                ShellCodes.Stale, ShellStrings.PausedForCapacity, "paused-for-capacity",
+                RecoveryActionKind.RetryProjection, ShellStrings.Reconnect, true);
+        return StatusOf(partition.Readiness);
     }
 
     private static StatusPresentation StatusOf(PartitionReadiness readiness) =>

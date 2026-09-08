@@ -56,6 +56,25 @@ public sealed class DeviceConnectionStatusViewModel
         var recovery = state.Recovery;
         var clock = now ?? _time.GetUtcNow();
         InFlight = state.Phase is ConnectionPhase.Connecting or ConnectionPhase.Synchronizing;
+        if (state.Phase is ConnectionPhase.WaitingForCapacity or ConnectionPhase.PausedForCapacity)
+        {
+            RetryEnabled = state.Phase == ConnectionPhase.PausedForCapacity;
+            CancelEnabled = false;
+            EditCredentialsEnabled = false;
+            ReviewHostKeyEnabled = false;
+            SecondsRemaining = 0;
+            InputReplayText = recovery.InputNotReplayed ? ShellStrings.InputNotReplayed : null;
+            StatusText = state.Phase == ConnectionPhase.WaitingForCapacity
+                ? ShellStrings.WaitingForCapacity
+                : ShellStrings.PausedForCapacity;
+            AutomationName = state.Phase == ConnectionPhase.WaitingForCapacity
+                ? "waiting-for-capacity"
+                : "paused-for-capacity";
+            AutomationHint = StatusText;
+            _ = context;
+            return;
+        }
+
         CancelEnabled = recovery.RetryTimerCount > 0 && !InFlight;
         SecondsRemaining = 0;
         if (recovery.NextRetryUtc is { } due && due > clock)

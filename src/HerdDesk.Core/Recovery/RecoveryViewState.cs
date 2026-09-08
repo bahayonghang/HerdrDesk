@@ -70,6 +70,20 @@ public static class RecoveryProjection
                 replayed);
         }
 
+        if (session.Phase is ConnectionPhase.WaitingForCapacity or ConnectionPhase.PausedForCapacity)
+        {
+            return new(
+                RecoveryViewKind.AwaitingUser,
+                false,
+                recovery.Attempt,
+                null,
+                ResourceBudgetCodes.ConnectionBudgetExhausted,
+                false,
+                true,
+                lastKnownLabel,
+                replayed);
+        }
+
         if (session.Phase is ConnectionPhase.Connecting or ConnectionPhase.Synchronizing)
         {
             return new(
