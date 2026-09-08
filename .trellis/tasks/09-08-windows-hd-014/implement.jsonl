@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"terminal frame、renderer 消费回执、输入和 host 权限跨层流"}
+{"file":"docs/plan/docs/03_架构与数据流.md","reason":"Terminal.Web 模块边界、可见 pane 预算和身份模型"}
+{"file":"docs/plan/docs/06_终端与输入法.md","reason":"ANSI delta、UTF-8、背压、滚动与选择契约"}
+{"file":"docs/plan/docs/08_安全与威胁模型.md","reason":"WebView2 origin、消息 allowlist 与不可信输出边界"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Terminal.Web unit、Windows integration、web 与 CI 唯一入口"}
