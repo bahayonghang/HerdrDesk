@@ -19,8 +19,8 @@
       "risk": "错误版本导致所有后续fixture失效",
       "rollback": "停用自动兼容判断，恢复只读诊断",
       "status": "in_progress",
-      "implementation_note": "源码commit/blob/schema header已复核；缺运行中本地与远端证据。",
-      "progress_evidence": "docs/implementation-g0.md"
+      "implementation_note": "源码 v0.8.2/protocol 20 已复核。隔离 Windows 记录 preview protocol 22，不兼容；ACL 未采集；远端 not_run。AC01 未通过。",
+      "progress_evidence": "evidence/compatibility-baseline.json"
     },
     {
       "id": "HD-002",
@@ -82,9 +82,9 @@
       "proposed_output": "tests/fixtures/real-terminal-v082/",
       "risk": "源码支持但Windows运行路径失败",
       "rollback": "只读模式；保留本地诊断，不启动完整GUI开发",
-      "status": "blocked",
-      "implementation_note": "离线探针与合成回归已完成；等待HD-001运行证据及隔离Windows pane。",
-      "progress_evidence": "docs/implementation-g0.md"
+      "status": "in_progress",
+      "implementation_note": "隔离 pane observe/control 已记录；control_verified 仍为 false；resize/双控制者未跑。AC05 未通过。",
+      "progress_evidence": "evidence/runtime/windows-terminal-lease.capture.json"
     },
     {
       "id": "HD-005",

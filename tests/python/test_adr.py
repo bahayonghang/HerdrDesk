@@ -121,6 +121,16 @@ class ApprovedBaselineTests(unittest.TestCase):
         self.assertIn('ADR-0001', markdown)
         for adr_id in REQUIRED_ADR_IDS:
             self.assertIn(adr_id, markdown)
+        windows_runtime = _gate(document, 'hd001-windows-runtime')
+        self.assertEqual(windows_runtime['path'], 'confirmed')
+        self.assertEqual(windows_runtime['result'], 'recorded')
+        self.assertIs(windows_runtime['claim_passed'], False)
+        self.assertEqual(windows_runtime['evidence_class'], 'isolated_windows_runtime')
+        lease_gate = _gate(document, 'hd004-windows-lease')
+        self.assertEqual(lease_gate['path'], 'confirmed')
+        self.assertEqual(lease_gate['result'], 'recorded')
+        self.assertIs(lease_gate['claim_passed'], False)
+        self.assertEqual(_gate(document, 'hd001-named-pipe-acl')['path'], 'blocked')
         _check()
 
     def test_ac44_passed_claim_is_rejected(self):
@@ -190,7 +200,7 @@ class ApprovedBaselineTests(unittest.TestCase):
     def test_blocked_gate_passed_is_rejected(self):
         document, _, _, _, _ = _bundle()
         document = copy.deepcopy(document)
-        _gate(document, 'hd001-windows-runtime')['result'] = 'passed'
+        _gate(document, 'hd001-named-pipe-acl')['result'] = 'passed'
         with self.assertRaises(AdrError) as ctx:
             _check(document=document)
         self.assertEqual(str(ctx.exception), 'blocked_treated_as_passed')

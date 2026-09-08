@@ -15,7 +15,7 @@
 | HD-001 | 锁定上游事实与版本 | in_progress | — | AC01 | `evidence/compatibility-baseline.json` |
 | HD-002 | 名称和授权清点 | in_progress | — | AC02 | `docs/licensing-register.md` |
 | HD-003 | API endpoint 与 pipe 映射 | blocked | HD-001 | AC03 | `tests/fixtures/endpoint-cases.json` |
-| HD-004 | 终端桥协议探针 | blocked | HD-001 | AC05 | `tests/fixtures/real-terminal-v082/` |
+| HD-004 | 终端桥协议探针 | in_progress | HD-001 | AC05 | `tests/fixtures/real-terminal-v082/` |
 | HD-005 | WinUI renderer 与中文输入 spike | planned | HD-004 | AC08, AC09 | `docs/spikes/renderer-decision.md` |
 | HD-006 | 安全边界与 ADR 定稿 | planned | HD-002, 003, 005 | AC44 | `docs/adr/approved-baseline.md` |
 

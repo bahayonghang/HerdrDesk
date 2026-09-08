@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "document_kind": "version_support_matrix",
-  "note": "Unknown versions stay out of the default compatible set. The conflict row key is (os, arch, cli_binary_hash, daemon_version, protocol, schema_hash). Any unknown key field means the combo is not compatible. Source inspection, synthetic fixtures, and hosted CI are not runtime proof.",
+  "note": "Unknown versions stay out of the default compatible set. The conflict row key is (os, arch, cli_binary_hash, daemon_version, protocol, schema_hash). Any unknown key field means the combo is not compatible. Protocol 22 runtime is not compatible with protocol 20 source. Source inspection, synthetic fixtures, and hosted CI are not runtime proof. Preview stays out of compatible_by_default.",
   "row_key": [
     "os",
     "arch",
@@ -36,10 +36,10 @@
         "note": "Source protocol 20 is not a runtime schema hash and is not copied into key.schema_hash."
       },
       "windows_runtime": {
-        "status": "blocked",
-        "evidence_level": "blocked",
-        "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
-        "capture": "evidence/runtime/windows-runtime.blocked.json"
+        "status": "recorded",
+        "evidence_level": "isolated_windows_runtime",
+        "capture": "evidence/runtime/windows-runtime.capture.json",
+        "note": "See the protocol-22 row. This source-key row stays not compatible because key fields are unknown."
       },
       "remote_runtime": {
         "status": "not_run",
@@ -48,6 +48,40 @@
       },
       "compatible": false,
       "reason": "unknown_key_fields: os, arch, cli_binary_hash, daemon_version, protocol, schema_hash"
+    },
+    {
+      "key": {
+        "os": "windows",
+        "arch": null,
+        "cli_binary_hash": "d3e69a7810beb6077c47bd8d876f50929152828a6c210c5e6d001f9220137da6",
+        "daemon_version": null,
+        "protocol": 22,
+        "schema_hash": "5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a"
+      },
+      "source": {
+        "status": "recorded",
+        "evidence_level": "source_inspection_only",
+        "tag": "v0.8.2",
+        "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
+        "protocol_from_source_schema": 20,
+        "note": "Source protocol 20 does not match this runtime protocol 22."
+      },
+      "windows_runtime": {
+        "status": "recorded",
+        "evidence_level": "isolated_windows_runtime",
+        "cli": "herdr 0.9.0-preview.2026-09-08-62431dbd033b",
+        "channel": "preview",
+        "protocol": 22,
+        "matches_reference_header": false,
+        "capture": "evidence/runtime/windows-runtime.capture.json"
+      },
+      "remote_runtime": {
+        "status": "not_run",
+        "evidence_level": "not_run",
+        "capture": "evidence/runtime/remote-runtime.not-run.json"
+      },
+      "compatible": false,
+      "reason": "protocol_mismatch_not_compatible: runtime 22 vs source 20; unknown_key_fields: arch, daemon_version; preview_not_in_default_compatible_set; remote_not_run"
     }
   ],
   "channel_diff": [
@@ -55,15 +89,17 @@
       "channel": "stable",
       "tag": "v0.8.2",
       "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
-      "status": "source_recorded_runtime_unknown"
+      "status": "source_recorded_runtime_unknown",
+      "note": "The isolated Windows capture ran a preview binary, not this stable tag."
     },
     {
       "channel": "preview",
-      "tag": null,
-      "issues": "unknown",
-      "status": "unknown_not_in_default_compatible_set",
-      "effect": "blocked_until_recorded",
-      "note": "Preview issues are not copied into the stable baseline as defects."
+      "tag": "0.9.0-preview.2026-09-08-62431dbd033b",
+      "commit": "62431dbd033b",
+      "protocol": 22,
+      "status": "recorded_not_in_default_compatible_set",
+      "effect": "blocked_until_compatible_with_source_protocol_20",
+      "note": "Preview issues are not copied into the stable baseline as defects. Protocol 22 is not compatible with source protocol 20."
     }
   ]
 }

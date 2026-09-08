@@ -18,12 +18,14 @@
 | `src/server/render_stream.rs` blob | 见文件 `herdr.source_blobs` |
 | schema blob | 见文件 `herdr.source_blobs` |
 | `distribution_binary_sha256` | null |
-| `runtime_binary_sha256` / `daemon_version` / `runtime_schema_sha256` | null |
-| `runtime_verification.windows_local` | `blocked`（`no_authorized_isolated_pane_or_live_herdr_grant`） |
+| `runtime_binary_sha256` | `d3e69a7810beb6077c47bd8d876f50929152828a6c210c5e6d001f9220137da6`（preview；非 git blob） |
+| `daemon_version` | null（无独立于 CLI `--version` 的 daemon ping） |
+| `runtime_schema_sha256` | `5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a` |
+| `runtime_verification.windows_local` | `recorded`（preview CLI `0.9.0-preview.2026-09-08-62431dbd033b`，runtime `api_protocol=22`；与源码 protocol 20 不兼容） |
 | `runtime_verification.remote_linux` | `not_run`（独立条目，不借用 Windows） |
-| `runtime_verification.named_pipe_acl` | `blocked`（与 Windows runtime 同一授权缺口） |
-| `runtime_verification.windows_endpoint` | `blocked`（`no_authorized_isolated_windows_endpoint_or_live_herdr_grant`；HD-001 C2 残余） |
-| `runtime_verification.windows_terminal_lease` | `blocked`（`no_authorized_isolated_pane_or_live_herdr_grant`；HD-001 C2 残余；独立于 endpoint 记录） |
+| `runtime_verification.named_pipe_acl` | `blocked`（`named_pipe_acl_not_captured`） |
+| `runtime_verification.windows_endpoint` | `blocked`（`no_authorized_isolated_windows_endpoint_or_live_herdr_grant`） |
+| `runtime_verification.windows_terminal_lease` | `recorded`（隔离 pane observe/control；`control_verified` 仍为 false；非 AC05 pass） |
 | `runtime_verification.ime` | `blocked`（`no_authorized_winui_interactive_desktop_or_ime_grant`；HD-005 L3 未授权） |
 | `default_write_capability` | false |
 
@@ -31,7 +33,7 @@
 
 ## `version-support-matrix.json`
 
-冲突行键：`(os, arch, cli_binary_hash, daemon_version, protocol, schema_hash)`。列：source、Windows runtime、remote runtime。任一关键字段未知则该组合不得标 `compatible`。`compatible_by_default` 当前为空。preview 未知项不进入默认兼容集。
+冲突行键：`(os, arch, cli_binary_hash, daemon_version, protocol, schema_hash)`。列：source、Windows runtime、remote runtime。任一关键字段未知则该组合不得标 `compatible`。runtime protocol 22 不得标为与 source protocol 20 兼容。`compatible_by_default` 当前为空。preview 不进入默认兼容集。
 
 ## `runtime/`
 
@@ -42,10 +44,10 @@ UTF-8 JSON。采集记录字段：`capture_id`、`kind`、`captured_at_utc`、`o
 | `capture.schema.json` | 采集字段契约；不是一次运行 |
 | `windows-runtime.template.json` | Windows 线模板；`template=true`，空 hash/退出码 |
 | `remote-runtime.template.json` | remote 线模板；不得填成一次成功运行 |
-| `windows-runtime.blocked.json` | AC01-C2 当前记录：blocked |
+| `windows-runtime.capture.json` | AC01-C2 隔离 Windows 预检：recorded，protocol 22，非兼容 |
 | `remote-runtime.not-run.json` | AC01-C3 独立 `not_run` 记录 |
 | `windows-endpoint-matrix.blocked.json` | AC03-C1 当前记录：blocked；合成矩阵不是 runtime pass |
-| `windows-terminal-lease.blocked.json` | AC05-C1 当前记录：blocked；合成 lease 矩阵不是 runtime pass；独立于 endpoint 记录 |
+| `windows-terminal-lease.capture.json` | AC05-C1 recorded；`control_verified` 仍 false；合成 lease 矩阵不是 AC05 pass；独立于 endpoint 记录 |
 | `windows-renderer-ime.blocked.json` | HD-005 IME/desktop 当前记录：blocked；L1 合成标本不是 AC08/AC09 pass；独立于 lease/endpoint 记录 |
 
 模板不是成功运行。runtime 成功结论必须指向非模板采集文件。
@@ -61,5 +63,5 @@ UTF-8 JSON。采集记录字段：`capture_id`、`kind`、`captured_at_utc`、`o
 - 禁止把 `source_inspection_only`、synthetic fixture 或 hosted CI 提升为 runtime 证明。
 - 禁止把 git blob SHA 写入 `runtime_binary_sha256` 或 `runtime_schema_sha256`。
 - Windows 与 remote 的 runtime 结论必须来自独立记录。
-- `api_protocol` 保持 20；`default_write_capability` 保持 false。
-- 结构校验返回 `windows_verified: false`。
+- 源码 `api_protocol` 保持 20；`default_write_capability` 保持 false。runtime protocol 22 不得提升为兼容。
+- 结构校验返回 `windows_verified: false`。AC01/AC05 保持 not passed。

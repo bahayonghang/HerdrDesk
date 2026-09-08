@@ -1,0 +1,186 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "windows-terminal-lease-2026-09-08-isolated-pane",
+  "kind": "windows_terminal_lease",
+  "captured_at_utc": "2026-09-08T05:02:48Z",
+  "operator_scope": "isolated_disposable_pane_observe_control",
+  "host_fingerprint_redacted": "windows_local",
+  "command_redacted": [
+    "herdr terminal session observe TARGET --cols --rows",
+    "herdr terminal session control TARGET --cols --rows",
+    "herdr terminal session control TARGET --cols --rows with terminal.input text"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "evidence_level": "isolated_windows_runtime",
+  "result": "recorded",
+  "herdr_executed": true,
+  "live_matrix": "recorded_subset",
+  "simulation_fixture": "tests/fixtures/lease-cases.json",
+  "real_capture_index": "tests/fixtures/real-terminal-v082/index.json",
+  "ac05_passed": false,
+  "ac05_c1": "recorded",
+  "ac06_c1": "blocked",
+  "ac07_c1": "blocked",
+  "ac14_c1": "blocked",
+  "ac15_c1": "blocked",
+  "ac16_c1": "blocked",
+  "windows_verified": false,
+  "caller_pane_targeted": false,
+  "target_redacted": "disposable_pane",
+  "protocol": 22,
+  "takeover_used": false,
+  "control_verified": false,
+  "release_acknowledged": false,
+  "pane_exit_verified": false,
+  "wire_shape_checks_passed": true,
+  "input_sent": true,
+  "input_bytes": 10,
+  "input_sha256": "9d6f6f2b6946ef15ac99a3f617668c9cf11b013afa107e8160fc7330a663e111",
+  "covers": [
+    "observe_first_frame",
+    "observe_stdout_eof_not_pane_exit",
+    "observe_terminal_closed_not_pane_exit",
+    "observe_cannot_send_input",
+    "control_unconfirmed_stays_acquiring",
+    "control_busy_second_controller_no_takeover",
+    "control_not_inferred_from_frame_process_focus",
+    "fictional_granted_rejected",
+    "takeover_without_confirmation",
+    "takeover_confirmed_adapter_proved",
+    "no_input_ack_unknown",
+    "resize_requires_verified_writer",
+    "resize_unacknowledged_while_verified",
+    "release_ends_bridge_pane_continues"
+  ],
+  "live_covers": [
+    "observe_first_frame",
+    "observe_bridge_exit_not_pane_exit",
+    "control_unconfirmed_after_stdin_write",
+    "release_ends_bridge_pane_continues"
+  ],
+  "probes": {
+    "observe": {
+      "checked_at_utc": "2026-09-08T05:01:56Z",
+      "input_sent": false,
+      "takeover_used": false,
+      "frame_count": 1,
+      "frames": [
+        {
+          "type": "terminal.frame",
+          "seq": 1,
+          "width": 120,
+          "height": 40,
+          "full": true,
+          "decoded_bytes": 5286,
+          "sha256": "619a25177ecd965333bf8bdd1237faef40d397450b6b35700a432e230df7fe30"
+        }
+      ],
+      "bridge_exit_code": 1,
+      "stderr_bytes": 0,
+      "stream_end": "bridge_process_exit",
+      "terminal_closed_seen": false,
+      "stdout_eof_seen": false,
+      "pane_exit_verified": false,
+      "control_verified": false,
+      "wire_shape_checks_passed": true,
+      "release_acknowledged": false,
+      "pane_alive_after_bridge_exit": true
+    },
+    "control": {
+      "checked_at_utc": "2026-09-08T05:02:18Z",
+      "input_sent": false,
+      "takeover_used": false,
+      "frame_count": 1,
+      "frames": [
+        {
+          "type": "terminal.frame",
+          "seq": 1,
+          "width": 120,
+          "height": 40,
+          "full": true,
+          "decoded_bytes": 5286,
+          "sha256": "619a25177ecd965333bf8bdd1237faef40d397450b6b35700a432e230df7fe30"
+        }
+      ],
+      "bridge_exit_code": 0,
+      "stderr_bytes": 0,
+      "stream_end": "bridge_process_exit",
+      "terminal_closed_seen": false,
+      "stdout_eof_seen": false,
+      "pane_exit_verified": false,
+      "control_verified": false,
+      "wire_shape_checks_passed": true,
+      "release_acknowledged": false,
+      "pane_alive_after_bridge_exit": true
+    },
+    "control_input": {
+      "checked_at_utc": "2026-09-08T05:02:48Z",
+      "input_sent": true,
+      "input_bytes": 10,
+      "input_sha256": "9d6f6f2b6946ef15ac99a3f617668c9cf11b013afa107e8160fc7330a663e111",
+      "takeover_used": false,
+      "frame_count": 4,
+      "frames": [
+        {
+          "type": "terminal.frame",
+          "seq": 1,
+          "width": 120,
+          "height": 40,
+          "full": true,
+          "decoded_bytes": 5286,
+          "sha256": "619a25177ecd965333bf8bdd1237faef40d397450b6b35700a432e230df7fe30"
+        },
+        {
+          "type": "terminal.frame",
+          "seq": 2,
+          "width": 120,
+          "height": 40,
+          "full": false,
+          "decoded_bytes": 1481,
+          "sha256": "b6a273c3c3bc80673bcbe6ad4af6872ea561d6f941f896ddccfe15fda4d9f3fb"
+        },
+        {
+          "type": "terminal.frame",
+          "seq": 3,
+          "width": 120,
+          "height": 40,
+          "full": false,
+          "decoded_bytes": 782,
+          "sha256": "5f842a88ebef698759ab0f4ea5160625a18df5f309c4574909e991314cf92963"
+        },
+        {
+          "type": "terminal.frame",
+          "seq": 4,
+          "width": 120,
+          "height": 40,
+          "full": false,
+          "decoded_bytes": 42,
+          "sha256": "22743e31134d78d4a1e698b96b824b2b99c1dc4d6af306de03043ed2f60a0a05"
+        }
+      ],
+      "bridge_exit_code": 0,
+      "stderr_bytes": 0,
+      "stream_end": "bridge_process_exit",
+      "terminal_closed_seen": false,
+      "stdout_eof_seen": false,
+      "pane_exit_verified": false,
+      "control_verified": false,
+      "wire_shape_checks_passed": true,
+      "release_acknowledged": false,
+      "pane_alive_after_bridge_exit": true
+    }
+  },
+  "limitations": [
+    "Authorized isolated disposable pane. Caller pane was not a probe target.",
+    "Wire-shape probe only. Not TUI, IME, or WinUI acceptance. Terminal bytes are not shipped.",
+    "Observe produced one full frame. Control with 10-byte input produced full then delta frames.",
+    "Canonical Base64 wire shape passed. stream_end is bridge_process_exit. EOF is not pane death.",
+    "Pane remained alive after bridge exit. control_verified stayed false after stdin write.",
+    "takeover_used is false. release_acknowledged is false. Resize and two-controller mutex were not run.",
+    "Synthetic lease-cases.json remains a mapper simulation. real-terminal-v082 index stays empty.",
+    "AC05-C1 is recorded. AC05 stays not passed. windows_verified stays false."
+  ]
+}

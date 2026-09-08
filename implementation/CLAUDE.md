@@ -14,12 +14,12 @@
 | probe selftest | passed，23，合成 |
 | C# build / smoke | `passed_ci`，22 |
 | Actions | passed，verified commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`，run `34138627135`，windows-latest + ubuntu-latest |
-| `windows_live_tests` | `not_run` |
+| `windows_live_tests` | `isolated_capture_recorded`（非 AC 通过） |
 | `verified_acceptance_ids` | `[]` |
 
 `scope`：G0 unit/contract/build only。每个后续 SHA 需要自己的 Actions 结果。
 
-阻塞：交互桌面与隔离 herdr；runtime CLI/daemon/schema 与 endpoint/ACL；renderer/IME 与产品实现。
+阻塞：runtime protocol 22 与源码 20 不兼容；named-pipe ACL / remote / endpoint 真机；`control_verified` 仍 false；IME/WinUI 未授权。
 
 ## 其他快照
 

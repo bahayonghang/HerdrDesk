@@ -34,10 +34,10 @@
 
 | 任务 | 状态 | 阻塞原因 / 下一步 |
 |---|---|---|
-| HD-001 | in_progress | 缺本地/远端 binary hash、daemon ping、runtime schema hash |
+| HD-001 | in_progress | Windows preview protocol 22 已记录但不兼容；ACL 未采集；远端 not_run |
 | HD-002 | in_progress | 项目许可、商标/包身份、分发清点 |
-| HD-003 | blocked | 等 HD-001 runtime 与 Windows pipe/ACL |
-| HD-004 | blocked | 等隔离 Windows pane 实测 |
+| HD-003 | blocked | Windows pipe/ACL 与 endpoint 真机仍缺 |
+| HD-004 | in_progress | 隔离 observe/control 已记录；control_verified 仍 false；AC05 未通过 |
 | HD-005–036 | planned | 见 tasks 索引 |
 
 阶段：G0 → P1 可观测 → P2 可写本地 MVP → P3 多设备 → P4 文件 → P5 发布。
@@ -74,7 +74,7 @@ G0 桥或 IME 失败则停止扩大可写范围。文件损坏、错设备输入
 
 改状态时同时改 `backlog.json` 与 `tasks/HD-xxx.md`。通过 AC 必须写入证据路径。G0 未通过时不要把产品 AC 标为 `passed`。
 
-当前快照：`implementation/status.json` 的 `verified_acceptance_ids=[]`，`windows_live_tests=not_run`。其中 `github_actions.verified_run_id=34138627135` 只覆盖 commit `629bb01`；计数可能滞后于后续协议/setup 回归。基线：`evidence/compatibility-baseline.json`。当前 HEAD 的 hosted Actions 为 UNVERIFIED。
+当前快照：`implementation/status.json` 的 `verified_acceptance_ids=[]`，`windows_live_tests=isolated_capture_recorded`（非 AC 通过）。其中 `github_actions.verified_run_id=34138627135` 只覆盖 commit `629bb01`；计数可能滞后于后续协议/setup 回归。基线：`evidence/compatibility-baseline.json`。当前 HEAD 的 hosted Actions 为 UNVERIFIED。
 
 ## 约束
 

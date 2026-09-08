@@ -63,9 +63,9 @@ class TerminalLeaseTests(unittest.TestCase):
         self.assertEqual(result['lease_validation'], 'passed')
         self.assertFalse(result['windows_verified'])
         self.assertFalse(result['ac05_passed'])
-        self.assertEqual(result['ac05_c1'], 'blocked')
-        self.assertEqual(result['live_matrix'], 'blocked')
-        self.assertEqual(result['blocked_category'], BLOCKED_CATEGORY)
+        self.assertEqual(result['ac05_c1'], 'recorded')
+        self.assertEqual(result['live_matrix'], 'recorded_subset')
+        self.assertIs(result['control_verified'], False)
         self.assertTrue(result['simulation'])
         self.assertEqual(result['rows'], 14)
         repo = repository.validate()
@@ -100,21 +100,29 @@ class TerminalLeaseTests(unittest.TestCase):
         self.assertIs(index['ac05_passed'], False)
         self.assertEqual(index['blocked_category'], BLOCKED_CATEGORY)
 
-    def test_shipped_capture_consumes_hd001_residual(self):
+    def test_shipped_capture_is_isolated_and_not_ac05(self):
         capture = _load(CAPTURE_REL)
         baseline = _load('evidence/compatibility-baseline.json')
-        self.assertEqual(capture['blocked_category'], BLOCKED_CATEGORY)
-        self.assertIs(capture['herdr_executed'], False)
+        self.assertEqual(capture['evidence_level'], 'isolated_windows_runtime')
+        self.assertEqual(capture['result'], 'recorded')
+        self.assertIs(capture['herdr_executed'], True)
         self.assertIs(capture['ac05_passed'], False)
         self.assertIs(capture['windows_verified'], False)
+        self.assertIs(capture['control_verified'], False)
+        self.assertIs(capture['takeover_used'], False)
+        self.assertIs(capture['pane_exit_verified'], False)
+        self.assertIs(capture['wire_shape_checks_passed'], True)
+        self.assertEqual(capture['ac05_c1'], 'recorded')
+        self.assertEqual(capture['ac06_c1'], 'blocked')
         self.assertEqual(
-            baseline['runtime_verification']['windows_terminal_lease'], 'blocked')
+            baseline['runtime_verification']['windows_terminal_lease'], 'recorded')
         matches = [
             item for item in baseline['records']
             if item['environment'] == 'windows_terminal_lease'
         ]
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0]['blocked_category'], BLOCKED_CATEGORY)
+        self.assertEqual(matches[0]['result'], 'recorded')
+        self.assertNotIn('blocked_category', matches[0])
         self.assertNotEqual(matches[0]['subject'], 'herdr-windows-endpoint-matrix')
 
     def test_lease_record_is_independent_of_endpoint(self):
@@ -124,7 +132,7 @@ class TerminalLeaseTests(unittest.TestCase):
         self.assertNotEqual(capture['kind'], endpoint['kind'])
         self.assertNotIn('named_pipe_connected', capture)
         self.assertNotEqual(
-            capture['blocked_category'],
+            capture.get('blocked_category'),
             endpoint['blocked_category'],
         )
 
@@ -448,6 +456,28 @@ class TerminalLeaseTests(unittest.TestCase):
             check_evidence(baseline, matrix, documents)
         self.assertEqual(str(ctx.exception), 'evidence_level_promotion')
 
+    def test_control_verified_stays_false_after_stdin_write(self):
+        capture = _load(CAPTURE_REL)
+        probe = capture['probes']['control_input']
+        self.assertIs(probe['input_sent'], True)
+        self.assertEqual(probe['input_bytes'], 10)
+        self.assertEqual(
+            probe['input_sha256'],
+            '9d6f6f2b6946ef15ac99a3f617668c9cf11b013afa107e8160fc7330a663e111',
+        )
+        self.assertIs(probe['control_verified'], False)
+        self.assertIs(probe['takeover_used'], False)
+        self.assertIs(probe['pane_exit_verified'], False)
+        self.assertEqual(probe['stream_end'], 'bridge_process_exit')
+        self.assertGreaterEqual(probe['frame_count'], 2)
+        self.assertIs(probe['frames'][0]['full'], True)
+        self.assertFalse(probe['frames'][1]['full'])
+        mutated = dict(capture)
+        mutated['control_verified'] = True
+        with self.assertRaises(LeaseError) as ctx:
+            _check(capture=mutated)
+        self.assertEqual(str(ctx.exception), 'control_verified_without_adapter')
+
     def test_endpoint_capture_cannot_stand_in_for_lease(self):
         endpoint = _load('evidence/runtime/windows-endpoint-matrix.blocked.json')
         with self.assertRaises(LeaseError) as ctx:
@@ -457,6 +487,34 @@ class TerminalLeaseTests(unittest.TestCase):
             'runtime_records_not_independent',
             'missing_blocked_category',
         })
+
+    def test_bridge_exit_classified_as_pane_death_is_rejected(self):
+        _, _, capture, *_ = _bundle()
+        capture['probes']['observe']['stream_end'] = 'pane_exit'
+        with self.assertRaises(LeaseError) as ctx:
+            _check(capture=capture)
+        self.assertEqual(str(ctx.exception), 'eof_classified_as_pane_exit')
+
+    def test_missing_pane_alive_after_bridge_exit_is_rejected(self):
+        _, _, capture, *_ = _bundle()
+        capture['probes']['observe']['pane_alive_after_bridge_exit'] = False
+        with self.assertRaises(LeaseError) as ctx:
+            _check(capture=capture)
+        self.assertEqual(str(ctx.exception), 'eof_classified_as_pane_exit')
+
+    def test_frame_bytes_payload_is_rejected(self):
+        _, _, capture, *_ = _bundle()
+        capture['probes']['control_input']['frames'][0]['bytes'] = 'AAAA'
+        with self.assertRaises(LeaseError) as ctx:
+            _check(capture=capture)
+        self.assertEqual(str(ctx.exception), 'payload_not_redacted')
+
+    def test_live_covers_cannot_omit_bridge_exit_or_stdin_write(self):
+        _, _, capture, *_ = _bundle()
+        capture['live_covers'] = ['observe_first_frame']
+        with self.assertRaises(LeaseError) as ctx:
+            _check(capture=capture)
+        self.assertEqual(str(ctx.exception), 'missing_matrix_row')
 
 
 if __name__ == '__main__':

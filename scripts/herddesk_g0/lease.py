@@ -19,7 +19,7 @@ class LeaseError(ValueError):
 
 FIXTURE_REL = 'tests/fixtures/lease-cases.json'
 REAL_INDEX_REL = 'tests/fixtures/real-terminal-v082/index.json'
-CAPTURE_REL = 'evidence/runtime/windows-terminal-lease.blocked.json'
+CAPTURE_REL = 'evidence/runtime/windows-terminal-lease.capture.json'
 BASELINE_REL = 'evidence/compatibility-baseline.json'
 ENDPOINT_CAPTURE_REL = 'evidence/runtime/windows-endpoint-matrix.blocked.json'
 BLOCKED_CATEGORY = 'no_authorized_isolated_pane_or_live_herdr_grant'
@@ -43,6 +43,18 @@ MATRIX_SCENARIOS = (
 CHILD_AC_FIELDS = (
     'ac05_c1', 'ac06_c1', 'ac07_c1', 'ac14_c1', 'ac15_c1', 'ac16_c1',
 )
+REQUIRED_LIVE_COVERS = frozenset({
+    'observe_first_frame',
+    'observe_bridge_exit_not_pane_exit',
+    'control_unconfirmed_after_stdin_write',
+    'release_ends_bridge_pane_continues',
+})
+PANE_DEATH_ENDS = frozenset({'pane_exit', 'pane_death'})
+STREAM_ENDS_NOT_PANE = frozenset({
+    'stdout_eof', 'terminal_closed', 'bridge_process_exit',
+})
+FRAME_PAYLOAD_KEYS = frozenset({'bytes', 'data', 'payload'})
+PROBE_TEXT_KEYS = frozenset({'stdout', 'stderr', 'input_text', 'input'})
 SUCCESS_RESULTS = frozenset({
     'passed', 'verified', 'compatible', 'success', 'ok',
 })
@@ -86,14 +98,14 @@ def check_terminal_lease_matrix(
         'lease_validation': 'passed',
         'windows_verified': False,
         'ac05_passed': False,
-        'ac05_c1': 'blocked',
-        'ac06_c1': 'blocked',
-        'ac07_c1': 'blocked',
-        'ac14_c1': 'blocked',
-        'ac15_c1': 'blocked',
-        'ac16_c1': 'blocked',
-        'live_matrix': 'blocked',
-        'blocked_category': BLOCKED_CATEGORY,
+        'ac05_c1': capture.get('ac05_c1') or 'recorded',
+        'ac06_c1': capture.get('ac06_c1') or 'blocked',
+        'ac07_c1': capture.get('ac07_c1') or 'blocked',
+        'ac14_c1': capture.get('ac14_c1') or 'blocked',
+        'ac15_c1': capture.get('ac15_c1') or 'blocked',
+        'ac16_c1': capture.get('ac16_c1') or 'blocked',
+        'live_matrix': capture.get('live_matrix') or 'recorded_subset',
+        'control_verified': False,
         'simulation': True,
         'rows': len(fixture['cases']),
     }
@@ -376,6 +388,35 @@ def _check_capture(capture: dict[str, Any]) -> None:
         raise LeaseError('evidence_level_promotion')
     if capture.get('kind') != 'windows_terminal_lease':
         raise LeaseError('missing_record_field')
+    if capture.get('ac05_passed') is not False:
+        raise LeaseError('ac05_claimed_passed')
+    if capture.get('windows_verified') is not False:
+        raise LeaseError('evidence_level_promotion')
+    if _is_success(capture.get('result')) or _is_success(capture.get('live_matrix')):
+        raise LeaseError('evidence_level_promotion')
+    if capture.get('control_verified') is True:
+        raise LeaseError('control_verified_without_adapter')
+    covers = capture.get('covers')
+    if not isinstance(covers, list) or set(covers) != set(MATRIX_SCENARIOS):
+        raise LeaseError('missing_matrix_row')
+    if capture.get('evidence_level') == 'isolated_windows_runtime':
+        if capture.get('result') != 'recorded':
+            raise LeaseError('evidence_level_promotion')
+        if capture.get('herdr_executed') is not True:
+            raise LeaseError('missing_record_field')
+        if capture.get('takeover_used') is not False:
+            raise LeaseError('evidence_level_promotion')
+        if capture.get('pane_exit_verified') is not False:
+            raise LeaseError('eof_classified_as_pane_exit')
+        if capture.get('wire_shape_checks_passed') is not True:
+            raise LeaseError('missing_record_field')
+        if capture.get('ac05_c1') != 'recorded':
+            raise LeaseError('missing_record_field')
+        for field in ('ac06_c1', 'ac07_c1', 'ac14_c1', 'ac15_c1', 'ac16_c1'):
+            if _is_success(capture.get(field)):
+                raise LeaseError('evidence_level_promotion')
+        _check_live_probes(capture)
+        return
     if capture.get('result') != 'blocked':
         raise LeaseError('evidence_level_promotion')
     if capture.get('blocked_category') != BLOCKED_CATEGORY:
@@ -384,15 +425,80 @@ def _check_capture(capture: dict[str, Any]) -> None:
         raise LeaseError('evidence_level_promotion')
     if capture.get('live_matrix') != 'blocked':
         raise LeaseError('evidence_level_promotion')
-    if capture.get('ac05_passed') is not False:
-        raise LeaseError('ac05_claimed_passed')
-    if capture.get('windows_verified') is not False:
-        raise LeaseError('evidence_level_promotion')
     if capture.get('exit_code') == 0 and capture.get('stdout_sha256'):
         raise LeaseError('evidence_level_promotion')
-    covers = capture.get('covers')
-    if not isinstance(covers, list) or set(covers) != set(MATRIX_SCENARIOS):
+
+
+def _check_live_probes(capture: dict[str, Any]) -> None:
+    live_covers = capture.get('live_covers')
+    if not isinstance(live_covers, list) or set(live_covers) != REQUIRED_LIVE_COVERS:
         raise LeaseError('missing_matrix_row')
+    probes = capture.get('probes')
+    if not isinstance(probes, dict) or 'observe' not in probes or 'control_input' not in probes:
+        raise LeaseError('missing_record_field')
+    for probe in probes.values():
+        if not isinstance(probe, dict):
+            raise LeaseError('missing_record_field')
+        _check_live_probe(probe)
+    observe = probes['observe']
+    control_input = probes['control_input']
+    if control_input.get('input_sent') is not True:
+        raise LeaseError('missing_record_field')
+    if control_input.get('control_verified') is True:
+        raise LeaseError('control_verified_without_adapter')
+    if control_input.get('takeover_used') is not False:
+        raise LeaseError('evidence_level_promotion')
+    if observe.get('wire_shape_checks_passed') is not True:
+        raise LeaseError('missing_record_field')
+    if control_input.get('wire_shape_checks_passed') is not True:
+        raise LeaseError('missing_record_field')
+    frames = control_input.get('frames')
+    if not isinstance(frames, list) or len(frames) < 2:
+        raise LeaseError('missing_record_field')
+    if frames[0].get('full') is not True:
+        raise LeaseError('missing_record_field')
+    if not any(item.get('full') is False for item in frames[1:]):
+        raise LeaseError('missing_record_field')
+
+
+def _check_live_probe(probe: dict[str, Any]) -> None:
+    if probe.get('control_verified') is True:
+        raise LeaseError('control_verified_without_adapter')
+    stream_end = probe.get('stream_end')
+    if (
+        stream_end not in STREAM_ENDS_NOT_PANE
+        and stream_end not in PANE_DEATH_ENDS
+        and stream_end != 'none'
+    ):
+        raise LeaseError('missing_record_field')
+    if stream_end in PANE_DEATH_ENDS or probe.get('pane_exit_verified') is True:
+        raise LeaseError('eof_classified_as_pane_exit')
+    if stream_end in STREAM_ENDS_NOT_PANE:
+        if probe.get('pane_alive_after_bridge_exit') is not True:
+            raise LeaseError('eof_classified_as_pane_exit')
+    pane_alive = probe.get('pane_alive_after_bridge_exit')
+    classified = classify_stream_end(
+        stdout_eof_seen=probe.get('stdout_eof_seen') is True,
+        terminal_closed_seen=probe.get('terminal_closed_seen') is True,
+        bridge_process_exited=stream_end == 'bridge_process_exit',
+        pane_alive_observed=True if pane_alive is True else (
+            False if pane_alive is False else None),
+    )
+    if classified['pane_exit_verified'] or (
+        classified['kind'] in STREAM_ENDS_NOT_PANE
+        and probe.get('pane_exit_verified') is True
+    ):
+        raise LeaseError('eof_classified_as_pane_exit')
+    if PROBE_TEXT_KEYS & set(probe):
+        raise LeaseError('payload_not_redacted')
+    frames = probe.get('frames')
+    if not isinstance(frames, list):
+        return
+    for frame in frames:
+        if not isinstance(frame, dict):
+            raise LeaseError('missing_record_field')
+        if FRAME_PAYLOAD_KEYS & set(frame):
+            raise LeaseError('payload_not_redacted')
 
 
 def _check_independent_of_endpoint(
@@ -415,9 +521,10 @@ def _check_baseline(baseline: dict[str, Any], capture: dict[str, Any]) -> None:
     verification = baseline.get('runtime_verification')
     if not isinstance(verification, dict):
         raise LeaseError('missing_record_field')
-    if verification.get('windows_terminal_lease') != 'blocked':
-        if _is_success(verification.get('windows_terminal_lease')):
-            raise LeaseError('evidence_level_promotion')
+    lease_status = verification.get('windows_terminal_lease')
+    if _is_success(lease_status):
+        raise LeaseError('evidence_level_promotion')
+    if lease_status not in {'blocked', 'recorded'}:
         raise LeaseError('missing_record_field')
     records = baseline.get('records')
     if not isinstance(records, list):
@@ -426,12 +533,22 @@ def _check_baseline(baseline: dict[str, Any], capture: dict[str, Any]) -> None:
     if len(matches) != 1:
         raise LeaseError('missing_record_field')
     record = matches[0]
-    if record.get('result') != 'blocked':
+    if _is_success(record.get('result')):
         raise LeaseError('evidence_level_promotion')
-    if record.get('blocked_category') != BLOCKED_CATEGORY:
-        raise LeaseError('missing_blocked_category')
     if CAPTURE_REL not in record.get('attachments', []):
         raise LeaseError('missing_record_field')
+    if lease_status == 'recorded':
+        if record.get('result') != 'recorded':
+            raise LeaseError('missing_record_field')
+        if record.get('evidence_level') != 'isolated_windows_runtime':
+            raise LeaseError('evidence_level_promotion')
+        if capture.get('control_verified') is True:
+            raise LeaseError('control_verified_without_adapter')
+    else:
+        if record.get('result') != 'blocked':
+            raise LeaseError('evidence_level_promotion')
+        if record.get('blocked_category') != BLOCKED_CATEGORY:
+            raise LeaseError('missing_blocked_category')
     endpoint_matches = [
         item for item in records if item.get('environment') == 'windows_endpoint'
     ]

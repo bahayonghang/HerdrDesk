@@ -47,7 +47,7 @@ class EvidenceBaselineTests(unittest.TestCase):
         result = validate_evidence(ROOT)
         self.assertEqual(result['evidence_validation'], 'passed')
         self.assertFalse(result['windows_verified'])
-        self.assertEqual(result['runtime_windows'], 'blocked')
+        self.assertEqual(result['runtime_windows'], 'recorded')
         self.assertEqual(result['runtime_remote'], 'not_run')
         self.assertEqual(result['source_evidence_level'], 'source_inspection_only')
         repo = repository.validate()
@@ -74,28 +74,43 @@ class EvidenceBaselineTests(unittest.TestCase):
             'f9642ffa0deb4dc87052a5247d700e1dcd50a753',
         )
         self.assertEqual(len(set(blobs.values())), 4)
-        self.assertIsNone(herdr['runtime_binary_sha256'])
-        self.assertIsNone(herdr['runtime_schema_sha256'])
+        self.assertEqual(
+            herdr['runtime_binary_sha256'],
+            'd3e69a7810beb6077c47bd8d876f50929152828a6c210c5e6d001f9220137da6',
+        )
+        self.assertEqual(
+            herdr['runtime_schema_sha256'],
+            '5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a',
+        )
         self.assertIsNone(herdr['distribution_binary_sha256'])
         self.assertEqual(herdr['api_protocol'], 20)
+        self.assertNotEqual(herdr['runtime_binary_sha256'], blobs['src/client/mod.rs'])
+        self.assertNotEqual(
+            herdr['runtime_schema_sha256'],
+            blobs['docs/next/api/herdr-api.schema.json'],
+        )
         self.assertIs(baseline['default_write_capability'], False)
         source = _record(baseline, 'source_inspection')
         for key in ('tag', 'commit', 'api_protocol', 'schema_version'):
             self.assertTrue(source['field_sources'][key])
 
-    def test_shipped_windows_record_is_blocked_with_category(self):
+    def test_shipped_windows_record_is_isolated_preview_not_compatible(self):
         baseline = _load('evidence/compatibility-baseline.json')
         windows = _record(baseline, 'windows_local')
-        capture = _load('evidence/runtime/windows-runtime.blocked.json')
-        self.assertEqual(windows['result'], 'blocked')
-        self.assertEqual(
-            windows['blocked_category'],
-            'no_authorized_isolated_pane_or_live_herdr_grant',
-        )
-        self.assertEqual(capture['blocked_category'], windows['blocked_category'])
-        self.assertIs(capture['herdr_executed'], False)
+        capture = _load('evidence/runtime/windows-runtime.capture.json')
+        self.assertEqual(windows['result'], 'recorded')
+        self.assertEqual(windows['evidence_level'], 'isolated_windows_runtime')
+        self.assertEqual(windows['runtime_protocol'], 22)
+        self.assertIs(windows['matches_reference_header'], False)
+        self.assertNotIn('blocked_category', windows)
+        self.assertEqual(capture['protocol'], 22)
+        self.assertIs(capture['matches_reference_header'], False)
+        self.assertIs(capture['herdr_executed'], True)
         self.assertIs(capture['template'], False)
+        self.assertEqual(capture['named_pipe_acl'], 'not_captured')
+        self.assertEqual(baseline['herdr']['api_protocol'], 20)
         self.assertFalse(validate_evidence(ROOT)['windows_verified'])
+        self.assertEqual(validate_evidence(ROOT)['runtime_windows'], 'recorded')
 
     def test_shipped_remote_record_is_not_run_and_not_copied_from_windows(self):
         baseline = _load('evidence/compatibility-baseline.json')
@@ -112,7 +127,7 @@ class EvidenceBaselineTests(unittest.TestCase):
         self.assertNotIn('herdr_path_redacted', remote_capture)
         self.assertIs(remote_capture['herdr_executed'], False)
         self.assertNotEqual(
-            _load('evidence/runtime/windows-runtime.blocked.json')['capture_id'],
+            _load('evidence/runtime/windows-runtime.capture.json')['capture_id'],
             remote_capture['capture_id'],
         )
         self.assertEqual(validate_evidence(ROOT)['runtime_remote'], 'not_run')
@@ -156,8 +171,12 @@ class EvidenceBaselineTests(unittest.TestCase):
         windows = _record(baseline, 'windows_local')
         windows['result'] = 'passed'
         windows['evidence_level'] = 'isolated_windows_runtime'
-        if 'blocked_category' in windows:
-            del windows['blocked_category']
+        windows['attachments'] = [
+            'evidence/runtime/windows-endpoint-matrix.blocked.json',
+        ]
+        windows['hashes']['runtime_binary_sha256'] = 'a' * 64
+        windows['hashes']['runtime_schema_sha256'] = None
+        windows.pop('blocked_category', None)
         baseline['runtime_verification']['windows_local'] = 'passed'
         with self.assertRaises(EvidenceError) as ctx:
             _check(baseline=baseline)
@@ -290,7 +309,12 @@ class EvidenceBaselineTests(unittest.TestCase):
 
     def test_runtime_hash_without_capture_is_rejected(self):
         baseline, _, _ = _bundle()
-        _record(baseline, 'windows_local')['hashes']['runtime_binary_sha256'] = 'a' * 64
+        windows = _record(baseline, 'windows_local')
+        windows['hashes']['runtime_binary_sha256'] = 'a' * 64
+        windows['hashes']['runtime_schema_sha256'] = None
+        windows['attachments'] = [
+            'evidence/runtime/windows-endpoint-matrix.blocked.json',
+        ]
         with self.assertRaises(EvidenceError) as ctx:
             _check(baseline=baseline)
         self.assertEqual(str(ctx.exception), 'missing_runtime_capture')
@@ -311,7 +335,7 @@ class EvidenceBaselineTests(unittest.TestCase):
 
     def test_blocked_capture_cannot_look_like_success(self):
         _, _, documents = _bundle()
-        cap = documents['evidence/runtime/windows-runtime.blocked.json']
+        cap = documents['evidence/runtime/remote-runtime.not-run.json']
         cap['exit_code'] = 0
         cap['stdout_sha256'] = 'a' * 64
         cap['stderr_sha256'] = 'b' * 64
@@ -350,7 +374,7 @@ class EvidenceBaselineTests(unittest.TestCase):
     def test_capture_stdout_cannot_use_git_blob(self):
         baseline, _, documents = _bundle()
         blob = baseline['herdr']['source_blobs']['src/client/mod.rs']
-        documents['evidence/runtime/windows-runtime.blocked.json']['stdout_sha256'] = blob
+        documents['evidence/runtime/windows-runtime.capture.json']['stdout_sha256'] = blob
         with self.assertRaises(EvidenceError) as ctx:
             _check(documents=documents)
         self.assertEqual(str(ctx.exception), 'hash_conflation')
@@ -367,7 +391,7 @@ class EvidenceBaselineTests(unittest.TestCase):
         baseline, matrix, documents = _bundle()
         fake_hash = 'a' * 64
         other_hash = 'b' * 64
-        windows_cap = copy.deepcopy(documents['evidence/runtime/windows-runtime.blocked.json'])
+        windows_cap = copy.deepcopy(documents['evidence/runtime/windows-runtime.capture.json'])
         windows_cap.update({
             'capture_id': 'windows-runtime-fake-success',
             'evidence_level': 'isolated_windows_runtime',
@@ -376,9 +400,12 @@ class EvidenceBaselineTests(unittest.TestCase):
             'stdout_sha256': fake_hash,
             'stderr_sha256': other_hash,
             'command_redacted': ['herdr --version'],
+            'protocol': 20,
+            'matches_reference_header': True,
+            'herdr_executed': True,
         })
-        for key in ('blocked_category', 'path_inspection_only', 'herdr_executed',
-                    'herdr_binary_on_path', 'herdr_path_redacted', 'covers'):
+        for key in ('blocked_category', 'path_inspection_only',
+                    'herdr_binary_on_path', 'herdr_path_redacted'):
             windows_cap.pop(key, None)
         remote_cap = copy.deepcopy(documents['evidence/runtime/remote-runtime.not-run.json'])
         remote_cap.update({
@@ -389,13 +416,16 @@ class EvidenceBaselineTests(unittest.TestCase):
             'stdout_sha256': other_hash,
             'stderr_sha256': fake_hash,
             'command_redacted': ['herdr --version'],
+            'herdr_executed': True,
         })
-        documents['evidence/runtime/windows-runtime.blocked.json'] = windows_cap
+        documents['evidence/runtime/windows-runtime.capture.json'] = windows_cap
         documents['evidence/runtime/remote-runtime.not-run.json'] = remote_cap
         windows = _record(baseline, 'windows_local')
         remote = _record(baseline, 'remote_linux')
         windows['result'] = 'passed'
         windows['evidence_level'] = 'isolated_windows_runtime'
+        windows['runtime_protocol'] = 20
+        windows['matches_reference_header'] = True
         windows['hashes']['runtime_binary_sha256'] = fake_hash
         windows.pop('blocked_category', None)
         remote['result'] = 'passed'
@@ -406,6 +436,114 @@ class EvidenceBaselineTests(unittest.TestCase):
         result = _check(baseline=baseline, matrix=matrix, documents=documents)
         self.assertEqual(result['evidence_validation'], 'passed')
         self.assertFalse(result['windows_verified'])
+
+    def test_protocol_22_cannot_be_marked_passed(self):
+        baseline, _, _ = _bundle()
+        windows = _record(baseline, 'windows_local')
+        windows['result'] = 'passed'
+        baseline['runtime_verification']['windows_local'] = 'passed'
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(baseline=baseline)
+        self.assertEqual(str(ctx.exception), 'protocol_mismatch_not_compatible')
+
+    def test_protocol_22_cannot_enter_compatible_by_default(self):
+        _, matrix, _ = _bundle()
+        matrix['compatible_by_default'] = [{
+            'os': 'windows',
+            'arch': 'x64',
+            'cli_binary_hash': 'd' * 64,
+            'daemon_version': '0.9.0-preview',
+            'protocol': 22,
+            'schema_hash': 'e' * 64,
+        }]
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(matrix=matrix)
+        self.assertEqual(str(ctx.exception), 'protocol_mismatch_not_compatible')
+
+    def test_protocol_22_row_cannot_be_marked_compatible(self):
+        _, matrix, _ = _bundle()
+        matrix['rows'][1]['compatible'] = True
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(matrix=matrix)
+        self.assertEqual(str(ctx.exception), 'protocol_mismatch_not_compatible')
+
+    def test_shipped_preview_stays_out_of_default_compatible_set(self):
+        matrix = _load('evidence/version-support-matrix.json')
+        self.assertEqual(matrix['compatible_by_default'], [])
+        self.assertIs(matrix['rows'][1]['compatible'], False)
+        self.assertEqual(matrix['rows'][1]['key']['protocol'], 22)
+        self.assertEqual(matrix['channel_diff'][1]['channel'], 'preview')
+        self.assertEqual(matrix['channel_diff'][1]['status'],
+                         'recorded_not_in_default_compatible_set')
+        result = validate_evidence(ROOT)
+        self.assertFalse(result['windows_verified'])
+        self.assertEqual(result['runtime_windows'], 'recorded')
+
+    def test_matches_reference_header_cannot_be_true_for_protocol_22(self):
+        baseline, _, documents = _bundle()
+        documents['evidence/runtime/windows-runtime.capture.json'][
+            'matches_reference_header'] = True
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(baseline=baseline, documents=documents)
+        self.assertEqual(str(ctx.exception), 'protocol_mismatch_not_compatible')
+
+    def test_preview_channel_cannot_enter_compatible_by_default(self):
+        _, matrix, _ = _bundle()
+        matrix['compatible_by_default'] = [{
+            'os': 'windows',
+            'arch': 'x64',
+            'cli_binary_hash': 'd' * 64,
+            'daemon_version': '0.9.0-preview',
+            'protocol': 20,
+            'schema_hash': 'e' * 64,
+            'channel': 'preview',
+        }]
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(matrix=matrix)
+        self.assertEqual(str(ctx.exception), 'unknown_combo_marked_compatible')
+
+    def test_named_pipe_acl_recorded_is_rejected(self):
+        baseline, _, _ = _bundle()
+        baseline['runtime_verification']['named_pipe_acl'] = 'recorded'
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(baseline=baseline)
+        self.assertEqual(str(ctx.exception), 'evidence_level_promotion')
+
+    def test_schema_export_shipped_is_rejected(self):
+        _, _, documents = _bundle()
+        documents['evidence/runtime/windows-runtime.capture.json'][
+            'schema_export_shipped'] = True
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(documents=documents)
+        self.assertEqual(str(ctx.exception), 'payload_not_redacted')
+
+    def test_snapshot_body_in_capture_is_rejected(self):
+        _, _, documents = _bundle()
+        documents['evidence/runtime/windows-runtime.capture.json'][
+            'commands']['snapshot']['result'] = {'id': 1}
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(documents=documents)
+        self.assertEqual(str(ctx.exception), 'payload_not_redacted')
+
+    def test_schema_dump_in_capture_is_rejected(self):
+        _, _, documents = _bundle()
+        documents['evidence/runtime/windows-runtime.capture.json'][
+            'commands']['schema']['methods'] = [{'name': 'x'}]
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(documents=documents)
+        self.assertEqual(str(ctx.exception), 'payload_not_redacted')
+
+    def test_shipped_runtime_omits_schema_snapshot_and_keeps_acl_blocked(self):
+        capture = _load('evidence/runtime/windows-runtime.capture.json')
+        baseline = _load('evidence/compatibility-baseline.json')
+        self.assertIs(capture['schema_export_shipped'], False)
+        self.assertIs(capture['snapshot_body_shipped'], False)
+        self.assertNotIn('bytes', capture.get('commands', {}).get('schema', {}))
+        self.assertNotIn('result', capture.get('commands', {}).get('snapshot', {}))
+        self.assertEqual(baseline['runtime_verification']['named_pipe_acl'], 'blocked')
+        self.assertEqual(baseline['runtime_verification']['ime'], 'blocked')
+        self.assertEqual(baseline['runtime_verification']['remote_linux'], 'not_run')
+        self.assertFalse(validate_evidence(ROOT)['windows_verified'])
 
 
 if __name__ == '__main__':

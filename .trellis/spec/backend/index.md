@@ -56,6 +56,7 @@ There is no HTTP API, no ORM, and no application host in `src/`.
 - [ ] Do not mark G0 or AC01–AC48 passed.
 - [ ] `herddesk_g0.licensing` keeps `ac02_passed` and `windows_verified` false. Pending or blocked is not approved. Public visibility is not a license grant.
 - [ ] `herddesk_g0.endpoint` keeps `ac03_passed` and `windows_verified` false. Synthetic endpoint fixtures are not Windows runtime proof.
-- [ ] `herddesk_g0.lease` keeps `ac05_passed` and `windows_verified` false. Synthetic lease fixtures and probe selftest are not observe/control runtime proof.
+- [ ] `herddesk_g0.evidence` keeps `windows_verified` false. Protocol 22 runtime cannot be marked compatible with source protocol 20. Preview stays out of `compatible_by_default`.
+- [ ] `herddesk_g0.lease` keeps `ac05_passed` and `windows_verified` false. Synthetic lease fixtures, probe selftest, and isolated observe/control captures with `control_verified=false` are not AC05 pass.
 - [ ] `herddesk_g0.renderer` keeps `ac08_passed`, `ac09_passed`, and `windows_verified` false. Synthetic renderer fixtures are not WinUI, WebView2, IME, or native runtime proof.
 - [ ] `herddesk_g0.adr` keeps `ac44_passed`, `g0_passed`, and `windows_verified` false. Blocked or unknown ledger rows are not passed. R5 is not executed.

@@ -49,6 +49,8 @@ NON_RUNTIME_LEVELS = frozenset({
 RUNTIME_LEVELS = frozenset({
     'isolated_windows_runtime', 'remote_runtime',
 })
+SOURCE_PROTOCOL = 20
+SOURCE_SCHEMA_VERSION = 1
 SUCCESS_RESULTS = frozenset({
     'passed', 'verified', 'compatible', 'success', 'ok',
 })
@@ -56,6 +58,18 @@ UNKNOWN_KEY_VALUES = frozenset({None, '', 'unknown', 'any', '*'})
 WINDOWS_PATH_KEYS = frozenset({
     'herdr_binary_on_path', 'path_inspection_only', 'herdr_path_redacted',
 })
+PAYLOAD_DOCUMENT_KEYS = frozenset({
+    'schema_dump', 'schema_body', 'schema_export', 'snapshot_body',
+    'snapshot_result', 'terminal_bytes', 'stdout', 'stderr', 'schema_text',
+})
+SCHEMA_DUMP_KEYS = frozenset({
+    'methods', 'properties', 'definitions', '$schema', 'items',
+})
+SNAPSHOT_BODY_KEYS = frozenset({'result', 'error', 'params'})
+FRAME_PAYLOAD_KEYS = frozenset({'bytes', 'data', 'payload'})
+BLOCKED_VERIFICATION_KEYS = (
+    'named_pipe_acl', 'windows_endpoint', 'ime',
+)
 REQUIRED_TEMPLATES = (
     'evidence/runtime/windows-runtime.template.json',
     'evidence/runtime/remote-runtime.template.json',
@@ -106,6 +120,7 @@ def check_evidence(
     schema, templates, captures = _split_documents(documents)
     _check_capture_schema(schema)
     _check_capture_documents(schema, templates, captures)
+    _check_payload_omitted(documents)
     records = baseline.get('records')
     if not isinstance(records, list):
         raise EvidenceError('missing_record_field')
@@ -125,6 +140,7 @@ def check_evidence(
     _check_herdr_runtime_hashes(baseline, windows, remote, captures)
     _check_templates(templates)
     _check_matrix(matrix, windows, remote)
+    _check_protocol_drift(baseline, windows, captures, matrix)
     return {
         'evidence_validation': 'passed',
         'windows_verified': False,
@@ -139,12 +155,12 @@ def _check_protocol_and_write(baseline: dict[str, Any]) -> None:
     if not isinstance(herdr, dict):
         raise EvidenceError('missing_record_field')
     protocol = herdr.get('api_protocol')
-    if type(protocol) is not int or protocol != 20:
+    if type(protocol) is not int or protocol != SOURCE_PROTOCOL:
         raise EvidenceError('api_protocol_mismatch')
     if baseline.get('default_write_capability') is not False:
         raise EvidenceError('default_write_capability_not_false')
     schema_version = herdr.get('schema_version')
-    if type(schema_version) is not int or schema_version != 1:
+    if type(schema_version) is not int or schema_version != SOURCE_SCHEMA_VERSION:
         raise EvidenceError('api_protocol_mismatch')
     for key in ('runtime_binary_sha256', 'runtime_schema_sha256', 'distribution_binary_sha256'):
         if key not in herdr:
@@ -260,6 +276,8 @@ def _check_hash_conflation(
             continue
         _reject_sha256(doc.get('stdout_sha256'), blobs)
         _reject_sha256(doc.get('stderr_sha256'), blobs)
+        _reject_sha256(doc.get('runtime_binary_sha256'), blobs)
+        _reject_sha256(doc.get('runtime_schema_sha256'), blobs)
 
 
 def _reject_sha256(value: Any, blobs: set[str]) -> None:
@@ -377,9 +395,14 @@ def _check_runtime_summaries(
         raise EvidenceError('runtime_summary_mismatch')
     if verification.get('remote_linux') != remote['result']:
         raise EvidenceError('runtime_summary_mismatch')
-    for key in ('named_pipe_acl', 'windows_endpoint', 'windows_terminal_lease', 'ime'):
-        if _is_success(verification.get(key)):
+    for key in BLOCKED_VERIFICATION_KEYS:
+        if verification.get(key) != 'blocked':
             raise EvidenceError('evidence_level_promotion')
+    lease_status = verification.get('windows_terminal_lease')
+    if _is_success(lease_status):
+        raise EvidenceError('evidence_level_promotion')
+    if lease_status not in {'blocked', 'recorded'}:
+        raise EvidenceError('missing_record_field')
 
 
 def _check_runtime_claims(
@@ -400,12 +423,28 @@ def _check_runtime_claims(
         raise EvidenceError('template_used_as_runtime_proof')
     attached = _attached_captures(record, captures, environment)
     for cap in attached:
-        fake = _looks_like_successful_run(cap) or cap.get('exit_code') == 0
-        if fake and (not success or cap.get('evidence_level') in NON_RUNTIME_LEVELS):
+        looks_run = _looks_like_successful_run(cap) or cap.get('exit_code') == 0
+        cap_level = cap.get('evidence_level')
+        if looks_run and cap_level in NON_RUNTIME_LEVELS:
+            raise EvidenceError('evidence_level_promotion')
+        if looks_run and cap_level not in RUNTIME_LEVELS:
+            raise EvidenceError('evidence_level_promotion')
+        if cap_level in RUNTIME_LEVELS and cap.get('herdr_executed') is False:
+            raise EvidenceError('evidence_level_promotion')
+        if (
+            cap_level in RUNTIME_LEVELS
+            and _is_success(cap.get('result'))
+            and not success
+        ):
             raise EvidenceError('evidence_level_promotion')
     runtime_cap = _runtime_capture(record, captures, environment)
     if success and runtime_cap is None:
         raise EvidenceError('missing_runtime_capture')
+    if (
+        record['evidence_level'] in RUNTIME_LEVELS
+        and record['result'] in {'blocked', 'not_run'}
+    ):
+        raise EvidenceError('evidence_level_promotion')
     herdr_runtime = (
         record['hashes'].get('runtime_binary_sha256'),
         record['hashes'].get('runtime_schema_sha256'),
@@ -493,7 +532,13 @@ def _check_matrix(
     for combo in default:
         if not isinstance(combo, dict):
             raise EvidenceError('unknown_combo_marked_compatible')
-        _reject_unknown_compatible(combo.get('key') or combo, True)
+        key = combo.get('key') or combo
+        _reject_unknown_compatible(key, True)
+        if key.get('channel') == 'preview':
+            raise EvidenceError('unknown_combo_marked_compatible')
+        protocol = key.get('protocol')
+        if type(protocol) is int and protocol != SOURCE_PROTOCOL:
+            raise EvidenceError('protocol_mismatch_not_compatible')
     if default and (
         windows['evidence_level'] not in RUNTIME_LEVELS
         or remote['evidence_level'] not in RUNTIME_LEVELS
@@ -518,6 +563,16 @@ def _check_matrix(
             if remote['evidence_level'] not in RUNTIME_LEVELS:
                 raise EvidenceError('evidence_level_promotion')
         compatible = row.get('compatible')
+        row_protocol = key.get('protocol')
+        win_protocol = row['windows_runtime'].get('protocol')
+        drifted = (
+            (type(row_protocol) is int and row_protocol != SOURCE_PROTOCOL)
+            or (type(win_protocol) is int and win_protocol != SOURCE_PROTOCOL)
+        )
+        if compatible is True and drifted:
+            raise EvidenceError('protocol_mismatch_not_compatible')
+        if row['windows_runtime'].get('channel') == 'preview' and compatible is not False:
+            raise EvidenceError('protocol_mismatch_not_compatible')
         if _unknown_key_fields(key):
             if compatible is not False:
                 raise EvidenceError('unknown_combo_marked_compatible')
@@ -532,6 +587,40 @@ def _check_matrix(
             for column in ('windows_runtime', 'remote_runtime'):
                 if row[column].get('evidence_level') in {'source_inspection_only', 'synthetic', 'hosted_ci'}:
                     raise EvidenceError('evidence_level_promotion')
+    _check_preview_channel(matrix, default)
+
+
+def _check_preview_channel(matrix: dict[str, Any], default: list[Any]) -> None:
+    default_keys = []
+    for combo in default:
+        if not isinstance(combo, dict):
+            continue
+        default_keys.append(combo.get('key') or combo)
+    rows = matrix.get('rows')
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            win = row.get('windows_runtime')
+            if not isinstance(win, dict) or win.get('channel') != 'preview':
+                continue
+            row_key = row.get('key')
+            if not isinstance(row_key, dict):
+                continue
+            for item in default_keys:
+                if not isinstance(item, dict):
+                    continue
+                if all(row_key.get(field) == item.get(field) for field in MATRIX_KEY_FIELDS):
+                    raise EvidenceError('unknown_combo_marked_compatible')
+    diffs = matrix.get('channel_diff')
+    if not isinstance(diffs, list):
+        return
+    for item in diffs:
+        if not isinstance(item, dict) or item.get('channel') != 'preview':
+            continue
+        status = item.get('status')
+        if _is_success(status) or status in {'compatible', 'compatible_by_default'}:
+            raise EvidenceError('unknown_combo_marked_compatible')
 
 
 def _unknown_key_fields(key: dict[str, Any]) -> list[str]:
@@ -576,6 +665,89 @@ def _check_source_field_sources(source: dict[str, Any]) -> None:
         value = sources.get(key)
         if not isinstance(value, str) or not value.strip():
             raise EvidenceError('missing_record_field')
+
+
+def _runtime_protocol(
+    record: dict[str, Any],
+    captures: dict[str, dict[str, Any]],
+    environment: str,
+) -> int | None:
+    cap = _runtime_capture(record, captures, environment)
+    if cap is not None and type(cap.get('protocol')) is int:
+        return cap['protocol']
+    value = record.get('runtime_protocol')
+    if type(value) is int:
+        return value
+    return None
+
+
+def _check_protocol_drift(
+    baseline: dict[str, Any],
+    windows: dict[str, Any],
+    captures: dict[str, dict[str, Any]],
+    matrix: dict[str, Any],
+) -> None:
+    source = baseline['herdr']['api_protocol']
+    proto = _runtime_protocol(windows, captures, 'windows_local')
+    if proto is not None and proto != source:
+        if _is_success(windows['result']):
+            raise EvidenceError('protocol_mismatch_not_compatible')
+        if windows.get('matches_reference_header') is True:
+            raise EvidenceError('protocol_mismatch_not_compatible')
+        cap = _runtime_capture(windows, captures, 'windows_local')
+        if cap is not None and cap.get('matches_reference_header') is True:
+            raise EvidenceError('protocol_mismatch_not_compatible')
+    default = matrix.get('compatible_by_default')
+    if isinstance(default, list):
+        for combo in default:
+            if not isinstance(combo, dict):
+                continue
+            key = combo.get('key') or combo
+            value = key.get('protocol')
+            if type(value) is int and value != source:
+                raise EvidenceError('protocol_mismatch_not_compatible')
+
+
+def _check_payload_omitted(documents: dict[str, dict[str, Any]]) -> None:
+    for doc in documents.values():
+        if doc.get('document_kind') == 'capture_schema' or doc.get('template') is True:
+            continue
+        _walk_payload(doc)
+        if doc.get('kind') == 'windows_runtime' and doc.get('evidence_level') in RUNTIME_LEVELS:
+            if 'schema_export_shipped' not in doc or 'snapshot_body_shipped' not in doc:
+                raise EvidenceError('missing_record_field')
+            if doc.get('schema_export_shipped') is not False:
+                raise EvidenceError('payload_not_redacted')
+            if doc.get('snapshot_body_shipped') is not False:
+                raise EvidenceError('payload_not_redacted')
+
+
+def _walk_payload(value: Any, *, command: str | None = None) -> None:
+    if isinstance(value, list):
+        for item in value:
+            _walk_payload(item, command=command)
+        return
+    if not isinstance(value, dict):
+        return
+    keys = set(value)
+    if keys & PAYLOAD_DOCUMENT_KEYS:
+        raise EvidenceError('payload_not_redacted')
+    if value.get('type') == 'terminal.frame' or 'decoded_bytes' in value:
+        if keys & FRAME_PAYLOAD_KEYS:
+            raise EvidenceError('payload_not_redacted')
+    if command == 'schema' and keys & SCHEMA_DUMP_KEYS:
+        raise EvidenceError('payload_not_redacted')
+    if command == 'snapshot' and keys & SNAPSHOT_BODY_KEYS:
+        raise EvidenceError('payload_not_redacted')
+    commands = value.get('commands')
+    if isinstance(commands, dict):
+        for name, body in commands.items():
+            nested = name if isinstance(name, str) else None
+            _walk_payload(body, command=nested)
+    for key, item in value.items():
+        if key == 'commands':
+            continue
+        _walk_payload(item, command=command)
 
 
 def _is_success(result: Any) -> bool:

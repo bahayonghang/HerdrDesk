@@ -82,15 +82,15 @@ GATE_TASKS = {
 }
 GATE_PATHS = {
     'hd001-source-protocol': 'confirmed',
-    'hd001-windows-runtime': 'blocked',
+    'hd001-windows-runtime': 'confirmed',
     'hd001-named-pipe-acl': 'blocked',
     'hd001-remote-runtime': 'unknown',
-    'hd001-runtime-hashes': 'unknown',
+    'hd001-runtime-hashes': 'confirmed',
     'hd003-endpoint-l1': 'confirmed',
     'hd003-windows-endpoint': 'blocked',
     'hd003-unc-and-env-guess': 'degrade',
     'hd004-lease-l1': 'confirmed',
-    'hd004-windows-lease': 'blocked',
+    'hd004-windows-lease': 'confirmed',
     'hd004-control-inference': 'degrade',
     'hd004-unknown-control-signal': 'unknown',
     'hd005-renderer-l1': 'confirmed',
@@ -99,11 +99,11 @@ GATE_PATHS = {
     'hd005-webview-origin-runtime': 'unknown',
 }
 GATE_BASELINE = {
-    'hd001-windows-runtime': ('windows_local', 'blocked'),
+    'hd001-windows-runtime': ('windows_local', 'recorded'),
     'hd001-named-pipe-acl': ('named_pipe_acl', 'blocked'),
     'hd001-remote-runtime': ('remote_linux', 'not_run'),
     'hd003-windows-endpoint': ('windows_endpoint', 'blocked'),
-    'hd004-windows-lease': ('windows_terminal_lease', 'blocked'),
+    'hd004-windows-lease': ('windows_terminal_lease', 'recorded'),
     'hd005-ime-desktop': ('ime', 'blocked'),
 }
 
@@ -134,7 +134,7 @@ RESULT_FOR_PATH = {
 ADOPTION_VALUES = frozenset({'adopted_as_policy', 'deferred', 'blocked'})
 EVIDENCE_CLASSES = frozenset({
     'source_inspection_only', 'synthetic', 'hosted_ci',
-    'blocked', 'not_run', 'unverified',
+    'blocked', 'not_run', 'unverified', 'isolated_windows_runtime',
 })
 SUCCESS_RESULTS = frozenset({
     'passed', 'verified', 'compatible', 'success', 'ok',
@@ -598,6 +598,8 @@ def _check_evidence_baseline(
             raise AdrError('blocked_treated_as_passed')
         if expected == 'not_run' and gate['path'] != 'unknown':
             raise AdrError('unknown_treated_as_passed')
+        if expected == 'recorded' and gate['path'] not in {'confirmed', 'degrade'}:
+            raise AdrError('missing_ledger_row')
         if _is_success(actual):
             raise AdrError('evidence_level_promotion')
 

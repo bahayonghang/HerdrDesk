@@ -145,7 +145,7 @@
       "evidence_class": "synthetic",
       "input_evidence": [
         "tests/fixtures/lease-cases.json",
-        "evidence/runtime/windows-terminal-lease.blocked.json",
+        "evidence/runtime/windows-terminal-lease.capture.json",
         "scripts/probe_herdr.py"
       ],
       "input_tasks": ["HD-004"],
@@ -407,15 +407,15 @@
       "id": "hd001-windows-runtime",
       "task": "HD-001",
       "capability": "windows_local_runtime",
-      "path": "blocked",
-      "evidence_class": "blocked",
-      "result": "blocked",
-      "live_result": "blocked",
-      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
-      "degrade": "observe_and_unknown",
+      "path": "confirmed",
+      "evidence_class": "isolated_windows_runtime",
+      "result": "recorded",
+      "live_result": "recorded",
+      "blocked_category": null,
+      "degrade": "protocol_22_not_compatible_with_source_20",
       "claim_passed": false,
       "attachments": [
-        "evidence/runtime/windows-runtime.blocked.json"
+        "evidence/runtime/windows-runtime.capture.json"
       ],
       "verification_task": "HD-001"
     },
@@ -427,11 +427,11 @@
       "evidence_class": "blocked",
       "result": "blocked",
       "live_result": "blocked",
-      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "blocked_category": "named_pipe_acl_not_captured",
       "degrade": "explicit_configuration_required",
       "claim_passed": false,
       "attachments": [
-        "evidence/runtime/windows-runtime.blocked.json"
+        "evidence/runtime/windows-runtime.capture.json"
       ],
       "verification_task": "HD-001"
     },
@@ -455,15 +455,16 @@
       "id": "hd001-runtime-hashes",
       "task": "HD-001",
       "capability": "runtime_and_distribution_hashes",
-      "path": "unknown",
-      "evidence_class": "not_run",
-      "result": "unknown",
-      "live_result": "not_run",
+      "path": "confirmed",
+      "evidence_class": "isolated_windows_runtime",
+      "result": "recorded",
+      "live_result": "recorded",
       "blocked_category": null,
-      "degrade": "keep_hash_fields_null",
+      "degrade": "distribution_binary_sha256_remains_null_protocol_22_not_source_20",
       "claim_passed": false,
       "attachments": [
-        "evidence/compatibility-baseline.json"
+        "evidence/compatibility-baseline.json",
+        "evidence/runtime/windows-runtime.capture.json"
       ],
       "verification_task": "HD-001"
     },
@@ -535,15 +536,15 @@
       "id": "hd004-windows-lease",
       "task": "HD-004",
       "capability": "windows_terminal_lease",
-      "path": "blocked",
-      "evidence_class": "blocked",
-      "result": "blocked",
-      "live_result": "blocked",
-      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
-      "degrade": "observe_and_unknown",
+      "path": "confirmed",
+      "evidence_class": "isolated_windows_runtime",
+      "result": "recorded",
+      "live_result": "recorded",
+      "blocked_category": null,
+      "degrade": "control_verified_stays_false_ac05_not_passed",
       "claim_passed": false,
       "attachments": [
-        "evidence/runtime/windows-terminal-lease.blocked.json"
+        "evidence/runtime/windows-terminal-lease.capture.json"
       ],
       "verification_task": "HD-004"
     },
@@ -554,13 +555,14 @@
       "path": "degrade",
       "evidence_class": "synthetic",
       "result": "degrade",
-      "live_result": "blocked",
-      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "live_result": "recorded",
+      "blocked_category": null,
       "degrade": "deny_control_verified_from_frame_process_focus",
       "claim_passed": false,
       "attachments": [
         "src/HerdDesk.Core/TerminalLeaseProbe.cs",
-        "src/HerdDesk.Core/InputPolicy.cs"
+        "src/HerdDesk.Core/InputPolicy.cs",
+        "evidence/runtime/windows-terminal-lease.capture.json"
       ],
       "verification_task": "HD-004"
     },

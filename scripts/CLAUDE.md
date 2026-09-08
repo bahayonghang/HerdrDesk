@@ -26,13 +26,13 @@ Python 3.10+，仅标准库。将本目录加入 `sys.path` 后 `import herddesk
 | `analyze_capture` | 总字节上限默认 256MiB；调用 `classify_stream_end`；`pane_exit_verified` 与 `daemon_or_pane_exit_verified` 在离线文件上为 false |
 | `classify_stream_end` | stdout EOF / `terminal.closed` / 桥进程退出；EOF 不是 pane 死亡 |
 | `evidence.EvidenceError` | 稳定证据规则码；消息仅为码 |
-| `evidence.validate_evidence` / `check_evidence` | 基线/矩阵/采集结构；拒绝 hash 混同与非 runtime 提升；`windows_verified` 恒为 false |
+| `evidence.validate_evidence` / `check_evidence` | 基线/矩阵/采集结构；拒绝 hash 混同、非 runtime 提升、protocol 22 标成与 protocol 20 兼容、preview 进入默认兼容集、schema/snapshot/终端正文入库、ACL/IME/endpoint 非 blocked；`windows_verified` 恒为 false |
 | `licensing.LicensingError` | 稳定许可规则码；消息仅为码 |
 | `licensing.validate_licensing` / `check_licensing` | 加载 `docs/licensing` 台账与模板；拒绝 pending/blocked 当 approved、herdrm 拷贝、公开可见当授权；`ac02_passed` 恒为 false |
 | `endpoint.EndpointError` | 稳定 endpoint 规则码；消息仅为码 |
 | `endpoint.validate_endpoint_matrix` / `check_endpoint_matrix` / `resolve_endpoint` | 七行模拟矩阵与受控映射；拒绝 APPDATA 猜测、named 回退、UNC、fixture 当 runtime/AC03 通过；`windows_verified` 与 `ac03_passed` 恒为 false |
 | `lease.LeaseError` | 稳定 lease 规则码；消息仅为码 |
-| `lease.validate_terminal_lease_matrix` / `check_terminal_lease_matrix` / `map_lease` | 十四行模拟矩阵与受控映射；拒绝首帧/进程/焦点置 ControlVerified、observe 发送输入、EOF 当 pane 退出、虚构 Granted、fixture 当 AC05 通过；`windows_verified` 与 `ac05_passed` 恒为 false |
+| `lease.validate_terminal_lease_matrix` / `check_terminal_lease_matrix` / `map_lease` | 十四行模拟矩阵与受控映射；隔离 capture 保持 `control_verified` false；拒绝首帧/进程/焦点/stdin 写置 ControlVerified、observe 发送输入、EOF/桥退出当 pane 死亡、帧 `bytes` 入库、虚构 Granted、fixture 当 AC05 通过；`windows_verified` 与 `ac05_passed` 恒为 false |
 | `renderer.RendererError` | 稳定 renderer 规则码；消息仅为码 |
 | `renderer.validate_renderer_matrix` / `check_renderer_matrix` / `assemble_utf8` / `evaluate_web_message` | 十八行 L1 矩阵；拒绝逐块替换字符、旧 epoch、预编辑发送、observe 转发、无界队列、未知 web type；`windows_verified` 与 `ac08_passed`/`ac09_passed` 恒为 false |
 | `adr.AdrError` | 稳定 ADR 规则码；消息仅为码 |

@@ -35,7 +35,7 @@ def _bundle():
     fixture = _load(FIXTURE_REL)
     capture = _load(CAPTURE_REL)
     baseline = _load('evidence/compatibility-baseline.json')
-    lease = _load('evidence/runtime/windows-terminal-lease.blocked.json')
+    lease = _load('evidence/runtime/windows-terminal-lease.capture.json')
     endpoint = _load('evidence/runtime/windows-endpoint-matrix.blocked.json')
     return fixture, capture, baseline, lease, endpoint
 
@@ -122,13 +122,13 @@ class RendererMatrixTests(unittest.TestCase):
 
     def test_renderer_record_is_independent_of_lease_and_endpoint(self):
         capture = _load(CAPTURE_REL)
-        lease = _load('evidence/runtime/windows-terminal-lease.blocked.json')
+        lease = _load('evidence/runtime/windows-terminal-lease.capture.json')
         endpoint = _load('evidence/runtime/windows-endpoint-matrix.blocked.json')
         self.assertNotEqual(capture['capture_id'], lease['capture_id'])
         self.assertNotEqual(capture['capture_id'], endpoint['capture_id'])
         self.assertNotEqual(capture['kind'], lease['kind'])
         self.assertNotEqual(capture['kind'], endpoint['kind'])
-        self.assertNotEqual(capture['blocked_category'], lease['blocked_category'])
+        self.assertNotEqual(capture.get('blocked_category'), lease.get('blocked_category'))
         self.assertNotEqual(capture['blocked_category'], endpoint['blocked_category'])
         self.assertNotIn('named_pipe_connected', capture)
 

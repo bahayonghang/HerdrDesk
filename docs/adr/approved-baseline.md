@@ -2,7 +2,7 @@
 
 Status: adopted as policy. Not G0 pass. Not AC44 pass.
 
-Date: 2026-09-08. Operator scope: local implementation. Live herdr, named-pipe ACL, terminal lease, WinUI, and IME were not granted.
+Date: 2026-09-08. Operator scope: isolated disposable pane for version/schema and observe/control. Named-pipe ACL, remote runtime, WinUI, and IME were not granted.
 
 G0 is not passed.
 AC44 is not passed.
@@ -27,7 +27,7 @@ Child AC44-C1 and AC44-C2 are contributions in this freeze. AC44 final stays `no
 | `hosted_ci` | Offline `just ci` / Actions on a SHA | no |
 | `blocked` | Authorized local work; live grant missing | no |
 | `not_run` | Independent capture not started | no |
-| `isolated_windows_runtime` | Authorized live Windows capture | not present |
+| `isolated_windows_runtime` | Authorized live Windows capture | no |
 
 A blocked or unknown gate with result `passed` / `verified` / `success` is a validator failure.
 
@@ -104,7 +104,7 @@ A blocked or unknown gate with result `passed` / `verified` / `success` is a val
 | Field | Value |
 |---|---|
 | Problem | Closing the GUI must not stop herdr or an existing agent. |
-| Input evidence | `tests/fixtures/lease-cases.json`, `evidence/runtime/windows-terminal-lease.blocked.json`, `scripts/probe_herdr.py` (HD-004) |
+| Input evidence | `tests/fixtures/lease-cases.json`, `evidence/runtime/windows-terminal-lease.capture.json`, `scripts/probe_herdr.py` (HD-004) |
 | Decision | v0.1 requires the user to start herdr. After a successful connect, if the server disappears, do not auto-revive. Closing the GUI stops only this application's direct child processes. |
 | Evidence class | `synthetic` |
 | Allow callers | `stop_owned_bridge_child`, `stop_owned_ssh_child` |
@@ -193,15 +193,15 @@ Executable gates. `claim_passed` is false on every row. Blocked and unknown rows
 | id | task | capability | path | evidence class | result | degrade |
 |---|---|---|---|---|---|---|
 | hd001-source-protocol | HD-001 | herdr source tag/blob/protocol | confirmed | source_inspection_only | recorded | source inspection is not runtime proof |
-| hd001-windows-runtime | HD-001 | windows local runtime | blocked | blocked | blocked | observe_and_unknown |
+| hd001-windows-runtime | HD-001 | windows local runtime | confirmed | isolated_windows_runtime | recorded | protocol 22 is not compatible with source 20 |
 | hd001-named-pipe-acl | HD-001 | named-pipe ACL | blocked | blocked | blocked | explicit_configuration_required |
 | hd001-remote-runtime | HD-001 | remote Linux runtime | unknown | not_run | not_run | observe_and_unknown |
-| hd001-runtime-hashes | HD-001 | runtime and distribution hashes | unknown | not_run | unknown | keep_hash_fields_null |
+| hd001-runtime-hashes | HD-001 | runtime and distribution hashes | confirmed | isolated_windows_runtime | recorded | distribution hash remains null; protocol 22 is not source 20 |
 | hd003-endpoint-l1 | HD-003 | endpoint resolver L1 | confirmed | synthetic | recorded | synthetic is not Windows runtime proof |
 | hd003-windows-endpoint | HD-003 | Windows endpoint runtime | blocked | blocked | blocked | explicit_configuration_required |
 | hd003-unc-and-env-guess | HD-003 | UNC and environment guess | degrade | synthetic | degrade | reject UNC; require explicit configuration |
 | hd004-lease-l1 | HD-004 | terminal lease mapper L1 | confirmed | synthetic | recorded | synthetic is not observe/control runtime proof |
-| hd004-windows-lease | HD-004 | Windows terminal lease | blocked | blocked | blocked | observe_and_unknown |
+| hd004-windows-lease | HD-004 | Windows terminal lease | confirmed | isolated_windows_runtime | recorded | control_verified stays false; AC05 not passed |
 | hd004-control-inference | HD-004 | ControlVerified inference | degrade | synthetic | degrade | deny ControlVerified from frame, process, or focus |
 | hd004-unknown-control-signal | HD-004 | unknown control signal | unknown | not_run | unknown | stay Unknown or Acquiring; no write |
 | hd005-renderer-l1 | HD-005 | renderer L1 host specimens | confirmed | synthetic | recorded | synthetic is not WinUI/IME proof |
@@ -211,9 +211,10 @@ Executable gates. `claim_passed` is false on every row. Blocked and unknown rows
 
 Blocked categories:
 
-- HD-001 / HD-004: `no_authorized_isolated_pane_or_live_herdr_grant`
+- HD-001 named-pipe ACL: `named_pipe_acl_not_captured`
 - HD-003: `no_authorized_isolated_windows_endpoint_or_live_herdr_grant`
 - HD-005: `no_authorized_winui_interactive_desktop_or_ime_grant`
+- HD-004 L1 synthetic residual: `no_authorized_isolated_pane_or_live_herdr_grant` on unrun 14-row live checks
 
 ## AC44
 
@@ -232,7 +233,8 @@ R5 phase-rule sync is not executed. HD-001 through HD-005 G0 target evidence is 
 ## Residuals
 
 - G0 is not passed.
-- Windows runtime, named-pipe ACL, terminal lease, IME, and WinUI stay blocked.
-- Remote runtime and runtime hashes stay unknown.
+- Isolated Windows runtime recorded protocol 22 preview. It is not compatible with source protocol 20.
+- Named-pipe ACL, remote runtime, endpoint live matrix, IME, and WinUI stay blocked or unknown.
+- `control_verified` stayed false after stdin write. AC05 stays not passed.
 - Native renderer stays unverified and is not promoted.
 - No product App, Infrastructure, bridge, or filebridge modules.

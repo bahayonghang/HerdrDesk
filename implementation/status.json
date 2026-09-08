@@ -28,11 +28,12 @@
     ],
     "scope": "G0 unit/contract/build only; each later commit needs its own result"
   },
-  "windows_live_tests": "not_run",
+  "windows_live_tests": "isolated_capture_recorded",
   "verified_acceptance_ids": [],
   "blockers": [
-    "Windows interactive desktop and isolated herdr sessions not verified",
-    "Runtime CLI/daemon/schema and endpoint/ACL evidence pending",
-    "Renderer/IME spike and product implementation pending"
+    "Runtime protocol 22 preview is not compatible with source protocol 20",
+    "Named-pipe ACL, remote runtime, and Windows endpoint live matrix pending",
+    "control_verified stayed false after isolated stdin write; AC05 not passed",
+    "Renderer/IME/WinUI interactive desktop not granted"
   ]
 }

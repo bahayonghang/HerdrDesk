@@ -1,0 +1,96 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "windows-runtime-2026-09-08-isolated-preview",
+  "kind": "windows_runtime",
+  "captured_at_utc": "2026-09-08T05:01:00Z",
+  "operator_scope": "isolated_disposable_pane_readonly_preflight",
+  "host_fingerprint_redacted": "windows_local",
+  "command_redacted": [
+    "herdr --version",
+    "herdr api schema --json",
+    "herdr api snapshot",
+    "herdr terminal session observe --help",
+    "herdr terminal session control --help"
+  ],
+  "exit_code": 0,
+  "stdout_sha256": "57e1bbf2bd5ec625e0c2625fd7db31fd6687260065684684738fd4c69f4a2e4c",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "evidence_level": "isolated_windows_runtime",
+  "result": "recorded",
+  "herdr_executed": true,
+  "windows_gui_tested": false,
+  "all_readonly_commands_succeeded": true,
+  "cli_version": "herdr 0.9.0-preview.2026-09-08-62431dbd033b",
+  "channel": "preview",
+  "protocol": 22,
+  "schema_version": 1,
+  "matches_reference_header": false,
+  "runtime_binary_sha256": "d3e69a7810beb6077c47bd8d876f50929152828a6c210c5e6d001f9220137da6",
+  "runtime_schema_sha256": "5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a",
+  "distribution_binary_sha256": null,
+  "daemon_version": null,
+  "same_blob_path_and_user_local_programs": true,
+  "named_pipe_acl": "not_captured",
+  "schema_export_shipped": false,
+  "snapshot_body_shipped": false,
+  "stdout_sha256_scope": "version_text_bytes",
+  "covers": [
+    "cli_version",
+    "schema_protocol",
+    "snapshot_root_keys"
+  ],
+  "uncovered": [
+    "named_pipe_acl",
+    "endpoint_shape_live",
+    "daemon_version_distinct_from_cli"
+  ],
+  "commands": {
+    "version": {
+      "exit_code": 0,
+      "stdout_bytes": 44,
+      "stderr_bytes": 0,
+      "version_text": "herdr 0.9.0-preview.2026-09-08-62431dbd033b"
+    },
+    "schema": {
+      "exit_code": 0,
+      "stdout_bytes": 275129,
+      "stderr_bytes": 0,
+      "json_valid": true,
+      "protocol": 22,
+      "schema_version": 1,
+      "sha256": "5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a",
+      "matches_reference_header": false
+    },
+    "snapshot": {
+      "exit_code": 0,
+      "stdout_bytes": 16010,
+      "stderr_bytes": 0,
+      "json_valid": true,
+      "root_keys": [
+        "id",
+        "result"
+      ],
+      "has_error": false
+    },
+    "observe_help": {
+      "exit_code": 0,
+      "stdout_bytes": 175,
+      "stderr_bytes": 0
+    },
+    "control_help": {
+      "exit_code": 0,
+      "stdout_bytes": 204,
+      "stderr_bytes": 0
+    }
+  },
+  "limitations": [
+    "Authorized isolated Windows pane. Schema export, snapshot body, and terminal bytes are not shipped.",
+    "Runtime api_protocol is 22. Source baseline remains v0.8.2 / protocol 20. matches_reference_header=false.",
+    "Preview CLI is not in compatible_by_default. This combo is not compatible with protocol 20 source.",
+    "PATH and user-local Programs resolved to the same binary blob. The path strings are not shipped.",
+    "Named-pipe ACL was not captured. Endpoint live matrix was not captured.",
+    "Daemon version was not recorded separately from CLI --version. Remote fields were not copied here.",
+    "windows_gui_tested is false. Structural validation does not set windows_verified. AC01 stays not passed."
+  ]
+}

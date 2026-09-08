@@ -156,10 +156,10 @@ distribution permission.
 
 | Field | Value |
 |---|---|
-| source | Not downloaded; live herdr was not granted |
-| version / hash | v0.8.2 tag known; runtime CLI/daemon not hashed / all SHA-256 null |
+| source | Not vendored; isolated Windows preview observed, not admitted |
+| version / hash | source v0.8.2; runtime CLI `0.9.0-preview.2026-09-08-62431dbd033b` protocol 22 / SHA-256 stay in evidence, not a license grant |
 | license | Runtime bits are not in this repository and are not a G0 product input |
-| notice / notice_status | HD-001 Windows runtime is blocked (`no_authorized_isolated_pane_or_live_herdr_grant`) / pending |
+| notice / notice_status | HD-001 recorded isolated preview protocol 22; not compatible with source 20; binary not a G0 product input / pending |
 | modification | none; runtime download is not present |
 | distribution | not in this repository |
 | technical / security / admission | not_evaluated / not_evaluated / blocked |

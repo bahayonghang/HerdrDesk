@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "collected_at": "2026-09-07",
-  "updated_at": "2026-09-08T18:30:00Z",
+  "updated_at": "2026-09-08T05:13:06Z",
   "evidence_level": "source_inspection_only",
   "matrix_path": "evidence/version-support-matrix.json",
   "herdr": {
@@ -17,16 +17,16 @@
       "docs/next/api/herdr-api.schema.json": "f9642ffa0deb4dc87052a5247d700e1dcd50a753"
     },
     "distribution_binary_sha256": null,
-    "runtime_binary_sha256": null,
+    "runtime_binary_sha256": "d3e69a7810beb6077c47bd8d876f50929152828a6c210c5e6d001f9220137da6",
     "daemon_version": null,
-    "runtime_schema_sha256": null
+    "runtime_schema_sha256": "5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a"
   },
   "runtime_verification": {
-    "windows_local": "blocked",
+    "windows_local": "recorded",
     "remote_linux": "not_run",
     "named_pipe_acl": "blocked",
     "windows_endpoint": "blocked",
-    "windows_terminal_lease": "blocked",
+    "windows_terminal_lease": "recorded",
     "ime": "blocked"
   },
   "default_write_capability": false,
@@ -75,38 +75,42 @@
         "source_blobs.src/server/render_stream.rs": "evidence index E05 git blob",
         "source_blobs.docs/next/api/herdr-api.schema.json": "evidence index E07 git blob",
         "distribution_binary_sha256": "null; distribution binary not hashed",
-        "runtime_binary_sha256": "null; no authorized runtime execution",
-        "runtime_schema_sha256": "null; no authorized runtime schema export",
-        "daemon_version": "null; no authorized daemon ping"
+        "runtime_binary_sha256": "null on this source record; Windows runtime hash is on herdr-windows-runtime",
+        "runtime_schema_sha256": "null on this source record; Windows runtime schema hash is on herdr-windows-runtime",
+        "daemon_version": "null; no distinct daemon ping separate from CLI --version"
       }
     },
     {
       "subject": "herdr-windows-runtime",
       "environment": "windows_local",
-      "observed_at": "2026-09-08T01:42:17Z",
-      "evidence_level": "blocked",
+      "observed_at": "2026-09-08T05:01:00Z",
+      "evidence_level": "isolated_windows_runtime",
+      "runtime_protocol": 22,
+      "matches_reference_header": false,
       "version": {
-        "tag": "v0.8.2",
-        "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
-        "cli": null,
+        "tag": null,
+        "commit": "62431dbd033b",
+        "cli": "herdr 0.9.0-preview.2026-09-08-62431dbd033b",
         "daemon": null
       },
       "hashes": {
         "git_blob_sha": null,
         "distribution_binary_sha256": null,
-        "runtime_binary_sha256": null,
-        "runtime_schema_sha256": null
+        "runtime_binary_sha256": "d3e69a7810beb6077c47bd8d876f50929152828a6c210c5e6d001f9220137da6",
+        "runtime_schema_sha256": "5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a"
       },
-      "result": "blocked",
-      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
-      "redaction": "path_redacted_no_runtime_output",
+      "result": "recorded",
+      "redaction": "schema_snapshot_and_paths_omitted",
       "limitations": [
-        "Local implementation was authorized. Live herdr was not granted.",
-        "CLI version, daemon ping, runtime schema/protocol, endpoint shape, and named-pipe ACL were not collected.",
-        "PATH inspection without execution is not a version or schema proof."
+        "Runtime CLI is herdr 0.9.0-preview.2026-09-08-62431dbd033b with api_protocol 22.",
+        "Source baseline remains v0.8.2 / protocol 20. matches_reference_header=false.",
+        "This combo is not compatible with protocol 20 source and is not in compatible_by_default.",
+        "Named-pipe ACL was not captured. Endpoint live matrix was not captured.",
+        "Schema export, snapshot body, and private paths are not shipped.",
+        "Remote fields were not copied into this record. AC01 stays not passed."
       ],
       "attachments": [
-        "evidence/runtime/windows-runtime.blocked.json"
+        "evidence/runtime/windows-runtime.capture.json"
       ]
     },
     {
@@ -169,30 +173,33 @@
     {
       "subject": "herdr-windows-terminal-lease",
       "environment": "windows_terminal_lease",
-      "observed_at": "2026-09-08T06:15:00Z",
-      "evidence_level": "blocked",
+      "observed_at": "2026-09-08T05:02:48Z",
+      "evidence_level": "isolated_windows_runtime",
+      "runtime_protocol": 22,
       "version": {
-        "tag": "v0.8.2",
-        "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
-        "cli": null,
+        "tag": null,
+        "commit": "62431dbd033b",
+        "cli": "herdr 0.9.0-preview.2026-09-08-62431dbd033b",
         "daemon": null
       },
       "hashes": {
         "git_blob_sha": null,
         "distribution_binary_sha256": null,
-        "runtime_binary_sha256": null,
-        "runtime_schema_sha256": null
+        "runtime_binary_sha256": "d3e69a7810beb6077c47bd8d876f50929152828a6c210c5e6d001f9220137da6",
+        "runtime_schema_sha256": "5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a"
       },
-      "result": "blocked",
-      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
-      "redaction": "path_redacted_no_runtime_output",
+      "result": "recorded",
+      "redaction": "terminal_bytes_and_target_omitted",
       "limitations": [
-        "Local implementation was authorized. Live herdr, disposable pane, input, takeover, and control writes were not granted.",
-        "Synthetic lease-cases.json is a mapper simulation, not observe/control runtime proof.",
-        "AC05-C1 is blocked. Offline parser/selftest is not runtime pass. AC05 remains not_run."
+        "Observe/control ran on an isolated disposable pane. Caller pane was not targeted.",
+        "Full then delta frames; canonical Base64 wire shape passed.",
+        "stream_end is bridge_process_exit. EOF is not pane death. Pane remained alive.",
+        "control_verified stayed false after a 10-byte stdin write. takeover_used is false.",
+        "Resize, two-controller mutex, IME, and named-pipe ACL were not run.",
+        "Synthetic lease-cases.json is not this capture. AC05 stays not passed."
       ],
       "attachments": [
-        "evidence/runtime/windows-terminal-lease.blocked.json"
+        "evidence/runtime/windows-terminal-lease.capture.json"
       ]
     },
     {
@@ -242,7 +249,7 @@
       "template": true
     },
     {
-      "path": "evidence/runtime/windows-runtime.blocked.json",
+      "path": "evidence/runtime/windows-runtime.capture.json",
       "kind": "windows_runtime",
       "template": false
     },
@@ -257,7 +264,7 @@
       "template": false
     },
     {
-      "path": "evidence/runtime/windows-terminal-lease.blocked.json",
+      "path": "evidence/runtime/windows-terminal-lease.capture.json",
       "kind": "windows_terminal_lease",
       "template": false
     },
