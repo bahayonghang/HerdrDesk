@@ -52,4 +52,26 @@ public static class ShellStrings
     public const string NotificationIdle = "空闲";
     public const string NotificationStale = "连接已过期，状态可能已变化";
     public const string Muted = "已静默";
+    public const string CreateWorkspace = "新建工作区";
+    public const string CreateTerminal = "新建终端";
+    public const string CreateAgent = "新建代理";
+    public const string RenameResource = "重命名";
+    public const string CloseResource = "关闭";
+    public const string ConfirmClose = "确认关闭";
+    public const string ConfirmGroupClose = "确认关闭工作树组";
+    public const string CancelEdit = "取消";
+    public const string SubmitCreate = "创建";
+    public const string SchemaIncompatible = "协议不兼容，写入已禁用";
+    public const string CapabilityUnknown = "缺少已验证的写入能力";
+    public const string OfflineWritesDisabled = "离线，写入已禁用";
+    public const string StaleWritesDisabled = "投影过期，写入已禁用";
+    public const string UnknownOutcome = "结果未知，请先查询再决定";
+    public const string GroupCloseRequired = "需单独确认关闭整个工作树组";
+    public const string StaleDialog = "目标已切换，请重新打开对话框";
+    public const string AgentKindClaude = "Claude";
+    public const string AgentKindCodex = "Codex";
+    public const string AgentKindOpenCode = "OpenCode";
+    public const string ShellKind = "普通终端";
+    public const string WorkingDirectory = "工作目录";
+    public const string DoNotAskAgain = "不再询问";
 }

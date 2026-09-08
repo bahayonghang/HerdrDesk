@@ -37,3 +37,4 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 - `Rpc/RpcEnvelopeParser.cs`
 - `Rpc/SchemaV1/` — snapshot/event DTOs and `RpcStateDecoder` (owned `JsonElement` extensions; runtime schema hash UNVERIFIED)
 - `Terminal/TerminalCliProcessFactory.cs`、`TerminalCliTransport.cs`、stdout pump、stderr drainer、command serializer、write queue
+- `Rpc/ResourceCommandAdapter.cs` — HD-017 verified operation mapping；无 generic method/argv；`close_group` 仅在显式确认时写入。L2 live mutation 为 UNVERIFIED。

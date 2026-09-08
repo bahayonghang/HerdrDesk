@@ -59,21 +59,53 @@ public static class SchemaOperations
         ],
         StringComparer.Ordinal);
 
+    public const string WorkspaceCreate = "workspace.create";
+    public const string WorkspaceRename = "workspace.rename";
+    public const string WorkspaceClose = "workspace.close";
+    public const string TabCreate = "tab.create";
+    public const string TabRename = "tab.rename";
+    public const string TabClose = "tab.close";
+    public const string PaneRename = "pane.rename";
+    public const string PaneClose = "pane.close";
+    public const string AgentStart = "agent.start";
+    public const string AgentRename = "agent.rename";
+    public const string WorkspaceGet = "workspace.get";
+    public const string TabGet = "tab.get";
+    public const string PaneGet = "pane.get";
+    public const string AgentGet = "agent.get";
+    public const string SessionSnapshot = "session.snapshot";
+
+    // HD-017 L1 allowlist. Other MutationControl methods stay capability-gated but unexposed.
+    public static FrozenSet<string> ResourceMutations { get; } = FrozenSet.ToFrozenSet(
+        [
+            WorkspaceCreate,
+            WorkspaceRename,
+            WorkspaceClose,
+            TabCreate,
+            TabRename,
+            TabClose,
+            PaneRename,
+            PaneClose,
+            AgentStart,
+            AgentRename
+        ],
+        StringComparer.Ordinal);
+
     public static FrozenSet<string> VerifiedWhenCompatible { get; } = FrozenSet.ToFrozenSet(
         [
             "ping",
-            "session.snapshot",
+            SessionSnapshot,
             "events.subscribe",
             "workspace.list",
-            "workspace.get",
+            WorkspaceGet,
             "tab.list",
-            "tab.get",
+            TabGet,
             "pane.list",
             "pane.current",
-            "pane.get",
+            PaneGet,
             "pane.layout",
             "agent.list",
-            "agent.get",
+            AgentGet,
             .. MutationControl
         ],
         StringComparer.Ordinal);

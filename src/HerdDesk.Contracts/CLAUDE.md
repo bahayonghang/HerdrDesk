@@ -103,6 +103,10 @@
 
 `Terminal/TerminalControlPorts.cs`：`IControlLeaseCoordinator`、`ILeaseTargetStore`、`IControlBindingHost`、`ControlLeaseState`、`ControlAttemptOutcome`、`TakeoverChallengeView`、`InputSubmissionOutcome`。`RequestControl` 不能携带 takeover。公开 API 无 raw argv、nonce 或 resource CRUD。L2 live lease 为 UNVERIFIED。
 
+## HD-017 增补
+
+`ResourceOperationPorts.cs`：`ResourceKey`、create/rename/close intent、`IResourceCommandCoordinator`、`IResourceCommandTransport`、`IResourceQueryTransport`。Agent kind 仅 Claude/Codex/OpenCode。无动态 RPC method、argv 或 approval bypass。`workspace.close` 的 `close_group` 缺省不发送。L2 live mutation 为 UNVERIFIED。
+
 ## HD-014 增补
 
 `Terminal/ITerminalRenderer.cs`：`BindAsync` / `ApplyAsync` / `ReadInputsAsync` / `SetReadOnlyAsync` / `FocusAsync`。`ApplyAsync` 完成只表示 parser consumed。`Terminal/IRenderFlowController.cs`：有界 enqueue、token ack、cancel、reset。`ITerminalRendererFactory.CreateAsync` 默认返回 null。不覆盖规划草案整文件。L2 WebView process 与 L3 DPI 为 UNVERIFIED。

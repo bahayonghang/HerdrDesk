@@ -10,7 +10,8 @@ cases =
     .. ActivationAndExitTests.All,
     .. DeepLinkRoutingTests.All,
     .. TerminalInputTests.All,
-    .. TerminalControlTests.All
+    .. TerminalControlTests.All,
+    .. ResourceCommandViewModelTests.All
 ];
 
 var failed = 0;

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd017_l2_status",
+  "l2_live_mutation": "UNVERIFIED",
+  "live_herdr": false,
+  "winui_admitted": false,
+  "l1_resource_command_coordinator": "required; does not close product AC20",
+  "ac20_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "HD-017 ships L1 schema-gated workspace/shell/agent create, rename, and close on fake RPC/Store. Timeout enters UnknownOutcome and queries; mutations are not retried. workspace.close omits close_group unless the user confirms group close. Agent kinds are Claude/Codex/OpenCode. This file is not AC pass evidence. L2 live mutation stays UNVERIFIED."
+}

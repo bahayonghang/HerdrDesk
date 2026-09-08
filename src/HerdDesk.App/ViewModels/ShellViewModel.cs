@@ -23,6 +23,7 @@ public sealed class ShellDependencies
     public IDiagnosticSink? DiagnosticSink { get; init; }
     public TerminalInputViewModel? TerminalInput { get; init; }
     public TerminalControlViewModel? TerminalControl { get; init; }
+    public ResourceCommandViewModel? ResourceCommands { get; init; }
 }
 
 public sealed class ShellViewModel
@@ -59,6 +60,7 @@ public sealed class ShellViewModel
             dependencies.Aliases);
         TerminalInput = dependencies.TerminalInput;
         TerminalControl = dependencies.TerminalControl;
+        ResourceCommands = dependencies.ResourceCommands;
         FocusRestore = new TerminalFocusCoordinator();
         Exit = dependencies.Exit;
         FilesAvailability = new RouteAvailability(
@@ -80,6 +82,7 @@ public sealed class ShellViewModel
     public NotificationCenterViewModel Notifications { get; }
     public TerminalInputViewModel? TerminalInput { get; }
     public TerminalControlViewModel? TerminalControl { get; }
+    public ResourceCommandViewModel? ResourceCommands { get; }
     public TerminalFocusCoordinator FocusRestore { get; }
     public TerminalDisplayCoordinator Display { get; }
     public AppExitCoordinator Exit { get; }
@@ -157,6 +160,7 @@ public sealed class ShellViewModel
         }
 
         RefreshFromCatalog();
+        ResourceCommands?.HandleSelectionChanged(ResourceKeyFromSelection());
         watch.Stop();
         LastStartMs = watch.Elapsed.TotalMilliseconds;
     }
@@ -166,6 +170,7 @@ public sealed class ShellViewModel
         SyncAttention();
         _navigation.Rebuild(Lifecycle == ShellLifecycle.Starting);
         Search.Refresh();
+        ResourceCommands?.Coordinator.NotifyProjectionAsync().AsTask().GetAwaiter().GetResult();
         ApplyPendingFocus();
         CompleteNotificationFocus();
         UpdateChrome();
@@ -185,6 +190,7 @@ public sealed class ShellViewModel
             TerminalControl?.HandleSelectionChanged(pane);
         }
 
+        ResourceCommands?.HandleSelectionChanged(ResourceKeyFromSelection());
         UpdateChrome();
     }
 
@@ -631,5 +637,27 @@ public sealed class ShellViewModel
 
         if (Lifecycle == ShellLifecycle.NoDevices)
             TitleSummary = ShellStrings.NoDevices;
+    }
+
+    private ResourceKey? ResourceKeyFromSelection()
+    {
+        var selection = _navigation.Selection;
+        if (selection.Session is not { } session)
+            return null;
+        if (selection.Pane is { } pane)
+        {
+            var projected = Catalog.FindPane(pane);
+            return new ResourceKey(
+                session,
+                projected?.AgentKind is null ? ResourceKind.Pane : ResourceKind.Agent,
+                pane.WorkspaceId,
+                projected?.TabId,
+                pane.PaneId,
+                projected?.TerminalId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(selection.WorkspaceId))
+            return new ResourceKey(session, ResourceKind.Workspace, selection.WorkspaceId);
+        return new ResourceKey(session, ResourceKind.Workspace, "");
     }
 }

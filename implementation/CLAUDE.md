@@ -39,5 +39,6 @@
 | `hd-014-l2.json` | L2 WebView process 与 L3 DPI/theme/focus = `UNVERIFIED`。L1 message/flow 不能关闭产品 AC08/AC27。WebView2 与 npm xterm 未准入。 |
 | `hd-015-l3.json` | L3 真机 IME 桌面 = `UNVERIFIED`。L1 coordinators 不能关闭产品 AC09/AC10。WebView2 / npm xterm 未准入。 |
 | `hd-016-l2.json` | L2 live lease = `UNVERIFIED`。L1 coordinator 不能关闭产品 AC07/AC14/AC16。`phase_gate=not_passed`。 |
+| `hd-017-l2.json` | L2 live mutation = `UNVERIFIED`。L1 coordinator 不能关闭产品 AC20。`phase_gate=not_passed`。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。

@@ -156,6 +156,10 @@ public static class ShellCodes
     public const string Empty = "empty";
     public const string Error = "error";
     public const string Muted = "muted";
+    public const string SchemaIncompatible = "rpc_schema_incompatible";
+    public const string CapabilityUnknown = "capability_unknown";
+    public const string GroupCloseRequired = "workspace_group_close_required";
+    public const string UnknownOutcome = "unknown_outcome";
 }
 
 public readonly record struct FocusToken(string ControlId);

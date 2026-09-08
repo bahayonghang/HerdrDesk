@@ -48,6 +48,8 @@ C# and Python need not share every internal code string. They must share reject/
 
 `TerminalCliTransport` write receipts use `NotSent`, `WrittenUnacknowledged`, and `UnknownAfterDisconnect`. They do not mean upstream execution. Fail-closed stdout codes include `line_bytes_limit`, `truncated_ndjson_record`, `malformed_terminal_record`, `sequence_gap_or_replay`, and `terminal_consumer_backpressure`. Observe input is `observe_input_denied`. First frame, process alive, and focus never set `ControlVerified`. L2 live herdr stays UNVERIFIED.
 
+HD-017 `ResourceCommandCoordinator` uses `ResourceGateDecision` / `ResourceOperation.Code`. Codes include `rpc_schema_incompatible`, `capability_unknown`, `stale_target`, `stale_confirmation`, `mutation_already_sent`, `workspace_group_close_required`, `close_group_unconfirmed`, `agent_kind_unverified`, `argv_rejected`, `rpc_not_sent`, `rpc_cancelled_after_write`, `timeout`, and `unknown_outcome`. Timeout after write becomes UnknownOutcome then a read-only query. Mutations are not retried. `close_group` is omitted unless the user confirms group close. L2 live mutation stays UNVERIFIED. Product AC20 stays not passed.
+
 ---
 
 ## Error Handling Patterns

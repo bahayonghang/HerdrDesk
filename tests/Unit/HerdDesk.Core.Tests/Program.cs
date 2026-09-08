@@ -91,7 +91,9 @@ cases =
     .. UnreadAggregationTests.All,
     .. StaleAndUnknownTests.All,
     .. ControlTransitionTests.All,
-    .. ControlLeaseCoordinatorTests.All
+    .. ControlLeaseCoordinatorTests.All,
+    .. ResourceCommandGateTests.All,
+    .. UnknownOutcomeTests.All
 ];
 
 var failed = 0;

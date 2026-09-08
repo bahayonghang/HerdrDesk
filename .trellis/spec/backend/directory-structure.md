@@ -14,7 +14,7 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 
 ```
 src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels, State projection ports)
-src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer, HD-016 ControlLeaseCoordinator
+src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer, HD-016 ControlLeaseCoordinator, HD-017 ResourceCommandCoordinator
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder, TerminalCliTransport
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  HD-014 L1 validator + BCL renderer adapter + HD-015 L1 input coordinators (no WebView2 packages)
@@ -40,7 +40,7 @@ global.json                 SDK 10.0.400, rollForward=disable
 NuGet.Config                empty package sources
 ```
 
-Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels + HD-015 focus/input ViewModels), `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web` (HD-014 L1 adapter + HD-015 L1 coordinators), `bridge/herddesk-bridge`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge`, `tests/Integration.Windows`. L2 named-pipe ACL is UNVERIFIED. HD-011 L2 visual/activation and L3 IME/DPI are UNVERIFIED. HD-014 L2 WebView process and L3 DPI are UNVERIFIED. HD-015 L3 real IME desktop is UNVERIFIED.
+Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels + HD-015 focus/input ViewModels + HD-016 control ViewModel + HD-017 resource command ViewModel), `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web` (HD-014 L1 adapter + HD-015 L1 coordinators), `bridge/herddesk-bridge`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge`, `tests/Integration.Windows`. L2 named-pipe ACL is UNVERIFIED. HD-011 L2 visual/activation and L3 IME/DPI are UNVERIFIED. HD-014 L2 WebView process and L3 DPI are UNVERIFIED. HD-015 L3 real IME desktop is UNVERIFIED. HD-016 L2 live lease is UNVERIFIED. HD-017 L2 live mutation is UNVERIFIED.
 
 ---
 
@@ -55,6 +55,7 @@ Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels + HD-015 focus/input V
 | Terminal CLI process / pumps | `src/HerdDesk.Infrastructure/Terminal/` |
 | Projection mapper and in-memory Store | `src/HerdDesk.Core/Store/` |
 | DeviceSession actor / reconcile planner | `src/HerdDesk.Core/DeviceSessions/` |
+| Resource command gate / coordinator | `src/HerdDesk.Core/Commands/` |
 | Attention reducer / unread aggregation | `src/HerdDesk.Core/Attention/` |
 | Notification center ViewModel / toast sink stub | `src/HerdDesk.App/ViewModels/NotificationCenterViewModel.cs`, `src/HerdDesk.App/Notifications/` |
 | DeviceSession ports and freshness | `src/HerdDesk.Contracts/State/IDeviceSession.cs` |
@@ -63,7 +64,7 @@ Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels + HD-015 focus/input V
 | Renderer L1 host types | `src/HerdDesk.Contracts/RendererModels.cs` |
 | Terminal CLI transport ports | `src/HerdDesk.Contracts/Terminal/` |
 | Terminal CLI process / pumps | `src/HerdDesk.Infrastructure/Terminal/` |
-| Frame parse, input grant, endpoint mapping, lease mapping, renderer L1, control lease actor | `src/HerdDesk.Core` |
+| Frame parse, input grant, endpoint mapping, lease mapping, renderer L1, control lease actor, resource command gate | `src/HerdDesk.Core` |
 | Python wire checks | `scripts/herddesk_g0/protocol.py` |
 | Compatibility evidence rules | `scripts/herddesk_g0/evidence.py` |
 | Endpoint matrix diagnostics | `scripts/herddesk_g0/endpoint.py` |

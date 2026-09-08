@@ -32,6 +32,8 @@ def validate() -> dict:
     hd013=json.loads((ROOT/'implementation/hd-013-l2.json').read_text(encoding='utf-8'))
     hd014=json.loads((ROOT/'implementation/hd-014-l2.json').read_text(encoding='utf-8'))
     hd015=json.loads((ROOT/'implementation/hd-015-l3.json').read_text(encoding='utf-8'))
+    hd016=json.loads((ROOT/'implementation/hd-016-l2.json').read_text(encoding='utf-8'))
+    hd017=json.loads((ROOT/'implementation/hd-017-l2.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -74,6 +76,19 @@ def validate() -> dict:
     assert hd015.get('npm_xterm_admitted') is not True
     assert hd015.get('live_herdr') is not True
     assert hd015.get('phase_gate')!='passed'
+    assert hd016.get('l2_live_lease')=='UNVERIFIED'
+    assert hd016.get('ac07_passed') is not True
+    assert hd016.get('ac14_passed') is not True
+    assert hd016.get('ac16_passed') is not True
+    assert hd016.get('g0_passed') is not True
+    assert hd016.get('live_herdr') is not True
+    assert hd016.get('phase_gate')!='passed'
+    assert hd017.get('l2_live_mutation')=='UNVERIFIED'
+    assert hd017.get('ac20_passed') is not True
+    assert hd017.get('g0_passed') is not True
+    assert hd017.get('live_herdr') is not True
+    assert hd017.get('winui_admitted') is not True
+    assert hd017.get('phase_gate')!='passed'
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'
