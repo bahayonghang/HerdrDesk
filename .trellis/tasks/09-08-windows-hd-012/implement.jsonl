@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"状态投影、注意力 reducer、系统通知与导航 deep link 的跨层一致性"}
+{"file":"docs/plan/docs/02_产品定义与名称.md","reason":"业务状态、未读和通知产品语义"}
+{"file":"docs/plan/docs/03_架构与数据流.md","reason":"首次同步、重连基线、dirty 收敛与通知去重"}
+{"file":"docs/plan/docs/08_安全与威胁模型.md","reason":"通知 deep link 不携命令及脱敏边界"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"通知 unit/component/Windows activation 测试归一入口"}

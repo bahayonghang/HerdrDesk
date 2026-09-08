@@ -1,0 +1,4 @@
+{"file":"planning/acceptance.json","reason":"最终核对 AC17、AC18 以及 AC12、AC37 的贡献边界"}
+{"file":"tasks/HD-012.md","reason":"核对通知任务范围、依赖、风险与回滚"}
+{"file":"docs/plan/docs/10_测试与验收.md","reason":"通知 L1、L2、L3 证据和多设备真实性边界"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
