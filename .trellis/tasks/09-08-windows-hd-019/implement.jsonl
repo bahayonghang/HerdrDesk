@@ -1,0 +1,4 @@
+{"file":".trellis/spec/backend/index.md","reason":"Contracts/Core identity, epoch and G0 evidence rules."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Control verification and offline-gate limitations."}
+{"file":".trellis/spec/frontend/index.md","reason":"Current deferred UI guidance and future WinUI constraints."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
