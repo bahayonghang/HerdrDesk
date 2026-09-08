@@ -2,27 +2,48 @@
 
 [根索引](../CLAUDE.md) · 证据
 
-生成日期：2026-09-08。可提交的基线与工具链记录。真实探针输出在 gitignored `probe-results/`。规划期来源索引在 `docs/plan/evidence/版本与证据索引.md`。
+生成日期：2026-09-08。可提交的基线、运行时采集模板与工具链记录。真实探针输出在 gitignored `probe-results/`。规划期来源索引在 `docs/plan/evidence/版本与证据索引.md`。
+
+`python scripts/validate_repository.py` 与 `herddesk_g0.evidence` 只证明 JSON/链接结构。结构校验不是产品验收，不能把 G0、AC01 或 Windows runtime 标为通过。
 
 ## `compatibility-baseline.json`
 
 | 字段 | 当前值 |
 |---|---|
-| `evidence_level` | `source_inspection_only` |
-| herdr tag | v0.8.2 |
-| commit | `9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c` |
+| 顶层 `evidence_level` | `source_inspection_only` |
+| herdr tag / commit | v0.8.2 / `9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c` |
 | `api_protocol` / `schema_version` | 20 / 1 |
-| `src/client/mod.rs` blob | `c33157fb0d9b7c1632562fced6bd9e439de80856` |
-| `src/ipc.rs` blob | `36e69ea2a571de096e3150779eb9cae6e803d7a8` |
-| `src/server/render_stream.rs` blob | `f14deb5e7e2f3183410020e5f36f7fb11dda6780` |
-| schema blob | `f9642ffa0deb4dc87052a5247d700e1dcd50a753` |
+| `src/client/mod.rs` blob | 见文件 `herdr.source_blobs`（git blob SHA-1） |
+| `src/ipc.rs` blob | 见文件 `herdr.source_blobs` |
+| `src/server/render_stream.rs` blob | 见文件 `herdr.source_blobs` |
+| schema blob | 见文件 `herdr.source_blobs` |
+| `distribution_binary_sha256` | null |
 | `runtime_binary_sha256` / `daemon_version` / `runtime_schema_sha256` | null |
-| `runtime_verification.*` | `not_run` |
+| `runtime_verification.windows_local` | `blocked`（`no_authorized_isolated_pane_or_live_herdr_grant`） |
+| `runtime_verification.remote_linux` | `not_run`（独立条目，不借用 Windows） |
+| `runtime_verification.named_pipe_acl` | `blocked`（与 Windows runtime 同一授权缺口） |
+| `runtime_verification.ime` | `not_run` |
 | `default_write_capability` | false |
 
-Git blob SHA 不是二进制 SHA-256，也不是运行中 schema hash。`validate_repository.py` 断言 `api_protocol==20` 且默认不可写。
+每条 `records[]` 含 `subject`、`environment`、`observed_at`、`evidence_level`、`version`、`hashes`、`result`、`redaction`、`limitations`、`attachments`。`hashes` 中 git blob SHA、分发 binary SHA-256、runtime schema SHA-256 分栏，禁止互推。源码字段来源在 source 记录的 `field_sources`。
 
-HD-001 完成条件：本地与远端各补齐 CLI version、daemon ping、schema protocol 与 hash。
+## `version-support-matrix.json`
+
+冲突行键：`(os, arch, cli_binary_hash, daemon_version, protocol, schema_hash)`。列：source、Windows runtime、remote runtime。任一关键字段未知则该组合不得标 `compatible`。`compatible_by_default` 当前为空。preview 未知项不进入默认兼容集。
+
+## `runtime/`
+
+UTF-8 JSON。采集记录字段：`capture_id`、`kind`、`captured_at_utc`、`operator_scope`、`host_fingerprint_redacted`、`command_redacted`、`exit_code`、`stdout_sha256`、`stderr_sha256`、`evidence_level`、`limitations`。
+
+| 文件 | 含义 |
+|---|---|
+| `capture.schema.json` | 采集字段契约；不是一次运行 |
+| `windows-runtime.template.json` | Windows 线模板；`template=true`，空 hash/退出码 |
+| `remote-runtime.template.json` | remote 线模板；不得填成一次成功运行 |
+| `windows-runtime.blocked.json` | AC01-C2 当前记录：blocked |
+| `remote-runtime.not-run.json` | AC01-C3 独立 `not_run` 记录 |
+
+模板不是成功运行。runtime 成功结论必须指向非模板采集文件。
 
 ## `toolchain.json`
 
@@ -32,3 +53,8 @@ HD-001 完成条件：本地与远端各补齐 CLI version、daemon ping、schem
 
 - 更新 runtime 字段必须附命令、主机、时间。禁止把客户端 `api schema` 当作 daemon 证明。
 - 禁止把 preview issue（如 #3701）写入本文件当作 stable 缺陷。
+- 禁止把 `source_inspection_only`、synthetic fixture 或 hosted CI 提升为 runtime 证明。
+- 禁止把 git blob SHA 写入 `runtime_binary_sha256` 或 `runtime_schema_sha256`。
+- Windows 与 remote 的 runtime 结论必须来自独立记录。
+- `api_protocol` 保持 20；`default_write_capability` 保持 false。
+- 结构校验返回 `windows_verified: false`。

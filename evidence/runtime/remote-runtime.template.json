@@ -1,0 +1,24 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "remote-runtime-template",
+  "kind": "remote_runtime",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_remote_test_device_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "herdr --version",
+    "herdr api schema --json",
+    "readonly daemon ping"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "remote_runtime",
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "Fill only after an authorized independent remote capture. Do not copy Windows fields.",
+    "Remote collection does not wait for P3 product code.",
+    "Do not copy git blob SHA into runtime_binary_sha256 or runtime_schema_sha256."
+  ]
+}

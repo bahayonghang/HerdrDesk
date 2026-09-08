@@ -1,0 +1,25 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "windows-runtime-template",
+  "kind": "windows_runtime",
+  "captured_at_utc": null,
+  "operator_scope": "isolated_disposable_pane_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "herdr --version",
+    "herdr api schema --json",
+    "readonly daemon ping",
+    "endpoint and named-pipe ACL inspection"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "isolated_windows_runtime",
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "Fill only after an authorized isolated Windows pane capture.",
+    "Do not copy git blob SHA into runtime_binary_sha256 or runtime_schema_sha256.",
+    "Client api schema is not daemon proof."
+  ]
+}

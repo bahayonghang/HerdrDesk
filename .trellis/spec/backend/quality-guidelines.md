@@ -43,13 +43,15 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 
 | Suite | How to run | Scope |
 |---|---|---|
-| Python | `python -m unittest discover -s tests/python -v` | Protocol, probe gates, setup stubs, repository, publish synthetic |
+| Python | `python -m unittest discover -s tests/python -v` | Protocol, probe gates, setup stubs, repository, evidence, publish synthetic |
 | Probe selftest | `python scripts/probe_herdr.py selftest` | Synthetic; `herdr_executed=false` |
 | Capture | `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson` | Offline NDJSON |
-| Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, UTF-8 |
+| Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, UTF-8; calls `herddesk_g0.evidence`; `windows_verified` stays false |
 | C# smoke | `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build` | Parser and `InputPolicy`; not `dotnet test` |
 
 `just ci` runs the full offline set. Counts in `implementation/status.json` may lag; use the current command output.
+
+Evidence tests in `tests/python/test_evidence.py` must call `herddesk_g0.evidence` and load the real files under `evidence/`. Git blob SHA, distribution binary SHA-256, and runtime schema SHA-256 stay in distinct fields. Source inspection, synthetic fixtures, and hosted CI are not runtime proof. Structural validation is not product acceptance.
 
 Protocol regressions for unpaired surrogates must assert the exact C# code `malformed_terminal_record`, then `terminal_stream_not_active` on the next valid frame, and must keep a valid surrogate pair accepted. Python uses the same fixture names.
 

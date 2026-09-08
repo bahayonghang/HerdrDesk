@@ -1,0 +1,32 @@
+{
+  "document_kind": "capture_schema",
+  "encoding": "utf-8",
+  "template_marker": "template",
+  "required_fields": [
+    "capture_id",
+    "kind",
+    "captured_at_utc",
+    "operator_scope",
+    "host_fingerprint_redacted",
+    "command_redacted",
+    "exit_code",
+    "stdout_sha256",
+    "stderr_sha256",
+    "evidence_level",
+    "limitations"
+  ],
+  "hash_fields_must_remain_distinct": [
+    "git_blob_sha",
+    "distribution_binary_sha256",
+    "runtime_binary_sha256",
+    "runtime_schema_sha256"
+  ],
+  "notes": [
+    "UTF-8 JSON capture schema for Windows and remote runtime lines.",
+    "This file is a schema, not a successful run.",
+    "Templates set template=true and leave captured_at_utc, exit_code, and hashes null.",
+    "stdout_sha256 and stderr_sha256 hash redacted output bytes. They are not git blob SHAs.",
+    "Git blob SHA, distribution binary SHA-256, and runtime schema SHA-256 stay in distinct fields.",
+    "Structure validation of this schema is not product acceptance."
+  ]
+}

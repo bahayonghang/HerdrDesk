@@ -24,6 +24,8 @@ Python 3.10+，仅标准库。将本目录加入 `sys.path` 后 `import herddesk
 | `NdjsonDecoder` | 按 LF 切行；失败锁存；无 LF 的 EOF 失败，即使字节碰巧是合法 JSON |
 | `TerminalCaptureValidator` | 单 epoch 有序帧；重连必须新实例 |
 | `analyze_capture` | 总字节上限默认 256MiB；`daemon_or_pane_exit_verified` 等恒为 false |
+| `evidence.EvidenceError` | 稳定证据规则码；消息仅为码 |
+| `evidence.validate_evidence` / `check_evidence` | 基线/矩阵/采集结构；拒绝 hash 混同与非 runtime 提升；`windows_verified` 恒为 false |
 
 `validate_input`：`text` 与 `bytes` 必须恰好一个；空载荷拒绝。Python `bool` 不得当作 JSON 整数。Base64 必须与 `b64encode` 回比一致。终端 payload 不做 UTF-8 解码。
 
@@ -58,7 +60,7 @@ argv：`herdr [--session S] terminal session {observe|control} TARGET --cols --r
 | 文件 | 行为 |
 |---|---|
 | `check_capture.py` | `analyze_capture`；`--output` 独占创建 |
-| `validate_repository.py` | UTF-8 JSON；无 `PackageReference`；36 任务无环；48 AC；baseline `api_protocol==20` 且 `default_write_capability is False` |
+| `validate_repository.py` | UTF-8 JSON；无 `PackageReference`；36 任务无环；48 AC；调用 `herddesk_g0.evidence`；baseline `api_protocol==20` 且 `default_write_capability is False`；`windows_verified` 恒为 false |
 | `publish_github.py` | 历史 `PUBLICATION_MANIFEST.json` 审计（`kind=historical_bundle_audit`）。默认 dry-run，漂移退出码 2。日常门禁是 `just ci`。`--publish` 仅历史空仓建仓，已有仓库拒绝 |
 | `Invoke-HerdDeskPreflight.ps1` | pwsh 7 包装 `preflight`；仓库内无 Windows 执行证据 |
 

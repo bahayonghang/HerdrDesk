@@ -18,7 +18,7 @@ src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
 tests/python/               stdlib unittest (sys.path → scripts/)
 tests/fixtures/             synthetic NDJSON and protocol-edge-cases.json
-scripts/herddesk_g0/        protocol.py (strict JSON, frames, NDJSON)
+scripts/herddesk_g0/        protocol.py, evidence.py
 scripts/probe_herdr.py      herdr probe
 scripts/Invoke-HerdDeskDotnetSetup.ps1
 scripts/validate_repository.py
@@ -40,6 +40,7 @@ Planned and **not** present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, 
 | Identity / envelope types | `src/HerdDesk.Contracts/TerminalModels.cs` unless an approved task adds a file |
 | Frame parse and input grant | `src/HerdDesk.Core` |
 | Python wire checks | `scripts/herddesk_g0/protocol.py` |
+| Compatibility evidence rules | `scripts/herddesk_g0/evidence.py` |
 | Shared synthetic records | `tests/fixtures/` (LF, UTF-8) |
 | C# assertions | `tests/HerdDesk.Core.SmokeTests/Program.cs` |
 | Python assertions | `tests/python/test_*.py` |

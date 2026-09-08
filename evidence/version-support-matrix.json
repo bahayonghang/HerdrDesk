@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "document_kind": "version_support_matrix",
+  "note": "Unknown versions stay out of the default compatible set. The conflict row key is (os, arch, cli_binary_hash, daemon_version, protocol, schema_hash). Any unknown key field means the combo is not compatible. Source inspection, synthetic fixtures, and hosted CI are not runtime proof.",
+  "row_key": [
+    "os",
+    "arch",
+    "cli_binary_hash",
+    "daemon_version",
+    "protocol",
+    "schema_hash"
+  ],
+  "columns": [
+    "source",
+    "windows_runtime",
+    "remote_runtime"
+  ],
+  "compatible_by_default": [],
+  "rows": [
+    {
+      "key": {
+        "os": null,
+        "arch": null,
+        "cli_binary_hash": null,
+        "daemon_version": null,
+        "protocol": null,
+        "schema_hash": null
+      },
+      "source": {
+        "status": "recorded",
+        "evidence_level": "source_inspection_only",
+        "tag": "v0.8.2",
+        "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
+        "protocol_from_source_schema": 20,
+        "schema_file_blob_field": "herdr.source_blobs['docs/next/api/herdr-api.schema.json']",
+        "note": "Source protocol 20 is not a runtime schema hash and is not copied into key.schema_hash."
+      },
+      "windows_runtime": {
+        "status": "blocked",
+        "evidence_level": "blocked",
+        "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+        "capture": "evidence/runtime/windows-runtime.blocked.json"
+      },
+      "remote_runtime": {
+        "status": "not_run",
+        "evidence_level": "not_run",
+        "capture": "evidence/runtime/remote-runtime.not-run.json"
+      },
+      "compatible": false,
+      "reason": "unknown_key_fields: os, arch, cli_binary_hash, daemon_version, protocol, schema_hash"
+    }
+  ],
+  "channel_diff": [
+    {
+      "channel": "stable",
+      "tag": "v0.8.2",
+      "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
+      "status": "source_recorded_runtime_unknown"
+    },
+    {
+      "channel": "preview",
+      "tag": null,
+      "issues": "unknown",
+      "status": "unknown_not_in_default_compatible_set",
+      "effect": "blocked_until_recorded",
+      "note": "Preview issues are not copied into the stable baseline as defects."
+    }
+  ]
+}

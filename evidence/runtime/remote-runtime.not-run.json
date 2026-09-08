@@ -1,0 +1,22 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "remote-runtime-2026-09-08-not-run",
+  "kind": "remote_runtime",
+  "captured_at_utc": "2026-09-08T01:42:17Z",
+  "operator_scope": "no_authorized_remote_test_device",
+  "host_fingerprint_redacted": null,
+  "command_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": "not_run",
+  "herdr_executed": false,
+  "limitations": [
+    "Independent remote capture was not authorized in this dispatch.",
+    "This record does not reuse Windows PATH inspection, Windows blocked_category, or Windows hashes.",
+    "herdr was not executed on a remote host.",
+    "Remote runtime remains unknown until a separate authorized capture exists."
+  ]
+}

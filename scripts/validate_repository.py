@@ -6,6 +6,10 @@ import sys
 import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
+SCRIPTS=Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0,str(SCRIPTS))
+from herddesk_g0.evidence import validate_evidence
 
 
 def validate() -> dict:
@@ -46,8 +50,11 @@ def validate() -> dict:
     assert (ROOT/'evidence/compatibility-baseline.json').is_file()
     baseline=json.loads((ROOT/'evidence/compatibility-baseline.json').read_text(encoding='utf-8'))
     assert baseline['herdr']['api_protocol']==20 and baseline['default_write_capability'] is False
+    evidence=validate_evidence(ROOT)
+    assert evidence['windows_verified'] is False
     return {'structural_validation':'passed','json_files':count,'projects':len(projects),
-            'tasks':len(tasks),'csharp_compiled':False,'windows_verified':False}
+            'tasks':len(tasks),'csharp_compiled':False,'windows_verified':False,
+            'evidence_validation':evidence['evidence_validation']}
 
 
 if __name__=='__main__':
