@@ -15,7 +15,7 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 ```
 src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels, State projection ports)
 src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer
-src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder
+src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder, TerminalCliTransport
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
 src/HerdDesk.App/           composition root / console host stub + HD-011 L1 ViewModels + HD-012 L1 NotificationCenter (no WinUI)
@@ -50,6 +50,8 @@ Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels), `src/HerdDesk.Infras
 | Identity / envelope types | `src/HerdDesk.Contracts/TerminalModels.cs` unless an approved task adds a file |
 | Projection / capability / decoded RPC state | `src/HerdDesk.Contracts/State/` |
 | Snapshot DTO / SchemaV1 decoder | `src/HerdDesk.Infrastructure/Rpc/SchemaV1/` |
+| Terminal CLI transport ports | `src/HerdDesk.Contracts/Terminal/` |
+| Terminal CLI process / pumps | `src/HerdDesk.Infrastructure/Terminal/` |
 | Projection mapper and in-memory Store | `src/HerdDesk.Core/Store/` |
 | DeviceSession actor / reconcile planner | `src/HerdDesk.Core/DeviceSessions/` |
 | Attention reducer / unread aggregation | `src/HerdDesk.Core/Attention/` |
@@ -58,6 +60,8 @@ Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels), `src/HerdDesk.Infras
 | Endpoint mapping types | `src/HerdDesk.Contracts/EndpointModels.cs` |
 | Terminal lease observation types | `src/HerdDesk.Contracts/LeaseModels.cs` |
 | Renderer L1 host types | `src/HerdDesk.Contracts/RendererModels.cs` |
+| Terminal CLI transport ports | `src/HerdDesk.Contracts/Terminal/` |
+| Terminal CLI process / pumps | `src/HerdDesk.Infrastructure/Terminal/` |
 | Frame parse, input grant, endpoint mapping, lease mapping, renderer L1 | `src/HerdDesk.Core` |
 | Python wire checks | `scripts/herddesk_g0/protocol.py` |
 | Compatibility evidence rules | `scripts/herddesk_g0/evidence.py` |

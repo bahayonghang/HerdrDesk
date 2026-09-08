@@ -75,10 +75,8 @@
 
 | 草案符号 | 说明 |
 |---|---|
-| `TerminalMode` | Observe / Control |
-| `TerminalEvent` 层次 | 草案 `TerminalFrame` 含 `Epoch`；另有 `TransportEnded(ExitCode, SawClosedEnvelope)` |
-| `IRpcConnection` | 请求与订阅分离；mutation 不盲目重试 |
-| `ITerminalTransport` | 领域层先授权再构造；`ReleaseAsync` 不关 pane |
+| `TerminalEvent` 层次 | 草案 `TerminalFrame` 含 `Epoch`。HD-013 使用独立 `TerminalTransportEvent` / `TerminalOwnedFrame`，不覆盖草案整文件 |
+| `IRpcConnection` | 请求与订阅分离；mutation 不盲目重试。HD-008 已用 request/subscription 端口 |
 | `ITerminalRenderer` | `ApplyAsync` ≠ 呈现完成 |
 | `IControlPolicy` | 对应 Core 的 `InputPolicy.Evaluate`，签名不同 |
 | `IRemoteFileService` | P4 文件面 |
@@ -95,6 +93,10 @@
 
 `ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。仍不编译 `ITerminalRenderer`。不覆盖规划草案整文件。
 
+## HD-013 增补
+
+`Terminal/`：`TerminalMode`、`TerminalOpenRequest`、`ITerminalTransport`、`ITerminalTransportFactory.OpenAsync`、typed input/resize/scroll commands、`TerminalWriteReceipt`（NotSent / WrittenUnacknowledged / UnknownAfterDisconnect）、owned frame events。公开 port 不暴露 `Process`、stdin writer 或 raw stderr。`ControlVerified` 不由首帧/进程存活/焦点置位。L2 live herdr 为 UNVERIFIED。
+
 ## HD-009 增补
 
 `State/`：`ConnectionPhase`、`CapabilityProfile`（`VerifiedOperations`，缺能力不写成已测 false）、投影与 decoded snapshot/event、`IRpcStateDecoder`。身份仍为 `DeviceId` / `SessionKey` / `PaneKey` / `ConnectionEpoch`。Muse/Qwen 为未知 agent。运行时 schema hash 默认 `UNVERIFIED`。不覆盖规划草案整文件。
@@ -105,7 +107,7 @@
 
 ## 入口与测试
 
-类库，无可执行入口。行为由 [../HerdDesk.Core](../HerdDesk.Core/CLAUDE.md)、[../HerdDesk.Infrastructure](../HerdDesk.Infrastructure/CLAUDE.md)、[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md)、[../../tests/Unit](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 与 [../../tests/Contract](../../tests/Contract/CLAUDE.md) 覆盖。
+类库，无可执行入口。行为由 [../HerdDesk.Core](../HerdDesk.Core/CLAUDE.md)、[../HerdDesk.Infrastructure](../HerdDesk.Infrastructure/CLAUDE.md)、[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md)、[../../tests/Unit](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md)、[../../tests/Unit/HerdDesk.Infrastructure.Tests](../../tests/Unit/HerdDesk.Infrastructure.Tests/CLAUDE.md) 与 [../../tests/Contract](../../tests/Contract/CLAUDE.md) 覆盖。
 
 ## 约束
 

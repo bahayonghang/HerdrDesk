@@ -5,6 +5,8 @@ using HerdDesk.Infrastructure.Diagnostics;
 
 if (args.Length > 0 && args[0] == "--fake-bridge")
     return FakeBridgeHost.Run(args.Skip(1).ToArray());
+if (args.Length > 0 && args[0] == "--fake-terminal")
+    return FakeTerminalHost.Run(args.Skip(1).ToArray());
 
 
 static void Check(bool condition)
@@ -413,7 +415,7 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. RpcCases.All];
+cases = [.. cases, .. RpcCases.All, .. TerminalCliTransportCases.All];
 
 var failed = 0;
 foreach (var test in cases)

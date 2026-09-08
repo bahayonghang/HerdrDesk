@@ -13,7 +13,7 @@
 - 失败后锁存：同一 parser 实例不再接受后续记录。
 - renderer L1：跨块 UTF-8 组装、epoch/seq 门、预编辑拒绝、有界队列分类、web message allowlist。不启动 WinUI 或 WebView2。
 
-传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。HD-009 mapper 只消费 Contracts decoded 输入，不解析 raw JSON。HD-010 actor 把 event 当 invalidation，不直接 patch Store。
+传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`。`ITerminalTransport` 在 Contracts；HD-013 实现位于 Infrastructure。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。HD-009 mapper 只消费 Contracts decoded 输入，不解析 raw JSON。HD-010 actor 把 event 当 invalidation，不直接 patch Store。
 
 ## 接口
 

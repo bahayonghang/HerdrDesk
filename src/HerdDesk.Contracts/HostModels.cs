@@ -13,5 +13,4 @@ public interface IAdapterCapability
     bool IsFakeSuccess { get; }
 }
 
-public interface ITerminalTransportFactory : IAdapterCapability;
 public interface ITerminalRendererFactory : IAdapterCapability;

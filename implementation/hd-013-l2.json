@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd013_l2_status",
+  "l2_live_herdr_terminal_session": "UNVERIFIED",
+  "ac05_passed": false,
+  "ac06_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "L1 fake-child TerminalCliTransport only. No live herdr. Not AC05/AC06 pass. Resize/release live evidence stays with HD-019; pane/daemon survival stays with HD-026."
+}

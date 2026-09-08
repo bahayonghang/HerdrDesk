@@ -29,6 +29,7 @@ def validate() -> dict:
     packages=json.loads((ROOT/'implementation/hd-007-packages.json').read_text(encoding='utf-8'))
     hd011=json.loads((ROOT/'implementation/hd-011-l2.json').read_text(encoding='utf-8'))
     hd012=json.loads((ROOT/'implementation/hd-012-l2.json').read_text(encoding='utf-8'))
+    hd013=json.loads((ROOT/'implementation/hd-013-l2.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -49,6 +50,11 @@ def validate() -> dict:
     assert hd012.get('g0_passed') is not True
     assert hd012.get('winui_admitted') is not True
     assert hd012.get('phase_gate')!='passed'
+    assert hd013.get('l2_live_herdr_terminal_session')=='UNVERIFIED'
+    assert hd013.get('ac05_passed') is not True
+    assert hd013.get('ac06_passed') is not True
+    assert hd013.get('g0_passed') is not True
+    assert hd013.get('phase_gate')!='passed'
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'

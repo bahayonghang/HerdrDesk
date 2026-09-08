@@ -45,5 +45,13 @@ public sealed class UnavailableAdapter :
         return ValueTask.FromResult<IRpcSubscriptionConnection?>(null);
     }
 
+    public ValueTask<ITerminalTransport?> OpenAsync(
+        TerminalOpenRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        _ = (request, cancellationToken);
+        return ValueTask.FromResult<ITerminalTransport?>(null);
+    }
+
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

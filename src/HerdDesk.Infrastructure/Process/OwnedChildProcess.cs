@@ -1,9 +1,15 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
 using HerdDesk.Contracts;
 using OsProcess = System.Diagnostics.Process;
 
 namespace HerdDesk.Infrastructure.Process;
+
+internal static class OwnedChildProcessKillLedger
+{
+    internal static readonly ConcurrentBag<int> KilledProcessIds = [];
+}
 
 public sealed class OwnedChildProcess : IAsyncDisposable
 {
@@ -33,6 +39,38 @@ public sealed class OwnedChildProcess : IAsyncDisposable
             {
                 return true;
             }
+        }
+    }
+
+    public int? ExitCode
+    {
+        get
+        {
+            try
+            {
+                return HasExited ? _process.ExitCode : null;
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
+        }
+    }
+
+    public Task WaitForExitAsync(CancellationToken cancellationToken = default) =>
+        _process.WaitForExitAsync(cancellationToken);
+
+    public void CloseStandardInput()
+    {
+        try
+        {
+            _process.StandardInput.Close();
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (IOException)
+        {
         }
     }
 
@@ -88,7 +126,10 @@ public sealed class OwnedChildProcess : IAsyncDisposable
                 var finished = await Task.WhenAny(exited, Task.Delay(CancelWaitMilliseconds))
                     .ConfigureAwait(false);
                 if (finished != exited && !HasExited)
+                {
+                    OwnedChildProcessKillLedger.KilledProcessIds.Add(_process.Id);
                     _process.Kill(entireProcessTree: false);
+                }
                 try
                 {
                     await _process.WaitForExitAsync().ConfigureAwait(false);

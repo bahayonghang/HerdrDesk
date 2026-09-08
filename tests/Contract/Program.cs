@@ -11,6 +11,8 @@ using HerdDesk.Terminal.Web;
 
 if (args.Length > 0 && args[0] == "--fake-bridge")
     return FakeBridgeHost.Run(args.Skip(1).ToArray());
+if (args.Length > 0 && args[0] == "--fake-terminal")
+    return FakeTerminalHost.Run(args.Skip(1).ToArray());
 
 
 static void Check(bool condition)
@@ -199,7 +201,7 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All];
+cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. TerminalWireCases.All];
 
 var failed = 0;
 foreach (var test in cases)

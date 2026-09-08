@@ -1,0 +1,50 @@
+namespace HerdDesk.Contracts;
+
+public static class TerminalTransportCodes
+{
+    public const string ConsumerBackpressure = "terminal_consumer_backpressure";
+    public const string LineBytesLimit = "line_bytes_limit";
+    public const string TruncatedRecord = "truncated_ndjson_record";
+    public const string StreamNotActive = "terminal_stream_not_active";
+    public const string Malformed = "malformed_terminal_record";
+    public const string ProtocolFailed = "terminal_protocol_failed";
+    public const string ProcessExited = "terminal_process_exited";
+    public const string StdoutEnded = "terminal_stdout_ended";
+    public const string Closed = "terminal_closed";
+    public const string Cancelled = "terminal_cancelled";
+    public const string AppStopping = "terminal_app_stopping";
+    public const string NotSent = "terminal_not_sent";
+    public const string WrittenUnacknowledged = "terminal_written_unacknowledged";
+    public const string UnknownAfterDisconnect = "terminal_unknown_after_disconnect";
+    public const string InvalidIdentity = "invalid_identity";
+    public const string WrongPane = "wrong_pane";
+    public const string StaleEpoch = "stale_epoch";
+    public const string InvalidEpoch = "invalid_epoch";
+    public const string InputBytesLimit = "input_bytes_limit";
+    public const string EmptyInput = "empty_input_rejected";
+    public const string ExactlyOnePayload = "exactly_one_input_payload_required";
+    public const string InvalidResize = "invalid_resize_dimensions";
+    public const string InvalidCell = "invalid_cell_dimensions";
+    public const string InvalidScrollDirection = "invalid_scroll_direction";
+    public const string InvalidScrollLines = "invalid_scroll_lines";
+    public const string InvalidScrollSource = "invalid_scroll_source";
+    public const string InvalidScrollCoordinate = "invalid_scroll_coordinate";
+    public const string InvalidScrollModifiers = "invalid_scroll_modifiers";
+    public const string UnknownCommand = "unknown_input_type";
+    public const string ObserveInputDenied = "observe_input_denied";
+    public const string Closing = "terminal_closing";
+    public const string ReleaseAlreadyQueued = "terminal_release_already_queued";
+    public const string ObserveClose = "terminal_observe_close";
+    public const string ExecutableInvalid = "terminal_executable_invalid";
+    public const string InvalidTarget = "terminal_target_invalid";
+    public const string InvalidSession = "terminal_session_invalid";
+    public const string InvalidMode = "invalid_terminal_mode";
+    public const string TakeoverUnverified = "takeover_parameter_unverified";
+    public const string TakeoverNotConfirmed = "takeover_not_confirmed";
+    public const string QueueBytesLimit = "queue_bytes_limit";
+    public const string ConnectionLost = "terminal_connection_lost";
+    public const string StderrFlood = "stderr_flood";
+    public const string InputIgnored = "input_ignored";
+    public const string Busy = "busy";
+    public const string Rejected = "rejected";
+}
