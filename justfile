@@ -69,13 +69,14 @@ structure:
 
 [group('dotnet')]
 format-check: build
-    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Contracts/Terminal --include src/HerdDesk.Core/Store --include src/HerdDesk.Core/DeviceSessions --include src/HerdDesk.Core/Attention --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
+    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/RendererModels.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Contracts/Terminal --include src/HerdDesk.Core/Store --include src/HerdDesk.Core/DeviceSessions --include src/HerdDesk.Core/Attention --include src/HerdDesk.Core/RenderFlowController.cs --include src/HerdDesk.Core/WebMessagePolicy.cs --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
 
 [group('dotnet')]
 unit-tests: build
     {{dotnet}} run --project tests/Unit/HerdDesk.Core.Tests --configuration {{configuration}} --no-build
     {{dotnet}} run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration {{configuration}} --no-build
     {{dotnet}} run --project tests/Unit/HerdDesk.App.Tests --configuration {{configuration}} --no-build
+    {{dotnet}} run --project tests/Unit/HerdDesk.Terminal.Web.Tests --configuration {{configuration}} --no-build
 
 [group('dotnet')]
 contract-tests: build
@@ -105,7 +106,7 @@ bridge-test:
 
 # Offline gate used by GitHub Actions. G0 BCL/Python/Rust on every OS.
 # Windows desktop restore runs only the skip/admit helper; it is not live WinUI.
-# Cargo recipes belong to HD-008. npm stays deferred until HD-014.
+# Cargo recipes belong to HD-008. npm/xterm and WebView2 stay not admitted.
 [group('ci')]
 ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop bridge-fmt bridge-clippy bridge-test
 

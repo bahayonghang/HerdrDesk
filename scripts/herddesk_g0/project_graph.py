@@ -40,6 +40,10 @@ ALLOWED_PROJECTS: dict[str, tuple[str, ...]] = {
     'tests/Unit/HerdDesk.App.Tests/HerdDesk.App.Tests.csproj': (
         'src/HerdDesk.App/HerdDesk.App.csproj',
     ),
+    'tests/Unit/HerdDesk.Terminal.Web.Tests/HerdDesk.Terminal.Web.Tests.csproj': (
+        'src/HerdDesk.Terminal.Web/HerdDesk.Terminal.Web.csproj',
+        'src/HerdDesk.Core/HerdDesk.Core.csproj',
+    ),
     'tests/Contract/HerdDesk.ContractTests.csproj': (
         'src/HerdDesk.Contracts/HerdDesk.Contracts.csproj',
         'src/HerdDesk.Core/HerdDesk.Core.csproj',

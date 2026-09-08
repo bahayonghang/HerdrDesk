@@ -11,6 +11,7 @@
     <Project Path="tests/Unit/HerdDesk.Core.Tests/HerdDesk.Core.Tests.csproj" />
     <Project Path="tests/Unit/HerdDesk.Infrastructure.Tests/HerdDesk.Infrastructure.Tests.csproj" />
     <Project Path="tests/Unit/HerdDesk.App.Tests/HerdDesk.App.Tests.csproj" />
+    <Project Path="tests/Unit/HerdDesk.Terminal.Web.Tests/HerdDesk.Terminal.Web.Tests.csproj" />
     <Project Path="tests/Contract/HerdDesk.ContractTests.csproj" />
   </Folder>
 </Solution>

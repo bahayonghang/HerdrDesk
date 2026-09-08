@@ -41,7 +41,7 @@ jobs:
       - name: Build BCL projects
         run: dotnet build HerdDesk.slnx --configuration Release
       - name: Verify formatting
-        run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Core/Store --include src/HerdDesk.Core/DeviceSessions --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
+        run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/RendererModels.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Contracts/Terminal --include src/HerdDesk.Core/Store --include src/HerdDesk.Core/DeviceSessions --include src/HerdDesk.Core/Attention --include src/HerdDesk.Core/RenderFlowController.cs --include src/HerdDesk.Core/WebMessagePolicy.cs --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
       - name: Run C# G0 smoke tests
         run: dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
       - name: Run Core unit tests
@@ -50,6 +50,8 @@ jobs:
         run: dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build
       - name: Run App unit tests
         run: dotnet run --project tests/Unit/HerdDesk.App.Tests --configuration Release --no-build
+      - name: Run Terminal.Web unit tests
+        run: dotnet run --project tests/Unit/HerdDesk.Terminal.Web.Tests --configuration Release --no-build
       - name: Run contract tests
         run: dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build
       - name: Install pinned Rust toolchain

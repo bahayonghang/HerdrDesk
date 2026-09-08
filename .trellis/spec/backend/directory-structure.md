@@ -17,12 +17,13 @@ src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseMode
 src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder, TerminalCliTransport
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
-src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
+src/HerdDesk.Terminal.Web/  HD-014 L1 validator + BCL renderer adapter (no WebView2 packages)
 src/HerdDesk.App/           composition root / console host stub + HD-011 L1 ViewModels + HD-012 L1 NotificationCenter (no WinUI)
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
 tests/Unit/HerdDesk.Core.Tests/  BCL unit runner
 tests/Unit/HerdDesk.Infrastructure.Tests/  config/diagnostics unit runner
 tests/Unit/HerdDesk.App.Tests/  HD-011 L1 ViewModel runner
+tests/Unit/HerdDesk.Terminal.Web.Tests/  HD-014 L1 message/flow runner
 tests/Contract/             composition and assembly contract runner
 tests/python/               stdlib unittest (sys.path → scripts/)
 tests/fixtures/             synthetic NDJSON, protocol-edge-cases.json, endpoint-cases.json, lease-cases.json, renderer-cases.json; real-terminal-v082/ placeholder
@@ -39,7 +40,7 @@ global.json                 SDK 10.0.400, rollForward=disable
 NuGet.Config                empty package sources
 ```
 
-Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels), `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web`, `bridge/herddesk-bridge`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge`, `tests/Integration.Windows`. L2 named-pipe ACL is UNVERIFIED. HD-011 L2 visual/activation and L3 IME/DPI are UNVERIFIED.
+Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels), `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web` (HD-014 L1 adapter), `bridge/herddesk-bridge`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge`, `tests/Integration.Windows`. L2 named-pipe ACL is UNVERIFIED. HD-011 L2 visual/activation and L3 IME/DPI are UNVERIFIED. HD-014 L2 WebView process and L3 DPI are UNVERIFIED.
 
 ---
 
@@ -96,7 +97,7 @@ Do not place domain policy in a probe script. Do not place WinUI or SSH types in
 - Input grant: `src/HerdDesk.Core/InputPolicy.cs`
 - Endpoint mapping: `src/HerdDesk.Core/EndpointResolver.cs`
 - Lease mapping: `src/HerdDesk.Core/TerminalLeaseProbe.cs`
-- Renderer L1: `src/HerdDesk.Core/Utf8ChunkAssembler.cs`, `RendererEpochGate.cs`, `CompositionPolicy.cs`, `RendererByteWindow.cs` (FIFO, oldest-frame ack), `WebMessagePolicy.cs`
+- Renderer L1: `src/HerdDesk.Core/Utf8ChunkAssembler.cs`, `RendererEpochGate.cs`, `CompositionPolicy.cs`, `RendererByteWindow.cs` (FIFO, oldest-frame ack), `WebMessagePolicy.cs`, `RenderFlowController.cs`
 - DeviceSession: `src/HerdDesk.Core/DeviceSessions/DeviceSession.cs`, `ReconcilePlanner.cs`
 - Python latching capture: `scripts/herddesk_g0/protocol.py` (`TerminalCaptureValidator`)
 - Licensing register rules: `scripts/herddesk_g0/licensing.py`

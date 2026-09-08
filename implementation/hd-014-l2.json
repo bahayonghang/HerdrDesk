@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd014_l2_status",
+  "l2_webview_process": "UNVERIFIED",
+  "l3_dpi_theme_focus": "UNVERIFIED",
+  "webview2_admitted": false,
+  "npm_xterm_admitted": false,
+  "windows_desktop_restore": "not_admitted",
+  "l1_renderer_ports": "required; does not close product AC08 or AC27",
+  "ac08_passed": false,
+  "ac27_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "HD-014 ships BCL ITerminalRenderer, versioned host-web message validation, and RenderFlowController over Core L1. Microsoft.Web.WebView2 and npm xterm are not admitted. This file is not AC pass evidence. L2 WebView process failure and L3 DPI/theme/focus stay UNVERIFIED."
+}

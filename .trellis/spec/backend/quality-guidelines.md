@@ -51,7 +51,8 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 | Core unit | `dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build` | Fake-port Core checks including HD-009 mapper/Store, HD-010 DeviceSession L1 race, and HD-012 Attention reducer; BCL runner |
 | Infrastructure unit | `dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build` | Config atomic write/backup/restore; diagnostic privacy; HD-013 fake-child `TerminalCliTransport` |
 | App unit | `dotnet run --project tests/Unit/HerdDesk.App.Tests --configuration Release --no-build` | HD-011 L1 shell/navigation/search/settings/diagnostics ViewModels; HD-012 L1 notification routing; fake Store; no WinUI |
-| Contract | `dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build` | Assembly graph, production composition, fake-bridge RPC, SchemaV1 decoder, HD-011 residuals |
+| Terminal.Web unit | `dotnet run --project tests/Unit/HerdDesk.Terminal.Web.Tests --configuration Release --no-build` | HD-014 L1 message allowlist, flow controller, epoch reject, observe no-resize; Uint8Array-equivalent bytes; no WebView2 |
+| Contract | `dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build` | Assembly graph, production composition, fake-bridge RPC, SchemaV1 decoder, HD-011 residuals, HD-014 residuals |
 | Rust bridge | `cargo fmt/clippy/test --manifest-path bridge/Cargo.toml --locked` | Byte relay, mapping, Unix half-close; L2 UNVERIFIED |
 
 `just ci` runs the full offline set. Counts in `implementation/status.json` may lag; use the current command output.

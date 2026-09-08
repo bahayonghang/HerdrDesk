@@ -7,6 +7,9 @@ public static class WebRendererHost
     public const string DeliveryBaseline = "webview2-xterm";
     public const string PackageStatus = "UNVERIFIED";
     public const string NativeCandidateStatus = "UNVERIFIED";
+    public const string L2WebViewProcess = "UNVERIFIED";
+    public const string L3DpiThemeFocus = "UNVERIFIED";
+    public const int ProtocolVersion = WebMessageLimits.SchemaVersion;
 
     public static UnavailableCapability Capability { get; } =
         new("terminal-renderer-web", "renderer_packages_unverified");

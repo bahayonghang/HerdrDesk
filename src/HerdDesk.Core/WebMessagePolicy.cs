@@ -8,7 +8,7 @@ namespace HerdDesk.Core;
 /// </summary>
 public static class WebMessagePolicy
 {
-    public const int SchemaVersion = 1;
+    public const int SchemaVersion = WebMessageLimits.SchemaVersion;
 
     public static InputDecision Evaluate(WebMessage message, InputContext context)
     {
@@ -24,17 +24,11 @@ public static class WebMessagePolicy
             return new(false, "wrong_pane");
         if (message.Type == "ime.preedit")
             return new(false, "preedit_not_sent");
-        var limit = message.Type == "frame.apply"
-            ? TerminalFrameParser.MaxFrameBytes
-            : InputPolicy.MaxInputBytes;
-        if (message.Type is "parse.consumed" or "terminal.resize")
-        {
-            if (message.PayloadBytes != 0)
-                return new(false, "web_message_bytes_limit");
-        }
-        else if (message.PayloadBytes <= 0 || message.PayloadBytes > limit)
+        if (!PayloadAllowed(message.Type, message.PayloadBytes))
             return new(false, "web_message_bytes_limit");
-        if (message.Type == "frame.apply" || message.Type == "parse.consumed")
+        if (message.Type is "frame.apply" or "parse.consumed" or "host.initialize" or "host.focus"
+            or "host.dispose" or "host.display" or "renderer.ready" or "renderer.fault"
+            or "link.request")
             return new(true, "allowed");
         if (message.Type == "terminal.resize")
         {
@@ -50,10 +44,25 @@ public static class WebMessagePolicy
             context, new RendererInput(context.ActivePane, context.Epoch, origin, payload));
     }
 
+    private static bool PayloadAllowed(string type, int payloadBytes) => type switch
+    {
+        "parse.consumed" or "terminal.resize" or "host.dispose" or "renderer.ready" =>
+            payloadBytes == 0,
+        "frame.apply" => payloadBytes is > 0 and <= WebMessageLimits.MaxFrameBytes,
+        "link.request" => payloadBytes is > 0 and <= WebMessageLimits.MaxLinkUriChars,
+        "host.initialize" or "host.focus" or "host.display" or "renderer.fault" =>
+            payloadBytes is >= 0 and <= WebMessageLimits.MaxInputBytes,
+        _ => payloadBytes is > 0 and <= WebMessageLimits.MaxInputBytes,
+    };
+
     private static bool IsAllowlisted(string type, WebMessageDirection direction) =>
         (type, direction) switch
         {
             ("frame.apply", WebMessageDirection.HostToRenderer) => true,
+            ("host.initialize", WebMessageDirection.HostToRenderer) => true,
+            ("host.focus", WebMessageDirection.HostToRenderer) => true,
+            ("host.dispose", WebMessageDirection.HostToRenderer) => true,
+            ("host.display", WebMessageDirection.HostToRenderer) => true,
             ("parse.consumed", WebMessageDirection.RendererToHost) => true,
             ("input.user_key", WebMessageDirection.RendererToHost) => true,
             ("input.committed_text", WebMessageDirection.RendererToHost) => true,
@@ -61,6 +70,9 @@ public static class WebMessagePolicy
             ("input.emulator_reply", WebMessageDirection.RendererToHost) => true,
             ("ime.preedit", WebMessageDirection.RendererToHost) => true,
             ("terminal.resize", WebMessageDirection.RendererToHost) => true,
+            ("link.request", WebMessageDirection.RendererToHost) => true,
+            ("renderer.ready", WebMessageDirection.RendererToHost) => true,
+            ("renderer.fault", WebMessageDirection.RendererToHost) => true,
             _ => false,
         };
 

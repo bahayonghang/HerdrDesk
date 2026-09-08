@@ -13,4 +13,8 @@ public interface IAdapterCapability
     bool IsFakeSuccess { get; }
 }
 
-public interface ITerminalRendererFactory : IAdapterCapability;
+public interface ITerminalRendererFactory : IAdapterCapability
+{
+    ValueTask<ITerminalRenderer?> CreateAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<ITerminalRenderer?>(null);
+}

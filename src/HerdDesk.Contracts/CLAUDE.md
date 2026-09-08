@@ -6,7 +6,7 @@
 
 ## 职责
 
-提供身份、终端信封、输入上下文、决策、API endpoint 解析、终端 lease 观测、renderer 标本、配置/诊断端口与 unavailable adapter 类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。`ITerminalRenderer` 仍只存在于草案，不在本目录编译。
+提供身份、终端信封、输入上下文、决策、API endpoint 解析、终端 lease 观测、renderer 标本、配置/诊断端口与 unavailable adapter 类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未整文件进入 `src/`。HD-014 已增量编译 `ITerminalRenderer` / `IRenderFlowController`。
 
 ## 已实现类型（`TerminalModels.cs`）
 
@@ -70,6 +70,9 @@
 | `RendererQueueState` | `Ready`, `Backpressured`, `Faulted` |
 | `WebMessage` | type / version / epoch / pane / payload 长度 / 方向；可选 claimed origin |
 | `RendererQueueDecision` | 有界队列结果；`ParseConsumedIsPresented` 恒为 false |
+| `RendererSurfaceState` | renderer 表面状态；不含 WinUI |
+| `WebMessageLimits` | JSON 16MiB、帧 8MiB、输入 64KiB、链接 2048 |
+| `RenderToken` / `RenderConsumption` / `RenderApplyResult` | 在途 token 与 apply 回执；ack 不是 GPU 呈现 |
 
 ## 草案多出、src 未实现
 
@@ -77,7 +80,6 @@
 |---|---|
 | `TerminalEvent` 层次 | 草案 `TerminalFrame` 含 `Epoch`。HD-013 使用独立 `TerminalTransportEvent` / `TerminalOwnedFrame`，不覆盖草案整文件 |
 | `IRpcConnection` | 请求与订阅分离；mutation 不盲目重试。HD-008 已用 request/subscription 端口 |
-| `ITerminalRenderer` | `ApplyAsync` ≠ 呈现完成 |
 | `IControlPolicy` | 对应 Core 的 `InputPolicy.Evaluate`，签名不同 |
 | `IRemoteFileService` | P4 文件面 |
 
@@ -91,11 +93,15 @@
 
 ## HD-007 增补
 
-`ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。仍不编译 `ITerminalRenderer`。不覆盖规划草案整文件。
+`ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。HD-014 增量编译 `Terminal/ITerminalRenderer.cs` 与 `Terminal/IRenderFlowController.cs`。不覆盖规划草案整文件。
 
 ## HD-013 增补
 
 `Terminal/`：`TerminalMode`、`TerminalOpenRequest`、`ITerminalTransport`、`ITerminalTransportFactory.OpenAsync`、typed input/resize/scroll commands、`TerminalWriteReceipt`（NotSent / WrittenUnacknowledged / UnknownAfterDisconnect）、owned frame events。公开 port 不暴露 `Process`、stdin writer 或 raw stderr。`ControlVerified` 不由首帧/进程存活/焦点置位。L2 live herdr 为 UNVERIFIED。
+
+## HD-014 增补
+
+`Terminal/ITerminalRenderer.cs`：`BindAsync` / `ApplyAsync` / `ReadInputsAsync` / `SetReadOnlyAsync` / `FocusAsync`。`ApplyAsync` 完成只表示 parser consumed。`Terminal/IRenderFlowController.cs`：有界 enqueue、token ack、cancel、reset。`ITerminalRendererFactory.CreateAsync` 默认返回 null。不覆盖规划草案整文件。L2 WebView process 与 L3 DPI 为 UNVERIFIED。
 
 ## HD-009 增补
 

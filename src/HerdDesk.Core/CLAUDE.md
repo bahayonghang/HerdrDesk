@@ -68,6 +68,7 @@
 | `CompositionPolicy` | `PreeditUpdate` → `preedit_not_sent`；`KeyWhileComposing` → `ime_owns_shortcut`；`Commit` 必须是 `CommittedText`，再走 `InputPolicy` |
 | `RendererByteWindow` | 有界 FIFO；ack 必须等于最旧帧大小；`ParseConsumedIsPresented` 恒 false；越界不丢 delta；`ClassifyDeltaDrop` → `delta_drop_forbidden` 且 `RequiresFullReset`；`Reset` 拒绝更小 epoch |
 | `WebMessagePolicy` | 版本 1 allowlist；未知 type / 超长 / 错 epoch / 错 pane 拒绝；输入走 `InputPolicy`；从不从消息构造 `InputContext` |
+| `RenderFlowController` | 在 `RendererByteWindow` 上叠加 seq/full 与 token generation；cancel/reset 使旧 token 失效；ack 不是呈现 |
 
 L1 通过不是 AC08/AC09 或 IME 真机通过。
 
@@ -91,7 +92,7 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 - `InputPolicy.cs` — 纯函数策略。
 - `EndpointResolver.cs` — 受控配置到 endpoint 的纯映射。
 - `TerminalLeaseProbe.cs` — 已观察 lease 信号到 `TerminalAccess` 的纯映射。
-- `Utf8ChunkAssembler.cs` / `RendererEpochGate.cs` / `CompositionPolicy.cs` / `RendererByteWindow.cs` / `WebMessagePolicy.cs` — HD-005 L1 标本。
+- `Utf8ChunkAssembler.cs` / `RendererEpochGate.cs` / `CompositionPolicy.cs` / `RendererByteWindow.cs` / `WebMessagePolicy.cs` / `RenderFlowController.cs` — HD-005 L1 标本与 HD-014 flow controller。
 - `HerdDesk.Core.csproj` — 仅 Contracts 引用。
 - `Store/CapabilityGate.cs` — protocol/schema/hash 不匹配时 `VerifiedOperations` 为空。
 - `Store/ProjectionMapper.cs` — 先校验全图再构造 immutable graph。
