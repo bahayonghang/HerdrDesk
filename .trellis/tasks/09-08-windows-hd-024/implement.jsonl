@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/index.md","reason":"Current Core and Infrastructure dependency boundary before generic recovery work"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Fail-closed, stale epoch, redacted error and reconnect parser reset rules"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Credential, stderr, host, path and input privacy constraints"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Failure classification and policy flow into the existing owning DeviceSession and keyed UI"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Verified absent DeviceSession and live SSH starting point"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Use the single registered Core, Infrastructure, App and SSH integration test targets"}
