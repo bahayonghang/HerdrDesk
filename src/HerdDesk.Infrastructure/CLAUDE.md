@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Infrastructure
 
-HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child process, bounded NDJSON, request/subscription RPC over two `herddesk-bridge` children. HD-009: SchemaV1 RPC document decoder. HD-013: process-level `TerminalCliTransport` over `herdr terminal session` stdio. No WinUI, SSH, or herdr daemon control.
+HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child process, bounded NDJSON, request/subscription RPC over two `herddesk-bridge` children. HD-009: SchemaV1 RPC document decoder. HD-013: process-level `TerminalCliTransport` over `herdr terminal session` stdio. HD-020 L1: OpenSSH config preview, staged connection test, and a private host-key trust store. No WinUI, live SSH host, `herdr machine` catalog, or herdr daemon control.
 
 ## 职责
 
@@ -16,7 +16,8 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 ## 依赖
 
 - 项目引用：Contracts、Core。
-- 禁止：PackageReference、WinUI、WebView2、SSH、硬编码用户目录。
+- `Ssh/` — HD-020 L1 `OpenSshConfigResolver`、`SshProcessSpecFactory`、`HostKeyTrustStore`、`SshConnectionTestService`。ViewModel 不接收 raw argv。L2 隔离 Windows/OpenSSH 为 UNVERIFIED。
+- 禁止：PackageReference、WinUI、WebView2、SSH.NET、硬编码用户目录、读写 `herdr machine` catalog。
 
 ## 入口
 
@@ -38,3 +39,4 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 - `Rpc/SchemaV1/` — snapshot/event DTOs and `RpcStateDecoder` (owned `JsonElement` extensions; runtime schema hash UNVERIFIED)
 - `Terminal/TerminalCliProcessFactory.cs`、`TerminalCliTransport.cs`、stdout pump、stderr drainer、command serializer、write queue
 - `Rpc/ResourceCommandAdapter.cs` — HD-017 verified operation mapping；无 generic method/argv；`close_group` 仅在显式确认时写入。L2 live mutation 为 UNVERIFIED。
+- `Ssh/` — HD-020 L1 OpenSSH locator/resolver/spec factory/trust store/test service。L2 isolated OpenSSH UNVERIFIED。

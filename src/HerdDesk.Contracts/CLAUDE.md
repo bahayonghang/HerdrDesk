@@ -93,7 +93,7 @@
 
 ## HD-007 增补
 
-`ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。HD-014 增量编译 `Terminal/ITerminalRenderer.cs` 与 `Terminal/IRenderFlowController.cs`。HD-016 增量编译 `Terminal/TerminalControlPorts.cs`（`IControlLeaseCoordinator`、`ControlLeaseState`、attempt outcome、public challenge view）。不覆盖规划草案整文件。公开 challenge view 不含 nonce。`busy`/`rejected`/`cancelled` 不是 `TerminalAccess` 值。
+`ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。HD-020 为 `DeviceProfile` 增加可选 SSH variant（`SshDeviceSettings`），不复制第二套 store。`SshConnectionContracts.cs`：host-key 状态、测试阶段/result 与只读 SSH 解析/测试 port。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。HD-014 增量编译 `Terminal/ITerminalRenderer.cs` 与 `Terminal/IRenderFlowController.cs`。HD-016 增量编译 `Terminal/TerminalControlPorts.cs`（`IControlLeaseCoordinator`、`ControlLeaseState`、attempt outcome、public challenge view）。不覆盖规划草案整文件。公开 challenge view 不含 nonce。`busy`/`rejected`/`cancelled` 不是 `TerminalAccess` 值。
 
 ## HD-013 增补
 

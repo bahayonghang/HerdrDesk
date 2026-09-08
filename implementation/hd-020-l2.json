@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd020_l2_status",
+  "l2_isolated_windows_openssh": "UNVERIFIED",
+  "live_ssh": false,
+  "herdr_machine_catalog": false,
+  "endpoint_generation_1": false,
+  "winui_admitted": false,
+  "integration_ssh_project": false,
+  "l1_device_profile_editor": "required; does not close product AC22 or AC23",
+  "ac22_passed": false,
+  "ac23_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "missing": {
+    "isolated_windows_openssh": true,
+    "disposable_ssh_account": true,
+    "proxyjump_lab": true,
+    "host_key_change_lab": true
+  },
+  "note": "HD-020 ships L1 SSH DeviceProfile editor, ssh -G preview, staged connection test, and a private host-key trust store on fakes. It does not read herdr machine catalog and does not implement endpoint generation 1. This file is not AC pass evidence. L2 isolated Windows/OpenSSH stays UNVERIFIED. Product AC22/AC23 stay with HD-026."
+}

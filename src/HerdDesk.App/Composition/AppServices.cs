@@ -2,6 +2,7 @@ using HerdDesk.Contracts;
 using HerdDesk.Infrastructure.Configuration;
 using HerdDesk.Infrastructure.Diagnostics;
 using HerdDesk.Infrastructure.Host;
+using HerdDesk.Infrastructure.Ssh;
 using HerdDesk.Terminal.Web;
 
 namespace HerdDesk.App.Composition;
@@ -17,7 +18,8 @@ public sealed class AppServices : IAsyncDisposable
         ITerminalTransportFactory terminalTransports,
         ITerminalRendererFactory terminalRenderers,
         DiagnosticAliasProjector aliases,
-        IReadOnlyList<UnavailableCapability> unavailable)
+        IReadOnlyList<UnavailableCapability> unavailable,
+        ISshConnectionTester? sshTester = null)
     {
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(clock);
@@ -37,6 +39,7 @@ public sealed class AppServices : IAsyncDisposable
         TerminalRenderers = terminalRenderers;
         Aliases = aliases;
         Unavailable = unavailable;
+        SshTester = sshTester;
         HasFakeSuccessAdapter =
             rpcConnections.IsFakeSuccess ||
             terminalTransports.IsFakeSuccess ||
@@ -52,6 +55,7 @@ public sealed class AppServices : IAsyncDisposable
     public ITerminalRendererFactory TerminalRenderers { get; }
     public DiagnosticAliasProjector Aliases { get; }
     public IReadOnlyList<UnavailableCapability> Unavailable { get; }
+    public ISshConnectionTester? SshTester { get; }
     public bool HasFakeSuccessAdapter { get; }
 
     public static AppServices CreateProduction(AppDataPaths paths, IClock? clock = null)
@@ -74,12 +78,15 @@ public sealed class AppServices : IAsyncDisposable
             renderers.Capability,
             WebRendererHost.Capability
         ];
+        var ssh = new SshConnectionTestService(paths, clock);
         return new AppServices(
-            paths, clock, store, diagnostics, rpc, transports, renderers, aliases, unavailable);
+            paths, clock, store, diagnostics, rpc, transports, renderers, aliases, unavailable, ssh);
     }
 
     public async ValueTask DisposeAsync()
     {
+        if (SshTester is not null)
+            await SshTester.CancelAsync().ConfigureAwait(false);
         if (TerminalRenderers is IAsyncDisposable renderer)
             await renderer.DisposeAsync().ConfigureAwait(false);
         if (TerminalTransports is IAsyncDisposable transport)

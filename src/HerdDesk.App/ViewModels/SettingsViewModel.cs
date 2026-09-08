@@ -21,8 +21,7 @@ public sealed class SettingsViewModel
         _display = display;
         _ownership = ownership ?? ConfigurationOwnership.Owner;
         _ui = ui;
-        SshAvailability = new RouteAvailability(
-            RouteAvailabilityKind.Disabled, ShellCodes.SshProviderPending, ShellStrings.SshPending);
+        SshAvailability = new RouteAvailability(RouteAvailabilityKind.Enabled);
         Draft = new LocalDeviceDraft(new DeviceId(Guid.Empty), "", "", []);
         UiDraft = UiPreferences.Default;
     }

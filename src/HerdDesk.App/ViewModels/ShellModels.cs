@@ -63,7 +63,9 @@ public enum SettingsLifecycle
     Saved,
     ValidationFailed,
     SaveFailed,
-    PermissionDenied
+    PermissionDenied,
+    Testing,
+    AwaitingHostKey
 }
 
 public enum LayoutBreakpoint

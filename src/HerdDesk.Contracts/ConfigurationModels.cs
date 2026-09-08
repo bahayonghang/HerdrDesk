@@ -5,6 +5,7 @@ public enum SessionProfileKind { LocalDefault, NamedSession, ExplicitEndpoint }
 public static class ConnectionKinds
 {
     public const string Local = "local";
+    public const string Ssh = "ssh";
 }
 
 public static class ConfigurationCodes
@@ -20,6 +21,7 @@ public static class ConfigurationCodes
     public const string InvalidIdentity = "invalid_identity";
     public const string InvalidProfile = "invalid_profile";
     public const string DuplicateSession = "duplicate_session";
+    public const string InvalidSshProfile = "ssh_profile_invalid";
 }
 
 public sealed record SessionProfile(
@@ -52,7 +54,12 @@ public sealed record DeviceProfile(
     string Label,
     string ConnectionKind,
     string VerifiedHerdrPath,
-    IReadOnlyList<SessionProfile> Sessions);
+    IReadOnlyList<SessionProfile> Sessions,
+    SshDeviceSettings? Ssh = null)
+{
+    public bool IsSshConnection =>
+        string.Equals(ConnectionKind, ConnectionKinds.Ssh, StringComparison.Ordinal);
+}
 
 public sealed record ConfigurationSnapshot(
     int SchemaVersion,

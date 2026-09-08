@@ -7,6 +7,8 @@ if (args.Length > 0 && args[0] == "--fake-bridge")
     return FakeBridgeHost.Run(args.Skip(1).ToArray());
 if (args.Length > 0 && args[0] == "--fake-terminal")
     return FakeTerminalHost.Run(args.Skip(1).ToArray());
+if (args.Length > 0 && args[0] == "--fake-ssh")
+    return FakeSshHost.Run(args.Skip(1).ToArray());
 
 
 static void Check(bool condition)
@@ -415,7 +417,17 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. RpcCases.All, .. TerminalCliTransportCases.All];
+cases =
+[
+    .. cases,
+    .. RpcCases.All,
+    .. TerminalCliTransportCases.All,
+    .. SshDeviceProfileStoreTests.All,
+    .. OpenSshConfigResolverTests.All,
+    .. SshProcessSpecFactoryTests.All,
+    .. HostKeyTrustStoreTests.All,
+    .. SshConnectionTestServiceTests.All
+];
 
 var failed = 0;
 foreach (var test in cases)

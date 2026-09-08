@@ -12,7 +12,7 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
     {
         "password", "passwd", "secret", "token", "private_key", "privatekey",
         "authorization", "credential", "terminal_text", "ansi", "input_text",
-        "private_key_pem"
+        "private_key_pem", "passphrase", "mfa", "keyboard_interactive", "pkcs11"
     };
     private static readonly HashSet<string> RootNames = new(StringComparer.Ordinal)
     {
@@ -20,7 +20,13 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
     };
     private static readonly HashSet<string> DeviceNames = new(StringComparer.Ordinal)
     {
-        "device_id", "label", "connection_kind", "verified_herdr_path", "sessions"
+        "device_id", "label", "connection_kind", "verified_herdr_path", "sessions", "ssh"
+    };
+    private static readonly HashSet<string> SshNames = new(StringComparer.Ordinal)
+    {
+        "host_alias", "user", "port", "identity_file_path", "identity_agent",
+        "proxy_jump_alias", "remote_herdr_path", "remote_helper_path", "auth_mode",
+        "profile_revision"
     };
     private static readonly HashSet<string> SessionNames = new(StringComparer.Ordinal)
     {
@@ -147,13 +153,14 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
         var error = ValidateProfile(profile);
         if (error is not null)
             return FailWrite(error);
+        var toSave = WithComputedSshRevision(current, profile);
         var devices = new List<DeviceProfile>(current.Devices.Count + 1);
         var replaced = false;
         foreach (var existing in current.Devices)
         {
-            if (existing.Device == profile.Device)
+            if (existing.Device == toSave.Device)
             {
-                devices.Add(profile);
+                devices.Add(toSave);
                 replaced = true;
             }
             else
@@ -162,7 +169,7 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
             }
         }
         if (!replaced)
-            devices.Add(profile);
+            devices.Add(toSave);
         return new(new ConfigurationSnapshot(
             ConfigurationSnapshot.CurrentSchemaVersion,
             current.Revision + 1,
@@ -277,6 +284,8 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
                     writer.WriteEndObject();
                 }
                 writer.WriteEndArray();
+                if (device.Ssh is { } ssh)
+                    WriteSsh(writer, ssh);
                 writer.WriteEndObject();
             }
             writer.WriteEndArray();
@@ -365,7 +374,13 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
                 return false;
             sessions.Add(session);
         }
-        device = new DeviceProfile(new DeviceId(id), label, kind, path, sessions);
+        SshDeviceSettings? ssh = null;
+        if (element.TryGetProperty("ssh", out var sshElement))
+        {
+            if (!TryReadSsh(sshElement, out ssh, out code))
+                return false;
+        }
+        device = new DeviceProfile(new DeviceId(id), label, kind, path, sessions, ssh);
         code = ValidateProfile(device) ?? "";
         if (code.Length != 0)
         {
@@ -432,8 +447,25 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
             return ConfigurationCodes.InvalidIdentity;
         if (!IsSafeLabel(profile.Label))
             return ConfigurationCodes.InvalidProfile;
-        if (!string.Equals(profile.ConnectionKind, ConnectionKinds.Local, StringComparison.Ordinal))
+        if (LooksLikeSecret(profile.Label) || LooksLikeSecret(profile.VerifiedHerdrPath))
+            return ConfigurationCodes.ForbiddenField;
+        if (string.Equals(profile.ConnectionKind, ConnectionKinds.Local, StringComparison.Ordinal))
+        {
+            if (profile.Ssh is not null)
+                return ConfigurationCodes.InvalidSshProfile;
+        }
+        else if (string.Equals(profile.ConnectionKind, ConnectionKinds.Ssh, StringComparison.Ordinal))
+        {
+            if (profile.Ssh is null)
+                return ConfigurationCodes.InvalidSshProfile;
+            var sshError = ValidateSsh(profile.Ssh);
+            if (sshError is not null)
+                return sshError;
+        }
+        else
+        {
             return ConfigurationCodes.InvalidProfile;
+        }
         if (!IsSafeHerdrPath(profile.VerifiedHerdrPath))
             return ConfigurationCodes.InvalidProfile;
         ArgumentNullException.ThrowIfNull(profile.Sessions);
@@ -499,6 +531,206 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
             default:
                 return ConfigurationCodes.InvalidProfile;
         }
+    }
+
+    private static DeviceProfile WithComputedSshRevision(
+        ConfigurationSnapshot current, DeviceProfile profile)
+    {
+        if (profile.Ssh is not { } ssh)
+            return profile;
+        var existing = current.Devices.FirstOrDefault(item => item.Device == profile.Device);
+        long revision;
+        if (existing?.Ssh is { } oldSsh)
+        {
+            revision = SshConnectionFieldsEqual(oldSsh, ssh)
+                ? oldSsh.ProfileRevision
+                : oldSsh.ProfileRevision + 1;
+        }
+        else
+        {
+            revision = ssh.ProfileRevision > 0 ? ssh.ProfileRevision : 1;
+        }
+
+        return profile with { Ssh = ssh with { ProfileRevision = revision } };
+    }
+
+    internal static bool SshConnectionFieldsEqual(SshDeviceSettings left, SshDeviceSettings right) =>
+        left.HostAlias == right.HostAlias &&
+        left.User == right.User &&
+        left.Port == right.Port &&
+        left.IdentityFilePath == right.IdentityFilePath &&
+        left.IdentityAgent == right.IdentityAgent &&
+        left.ProxyJumpAlias == right.ProxyJumpAlias &&
+        left.RemoteHerdrPath == right.RemoteHerdrPath &&
+        left.RemoteHelperPath == right.RemoteHelperPath &&
+        left.AuthMode.Raw == right.AuthMode.Raw;
+
+    private static void WriteSsh(Utf8JsonWriter writer, SshDeviceSettings ssh)
+    {
+        writer.WritePropertyName("ssh");
+        writer.WriteStartObject();
+        writer.WriteString("host_alias", ssh.HostAlias);
+        if (ssh.User is not null)
+            writer.WriteString("user", ssh.User);
+        if (ssh.Port is { } port)
+            writer.WriteNumber("port", port);
+        if (ssh.IdentityFilePath is not null)
+            writer.WriteString("identity_file_path", ssh.IdentityFilePath);
+        if (ssh.IdentityAgent is not null)
+            writer.WriteString("identity_agent", ssh.IdentityAgent);
+        if (ssh.ProxyJumpAlias is not null)
+            writer.WriteString("proxy_jump_alias", ssh.ProxyJumpAlias);
+        writer.WriteString("remote_herdr_path", ssh.RemoteHerdrPath);
+        if (ssh.RemoteHelperPath is not null)
+            writer.WriteString("remote_helper_path", ssh.RemoteHelperPath);
+        writer.WriteString("auth_mode", ssh.AuthMode.Raw);
+        writer.WriteNumber("profile_revision", ssh.ProfileRevision);
+        writer.WriteEndObject();
+    }
+
+    private static bool TryReadSsh(JsonElement element, out SshDeviceSettings ssh, out string code)
+    {
+        ssh = null!;
+        code = ConfigurationCodes.Malformed;
+        if (element.ValueKind != JsonValueKind.Object)
+            return false;
+        if (!TryObjectNames(element, SshNames, out code))
+            return false;
+        if (!TryGetString(element, "host_alias", out var hostAlias) ||
+            !TryGetString(element, "remote_herdr_path", out var remoteHerdr) ||
+            !TryGetString(element, "auth_mode", out var authRaw) ||
+            !TryGetInt64(element, "profile_revision", out var revision))
+        {
+            code = ConfigurationCodes.Malformed;
+            return false;
+        }
+
+        string? user = null;
+        if (element.TryGetProperty("user", out var userElement))
+        {
+            if (userElement.ValueKind != JsonValueKind.String)
+                return false;
+            user = userElement.GetString();
+        }
+
+        int? port = null;
+        if (element.TryGetProperty("port", out var portElement))
+        {
+            if (!portElement.TryGetInt32(out var parsedPort))
+                return false;
+            port = parsedPort;
+        }
+
+        string? identity = OptionalString(element, "identity_file_path");
+        string? agent = OptionalString(element, "identity_agent");
+        string? jump = OptionalString(element, "proxy_jump_alias");
+        string? helper = OptionalString(element, "remote_helper_path");
+        if ((element.TryGetProperty("identity_file_path", out _) && identity is null) ||
+            (element.TryGetProperty("identity_agent", out _) && agent is null) ||
+            (element.TryGetProperty("proxy_jump_alias", out _) && jump is null) ||
+            (element.TryGetProperty("remote_helper_path", out _) && helper is null))
+        {
+            code = ConfigurationCodes.Malformed;
+            return false;
+        }
+
+        ssh = new SshDeviceSettings(
+            hostAlias,
+            user,
+            port,
+            identity,
+            agent,
+            jump,
+            remoteHerdr,
+            helper,
+            SshDeviceSettings.ParseAuthMode(authRaw),
+            revision);
+        return true;
+    }
+
+    private static string? OptionalString(JsonElement element, string name)
+    {
+        if (!element.TryGetProperty(name, out var value))
+            return null;
+        return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+    }
+
+    public static string? ValidateSsh(SshDeviceSettings ssh)
+    {
+        ArgumentNullException.ThrowIfNull(ssh);
+        if (!IsSafeHostAlias(ssh.HostAlias))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.User is not null && !IsSafeUser(ssh.User))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.Port is { } port && (port < 1 || port > 65535))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.IdentityFilePath is not null && !IsSafeHerdrPath(ssh.IdentityFilePath))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.IdentityAgent is not null && !IsSafeAgentRef(ssh.IdentityAgent))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.ProxyJumpAlias is not null && !IsSafeHostAlias(ssh.ProxyJumpAlias))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (!IsSafePosixAbsolute(ssh.RemoteHerdrPath))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.RemoteHelperPath is not null && !IsSafePosixAbsolute(ssh.RemoteHelperPath))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.ProfileRevision < 0)
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.AuthMode.Known is { } known &&
+            ssh.AuthMode.Raw != SshDeviceSettings.AuthModeWire(known))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (ssh.AuthMode.Known == SshAuthMode.IdentityFile &&
+            string.IsNullOrWhiteSpace(ssh.IdentityFilePath))
+            return ConfigurationCodes.InvalidSshProfile;
+        if (LooksLikeSecret(ssh.HostAlias) || LooksLikeSecret(ssh.User) ||
+            LooksLikeSecret(ssh.IdentityFilePath) || LooksLikeSecret(ssh.IdentityAgent) ||
+            LooksLikeSecret(ssh.ProxyJumpAlias) || LooksLikeSecret(ssh.RemoteHerdrPath) ||
+            LooksLikeSecret(ssh.RemoteHelperPath) || LooksLikeSecret(ssh.AuthMode.Raw))
+            return ConfigurationCodes.ForbiddenField;
+        return null;
+    }
+
+    public static bool IsSafeHostAlias(string alias) =>
+        !string.IsNullOrWhiteSpace(alias) &&
+        alias.Length <= 255 &&
+        alias[0] != '-' &&
+        !HasControlOrSurrogate(alias) &&
+        alias.IndexOfAny([' ', '\t', '/', '\\', '@', ',', '"', '\'', '%', '\0']) < 0;
+
+    private static bool IsSafeUser(string user) =>
+        user.Length is > 0 and <= 128 &&
+        user[0] != '-' &&
+        !HasControlOrSurrogate(user) &&
+        user.IndexOfAny([' ', '\t', '/', '\\', '@', ',', '%', '\0']) < 0;
+
+    private static bool IsSafeAgentRef(string agent) =>
+        agent.Length is > 0 and <= 256 &&
+        agent[0] != '-' &&
+        !HasControlOrSurrogate(agent) &&
+        !LooksLikeSecret(agent) &&
+        agent.IndexOfAny(['\n', '\r', '\0']) < 0;
+
+    public static bool IsSafePosixAbsolute(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || path.Length > 512 || HasControlOrSurrogate(path))
+            return false;
+        if (path[0] != '/' || path.StartsWith("//", StringComparison.Ordinal))
+            return false;
+        if (path.Contains('%', StringComparison.Ordinal) || path.Contains("..", StringComparison.Ordinal))
+            return false;
+        if (path.Contains('\\', StringComparison.Ordinal))
+            return false;
+        return true;
+    }
+
+    public static bool LooksLikeSecret(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return false;
+        var lower = value.ToLowerInvariant();
+        return lower.Contains("-----begin", StringComparison.Ordinal) ||
+               lower.Contains("private key", StringComparison.Ordinal) ||
+               lower.Contains("password=", StringComparison.Ordinal);
     }
 
     private static bool IsSafeLabel(string label) =>
@@ -583,6 +815,8 @@ public sealed class AtomicConfigurationStore : IDeviceProfileStore
                         return nested;
                 }
                 return null;
+            case JsonValueKind.String:
+                return LooksLikeSecret(element.GetString()) ? "secret_value" : null;
             default:
                 return null;
         }

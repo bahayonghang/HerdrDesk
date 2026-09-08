@@ -18,6 +18,8 @@ public sealed class AppDataPaths
         LogDirectory = Path.GetFullPath(logDirectory);
         ConfigurationFile = Path.Combine(SettingsDirectory, "device-profiles.json");
         ConfigurationBackupFile = ConfigurationFile + ".bak";
+        KnownHostsFile = Path.Combine(SettingsDirectory, "ssh-known-hosts.json");
+        KnownHostsBackupFile = KnownHostsFile + ".bak";
         DiagnosticSaltFile = Path.Combine(SettingsDirectory, "diagnostic-alias.salt");
         DiagnosticLogFile = Path.Combine(LogDirectory, "diagnostics.jsonl");
     }
@@ -28,6 +30,8 @@ public sealed class AppDataPaths
     public string LogDirectory { get; }
     public string ConfigurationFile { get; }
     public string ConfigurationBackupFile { get; }
+    public string KnownHostsFile { get; }
+    public string KnownHostsBackupFile { get; }
     public string DiagnosticSaltFile { get; }
     public string DiagnosticLogFile { get; }
 

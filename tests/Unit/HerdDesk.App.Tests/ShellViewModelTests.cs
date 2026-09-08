@@ -84,8 +84,8 @@ internal static class ShellViewModelTests
         shell.StartAsync().AsTask().GetAwaiter().GetResult();
         shell.OpenSettings();
         AppTestHost.Check(shell.Route == ShellRoute.Settings);
-        AppTestHost.Check(shell.SshAvailability.Kind == RouteAvailabilityKind.Disabled);
-        AppTestHost.Check(shell.SshAvailability.ReasonCode == ShellCodes.SshProviderPending);
+        AppTestHost.Check(shell.SshAvailability.Kind == RouteAvailabilityKind.Enabled);
+        AppTestHost.Check(shell.FilesAvailability.Kind == RouteAvailabilityKind.Disabled);
         shell.OpenAbout();
         AppTestHost.Check(shell.Route == ShellRoute.About);
         AppTestHost.Check(shell.Diagnostics.AboutStatement == ProductInfo.IndependentClientStatement);

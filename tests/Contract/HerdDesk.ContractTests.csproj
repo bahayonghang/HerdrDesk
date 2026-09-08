@@ -8,5 +8,6 @@
     <ProjectReference Include="../../src/HerdDesk.App/HerdDesk.App.csproj" />
     <Compile Include="../HerdDesk.TestSupport/FakeBridgeHost.cs" Link="FakeBridgeHost.cs" />
     <Compile Include="../HerdDesk.TestSupport/FakeTerminalHost.cs" Link="FakeTerminalHost.cs" />
+    <Compile Include="../HerdDesk.TestSupport/FakeSshHost.cs" Link="FakeSshHost.cs" />
   </ItemGroup>
 </Project>

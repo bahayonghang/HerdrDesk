@@ -13,7 +13,8 @@ cases =
     .. TerminalControlTests.All,
     .. ResourceCommandViewModelTests.All,
     .. RecoveryBindingsTests.All,
-    .. LocalMvpShellCompositionTests.All
+    .. LocalMvpShellCompositionTests.All,
+    .. EditDeviceViewModelTests.All
 ];
 
 var failed = 0;

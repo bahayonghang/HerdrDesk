@@ -45,6 +45,11 @@ public static class ShellStrings
     public const string TakeoverReplacesController = "确认后将取代现有控制者";
     public const string ObserveScroll = "只读，滚动由当前控制者决定";
     public const string SshPending = "SSH 由 HD-020 提供";
+    public const string SshEditor = "SSH 设备配置";
+    public const string SshUnsupported = "未支持";
+    public const string HostKeySideChannel =
+        "请通过可信侧信道核对该指纹后再确认。未确认前不会写入信任库。";
+    public const string HostKeyChangedBlocked = "主机密钥已变更，连接已阻断。旧记录未覆盖。";
     public const string FilesPending = "文件区尚未启用";
     public const string SaveFailed = "保存失败，已恢复上次有效值";
     public const string PermissionDenied = "当前实例不能写入配置";
