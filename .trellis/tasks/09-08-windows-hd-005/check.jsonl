@@ -1,0 +1,4 @@
+{"file":"docs/plan/docs/10_测试与验收.md","reason":"区分 L1、L2、L3 及真实性能和交互桌面证据"}
+{"file":"planning/acceptance.json","reason":"复核 AC08、AC09、AC27、AC37、AC38 的最终归属与证据状态"}
+{"file":"tasks/HD-005.md","reason":"核对产品任务范围、依赖、风险和回滚"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

@@ -1,0 +1,5 @@
+{"file":".trellis/spec/frontend/index.md","reason":"确认前端规范仍为 deferred，spike 不得把模板当实现契约"}
+{"file":"docs/plan/docs/04_技术选型与ADR.md","reason":"renderer 基线、native 替换门禁与依赖策略"}
+{"file":"docs/plan/docs/06_终端与输入法.md","reason":"字节、背压、IME、焦点、选择和可访问性契约"}
+{"file":"docs/plan/docs/08_安全与威胁模型.md","reason":"WebView2 host message 与不可信终端边界"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"统一测试项目、solution、just 与 CI 发现入口"}
