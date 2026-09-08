@@ -71,6 +71,18 @@ public sealed class DiagnosticsViewModel
             fields.Add(Field("session", Alias("session", raw), true));
         }
 
+        var devices = _catalog.DevicesForTree();
+        for (var i = 0; i < devices.Count; i++)
+        {
+            var item = devices[i];
+            var index = (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            fields.Add(Field("device_" + index, Alias("device", item.Device.Value.ToString("D")), true));
+            fields.Add(Field("connection_" + index, _catalog.PhaseFor(item.Device).ToString(), false));
+            fields.Add(Field("sync_" + index, _catalog.FreshnessFor(item.Device).ToString(), false));
+            fields.Add(Field("terminal_" + index, "disconnected", false));
+            fields.Add(Field("file_" + index, "unavailable", false));
+        }
+
         if (_unavailable.Count == 0)
             fields.Add(Field("unavailable", "none", false));
         else

@@ -82,7 +82,7 @@ flowchart TB
 |---|---|---|
 | [src](src/CLAUDE.md) | C# solution 入口 | 已生成 |
 | [src/HerdDesk.Contracts](src/HerdDesk.Contracts/CLAUDE.md) | 身份、帧、输入决策、配置/诊断端口 | 已生成 |
-| [src/HerdDesk.Core](src/HerdDesk.Core/CLAUDE.md) | 单 epoch 帧解析器与输入策略 | 已生成 |
+| [src/HerdDesk.Core](src/HerdDesk.Core/CLAUDE.md) | 单 epoch 帧解析器与输入策略、HD-023 L1 多设备聚合 | 已生成 |
 | [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断、RPC stdio | 已生成 |
 | [bridge](bridge/CLAUDE.md) | herddesk-bridge L1 字节转发 | 已生成 |
 | [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter + HD-015 L1 input coordinators | 已生成 |

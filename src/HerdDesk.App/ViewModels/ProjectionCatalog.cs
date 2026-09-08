@@ -1,8 +1,9 @@
 using HerdDesk.Contracts;
+using HerdDesk.Core;
 
 namespace HerdDesk.App;
 
-public sealed class ProjectionCatalog
+public sealed class ProjectionCatalog : ICatalogProjection
 {
     private readonly Dictionary<PaneKey, int> _unread = new();
     private readonly Dictionary<PaneKey, TerminalAccess> _access = new();
@@ -15,6 +16,7 @@ public sealed class ProjectionCatalog
     public bool DaemonAvailable { get; set; }
     public long? QueueBytes { get; set; }
     public bool RendererReadyDefault { get; set; }
+    public GlobalProjectionStore? Aggregate { get; set; }
 
     public int UnreadCount(PaneKey pane) => _unread.GetValueOrDefault(pane);
 
@@ -41,9 +43,60 @@ public sealed class ProjectionCatalog
             _ready.Remove(pane);
     }
 
+    public IReadOnlyList<ProjectedDevice> DevicesForTree()
+    {
+        if (Aggregate is { } store)
+            return store.Read().ToProjectedDevices();
+        return Snapshot.Devices;
+    }
+
+    public ConnectionEpoch EpochFor(DeviceId device, SessionKey? session = null)
+    {
+        if (Aggregate is { } store && store.TryGetPartition(device, out var partition))
+            return session is { } key ? partition.EpochFor(key) : partition.Epoch;
+        return Snapshot.Epoch;
+    }
+
+    public ConnectionPhase PhaseFor(DeviceId device)
+    {
+        if (Aggregate is { } store && store.TryGetPartition(device, out var partition))
+            return partition.Phase;
+        if (FindDevice(device) is { } projected && projected.Capabilities.VerifiedOperations.Count == 0)
+            return ConnectionPhase.Incompatible;
+        return Snapshot.Phase;
+    }
+
+    public DeviceFreshness FreshnessFor(DeviceId device)
+    {
+        if (Aggregate is { } store && store.TryGetPartition(device, out var partition))
+            return partition.Freshness;
+        return Freshness;
+    }
+
+    public string? ErrorFor(DeviceId device)
+    {
+        if (Aggregate is { } store && store.TryGetPartition(device, out var partition))
+            return partition.ErrorCode;
+        return LastErrorCode;
+    }
+
+    public string LabelFor(DeviceId device)
+    {
+        if (Aggregate is { } store && store.TryGetPartition(device, out var partition))
+            return partition.DisplayLabel;
+        return device.Value.ToString("D");
+    }
+
+    public PartitionReadiness? ReadinessFor(DeviceId device)
+    {
+        if (Aggregate is { } store && store.TryGetPartition(device, out var partition))
+            return partition.Readiness;
+        return null;
+    }
+
     public PaneProjection? FindPane(PaneKey key)
     {
-        foreach (var device in Snapshot.Devices)
+        foreach (var device in DevicesForTree())
         {
             foreach (var session in device.Sessions)
             {
@@ -60,7 +113,7 @@ public sealed class ProjectionCatalog
 
     public WorkspaceProjection? FindWorkspace(SessionKey session, string workspaceId)
     {
-        foreach (var device in Snapshot.Devices)
+        foreach (var device in DevicesForTree())
         {
             foreach (var projected in device.Sessions)
             {
@@ -79,7 +132,7 @@ public sealed class ProjectionCatalog
 
     public ProjectedDevice? FindDevice(DeviceId device)
     {
-        foreach (var item in Snapshot.Devices)
+        foreach (var item in DevicesForTree())
         {
             if (item.Device == device)
                 return item;
@@ -90,7 +143,7 @@ public sealed class ProjectionCatalog
 
     public SessionProjection? FindSession(SessionKey session)
     {
-        foreach (var device in Snapshot.Devices)
+        foreach (var device in DevicesForTree())
         {
             foreach (var item in device.Sessions)
             {

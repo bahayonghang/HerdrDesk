@@ -89,6 +89,7 @@ public enum SearchResultKind
     Session,
     Workspace,
     Pane,
+    Agent,
     Recent
 }
 
@@ -151,6 +152,7 @@ public static class ShellCodes
     public const string CapabilityUnverified = "capability_unverified";
     public const string ObserveNoResize = "observe_no_resize";
     public const string PermissionDenied = "permission_denied";
+    public const string AuthRequired = "auth_required";
     public const string TargetExpired = "target_expired";
     public const string Starting = "starting";
     public const string Failed = "failed";
@@ -247,7 +249,8 @@ public sealed record SearchState(
     bool IsOpen,
     bool IsComposing,
     double LatencyMs,
-    bool HasExpiredResults);
+    bool HasExpiredResults,
+    bool HasPartialResults = false);
 
 public sealed record LocalSessionDraft(
     SessionProfileKind Kind,

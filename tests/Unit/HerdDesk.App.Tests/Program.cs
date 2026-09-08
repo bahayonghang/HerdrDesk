@@ -15,7 +15,9 @@ cases =
     .. RecoveryBindingsTests.All,
     .. LocalMvpShellCompositionTests.All,
     .. EditDeviceViewModelTests.All,
-    .. HelperInstallViewModelTests.All
+    .. HelperInstallViewModelTests.All,
+    .. PartialStateTests.All,
+    .. SharedResolverTests.All
 ];
 
 var failed = 0;

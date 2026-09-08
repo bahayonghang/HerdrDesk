@@ -110,6 +110,55 @@ public sealed class AttentionReducer
         return new(decisions, Entries);
     }
 
+    public AttentionApplyResult ApplyAggregate(
+        IReadOnlyList<AttentionPartitionFeed> parts,
+        AttentionSyncKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(parts);
+        var decisions = new List<NotificationDecision>();
+        var present = new HashSet<AttentionKey>();
+        var currentSessions = new HashSet<SessionKey>();
+        var snapshotDevices = new HashSet<DeviceId>();
+        var snapshotSessions = new HashSet<SessionKey>();
+        foreach (var part in parts)
+        {
+            ArgumentNullException.ThrowIfNull(part);
+            ArgumentNullException.ThrowIfNull(part.Snapshot);
+            var snapshot = part.Snapshot;
+            var stamp = part.Stamp;
+            if (snapshot.Epoch.Value <= 0)
+                continue;
+            if (stamp.Epoch.Value > 0 && stamp.Epoch.Value < snapshot.Epoch.Value)
+            {
+                foreach (var device in snapshot.Devices)
+                {
+                    snapshotDevices.Add(device.Device);
+                    foreach (var session in device.Sessions)
+                        snapshotSessions.Add(session.Session);
+                }
+
+                foreach (var decision in SuppressOldEpoch(snapshot, stamp).Decisions)
+                    decisions.Add(decision);
+                continue;
+            }
+
+            foreach (var device in snapshot.Devices)
+            {
+                snapshotDevices.Add(device.Device);
+                foreach (var session in device.Sessions)
+                {
+                    snapshotSessions.Add(session.Session);
+                    ApplySession(
+                        device.Device, session, snapshot.Epoch, stamp.ObservedAt, stamp.BaselineGeneration,
+                        kind, present, currentSessions, decisions);
+                }
+            }
+        }
+
+        ExpireMissing(present, currentSessions, snapshotDevices, snapshotSessions);
+        return new(decisions, Entries);
+    }
+
     public void MarkRead(string transitionId)
     {
         if (string.IsNullOrWhiteSpace(transitionId))

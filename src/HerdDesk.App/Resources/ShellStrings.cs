@@ -58,6 +58,9 @@ public static class ShellStrings
     public const string FilesPending = "文件区尚未启用";
     public const string SaveFailed = "保存失败，已恢复上次有效值";
     public const string PermissionDenied = "当前实例不能写入配置";
+    public const string AuthRequired = "需要认证";
+    public const string PartialResults = "部分设备尚未就绪";
+    public const string Agent = "代理";
     public const string Notifications = "通知中心";
     public const string NotificationBlocked = "已阻塞";
     public const string NotificationDone = "已结束";

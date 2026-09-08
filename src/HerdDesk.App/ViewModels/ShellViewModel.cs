@@ -24,6 +24,8 @@ public sealed class ShellDependencies
     public TerminalInputViewModel? TerminalInput { get; init; }
     public TerminalControlViewModel? TerminalControl { get; init; }
     public ResourceCommandViewModel? ResourceCommands { get; init; }
+    public GlobalProjectionStore? Aggregate { get; init; }
+    public IReconnectRequestor? Reconnect { get; init; }
 }
 
 public sealed class ShellViewModel
@@ -46,6 +48,8 @@ public sealed class ShellViewModel
         _deps = dependencies;
         Catalog = dependencies.Catalog;
         _navigation = new NavigationCoordinator(dependencies.Catalog);
+        Catalog.Aggregate = dependencies.Aggregate;
+        Resolver = new GlobalTargetResolver(dependencies.Aggregate, Catalog);
         Search = new SearchPaletteViewModel(dependencies.Catalog, dependencies.Recents);
         Display = new TerminalDisplayCoordinator(dependencies.DisplaySurface);
         Settings = new SettingsViewModel(
@@ -57,7 +61,13 @@ public sealed class ShellViewModel
             dependencies.NotificationSink,
             dependencies.DiagnosticSink,
             dependencies.Clock,
-            dependencies.Aliases);
+            dependencies.Aliases,
+            Resolver);
+        MultiDevice = new MultiDeviceNavigationViewModel(
+            Catalog, _navigation, dependencies.Reconnect);
+        GlobalSearch = dependencies.Aggregate is { } store
+            ? new GlobalSearchViewModel(store, dependencies.Recents, Resolver)
+            : null;
         TerminalInput = dependencies.TerminalInput;
         TerminalControl = dependencies.TerminalControl;
         ResourceCommands = dependencies.ResourceCommands;
@@ -76,6 +86,9 @@ public sealed class ShellViewModel
     }
 
     public ProjectionCatalog Catalog { get; }
+    public GlobalTargetResolver Resolver { get; }
+    public MultiDeviceNavigationViewModel MultiDevice { get; }
+    public GlobalSearchViewModel? GlobalSearch { get; }
     public SearchPaletteViewModel Search { get; }
     public SettingsViewModel Settings { get; }
     public DiagnosticsViewModel Diagnostics { get; }
@@ -169,7 +182,9 @@ public sealed class ShellViewModel
     {
         SyncAttention();
         _navigation.Rebuild(Lifecycle == ShellLifecycle.Starting);
+        MultiDevice.Rebuild();
         Search.Refresh();
+        GlobalSearch?.UpdateQuery(GlobalSearch.Query);
         ResourceCommands?.Coordinator.NotifyProjectionAsync().AsTask().GetAwaiter().GetResult();
         ApplyPendingFocus();
         CompleteNotificationFocus();
@@ -269,7 +284,9 @@ public sealed class ShellViewModel
         var hit = Search.Selected;
         if (hit is null)
             return false;
-        if (hit.IsExpired || !Resolve(hit, out var item) || item is null)
+        var resolved = Resolver.Resolve(GlobalEntityMapping.FromSearchHit(hit));
+        if (hit.IsExpired || resolved.Status == ResolveStatus.Expired ||
+            !Resolve(hit, out var item) || item is null)
         {
             Search.MarkExpired(hit);
             ActivationExpired = true;
@@ -281,10 +298,12 @@ public sealed class ShellViewModel
 
         Select(item);
         CloseSearch(restoreFocus: false);
-        if (hit.Pane is { } pane)
+        if (resolved.IsResolved && hit.Pane is { } pane)
             TryFocusPane(pane, hit.Epoch);
+        else
+            _navigation.ContentFocused = false;
         UpdateChrome();
-        return true;
+        return resolved.IsResolved;
     }
 
     public void RemoveRecent(RecentEntry entry)
@@ -419,7 +438,7 @@ public sealed class ShellViewModel
                 pane.Session, pane.WorkspaceId, pane, intent.Epoch ?? Catalog.Snapshot.Epoch,
                 null, false, false);
             if (!Resolve(hit, out var item) || item is null ||
-                (intent.Epoch is { } epoch && epoch != Catalog.Snapshot.Epoch))
+                Resolver.Resolve(GlobalEntityMapping.FromSearchHit(hit)).Status == ResolveStatus.Expired)
             {
                 ActivationExpired = true;
                 _navigation.MarkExpired();
@@ -433,14 +452,14 @@ public sealed class ShellViewModel
 
     public bool TryRequestResize(int columns, int rows)
     {
-        if (Selection.IsExpired || Selection.Pane is not { } pane)
+        if (Selection.IsExpired || Selection.Pane is not { } pane || Selection.Device is not { } device)
             return false;
-        if (Selection.Epoch != Catalog.Snapshot.Epoch)
+        if (Selection.Epoch != Catalog.EpochFor(device, Selection.Session))
             return false;
         var context = new InputContext(
             pane, Selection.Epoch, Access, ControlVerified);
-        var device = Catalog.FindDevice(pane.Session.Device);
-        var capabilities = device?.Capabilities ??
+        var projected = Catalog.FindDevice(pane.Session.Device);
+        var capabilities = projected?.Capabilities ??
                            new CapabilityProfile("", null, 0, 0, "", "UNVERIFIED",
                                System.Collections.Frozen.FrozenSet<string>.Empty);
         return Display.TryRequestResize(columns, rows, context, capabilities);
@@ -450,30 +469,38 @@ public sealed class ShellViewModel
 
     private void SyncAttention()
     {
-        var epoch = Catalog.Snapshot.Epoch;
         AttentionSyncKind kind;
         if (Lifecycle == ShellLifecycle.Starting || _attentionEpoch.Value == 0)
             kind = AttentionSyncKind.Baseline;
-        else if (epoch != _attentionEpoch)
+        else if (Catalog.Aggregate is not null)
+            kind = Catalog.Freshness == DeviceFreshness.Refreshing
+                ? AttentionSyncKind.DirtyRefresh
+                : AttentionSyncKind.Live;
+        else if (Catalog.Snapshot.Epoch != _attentionEpoch)
             kind = AttentionSyncKind.ReconnectBaseline;
         else if (Catalog.Freshness == DeviceFreshness.Refreshing)
             kind = AttentionSyncKind.DirtyRefresh;
         else
             kind = AttentionSyncKind.Live;
-        if (Catalog.Freshness == DeviceFreshness.Stale)
+        if (Catalog.Aggregate is null)
         {
-            foreach (var device in Catalog.Snapshot.Devices)
-                Notifications.MarkDeviceStale(device.Device);
-        }
-        else if (Catalog.Snapshot.Phase == ConnectionPhase.Offline)
-        {
-            foreach (var device in Catalog.Snapshot.Devices)
-                Notifications.MarkDeviceOffline(device.Device);
+            if (Catalog.Freshness == DeviceFreshness.Stale)
+            {
+                foreach (var device in Catalog.Snapshot.Devices)
+                    Notifications.MarkDeviceStale(device.Device);
+            }
+            else if (Catalog.Snapshot.Phase == ConnectionPhase.Offline)
+            {
+                foreach (var device in Catalog.Snapshot.Devices)
+                    Notifications.MarkDeviceOffline(device.Device);
+            }
         }
 
         Notifications.SetGlobalMute(!Settings.CommittedUi.NotificationsEnabled);
         Notifications.Synchronize(kind, Lifecycle == ShellLifecycle.Starting);
-        _attentionEpoch = epoch;
+        _attentionEpoch = Catalog.Aggregate is not null
+            ? new ConnectionEpoch(1)
+            : Catalog.Snapshot.Epoch;
     }
 
     private void CompleteNotificationFocus()
@@ -503,7 +530,8 @@ public sealed class ShellViewModel
 
     private void TryFocusPane(PaneKey pane, ConnectionEpoch epoch)
     {
-        var valid = epoch == Catalog.Snapshot.Epoch && Catalog.FindPane(pane) is not null;
+        var valid = epoch == Catalog.EpochFor(pane.Session.Device, pane.Session) &&
+                    Catalog.FindPane(pane) is not null;
         FocusRestore.SetControlVerified(Catalog.ControlVerifiedFor(pane));
         var result = FocusRestore.RequestFocus(pane, epoch, Catalog.RendererReadyFor(pane), valid);
         if (!valid)
@@ -533,7 +561,8 @@ public sealed class ShellViewModel
     {
         if (_pendingFocus?.Pane is not { } pane)
             return;
-        var valid = _pendingFocus.Epoch == Catalog.Snapshot.Epoch && Catalog.FindPane(pane) is not null;
+        var valid = _pendingFocus.Epoch == Catalog.EpochFor(pane.Session.Device, pane.Session) &&
+                    Catalog.FindPane(pane) is not null;
         if (!valid)
         {
             ActivationExpired = true;
@@ -557,11 +586,13 @@ public sealed class ShellViewModel
     private bool Resolve(SearchHit hit, out NavigationItem? item)
     {
         item = null;
-        if (hit.Epoch != Catalog.Snapshot.Epoch && hit.Kind != SearchResultKind.Recent)
+        if (hit.Kind != SearchResultKind.Recent &&
+            hit.Epoch != Catalog.EpochFor(hit.Device, hit.Session))
             return false;
         if (hit.Pane is { } pane)
         {
-            if (Catalog.FindPane(pane) is null || hit.Epoch != Catalog.Snapshot.Epoch)
+            if (Catalog.FindPane(pane) is null ||
+                hit.Epoch != Catalog.EpochFor(pane.Session.Device, pane.Session))
                 return false;
             var identity = NavigationIdentity.Format(
                 NavigationKind.Pane, pane.Session.Device, pane.Session, pane.WorkspaceId, pane);

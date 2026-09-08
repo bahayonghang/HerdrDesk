@@ -188,7 +188,8 @@ internal static class AppTestHost
         IDiagnosticSink? diagnostics = null,
         INotificationSink? notifications = null,
         DiagnosticAliasProjector? aliases = null,
-        TerminalInputViewModel? input = null)
+        TerminalInputViewModel? input = null,
+        GlobalProjectionStore? aggregate = null)
     {
         paths ??= AppDataPaths.FromRoot(TempRoot());
         profiles ??= new AtomicConfigurationStore(paths);
@@ -205,6 +206,7 @@ internal static class AppTestHost
             NotificationSink = notifications,
             Aliases = aliases,
             TerminalInput = input,
+            Aggregate = aggregate,
             Unavailable =
             [
                 new UnavailableCapability("rpc-connection", "rpc_bridge_unavailable"),

@@ -128,6 +128,10 @@ public sealed record AttentionScope(
     AttentionKey? Key = null,
     string? TransitionId = null);
 
+public sealed record AttentionPartitionFeed(
+    DeviceProjectionSnapshot Snapshot,
+    ProjectionStamp Stamp);
+
 public sealed record AttentionApplyResult(
     IReadOnlyList<NotificationDecision> Decisions,
     IReadOnlyList<AttentionEntry> Entries)

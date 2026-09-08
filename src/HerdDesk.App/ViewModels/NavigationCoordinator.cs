@@ -1,4 +1,5 @@
 using HerdDesk.Contracts;
+using HerdDesk.Core;
 
 namespace HerdDesk.App;
 
@@ -57,7 +58,7 @@ public sealed class NavigationCoordinator
             return;
         }
 
-        if (current.Epoch != _catalog.Snapshot.Epoch)
+        if (current.Epoch != _catalog.EpochFor(current.Device, current.Session))
         {
             Selection = ToSelection(current) with { IsExpired = true };
             ContentFocused = false;
@@ -181,7 +182,9 @@ public sealed class NavigationCoordinator
     {
         if (Selection.Kind == SelectionKind.None)
             return;
-        if (Selection.Epoch != _catalog.Snapshot.Epoch || !SelectionExistsInCatalog())
+        if (Selection.Device is { } selectedDevice &&
+            (Selection.Epoch != _catalog.EpochFor(selectedDevice, Selection.Session) ||
+             !SelectionExistsInCatalog()))
         {
             Selection = Selection with { IsExpired = true };
             ContentFocused = false;
@@ -208,9 +211,9 @@ public sealed class NavigationCoordinator
 
     private List<NavigationItem> BuildRoots(bool starting)
     {
-        var snapshot = _catalog.Snapshot;
-        var roots = new List<NavigationItem>(snapshot.Devices.Count);
-        foreach (var device in snapshot.Devices)
+        var devices = _catalog.DevicesForTree();
+        var roots = new List<NavigationItem>(devices.Count);
+        foreach (var device in devices)
         {
             var sessions = new List<NavigationItem>(device.Sessions.Count);
             foreach (var session in device.Sessions)
@@ -226,22 +229,25 @@ public sealed class NavigationCoordinator
         IReadOnlyList<NavigationItem> sessions,
         bool starting)
     {
-        var phase = _catalog.Snapshot.Phase;
-        var stale = _catalog.Freshness == DeviceFreshness.Stale || phase == ConnectionPhase.Stale;
+        var phase = DevicePhase(device);
+        var stale = _catalog.FreshnessFor(device.Device) == DeviceFreshness.Stale ||
+                    phase == ConnectionPhase.Stale;
         var incompatible = phase == ConnectionPhase.Incompatible ||
                            device.Capabilities.VerifiedOperations.Count == 0;
         var offline = phase == ConnectionPhase.Offline;
         var identity = NavigationIdentity.Format(NavigationKind.Device, device.Device, null, null, null);
         var selected = Matches(SelectionKind.Device, device.Device, null, null, null);
-        var status = StatusFor(starting, sessions.Count == 0, stale, incompatible, offline, _catalog.LastErrorCode);
+        var status = StatusFor(
+            starting, sessions.Count == 0, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
+            _catalog.ReadinessFor(device.Device));
         return new NavigationItem(
             NavigationKind.Device,
             device.Device,
             null,
             null,
             null,
-            _catalog.Snapshot.Epoch,
-            device.Device.Value.ToString("D"),
+            _catalog.EpochFor(device.Device),
+            _catalog.LabelFor(device.Device),
             ShellStrings.Device,
             phase,
             new WireEnum<AgentStatusKind>("unknown", AgentStatusKind.Unknown),
@@ -272,13 +278,16 @@ public sealed class NavigationCoordinator
         foreach (var workspace in session.Workspaces)
             workspaces.Add(BuildWorkspace(device, session, workspace, starting));
         var phase = SessionPhase(device, session);
-        var stale = _catalog.Freshness == DeviceFreshness.Stale || phase == ConnectionPhase.Stale;
+        var stale = _catalog.FreshnessFor(device.Device) == DeviceFreshness.Stale ||
+                    phase == ConnectionPhase.Stale;
         var incompatible = phase == ConnectionPhase.Incompatible;
         var offline = phase == ConnectionPhase.Offline;
         var identity = NavigationIdentity.Format(
             NavigationKind.Session, device.Device, session.Session, null, null);
         var selected = Matches(SelectionKind.Session, device.Device, session.Session, null, null);
-        var status = StatusFor(starting, workspaces.Count == 0, stale, incompatible, offline, _catalog.LastErrorCode);
+        var status = StatusFor(
+            starting, workspaces.Count == 0, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
+            _catalog.ReadinessFor(device.Device));
         var label = session.Session.SessionName ?? session.Session.EndpointKey;
         return new NavigationItem(
             NavigationKind.Session,
@@ -286,7 +295,7 @@ public sealed class NavigationCoordinator
             session.Session,
             null,
             null,
-            _catalog.Snapshot.Epoch,
+            _catalog.EpochFor(device.Device, session.Session),
             label,
             ShellStrings.Session,
             phase,
@@ -323,21 +332,24 @@ public sealed class NavigationCoordinator
             .Select(item => BuildPane(device, session, workspace, item, starting))
             .ToArray();
         var phase = SessionPhase(device, session);
-        var stale = _catalog.Freshness == DeviceFreshness.Stale || phase == ConnectionPhase.Stale;
+        var stale = _catalog.FreshnessFor(device.Device) == DeviceFreshness.Stale ||
+                    phase == ConnectionPhase.Stale;
         var incompatible = phase == ConnectionPhase.Incompatible;
         var offline = phase == ConnectionPhase.Offline;
         var identity = NavigationIdentity.Format(
             NavigationKind.Workspace, device.Device, session.Session, workspace.WorkspaceId, null);
         var selected = Matches(
             SelectionKind.Workspace, device.Device, session.Session, workspace.WorkspaceId, null);
-        var status = StatusFor(starting, panes.Length == 0, stale, incompatible, offline, _catalog.LastErrorCode);
+        var status = StatusFor(
+            starting, panes.Length == 0, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
+            _catalog.ReadinessFor(device.Device));
         return new NavigationItem(
             NavigationKind.Workspace,
             device.Device,
             session.Session,
             workspace.WorkspaceId,
             null,
-            _catalog.Snapshot.Epoch,
+            _catalog.EpochFor(device.Device, session.Session),
             workspace.Label,
             ShellStrings.Workspace,
             phase,
@@ -371,14 +383,17 @@ public sealed class NavigationCoordinator
         bool starting)
     {
         var phase = SessionPhase(device, session);
-        var stale = _catalog.Freshness == DeviceFreshness.Stale || phase == ConnectionPhase.Stale;
+        var stale = _catalog.FreshnessFor(device.Device) == DeviceFreshness.Stale ||
+                    phase == ConnectionPhase.Stale;
         var incompatible = phase == ConnectionPhase.Incompatible;
         var offline = phase == ConnectionPhase.Offline;
         var identity = NavigationIdentity.Format(
             NavigationKind.Pane, device.Device, session.Session, workspace.WorkspaceId, pane.Key);
         var selected = Matches(SelectionKind.Pane, device.Device, session.Session, workspace.WorkspaceId, pane.Key);
         var expired = selected && Selection.IsExpired;
-        var status = StatusFor(starting, false, stale, incompatible, offline, _catalog.LastErrorCode);
+        var status = StatusFor(
+            starting, false, stale, incompatible, offline, _catalog.ErrorFor(device.Device),
+            _catalog.ReadinessFor(device.Device));
         var agent = pane.AgentKind is null
             ? new WireEnum<AgentStatusKind>(pane.AgentStatus.Raw, AgentStatusKind.Unknown)
             : pane.AgentStatus;
@@ -391,7 +406,7 @@ public sealed class NavigationCoordinator
             session.Session,
             workspace.WorkspaceId,
             pane.Key,
-            _catalog.Snapshot.Epoch,
+            _catalog.EpochFor(device.Device, session.Session),
             label,
             ShellStrings.Pane,
             phase,
@@ -427,8 +442,11 @@ public sealed class NavigationCoordinator
         _ = session;
         if (device.Capabilities.VerifiedOperations.Count == 0)
             return ConnectionPhase.Incompatible;
-        return _catalog.Snapshot.Phase;
+        return DevicePhase(device);
     }
+
+    private ConnectionPhase DevicePhase(ProjectedDevice device) =>
+        _catalog.PhaseFor(device.Device);
 
     private bool Matches(
         SelectionKind kind,
@@ -477,23 +495,36 @@ public sealed class NavigationCoordinator
         bool stale,
         bool incompatible,
         bool offline,
-        string? error)
+        string? error,
+        PartitionReadiness? readiness = null)
     {
         if (starting)
             return new(ShellCodes.Loading, ShellStrings.Loading, "loading", RecoveryActionKind.None, "", false);
-        if (incompatible)
+        if (readiness == PartitionReadiness.AuthRequired)
+            return new(ShellCodes.AuthRequired, ShellStrings.AuthRequired, "auth",
+                RecoveryActionKind.OpenSettings, ShellStrings.Settings, true);
+        if (readiness == PartitionReadiness.PermissionDenied)
+            return new(ShellCodes.PermissionDenied, ShellStrings.PermissionDenied, "permission",
+                RecoveryActionKind.OpenDiagnostics, ShellStrings.Diagnostics, true);
+        if (readiness == PartitionReadiness.Cancelling)
+            return new(ShellCodes.Loading, ShellStrings.Loading, "cancelling", RecoveryActionKind.None, "", false);
+        if (incompatible || readiness == PartitionReadiness.Incompatible)
             return new(ShellCodes.Incompatible, ShellStrings.Incompatible, "incompatible",
                 RecoveryActionKind.OpenDiagnostics, ShellStrings.Diagnostics, true);
-        if (!string.IsNullOrEmpty(error))
+        if (readiness == PartitionReadiness.Error ||
+            (!string.IsNullOrEmpty(error) && readiness is not PartitionReadiness.Offline
+                and not PartitionReadiness.Stale and not PartitionReadiness.Loading))
             return new(ShellCodes.Error, ShellStrings.Error, "error",
                 RecoveryActionKind.OpenDiagnostics, ShellStrings.Diagnostics, true, null);
-        if (stale)
+        if (readiness == PartitionReadiness.Loading)
+            return new(ShellCodes.Loading, ShellStrings.Loading, "loading", RecoveryActionKind.None, "", false);
+        if (stale || readiness == PartitionReadiness.Stale)
             return new(ShellCodes.Stale, ShellStrings.Stale, "stale",
                 RecoveryActionKind.RetryProjection, ShellStrings.Reconnect, true);
-        if (offline)
+        if (offline || readiness == PartitionReadiness.Offline)
             return new(ShellCodes.Offline, ShellStrings.Offline, "offline",
                 RecoveryActionKind.RetryProjection, ShellStrings.Reconnect, true);
-        if (empty)
+        if (empty || readiness == PartitionReadiness.Empty)
             return new(ShellCodes.Empty, ShellStrings.Empty, "empty",
                 RecoveryActionKind.AddDevice, ShellStrings.AddDevice, true);
         return new("ready", ShellStrings.Ready, "ready", RecoveryActionKind.None, "", false);

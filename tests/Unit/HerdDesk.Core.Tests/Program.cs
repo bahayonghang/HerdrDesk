@@ -97,7 +97,11 @@ cases =
     .. RecoveryPolicyTests.All,
     .. DeviceSessionRecoveryTests.All,
     .. ControlLeaseRecoveryTests.All,
-    .. LocalMvpCompositionTests.All
+    .. LocalMvpCompositionTests.All,
+    .. PartitionIsolationTests.All,
+    .. GlobalTargetResolverTests.All,
+    .. GlobalSearchPerformanceTests.All,
+    .. OldEpochConcurrencyTests.All
 ];
 
 var failed = 0;

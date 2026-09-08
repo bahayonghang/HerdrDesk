@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd023_l2_status",
+  "l2_live_three_device_search_p95": "UNVERIFIED",
+  "live_three_device_ssh": false,
+  "live_three_device_p95": false,
+  "winui_admitted": false,
+  "integration_windows_project": false,
+  "l1_aggregation": "required; does not close product AC19 or AC21",
+  "ac19_passed": false,
+  "ac21_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "missing": {
+    "live_three_device_ssh": true,
+    "live_search_p95": true,
+    "winui_shell": true
+  },
+  "note": "HD-023 ships L1 multi-device partition aggregation, GlobalEntityRef resolver, and in-memory search over fake Stores. Search does not spawn terminals or open a network. L2 live 3-device SSH p95 stays UNVERIFIED. Product AC19/AC21 stay with HD-026 and are not passed."
+}

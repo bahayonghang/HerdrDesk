@@ -60,6 +60,7 @@ public sealed class NotificationCenterViewModel
     private readonly IDiagnosticSink? _diagnostics;
     private readonly IClock _clock;
     private readonly DiagnosticAliasProjector? _aliases;
+    private readonly GlobalTargetResolver _resolver;
     private readonly List<NotificationListItem> _items = [];
     private string? _hoverId;
     private string? _focusId;
@@ -74,7 +75,8 @@ public sealed class NotificationCenterViewModel
         INotificationSink? sink = null,
         IDiagnosticSink? diagnostics = null,
         IClock? clock = null,
-        DiagnosticAliasProjector? aliases = null)
+        DiagnosticAliasProjector? aliases = null,
+        GlobalTargetResolver? resolver = null)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         _catalog = catalog;
@@ -83,8 +85,11 @@ public sealed class NotificationCenterViewModel
         _diagnostics = diagnostics;
         _clock = clock ?? new SystemClock();
         _aliases = aliases;
+        _resolver = resolver ?? new GlobalTargetResolver(catalog.Aggregate, catalog);
         Lifecycle = NotificationCenterLifecycle.Loading;
     }
+
+    public GlobalTargetResolver Resolver => _resolver;
 
     public AttentionReducer Reducer => _reducer;
     public NotificationCenterLifecycle Lifecycle { get; private set; }
@@ -142,8 +147,27 @@ public sealed class NotificationCenterViewModel
     {
         if (starting)
             Lifecycle = NotificationCenterLifecycle.Loading;
-        var stamp = new ProjectionStamp(_catalog.Snapshot.Epoch, 0, _clock.UtcNow);
-        var result = _reducer.Apply(_catalog.Snapshot, stamp, kind);
+        AttentionApplyResult result;
+        if (_catalog.Aggregate is { } store)
+        {
+            var feeds = new List<AttentionPartitionFeed>();
+            foreach (var partition in store.Read().Partitions)
+            {
+                if (partition.Freshness == DeviceFreshness.Stale)
+                    _reducer.MarkDeviceStale(partition.Device);
+                else if (partition.Phase == ConnectionPhase.Offline)
+                    _reducer.MarkDeviceOffline(partition.Device);
+                feeds.AddRange(partition.ToAttentionFeeds(_clock.UtcNow));
+            }
+
+            result = _reducer.ApplyAggregate(feeds, kind);
+        }
+        else
+        {
+            var stamp = new ProjectionStamp(_catalog.Snapshot.Epoch, 0, _clock.UtcNow);
+            result = _reducer.Apply(_catalog.Snapshot, stamp, kind);
+        }
+
         PushUnread();
         Deliver(result);
         Diagnose(result);
@@ -237,7 +261,8 @@ public sealed class NotificationCenterViewModel
         }
 
         var target = entry.Target;
-        if (target.Epoch != _catalog.Snapshot.Epoch || _catalog.FindPane(target.Key.Pane) is null)
+        var resolved = _resolver.ResolveNotification(target);
+        if (resolved.Status == ResolveStatus.Expired || _catalog.FindPane(target.Key.Pane) is null)
         {
             _reducer.MarkExpired(token);
             Rebuild();
@@ -267,7 +292,8 @@ public sealed class NotificationCenterViewModel
             return new(false, false, true, false, pending.Target, AttentionCodes.Cancelled, pending.Token);
         }
 
-        if (pending.Target.Epoch != _catalog.Snapshot.Epoch ||
+        var pendingResolved = _resolver.ResolveNotification(pending.Target);
+        if (pendingResolved.Status == ResolveStatus.Expired ||
             _catalog.FindPane(pending.Target.Key.Pane) is null)
         {
             _reducer.MarkExpired(pending.Token);
@@ -294,7 +320,7 @@ public sealed class NotificationCenterViewModel
 
     private void PushUnread()
     {
-        foreach (var device in _catalog.Snapshot.Devices)
+        foreach (var device in _catalog.DevicesForTree())
         {
             foreach (var session in device.Sessions)
             {
@@ -401,20 +427,52 @@ public sealed class NotificationCenterViewModel
             return;
         }
 
-        if (!string.IsNullOrEmpty(_catalog.LastErrorCode))
+        if (_catalog.Aggregate is { } store)
         {
-            Lifecycle = NotificationCenterLifecycle.Error;
-            BannerCode = ShellCodes.Error;
-            BannerText = ShellStrings.Error;
-            return;
-        }
+            var view = store.Read();
+            if (view.Readiness == AggregateReadiness.Empty)
+            {
+                Lifecycle = NotificationCenterLifecycle.Empty;
+                BannerCode = ShellCodes.Empty;
+                BannerText = ShellStrings.Empty;
+                return;
+            }
 
-        if (_catalog.Snapshot.Phase == ConnectionPhase.Offline)
+            if (view.ReadyCount == 0 &&
+                view.Partitions.All(item => item.Readiness == PartitionReadiness.Error))
+            {
+                Lifecycle = NotificationCenterLifecycle.Error;
+                BannerCode = ShellCodes.Error;
+                BannerText = ShellStrings.Error;
+                return;
+            }
+
+            if (view.ReadyCount == 0 &&
+                view.Partitions.All(item => item.Phase == ConnectionPhase.Offline))
+            {
+                Lifecycle = NotificationCenterLifecycle.Offline;
+                BannerCode = ShellCodes.Offline;
+                BannerText = ShellStrings.Offline;
+                return;
+            }
+        }
+        else
         {
-            Lifecycle = NotificationCenterLifecycle.Offline;
-            BannerCode = ShellCodes.Offline;
-            BannerText = ShellStrings.Offline;
-            return;
+            if (!string.IsNullOrEmpty(_catalog.LastErrorCode))
+            {
+                Lifecycle = NotificationCenterLifecycle.Error;
+                BannerCode = ShellCodes.Error;
+                BannerText = ShellStrings.Error;
+                return;
+            }
+
+            if (_catalog.Snapshot.Phase == ConnectionPhase.Offline)
+            {
+                Lifecycle = NotificationCenterLifecycle.Offline;
+                BannerCode = ShellCodes.Offline;
+                BannerText = ShellStrings.Offline;
+                return;
+            }
         }
 
         if (IsMuted)

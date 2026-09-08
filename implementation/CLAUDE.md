@@ -46,5 +46,6 @@
 | `hd-020-l2.json` | L2 隔离 Windows/OpenSSH = `UNVERIFIED`。L1 DeviceProfile 编辑/预览/测试不能关闭产品 AC22/AC23。`phase_gate=not_passed`。 |
 | `hd-021-l2.json` | L2 live helper deploy = `UNVERIFIED`。L1 manifest/consent/publish 状态机不能关闭产品 AC25。`phase_gate=not_passed`。 |
 | `hd-022-l2.json` | L2 live SSH = `UNVERIFIED`。L1 fake `ssh -T` transport set 不能关闭产品 AC24/AC26。`phase_gate=not_passed`。 |
+| `hd-023-l2.json` | L2 live 3-device search p95 = `UNVERIFIED`。L1 in-memory 聚合不能关闭产品 AC19/AC21。`phase_gate=not_passed`。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。
