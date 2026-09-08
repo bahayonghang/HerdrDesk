@@ -35,12 +35,15 @@ public sealed class DeviceSession : IDeviceSession
     private IRpcSubscriptionConnection? _subscription;
     private ITimer? _coalesce;
     private ITimer? _calibration;
+    private ITimer? _retry;
     private TaskCompletionSource? _connectWait;
     private TaskCompletionSource? _stopWait;
     private string? _lastError;
+    private string? _socketPath;
     private long _nextOperation;
     private int _acceptedInvalidations;
     private int _missedReconcile;
+    private int _missedRetry;
     private bool _acked;
     private bool _subscriptionActive;
     private bool _baselineInstalled;
@@ -48,10 +51,23 @@ public sealed class DeviceSession : IDeviceSession
     private bool _reconcileAfterRead;
     private bool _coalesceArmed;
     private bool _calibrationArmed;
+    private bool _retryArmed;
     private bool _intentionalClose;
     private bool _stopping;
+    private bool _appStopping;
+    private bool _userDisconnect;
+    private bool _reconnectBaseline;
+    private bool _everReady;
+    private bool _retryInFlight;
+    private int _retryAttempt;
+    private int _reconnectEffects;
+    private RecoveryCause? _recoveryCause;
+    private string? _recoveryDecision;
+    private DateTimeOffset? _nextRetryUtc;
+    private TimeSpan? _pendingRetryDelay;
     private ulong _coalesceOp;
     private ulong _calibrationOp;
+    private ulong _retryOp;
     private ConnectionEpoch _coalesceEpoch;
     private ConnectionEpoch _calibrationEpoch;
 
@@ -123,6 +139,22 @@ public sealed class DeviceSession : IDeviceSession
         await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    public async ValueTask RetryNowAsync(CancellationToken cancellationToken = default)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await _mailbox.Writer.WriteAsync(new RetryNowCommand(completion), cancellationToken)
+            .ConfigureAwait(false);
+        await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask NotifyAppStoppingAsync(CancellationToken cancellationToken = default)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await _mailbox.Writer.WriteAsync(new AppStoppingCommand(completion), cancellationToken)
+            .ConfigureAwait(false);
+        await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     public async IAsyncEnumerable<DeviceSessionState> ReadStatesAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -181,8 +213,17 @@ public sealed class DeviceSession : IDeviceSession
             case DisconnectCommand command:
                 HandleDisconnect(command);
                 break;
+            case RetryNowCommand command:
+                HandleRetryNow(command);
+                break;
+            case AppStoppingCommand command:
+                HandleAppStopping(command);
+                break;
             case StopCommand command:
                 HandleStop(command);
+                break;
+            case RetryDueMessage retry:
+                HandleRetryDue(retry);
                 break;
             case ConnectionsOpenedMessage opened:
                 HandleOpened(opened);
@@ -213,39 +254,111 @@ public sealed class DeviceSession : IDeviceSession
         }
 
         DrainMissedReconcile();
+        DrainMissedRetry();
     }
 
     private void HandleConnect(ConnectCommand command)
     {
-        if (_stopping)
+        if (_stopping || _appStopping)
         {
             command.Completion.TrySetResult();
             return;
         }
 
+        _socketPath = command.SocketPath;
+        _userDisconnect = false;
         _connectWait?.TrySetResult();
         _connectWait = command.Completion;
+        CancelRetryTimer();
         BeginEpoch(command.SocketPath);
     }
 
     private void HandleDisconnect(DisconnectCommand command)
     {
+        _userDisconnect = true;
         EnterOffline();
         command.Completion.TrySetResult();
+    }
+
+    private void HandleRetryNow(RetryNowCommand command)
+    {
+        if (_appStopping || _stopping)
+        {
+            command.Completion.TrySetResult();
+            return;
+        }
+
+        if (_phase is ConnectionPhase.Connecting or ConnectionPhase.Synchronizing || _retryInFlight)
+        {
+            command.Completion.TrySetResult();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_socketPath))
+        {
+            command.Completion.TrySetResult();
+            return;
+        }
+
+        _userDisconnect = false;
+        CancelRetryTimer();
+        var decision = RecoveryPolicy.Manual(_appStopping, _recoveryCause ?? RecoveryCause.ManualDisconnect);
+        if (decision.Action != RecoveryAction.RetryNow)
+        {
+            _recoveryDecision = RecoveryCodes.AwaitUser;
+            Publish();
+            command.Completion.TrySetResult();
+            return;
+        }
+
+        _recoveryDecision = RecoveryCodes.RetryNow;
+        BeginEpoch(_socketPath);
+        command.Completion.TrySetResult();
+    }
+
+    private void HandleAppStopping(AppStoppingCommand command)
+    {
+        _appStopping = true;
+        _userDisconnect = false;
+        CancelRetryTimer();
+        _recoveryCause = RecoveryCause.AppStopping;
+        _recoveryDecision = RecoveryCodes.Stop;
+        EnterOffline();
+        command.Completion.TrySetResult();
+    }
+
+    private void HandleRetryDue(RetryDueMessage message)
+    {
+        _ = message;
+        _retryArmed = false;
+        if (_appStopping || _stopping || _intentionalClose || _userDisconnect)
+            return;
+        if (_phase != ConnectionPhase.Stale || _retryInFlight || string.IsNullOrWhiteSpace(_socketPath))
+            return;
+        BeginEpoch(_socketPath);
     }
 
     private void HandleStop(StopCommand command)
     {
         _stopping = true;
+        _appStopping = true;
         _stopWait = command.Completion;
+        CancelRetryTimer();
         EnterOffline();
         _mailbox.Writer.TryComplete();
     }
 
     private void BeginEpoch(string socketPath)
     {
+        if (_appStopping || _stopping)
+            return;
+        _socketPath = socketPath;
         _intentionalClose = true;
+        CancelRetryTimer();
         CancelEpochEffects();
+        _reconnectEffects++;
+        _retryInFlight = true;
+        _reconnectBaseline = _everReady;
         var nextValue = _epoch.Value + 1;
         if (nextValue <= 0)
             nextValue = 1;
@@ -325,7 +438,7 @@ public sealed class DeviceSession : IDeviceSession
 
     private void HandleOpened(ConnectionsOpenedMessage message)
     {
-        if (message.Epoch != _epoch || _stopping || _intentionalClose ||
+        if (message.Epoch != _epoch || _stopping || _appStopping || _intentionalClose ||
             _phase != ConnectionPhase.Connecting || _request is not null)
         {
             StartEffect(async () =>
@@ -434,7 +547,10 @@ public sealed class DeviceSession : IDeviceSession
         {
             if (IsProtocolFailure(decoded.Code))
             {
-                EnterStale(decoded.Code ?? RpcCodes.ProtocolPollution);
+                EnterStale(
+                    decoded.Code ?? RpcCodes.ProtocolPollution,
+                    RecoveryPolicy.Create(
+                        RecoveryScope.Rpc, RecoveryCause.ProtocolError, _session, null, _epoch, false));
                 return;
             }
 
@@ -613,7 +729,7 @@ public sealed class DeviceSession : IDeviceSession
 
     private void HandleEnded(ConnectionEndedMessage message)
     {
-        if (message.Epoch != _epoch || _stopping || _intentionalClose)
+        if (message.Epoch != _epoch || _stopping || _intentionalClose || _appStopping)
             return;
         if (_phase is ConnectionPhase.Offline or ConnectionPhase.Stale or ConnectionPhase.Incompatible)
             return;
@@ -623,12 +739,20 @@ public sealed class DeviceSession : IDeviceSession
             return;
         }
 
-        var code = message.FromRequest && message.Kind == RpcFailureKind.ConnectionLost
-            ? RpcCodes.RequestLost
-            : message.FromSubscription && message.Kind == RpcFailureKind.ConnectionLost
-                ? RpcCodes.SubscriptionLost
-                : message.Code;
-        EnterStale(code);
+        var code = message.Code;
+        if (message.Kind == RpcFailureKind.ConnectionLost &&
+            code is RpcCodes.ConnectionLost or RpcCodes.RequestLost or RpcCodes.SubscriptionLost)
+        {
+            if (message.FromRequest)
+                code = RpcCodes.RequestLost;
+            else if (message.FromSubscription)
+                code = RpcCodes.SubscriptionLost;
+        }
+
+        var failure = RecoveryPolicy.ClassifyRpc(
+            _session, _epoch, code, message.Kind, message.FromRequest, message.FromSubscription,
+            _userDisconnect, _appStopping);
+        EnterStale(code, failure);
     }
 
     private void ApplyRequestFailure(RpcFailure failure)
@@ -796,6 +920,13 @@ public sealed class DeviceSession : IDeviceSession
             _phase = ConnectionPhase.Ready;
             _freshness = DeviceFreshness.Current;
             _lastError = null;
+            _everReady = true;
+            _retryInFlight = false;
+            _retryAttempt = 0;
+            _recoveryCause = null;
+            _recoveryDecision = null;
+            _nextRetryUtc = null;
+            CancelRetryTimer();
         }
 
         Publish();
@@ -806,9 +937,13 @@ public sealed class DeviceSession : IDeviceSession
         if (_baselineInstalled)
             return;
         _baselineInstalled = true;
+        if (!_reconnectBaseline)
+            return;
+        _options.Notifications?.OnLifecycleNotification(
+            SessionLifecycleKinds.BaselineEstablished, SnapshotState());
     }
 
-    private void EnterStale(string code)
+    private void EnterStale(string code, RecoveryFailure? classified = null)
     {
         if (_phase == ConnectionPhase.Offline)
             return;
@@ -819,12 +954,18 @@ public sealed class DeviceSession : IDeviceSession
         _acked = false;
         _readInFlight = false;
         _reconcileAfterRead = false;
+        _retryInFlight = false;
         _capabilities = WithoutMutations(_capabilities);
         _ = _store.MarkStale(_epoch, code);
-        Diagnose("stale", DiagnosticOutcome.Failure, code);
+        var failure = classified ?? RecoveryPolicy.ClassifyRpc(
+            _session, _epoch, code, RpcFailureKind.ConnectionLost, false, false, _userDisconnect, _appStopping);
+        _recoveryCause = failure.Cause;
+        PrepareRetry(failure);
+        Diagnose("stale", DiagnosticOutcome.Failure, failure.DiagnosticId);
         Publish();
         CompleteConnect();
         CancelEpochEffects();
+        ArmPreparedRetry();
     }
 
     private void EnterIncompatible(string code)
@@ -836,11 +977,16 @@ public sealed class DeviceSession : IDeviceSession
         _acked = false;
         _readInFlight = false;
         _reconcileAfterRead = false;
+        _retryInFlight = false;
+        _recoveryCause = RecoveryCause.SchemaIncompatible;
+        _recoveryDecision = RecoveryCodes.AwaitUser;
+        _nextRetryUtc = null;
         _capabilities = _capabilities with { VerifiedOperations = FrozenSet<string>.Empty };
         Diagnose("incompatible", DiagnosticOutcome.Failure, code);
         Publish();
         CompleteConnect();
         CancelEpochEffects();
+        CancelRetryTimer();
     }
 
     private void EnterOffline()
@@ -852,9 +998,14 @@ public sealed class DeviceSession : IDeviceSession
         _acked = false;
         _readInFlight = false;
         _reconcileAfterRead = false;
+        _retryInFlight = false;
+        _recoveryCause = _appStopping ? RecoveryCause.AppStopping : RecoveryCause.ManualDisconnect;
+        _recoveryDecision = RecoveryCodes.Stop;
+        _nextRetryUtc = null;
         _capabilities = WithoutMutations(_capabilities);
         if (_epoch.Value > 0)
             _ = _store.MarkStale(_epoch, "offline");
+        CancelRetryTimer();
         Publish();
         CompleteConnect();
         CancelEpochEffects();
@@ -943,6 +1094,83 @@ public sealed class DeviceSession : IDeviceSession
             HandleReconcile();
     }
 
+    private void DrainMissedRetry()
+    {
+        if (Interlocked.Exchange(ref _missedRetry, 0) != 0)
+            HandleRetryDue(new RetryDueMessage(_retryOp));
+    }
+
+    private void PrepareRetry(RecoveryFailure failure)
+    {
+        _pendingRetryDelay = null;
+        if (_appStopping || _stopping || _userDisconnect)
+        {
+            _recoveryDecision = RecoveryCodes.Stop;
+            _nextRetryUtc = null;
+            return;
+        }
+
+        var attempt = _retryAttempt + 1;
+        var decision = RecoveryPolicy.Decide(failure, attempt, _options.Entropy);
+        _recoveryDecision = decision.StartDaemon ? RecoveryCodes.Stop : decision.Reason;
+        if (decision.Action is RecoveryAction.Stop or RecoveryAction.AwaitUser)
+        {
+            _nextRetryUtc = null;
+            return;
+        }
+
+        _retryAttempt = attempt;
+        if (decision.Action == RecoveryAction.RetryNow || decision.Delay <= TimeSpan.Zero)
+        {
+            _nextRetryUtc = _time.GetUtcNow();
+            _pendingRetryDelay = TimeSpan.Zero;
+            return;
+        }
+
+        _nextRetryUtc = _time.GetUtcNow() + decision.Delay;
+        _pendingRetryDelay = decision.Delay;
+    }
+
+    private void ArmPreparedRetry()
+    {
+        var delay = _pendingRetryDelay;
+        _pendingRetryDelay = null;
+        if (delay is null)
+            return;
+        if (delay.Value <= TimeSpan.Zero)
+        {
+            HandleRetryDue(new RetryDueMessage(NextOp()));
+            return;
+        }
+
+        ArmRetry(delay.Value);
+        Publish();
+    }
+
+    private void ArmRetry(TimeSpan delay)
+    {
+        _retryOp = NextOp();
+        _nextRetryUtc = _time.GetUtcNow() + delay;
+        _retry ??= _time.CreateTimer(
+            _ =>
+            {
+                if (!TryPost(new RetryDueMessage(_retryOp)))
+                    Interlocked.Exchange(ref _missedRetry, 1);
+            },
+            null,
+            Timeout.InfiniteTimeSpan,
+            Timeout.InfiniteTimeSpan);
+        _retry.Change(delay, Timeout.InfiniteTimeSpan);
+        _retryArmed = true;
+    }
+
+    private void CancelRetryTimer()
+    {
+        _retry?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        _retryArmed = false;
+        _nextRetryUtc = null;
+    }
+
     private bool AcceptCompletion(ConnectionEpoch epoch, ulong operationId)
     {
         if (epoch != _epoch)
@@ -1019,9 +1247,16 @@ public sealed class DeviceSession : IDeviceSession
             _lastError,
             _baselineInstalled,
             _acceptedInvalidations,
-            (_coalesceArmed ? 1 : 0) + (_calibrationArmed ? 1 : 0),
+            (_coalesceArmed ? 1 : 0) + (_calibrationArmed ? 1 : 0) + (_retryArmed ? 1 : 0),
             _readInFlight ? 1 : 0,
-            _effects.Count(item => !item.IsCompleted));
+            _effects.Count(item => !item.IsCompleted),
+            new SessionRecoveryProgress(
+                _retryAttempt,
+                _nextRetryUtc,
+                _recoveryCause is { } cause ? RecoveryPolicy.Code(cause) : null,
+                _recoveryDecision,
+                _retryArmed ? 1 : 0,
+                _reconnectEffects));
 
     private void PruneEffects()
     {
@@ -1063,8 +1298,11 @@ public sealed class DeviceSession : IDeviceSession
 
         _coalesce?.Dispose();
         _calibration?.Dispose();
+        _retry?.Dispose();
         _coalesce = null;
         _calibration = null;
+        _retry = null;
+        _retryArmed = false;
         var request = _request;
         var subscription = _subscription;
         _request = null;

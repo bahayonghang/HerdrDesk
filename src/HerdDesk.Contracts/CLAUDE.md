@@ -117,7 +117,7 @@
 
 ## HD-010 增补
 
-`State/IDeviceSession.cs`：`IDeviceSession`、`DeviceSessionState`、`DeviceFreshness`、`ISessionNotificationSink`。App 只订阅 typed state。`IRpcStateDecoder.DecodeEntityRead` 解码 getter 响应。`IRpcRequestConnection.WhenCompleted` / `Failure` 与 `IRpcSubscriptionConnection.WhenReady` 区分 request EOF、subscription EOF 与 ack。`RpcCodes` 增加 `rpc_subscription_lost`、`rpc_request_lost`、`rpc_reconcile_failed`。
+`State/IDeviceSession.cs`：`IDeviceSession`、`DeviceSessionState`、`DeviceFreshness`、`ISessionNotificationSink`。App 只订阅 typed state。`IRpcStateDecoder.DecodeEntityRead` 解码 getter 响应。`IRpcRequestConnection.WhenCompleted` / `Failure` 与 `IRpcSubscriptionConnection.WhenReady` 区分 request EOF、subscription EOF 与 ack。`RpcCodes` 增加 `rpc_subscription_lost`、`rpc_request_lost`、`rpc_reconcile_failed`。HD-018 增加 `SessionRecoveryProgress`、`RetryNowAsync`、`NotifyAppStoppingAsync`、`LeaseRecoverySignal`。L2 live disconnect 为 UNVERIFIED。
 
 ## 入口与测试
 

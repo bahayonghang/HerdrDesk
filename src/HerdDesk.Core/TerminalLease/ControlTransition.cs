@@ -26,7 +26,14 @@ public enum ControlEvent
     ReleaseControl,
     TransportLost,
     RecoverObserve,
-    CandidateClosed
+    CandidateClosed,
+    ProjectionBecameStale,
+    ProjectionReady,
+    RendererFailed,
+    AppStopping,
+    TerminalClosed,
+    TerminalStdoutEnded,
+    TerminalProcessExited
 }
 
 [Flags]
@@ -109,6 +116,13 @@ public static class ControlTransition
             ControlEvent.TransportLost => TransportLost(input),
             ControlEvent.RecoverObserve => RecoverObserve(input),
             ControlEvent.CandidateClosed => CandidateClosed(input),
+            ControlEvent.ProjectionBecameStale => ProjectionStale(input),
+            ControlEvent.ProjectionReady => ProjectionReady(input),
+            ControlEvent.RendererFailed => RendererFailed(input),
+            ControlEvent.AppStopping => AppStopping(input),
+            ControlEvent.TerminalClosed => TerminalFault(input, ControlLeaseCodes.TerminalClosed),
+            ControlEvent.TerminalStdoutEnded => TerminalFault(input, ControlLeaseCodes.TerminalStdoutEof),
+            ControlEvent.TerminalProcessExited => TerminalFault(input, ControlLeaseCodes.TerminalClientExit),
             _ => Stay(input, NoVerify(input.Access), input.LastAttempt, CodeFor(input), ControlTransitionEffects.None)
         };
     }
@@ -299,6 +313,56 @@ public static class ControlTransition
             ControlTransitionEffects.OpenObserve | ControlTransitionEffects.RevokeWrite |
             ControlTransitionEffects.CloseCandidate | ControlTransitionEffects.CloseControl |
             ControlTransitionEffects.InvalidateChallenge | ControlTransitionEffects.IncrementGeneration);
+
+    private static ControlTransitionResult ProjectionStale(ControlTransitionInput input) =>
+        new(
+            TerminalAccess.Disconnected,
+            false,
+            ControlAttemptOutcome.Unknown,
+            ControlLeaseCodes.TargetStale,
+            ControlTransitionEffects.RevokeWrite | ControlTransitionEffects.CloseCandidate |
+            ControlTransitionEffects.CloseControl | ControlTransitionEffects.CloseObserve |
+            ControlTransitionEffects.InvalidateChallenge | ControlTransitionEffects.IncrementGeneration);
+
+    private static ControlTransitionResult ProjectionReady(ControlTransitionInput input)
+    {
+        if (!input.StoreExists || !input.StoreFresh)
+            return new(
+                TerminalAccess.Disconnected,
+                false,
+                ControlAttemptOutcome.None,
+                input.StoreExists ? ControlLeaseCodes.TargetStale : ControlLeaseCodes.PaneClosed,
+                ControlTransitionEffects.RevokeWrite | ControlTransitionEffects.CloseCandidate |
+                ControlTransitionEffects.CloseControl | ControlTransitionEffects.InvalidateChallenge);
+        return RecoverObserve(input);
+    }
+
+    private static ControlTransitionResult RendererFailed(ControlTransitionInput input) =>
+        TerminalFault(input, ControlLeaseCodes.RendererFailure);
+
+    private static ControlTransitionResult AppStopping(ControlTransitionInput input) =>
+        new(
+            TerminalAccess.Disconnected,
+            false,
+            ControlAttemptOutcome.None,
+            ControlLeaseCodes.AppStopping,
+            ControlTransitionEffects.RevokeWrite | ControlTransitionEffects.CloseCandidate |
+            ControlTransitionEffects.CloseControl | ControlTransitionEffects.CloseObserve |
+            ControlTransitionEffects.InvalidateChallenge | ControlTransitionEffects.IncrementGeneration);
+
+    private static ControlTransitionResult TerminalFault(ControlTransitionInput input, string code)
+    {
+        if (input.StoreExists && input.StoreFresh)
+            return RecoverObserve(input) with { Code = code };
+        return new(
+            TerminalAccess.Disconnected,
+            false,
+            ControlAttemptOutcome.Unknown,
+            code,
+            ControlTransitionEffects.RevokeWrite | ControlTransitionEffects.CloseCandidate |
+            ControlTransitionEffects.CloseControl | ControlTransitionEffects.CloseObserve |
+            ControlTransitionEffects.InvalidateChallenge | ControlTransitionEffects.IncrementGeneration);
+    }
 
     private static ControlTransitionResult CandidateClosed(ControlTransitionInput input)
     {

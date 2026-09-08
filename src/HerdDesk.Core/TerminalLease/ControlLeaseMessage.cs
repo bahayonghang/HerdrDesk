@@ -22,6 +22,10 @@ internal sealed record ReleaseControlCommand(TaskCompletionSource Completion) : 
 
 internal sealed record RecoverObserveCommand(TaskCompletionSource Completion) : ControlLeaseMessage;
 
+internal sealed record RecoverySignalCommand(
+    LeaseRecoverySignal Signal,
+    TaskCompletionSource Completion) : ControlLeaseMessage;
+
 internal sealed record SubmitInputCommand(
     RendererInput Input,
     TaskCompletionSource<InputSubmissionOutcome> Completion) : ControlLeaseMessage;
@@ -80,4 +84,5 @@ internal sealed record WritableAppliedMessage(long LeaseGeneration) : ControlLea
 internal sealed record WriteCompletedMessage(
     long LeaseGeneration,
     InputSubmissionOutcome Outcome,
-    TaskCompletionSource<InputSubmissionOutcome>? Completion) : ControlLeaseMessage;
+    TaskCompletionSource<InputSubmissionOutcome>? Completion,
+    bool Attempted) : ControlLeaseMessage;

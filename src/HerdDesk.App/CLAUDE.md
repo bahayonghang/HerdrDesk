@@ -13,6 +13,7 @@ HD-007 composition root / host stub plus HD-011 L1 navigation ViewModels and HD-
 - HD-015 L1：`TerminalFocusCoordinator` 在 renderer Ready 后恢复焦点；`TerminalInputViewModel` 展示观察/申请控制/控制/输入暂停/连接过期。焦点不置位 `ControlVerified`。`RequestControl` 不授予 lease。
 - HD-016 L1：`TerminalControlViewModel` 调用 `ControlLeaseCoordinator`。无 WinUI ControlBar。无 always-takeover。选择变化使 takeover handle 失效。L2 live lease 为 UNVERIFIED。
 - HD-017 L1：`ResourceCommandViewModel` 调用 `ResourceCommandCoordinator`。无 WinUI 对话框。无全局 bypass。选择变化使未提交对话框 stale。L2 live mutation 为 UNVERIFIED。
+- HD-018 L1：`Recovery/RecoveryBindings.cs` 把 `DeviceSessionState` 路由给 lease 的 stale/ready 信号，并投影 `RecoveryViewState`。无 timer、epoch 或 mutation 权。不启动 daemon，不 `RecoverControl`。`AppExitCoordinator` kill ledger 只含 owned bridge/CLI。L2 live disconnect 为 UNVERIFIED。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
 - 释放顺序：renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
 

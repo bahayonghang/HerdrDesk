@@ -8,10 +8,13 @@ using HerdDesk.Core;
 internal sealed class CountingNotificationSink : ISessionNotificationSink
 {
     public int Calls;
+    public readonly List<string> Kinds = [];
 
     public void OnLifecycleNotification(string kind, DeviceSessionState state)
     {
-        _ = (kind, state);
+        _ = state;
+        lock (Kinds)
+            Kinds.Add(kind);
         Interlocked.Increment(ref Calls);
     }
 }
@@ -245,6 +248,7 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
     private TaskCompletionSource _release =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
     private volatile bool _hold;
+    private volatile RpcFailure? _failure;
     private int _pending;
 
     public FakeRequestConnection(ConnectionEpoch epoch, FakeDecoder decoder, List<string> methods)
@@ -257,7 +261,7 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
     public ConnectionEpoch Epoch { get; }
     public int PendingCount => _pending;
     public int? ChildProcessId => 11;
-    public RpcFailure? Failure { get; private set; }
+    public RpcFailure? Failure => _failure;
     public Task WhenCompleted => _completed.Task;
     public Task SnapshotRequested => _requested.Task;
     public RpcFailureKind? NextFailureKind { get; set; }
@@ -275,9 +279,17 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
         _release.TrySetResult();
     }
 
-    public void FailEof()
+    public void FailEof() => Complete(new RpcFailure(RpcCodes.RequestLost, RpcFailureKind.ConnectionLost));
+
+    public void FailChildExit() => Complete(new RpcFailure(RpcCodes.ChildExited, RpcFailureKind.ConnectionLost));
+
+    public void FailUnavailable() => Complete(new RpcFailure(RpcCodes.Unavailable, RpcFailureKind.Unavailable));
+
+    public void FailProtocol() => Complete(new RpcFailure(RpcCodes.ProtocolPollution, RpcFailureKind.Protocol));
+
+    private void Complete(RpcFailure failure)
     {
-        Failure = new RpcFailure(RpcCodes.RequestLost, RpcFailureKind.ConnectionLost);
+        _failure = failure;
         _completed.TrySetResult();
         _release.TrySetResult();
     }
@@ -292,8 +304,8 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
         {
             lock (_methods)
                 _methods.Add(method);
-            if (Failure is not null)
-                return new RpcRequestOutcome(Failure);
+            if (_failure is not null)
+                return new RpcRequestOutcome(_failure);
             if (NextFailureKind is { } kind)
             {
                 var code = NextFailureCode ?? RpcCodes.ReconcileFailed;
@@ -309,8 +321,8 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
                 requested.TrySetResult();
                 if (_hold)
                     await _release.Task.ConfigureAwait(false);
-                if (Failure is not null)
-                    return new RpcRequestOutcome(Failure);
+                if (_failure is not null)
+                    return new RpcRequestOutcome(_failure);
                 cancellationToken.ThrowIfCancellationRequested();
                 return Ok();
             }
@@ -331,7 +343,7 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
 
     public ValueTask DisposeAsync()
     {
-        Failure ??= new RpcFailure(RpcCodes.ConnectionLost, RpcFailureKind.ConnectionLost);
+        _failure ??= new RpcFailure(RpcCodes.ConnectionLost, RpcFailureKind.ConnectionLost);
         _completed.TrySetResult();
         _release.TrySetResult();
         return ValueTask.CompletedTask;
@@ -439,6 +451,7 @@ internal sealed class FakeRpcFactory : IRpcConnectionFactory
     public bool Available => true;
     public bool IsFakeSuccess => false;
     public bool AutoAck { get; set; } = true;
+    public bool NextOpenFails { get; set; }
     public List<string> Opens { get; } = [];
     public List<string> Methods { get; } = [];
     public FakeRequestConnection? LastRequest { get; private set; }
@@ -457,6 +470,8 @@ internal sealed class FakeRpcFactory : IRpcConnectionFactory
         _ = (session, socketPath, cancellationToken);
         lock (_gate)
             Opens.Add("request");
+        if (NextOpenFails)
+            return ValueTask.FromResult<IRpcRequestConnection?>(null);
         LastRequest = Pair(epoch.Value).Request;
         return ValueTask.FromResult<IRpcRequestConnection?>(LastRequest);
     }
@@ -471,6 +486,8 @@ internal sealed class FakeRpcFactory : IRpcConnectionFactory
         _ = (session, socketPath, subscribeParameters, cancellationToken);
         lock (_gate)
             Opens.Add("subscription");
+        if (NextOpenFails)
+            return ValueTask.FromResult<IRpcSubscriptionConnection?>(null);
         LastSubscription = Pair(epoch.Value).Subscription;
         return ValueTask.FromResult<IRpcSubscriptionConnection?>(LastSubscription);
     }
@@ -529,6 +546,12 @@ internal sealed class DeviceSessionHarness
     public void Disconnect() =>
         Actor.DisconnectAsync().AsTask().GetAwaiter().GetResult();
 
+    public void RetryNow() =>
+        Actor.RetryNowAsync().AsTask().GetAwaiter().GetResult();
+
+    public void NotifyAppStopping() =>
+        Actor.NotifyAppStoppingAsync().AsTask().GetAwaiter().GetResult();
+
     public void DisposeActor() =>
         Actor.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
@@ -562,17 +585,30 @@ internal static class DeviceSessionWait
         Func<DeviceSessionState, bool> pred,
         CancellationToken cancellationToken)
     {
-        if (pred(session.Current))
-            return session.Current;
-        await foreach (var state in session.ReadStatesAsync(cancellationToken).ConfigureAwait(false))
+        try
         {
-            if (pred(state))
-                return state;
             if (pred(session.Current))
                 return session.Current;
+            await foreach (var state in session.ReadStatesAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (pred(state))
+                    return state;
+                if (pred(session.Current))
+                    return session.Current;
+            }
+        }
+        catch (OperationCanceledException)
+        {
         }
 
-        throw new Exception("wait_timeout phase=" + session.Current.Phase + " error=" + session.Current.LastErrorCode);
+        throw new Exception(
+            "wait_timeout phase=" + session.Current.Phase +
+            " error=" + session.Current.LastErrorCode +
+            " cause=" + session.Current.Recovery.Cause +
+            " decision=" + session.Current.Recovery.Decision +
+            " attempt=" + session.Current.Recovery.Attempt +
+            " retryTimer=" + session.Current.Recovery.RetryTimerCount +
+            " epoch=" + session.Current.Epoch.Value);
     }
 }
 

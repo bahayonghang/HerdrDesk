@@ -9,7 +9,13 @@ internal sealed record ConnectCommand(string SocketPath, TaskCompletionSource Co
 
 internal sealed record DisconnectCommand(TaskCompletionSource Completion) : ActorMessage;
 
+internal sealed record RetryNowCommand(TaskCompletionSource Completion) : ActorMessage;
+
+internal sealed record AppStoppingCommand(TaskCompletionSource Completion) : ActorMessage;
+
 internal sealed record StopCommand(TaskCompletionSource Completion) : ActorMessage;
+
+internal sealed record RetryDueMessage(ulong OperationId) : ActorMessage;
 
 internal sealed record ConnectionsOpenedMessage(
     ConnectionEpoch Epoch,

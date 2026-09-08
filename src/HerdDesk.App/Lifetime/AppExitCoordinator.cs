@@ -1,8 +1,23 @@
 namespace HerdDesk.App;
 
+public enum OwnedChildKind
+{
+    RpcBridge,
+    TerminalCli
+}
+
+public enum ForeignProcessKind
+{
+    Daemon,
+    Agent,
+    Pane
+}
+
 public sealed class AppExitCoordinator : IAsyncDisposable
 {
-    private readonly List<(int Id, IAsyncDisposable Child)> _owned = [];
+    private readonly List<(int Id, OwnedChildKind Kind, IAsyncDisposable Child)> _owned = [];
+    private readonly List<int> _killLedger = [];
+    private readonly List<int> _rejectedForeign = [];
     private readonly CancellationTokenSource _lifetime = new();
     private int _disposed;
 
@@ -12,16 +27,41 @@ public sealed class AppExitCoordinator : IAsyncDisposable
     public CancellationToken LifetimeToken => _lifetime.Token;
     public IReadOnlyList<int> OwnedIds => _owned.Select(item => item.Id).ToArray();
     public IReadOnlyList<int> ReleasedIds { get; private set; } = [];
+    public IReadOnlyList<int> KillLedger => _killLedger;
+    public IReadOnlyList<int> RejectedForeignIds => _rejectedForeign;
     public bool StoppedDaemon { get; private set; }
     public bool StoppedAgent { get; private set; }
     public bool ClosedRemotePane { get; private set; }
 
-    public void RegisterOwned(int id, IAsyncDisposable child)
+    public void RegisterOwned(int id, IAsyncDisposable child) =>
+        RegisterOwned(id, child, OwnedChildKind.RpcBridge);
+
+    public void RegisterOwned(int id, IAsyncDisposable child, OwnedChildKind kind)
     {
         ArgumentNullException.ThrowIfNull(child);
         if (!AcceptingActivation)
             throw new InvalidOperationException("exit_in_progress");
-        _owned.Add((id, child));
+        _owned.Add((id, kind, child));
+    }
+
+    public bool TryRegisterForeign(int id, ForeignProcessKind kind)
+    {
+        _ = kind;
+        _rejectedForeign.Add(id);
+        return false;
+    }
+
+    public async ValueTask NoteLateStartAsync(int id, IAsyncDisposable child, OwnedChildKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        if (AcceptingActivation)
+        {
+            RegisterOwned(id, child, kind);
+            return;
+        }
+
+        await child.DisposeAsync().ConfigureAwait(false);
+        _killLedger.Add(id);
     }
 
     public async ValueTask ExitAsync()
@@ -43,6 +83,7 @@ public sealed class AppExitCoordinator : IAsyncDisposable
         {
             await item.Child.DisposeAsync().ConfigureAwait(false);
             released.Add(item.Id);
+            _killLedger.Add(item.Id);
         }
 
         _owned.Clear();

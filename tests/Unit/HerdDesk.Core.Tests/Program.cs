@@ -93,7 +93,10 @@ cases =
     .. ControlTransitionTests.All,
     .. ControlLeaseCoordinatorTests.All,
     .. ResourceCommandGateTests.All,
-    .. UnknownOutcomeTests.All
+    .. UnknownOutcomeTests.All,
+    .. RecoveryPolicyTests.All,
+    .. DeviceSessionRecoveryTests.All,
+    .. ControlLeaseRecoveryTests.All
 ];
 
 var failed = 0;

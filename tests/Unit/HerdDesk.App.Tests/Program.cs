@@ -11,7 +11,8 @@ cases =
     .. DeepLinkRoutingTests.All,
     .. TerminalInputTests.All,
     .. TerminalControlTests.All,
-    .. ResourceCommandViewModelTests.All
+    .. ResourceCommandViewModelTests.All,
+    .. RecoveryBindingsTests.All
 ];
 
 var failed = 0;

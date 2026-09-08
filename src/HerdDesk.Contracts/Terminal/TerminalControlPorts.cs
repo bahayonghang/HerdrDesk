@@ -10,6 +10,17 @@ public enum ControlIntent
     RecoverObserve
 }
 
+public enum LeaseRecoverySignal
+{
+    ProjectionStale,
+    ProjectionReady,
+    RendererFailed,
+    AppStopping,
+    TerminalClosed,
+    TerminalStdoutEof,
+    TerminalClientExit
+}
+
 public enum ControlAttemptOutcome
 {
     None,
@@ -125,6 +136,10 @@ public interface IControlLeaseCoordinator : IAsyncDisposable
     ValueTask ReleaseControlAsync(CancellationToken cancellationToken = default);
 
     ValueTask RecoverObserveAsync(CancellationToken cancellationToken = default);
+
+    ValueTask NoteRecoverySignalAsync(
+        LeaseRecoverySignal signal,
+        CancellationToken cancellationToken = default);
 
     ValueTask<InputSubmissionOutcome> SubmitInputAsync(
         RendererInput input,

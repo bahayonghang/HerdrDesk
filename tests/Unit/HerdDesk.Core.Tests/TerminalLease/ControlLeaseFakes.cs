@@ -88,6 +88,10 @@ internal sealed class FakeLeaseRenderer : ITerminalRenderer
 internal sealed class FakeLeaseTransport : ITerminalTransport
 {
     private readonly Channel<TerminalTransportEvent> _events = Channel.CreateUnbounded<TerminalTransportEvent>();
+    private readonly TaskCompletionSource _writeStarted =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource _writeRelease =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
     private long _eventId;
     private ulong _commandId;
     private int _closed;
@@ -112,6 +116,8 @@ internal sealed class FakeLeaseTransport : ITerminalTransport
     public string? AttemptId { get; }
     public bool TakeoverAuthorized { get; }
     public List<byte[]> Inputs { get; } = [];
+    public bool HoldWrite { get; set; }
+    public Task WriteStarted => _writeStarted.Task;
     public int ResizeCount { get; private set; }
     public int ScrollCount { get; private set; }
     public int ReleaseCount { get; private set; }
@@ -123,18 +129,35 @@ internal sealed class FakeLeaseTransport : ITerminalTransport
             yield return item;
     }
 
-    public ValueTask<TerminalWriteReceipt> SendInputAsync(
+    public async ValueTask<TerminalWriteReceipt> SendInputAsync(
         TerminalInputCommand input,
         CancellationToken cancellationToken = default)
     {
+        if (HoldWrite)
+        {
+            _writeStarted.TrySetResult();
+            await _writeRelease.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         if (Volatile.Read(ref _closed) != 0 || Mode != TerminalMode.Control)
-            return new(new TerminalWriteReceipt(NextCommand(), TerminalWriteDisposition.NotSent,
-                ControlLeaseCodes.InputNotSent));
+            return new TerminalWriteReceipt(NextCommand(), TerminalWriteDisposition.NotSent,
+                ControlLeaseCodes.InputNotSent);
         Inputs.Add((input.Bytes ?? []).ToArray());
-        return new(new TerminalWriteReceipt(
+        return new TerminalWriteReceipt(
             NextCommand(), TerminalWriteDisposition.WrittenUnacknowledged,
-            TerminalTransportCodes.WrittenUnacknowledged));
+            TerminalTransportCodes.WrittenUnacknowledged);
     }
+
+    public void ReleaseWrite() => _writeRelease.TrySetResult();
+
+    public void EmitClosed() =>
+        Emit(new TerminalClosedObserved(NextEvent(), Pane, Epoch, false, "closed"));
+
+    public void EmitStdoutEnded() =>
+        Emit(new TerminalStdoutEnded(NextEvent(), Pane, Epoch, false));
+
+    public void EmitProcessExited() =>
+        Emit(new TerminalProcessExited(NextEvent(), Pane, Epoch, 1));
 
     public ValueTask<TerminalWriteReceipt> ResizeAsync(
         TerminalResizeCommand size,
@@ -189,6 +212,7 @@ internal sealed class FakeLeaseTransport : ITerminalTransport
     {
         if (Interlocked.Exchange(ref _closed, 1) != 0)
             return ValueTask.CompletedTask;
+        _writeRelease.TrySetResult();
         _events.Writer.TryComplete();
         return ValueTask.CompletedTask;
     }

@@ -40,6 +40,8 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
     private bool _promotionInFlight;
     private bool _writable;
     private bool _stopping;
+    private bool _appStopping;
+    private bool _projectionReady;
     private bool _disconnected;
     private ulong _nextCommandId;
     private string? _pendingConfirmHandle;
@@ -117,6 +119,11 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
 
     public ValueTask RecoverObserveAsync(CancellationToken cancellationToken = default) =>
         Call(new RecoverObserveCommand(NewCompletion()), cancellationToken);
+
+    public ValueTask NoteRecoverySignalAsync(
+        LeaseRecoverySignal signal,
+        CancellationToken cancellationToken = default) =>
+        Call(new RecoverySignalCommand(signal, NewCompletion()), cancellationToken);
 
     public ValueTask<InputSubmissionOutcome> SubmitInputAsync(
         RendererInput input,
@@ -218,6 +225,9 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
                 Apply(ControlEvent.RecoverObserve, ReadStoreOrMissing());
                 command.Completion.TrySetResult();
                 break;
+            case RecoverySignalCommand command:
+                HandleRecoverySignal(command);
+                break;
             case SubmitInputCommand command:
                 HandleInput(command);
                 break;
@@ -229,6 +239,7 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
                 break;
             case LeaseStopCommand command:
                 _stopping = true;
+                _appStopping = true;
                 RevokeWrite();
                 _mailbox.Writer.TryComplete();
                 command.Completion.TrySetResult();
@@ -259,6 +270,73 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
                 HandleWriteCompleted(written);
                 break;
         }
+    }
+
+    private void HandleRecoverySignal(RecoverySignalCommand command)
+    {
+        if (_appStopping && command.Signal != LeaseRecoverySignal.AppStopping)
+        {
+            command.Completion.TrySetResult();
+            return;
+        }
+
+        switch (command.Signal)
+        {
+            case LeaseRecoverySignal.ProjectionStale:
+                _projectionReady = false;
+                Apply(ControlEvent.ProjectionBecameStale, ReadStoreOrMissing());
+                break;
+            case LeaseRecoverySignal.ProjectionReady:
+                _projectionReady = true;
+                Apply(ControlEvent.ProjectionReady, ReadStoreOrMissing());
+                break;
+            case LeaseRecoverySignal.RendererFailed:
+                Apply(ControlEvent.RendererFailed, ReadStoreOrMissing());
+                break;
+            case LeaseRecoverySignal.AppStopping:
+                _appStopping = true;
+                Apply(ControlEvent.AppStopping, ReadStoreOrMissing());
+                break;
+            case LeaseRecoverySignal.TerminalClosed:
+                HandleFault(ControlEvent.TerminalClosed, TerminalMode.Observe, null);
+                break;
+            case LeaseRecoverySignal.TerminalStdoutEof:
+                HandleFault(ControlEvent.TerminalStdoutEnded, TerminalMode.Observe, null);
+                break;
+            case LeaseRecoverySignal.TerminalClientExit:
+                HandleFault(ControlEvent.TerminalProcessExited, TerminalMode.Observe, null);
+                break;
+        }
+
+        command.Completion.TrySetResult();
+    }
+
+    private void HandleFault(ControlEvent evt, TerminalMode mode, string? attemptId)
+    {
+        if (mode == TerminalMode.Control)
+        {
+            if (!string.Equals(attemptId, _attemptId, StringComparison.Ordinal) && _attemptId is not null)
+                return;
+            if (!_projectionReady)
+            {
+                HandleEnded(mode, attemptId);
+                return;
+            }
+
+            Apply(evt, ReadStoreOrMissing());
+            return;
+        }
+
+        if (_control is not null && mode == TerminalMode.Observe)
+            return;
+        if (!_projectionReady && evt is ControlEvent.TerminalClosed or ControlEvent.TerminalStdoutEnded
+            or ControlEvent.TerminalProcessExited)
+        {
+            Apply(ControlEvent.TransportLost, ReadStoreOrMissing());
+            return;
+        }
+
+        Apply(evt, ReadStoreOrMissing());
     }
 
     private void HandleOpen(PaneKey pane, ControlEvent evt, TaskCompletionSource completion)
@@ -328,7 +406,8 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
             Post(new WriteCompletedMessage(
                 generation,
                 TerminalInputCoordinator.MapReceipt(receipt, generation, false),
-                command.Completion));
+                command.Completion,
+                true));
         });
     }
 
@@ -370,7 +449,8 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
             Post(new WriteCompletedMessage(
                 generation,
                 TerminalInputCoordinator.MapReceipt(receipt, generation, false),
-                command.Completion));
+                command.Completion,
+                true));
         });
     }
 
@@ -412,13 +492,14 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
             Post(new WriteCompletedMessage(
                 generation,
                 TerminalInputCoordinator.MapReceipt(receipt, generation, false),
-                command.Completion));
+                command.Completion,
+                true));
         });
     }
 
     private void HandleOpened(TransportOpenedMessage opened)
     {
-        if (_stopping || opened.LeaseGeneration != _leaseGeneration)
+        if (_stopping || _appStopping || opened.LeaseGeneration != _leaseGeneration)
         {
             StartDispose(opened.Transport);
             return;
@@ -442,6 +523,7 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
         _ownershipProved = false;
         _rendererAcked = false;
         _promotionInFlight = false;
+        _projectionReady = true;
         StartPump(opened.Transport, opened.Epoch, TerminalMode.Control, opened.AttemptId, opened.LeaseGeneration);
         Publish();
     }
@@ -488,8 +570,14 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
                 HandleOwnership(ownership, message.Mode, message.AttemptId);
                 break;
             case TerminalClosedObserved:
+                HandleFault(ControlEvent.TerminalClosed, message.Mode, message.AttemptId);
+                break;
             case TerminalStdoutEnded:
+                HandleFault(ControlEvent.TerminalStdoutEnded, message.Mode, message.AttemptId);
+                break;
             case TerminalProcessExited:
+                HandleFault(ControlEvent.TerminalProcessExited, message.Mode, message.AttemptId);
+                break;
             case TerminalProtocolFailed:
             case TerminalConsumerBackpressure:
             case TerminalTransportEnded:
@@ -636,11 +724,23 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
         var outcome = written.Outcome;
         if (written.LeaseGeneration != _leaseGeneration)
         {
-            outcome = outcome with
+            if (written.Attempted)
             {
-                Disposition = TerminalWriteDisposition.UnknownAfterDisconnect,
-                Code = ControlLeaseCodes.InputOutcomeUnknown
-            };
+                outcome = outcome with
+                {
+                    Disposition = TerminalWriteDisposition.UnknownAfterDisconnect,
+                    Code = ControlLeaseCodes.InputOutcomeUnknown
+                };
+            }
+            else if (outcome.Disposition != TerminalWriteDisposition.NotSent)
+            {
+                outcome = outcome with
+                {
+                    Disposition = TerminalWriteDisposition.UnknownAfterDisconnect,
+                    Code = ControlLeaseCodes.InputOutcomeUnknown
+                };
+            }
+
             written.Completion?.TrySetResult(outcome);
             return;
         }
@@ -857,6 +957,8 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
 
     private void StartObserve(PaneKey pane)
     {
+        if (_stopping || _appStopping)
+            return;
         CloseObserve();
         _disconnected = false;
         _bindingEpoch++;
@@ -880,6 +982,8 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
 
     private void StartCandidate(PaneKey pane, TerminalTakeoverAuthorization? takeover, string? attempt = null)
     {
+        if (_stopping || _appStopping)
+            return;
         CloseCandidate();
         _attemptId = attempt ?? Guid.NewGuid().ToString("N");
         if (takeover is not null)
@@ -925,6 +1029,7 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
             await _renderer.SetReadOnlyAsync(true).ConfigureAwait(false);
             await _renderer.BindAsync(transport.Pane, epoch).ConfigureAwait(false);
         });
+        _projectionReady = true;
         StartPump(transport, epoch, TerminalMode.Observe, null, _leaseGeneration);
         Publish();
     }
@@ -1244,6 +1349,7 @@ public sealed class ControlLeaseCoordinator : IControlLeaseCoordinator
             CancelAcquireCommand command => command.Completion,
             ReleaseControlCommand command => command.Completion,
             RecoverObserveCommand command => command.Completion,
+            RecoverySignalCommand command => command.Completion,
             LeaseStopCommand command => command.Completion,
             _ => throw new ArgumentOutOfRangeException(nameof(message))
         };

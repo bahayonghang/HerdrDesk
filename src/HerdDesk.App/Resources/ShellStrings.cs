@@ -16,6 +16,10 @@ public static class ShellStrings
     public const string DaemonUnavailable = "连接服务不可用";
     public const string Offline = "离线";
     public const string Stale = "过期缓存";
+    public const string DataMayBeStale = "数据可能过期";
+    public const string AwaitingUser = "等待操作";
+    public const string RebuildingProjection = "正在重建投影";
+    public const string ReobservingTerminal = "正在重新观察";
     public const string Incompatible = "能力不兼容";
     public const string Loading = "加载中";
     public const string Empty = "空";

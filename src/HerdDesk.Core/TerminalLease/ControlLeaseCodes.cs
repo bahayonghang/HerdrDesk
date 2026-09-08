@@ -12,6 +12,12 @@ public static class ControlLeaseCodes
     public const string TakeoverConfirmationStale = "takeover_confirmation_stale";
     public const string CandidateBackpressure = "candidate_backpressure";
     public const string TerminalDisconnected = "terminal_disconnected";
+    public const string TerminalClosed = "terminal_closed";
+    public const string TerminalStdoutEof = "terminal_stdout_eof";
+    public const string TerminalClientExit = "terminal_client_exit";
+    public const string RendererFailure = "renderer_failure";
+    public const string PaneClosed = "pane_closed";
+    public const string AppStopping = "app_stopping";
     public const string InputNotSent = "input_not_sent";
     public const string InputOutcomeUnknown = "input_outcome_unknown";
     public const string ControlNotVerified = "control_not_verified";

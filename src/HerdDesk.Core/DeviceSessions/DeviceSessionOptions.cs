@@ -10,6 +10,7 @@ public sealed record DeviceSessionOptions
     public string SessionAlias { get; init; } = "session";
     public bool DegradedFullSnapshotOnly { get; init; }
     public ISessionNotificationSink? Notifications { get; init; }
+    public IRecoveryEntropy Entropy { get; init; } = ZeroRecoveryEntropy.Instance;
 
     public static DeviceSessionOptions Default { get; } = new();
 }

@@ -50,6 +50,8 @@ C# and Python need not share every internal code string. They must share reject/
 
 HD-017 `ResourceCommandCoordinator` uses `ResourceGateDecision` / `ResourceOperation.Code`. Codes include `rpc_schema_incompatible`, `capability_unknown`, `stale_target`, `stale_confirmation`, `mutation_already_sent`, `workspace_group_close_required`, `close_group_unconfirmed`, `agent_kind_unverified`, `argv_rejected`, `rpc_not_sent`, `rpc_cancelled_after_write`, `timeout`, and `unknown_outcome`. Timeout after write becomes UnknownOutcome then a read-only query. Mutations are not retried. `close_group` is omitted unless the user confirms group close. L2 live mutation stays UNVERIFIED. Product AC20 stays not passed.
 
+HD-018 `RecoveryPolicy` classifies `RecoveryFailure` and returns `RecoveryDecision`. Cause codes: `request_eof`, `subscription_eof`, `rpc_bridge_exit`, `daemon_unreachable`, `schema_incompatible`, `protocol_incompatible`, `terminal_closed`, `terminal_stdout_eof`, `terminal_client_exit`, `renderer_failure`, `cancellation`, `manual_disconnect`, `app_stopping`, `authentication`, `host_key_changed`. Decision codes: `retry_after`, `retry_now`, `await_user`, `stop`, `retry_exhausted`. `StartDaemon` stays false. Abnormal RPC loss publishes Stale before any retry timer. Recovery does not call RecoverControl or replay input. L2 live disconnect stays UNVERIFIED. Product AC13/AC14/AC15 stay not passed.
+
 ---
 
 ## Error Handling Patterns

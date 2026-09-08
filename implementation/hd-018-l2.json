@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd018_l2_status",
+  "l2_live_disconnect": "UNVERIFIED",
+  "live_herdr": false,
+  "winui_admitted": false,
+  "auto_start_daemon": false,
+  "l1_recovery_policy": "required; does not close product AC13, AC14, or AC15",
+  "ac13_passed": false,
+  "ac14_passed": false,
+  "ac15_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "HD-018 ships L1 RecoveryPolicy and cross-owner stale/observe signals on fake RPC/terminal ports. First observable after abnormal RPC loss is Stale. Recovery never auto-starts herdr and never restores control. This file is not AC pass evidence. L2 live disconnect stays UNVERIFIED. Product AC13/AC14/AC15 stay with HD-026."
+}

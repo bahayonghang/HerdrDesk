@@ -8,6 +8,17 @@ public enum DeviceFreshness
     Stale
 }
 
+public sealed record SessionRecoveryProgress(
+    int Attempt,
+    DateTimeOffset? NextRetryUtc,
+    string? Cause,
+    string? Decision,
+    int RetryTimerCount,
+    int ReconnectEffectCount)
+{
+    public static SessionRecoveryProgress None { get; } = new(0, null, null, null, 0, 0);
+}
+
 public sealed record DeviceSessionState(
     SessionKey Session,
     ConnectionEpoch Epoch,
@@ -22,7 +33,48 @@ public sealed record DeviceSessionState(
     int AcceptedInvalidations,
     int ActiveTimerCount,
     int InFlightReadEffects,
-    int PendingEffectTasks);
+    int PendingEffectTasks,
+    SessionRecoveryProgress Recovery)
+{
+    public DeviceSessionState(
+        SessionKey session,
+        ConnectionEpoch epoch,
+        ConnectionPhase phase,
+        DeviceFreshness freshness,
+        CapabilityProfile capabilities,
+        DeviceProjectionSnapshot projection,
+        long dirtyGeneration,
+        int dirtyScopeCount,
+        string? lastErrorCode,
+        bool baselineInstalled,
+        int acceptedInvalidations,
+        int activeTimerCount,
+        int inFlightReadEffects,
+        int pendingEffectTasks)
+        : this(
+            session,
+            epoch,
+            phase,
+            freshness,
+            capabilities,
+            projection,
+            dirtyGeneration,
+            dirtyScopeCount,
+            lastErrorCode,
+            baselineInstalled,
+            acceptedInvalidations,
+            activeTimerCount,
+            inFlightReadEffects,
+            pendingEffectTasks,
+            SessionRecoveryProgress.None)
+    {
+    }
+}
+
+public static class SessionLifecycleKinds
+{
+    public const string BaselineEstablished = "baseline-established";
+}
 
 public interface ISessionNotificationSink
 {
@@ -36,5 +88,7 @@ public interface IDeviceSession : IAsyncDisposable
     DeviceSessionState Current { get; }
     ValueTask ConnectAsync(string socketPath, CancellationToken cancellationToken = default);
     ValueTask DisconnectAsync(CancellationToken cancellationToken = default);
+    ValueTask RetryNowAsync(CancellationToken cancellationToken = default);
+    ValueTask NotifyAppStoppingAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<DeviceSessionState> ReadStatesAsync(CancellationToken cancellationToken = default);
 }
