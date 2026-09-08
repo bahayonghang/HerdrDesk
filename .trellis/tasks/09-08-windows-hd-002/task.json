@@ -1,0 +1,32 @@
+{
+  "id": "windows-hd-002",
+  "name": "windows-hd-002",
+  "title": "HD-002 名称和授权清点",
+  "description": "确认品牌标识、代码/素材许可；未授权内容不得进入仓库",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "Local implementation authorized. AC02 remains not_run. Final owner HD-035. Child contributions AC02-C1 inventory and AC02-C2 templates only.",
+  "meta": {
+    "source_task": "HD-002",
+    "phase": "G0",
+    "ac02_status": "not_run",
+    "final_review_task": "HD-035",
+    "local_implementation": "authorized"
+  }
+}
