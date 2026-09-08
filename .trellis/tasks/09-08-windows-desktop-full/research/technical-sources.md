@@ -9,4 +9,6 @@
 | [xterm flow control](https://xtermjs.org/docs/guides/flowcontrol/) | write 异步排队；callback 表示消费，快速生产端需要背压 | HD-014/025 采用有界字节记账与消费回执；callback 不是 GPU 呈现、上游输入 ACK 或业务执行成功 |
 | [App Installer update settings](https://learn.microsoft.com/en-us/windows/msix/app-installer/update-settings) | 更新可在启动时检查并提示；ForceUpdateFromAnyVersion 允许降级 | HD-034 规划同一 Publisher 的受控更新/回滚路径；普通通道不默认打开任意降级，必须测试指定回滚包和配置恢复 |
 
-本轮没有重新确认所有上游 herdr 方法，也没有把网页信息升级成目标机器可用性证据。旧 plan 固定 v0.8.2/protocol 20 仍作为待运行核验的基线；升级另经兼容性矩阵。
+本轮没有重新确认所有上游 herdr 方法，也没有把网页信息升级成目标机器可用性证据。
+
+2026-09-08 规划基线改为 GitHub 稳定 tag **v0.9.0**（`PROTOCOL_VERSION=22`，`ENDPOINT_PROTOCOL_GENERATION=1`）。详见 [herdr-0.9.0.md](herdr-0.9.0.md)。v0.8.2/protocol 20 保留为历史对照。https://herdr.dev/latest.json 在核验时仍显示 0.8.2/20，以 GitHub release 为准。本机 preview daemon 不作为稳定 tag 证明，也不授权 `herdr channel set`。

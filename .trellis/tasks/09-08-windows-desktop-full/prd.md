@@ -10,7 +10,7 @@
 
 - 当前是G0协议/策略骨架：`HerdDesk.slnx:2`；源码只包含Contracts、Core及smoke项目，未来App/Infrastructure/renderer/sidecar均未创建。
 - `implementation/status.json:2` 记录G0未通过、Windows live not_run和无已验证AC；历史离线/hosted结果不能当作当前完整产品可用性。
-- `evidence/compatibility-baseline.json:17` 的runtime binary、daemon、runtime schema证据仍缺；控制权与IME是下一阶段的关键技术风险。
+- `evidence/compatibility-baseline.json` 已记录本机 preview protocol 22 与源码 v0.8.2/20 分栏；规划上游改为 GitHub **v0.9.0 / protocol 22**（[research/herdr-0.9.0.md](research/herdr-0.9.0.md)）。稳定 tag 运行时、ACL、远端、IME 仍缺。不得把 preview 或网站 latest.json 的 0.8.2 当作当前 GitHub latest。
 - 活动产品需求来自`planning/backlog.json`和`tasks/HD-001.md`至`tasks/HD-036.md`；48项验收来自`planning/acceptance.json`。`docs/plan/`仅作为既有设计档案，不能覆盖活动状态。
 - 完整现状/差距见 [research/current-state.md](research/current-state.md)，公开技术依据复核见 [research/technical-sources.md](research/technical-sources.md)。
 
