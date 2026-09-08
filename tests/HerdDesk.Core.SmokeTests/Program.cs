@@ -177,6 +177,94 @@ static void AssertEndpointCase(JsonElement item)
     AssertRedacted(result.Failure.Code);
     AssertRedacted(result.Failure.DiagnosticId);
 }
+static bool Flag(JsonElement obj, string name) =>
+    obj.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.True;
+static bool? OptionalBool(JsonElement obj, string name)
+{
+    if (!obj.TryGetProperty(name, out var element) ||
+        element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        return null;
+    if (element.ValueKind == JsonValueKind.True) return true;
+    if (element.ValueKind == JsonValueKind.False) return false;
+    throw new Exception("invalid_optional_bool");
+}
+static TerminalAccess ParseTerminalAccess(string value) => value switch
+{
+    "disconnected" => TerminalAccess.Disconnected,
+    "observing" => TerminalAccess.Observing,
+    "acquiring" => TerminalAccess.Acquiring,
+    "controlling" => TerminalAccess.Controlling,
+    "unknown" => TerminalAccess.Unknown,
+    _ => throw new Exception("unknown_terminal_access"),
+};
+static TerminalLeaseOperation ParseLeaseOperation(string value) => value switch
+{
+    "observe" => TerminalLeaseOperation.Observe,
+    "request_control" => TerminalLeaseOperation.RequestControl,
+    "request_takeover" => TerminalLeaseOperation.RequestTakeover,
+    "resize_while_verified" => TerminalLeaseOperation.ResizeWhileVerified,
+    "release" => TerminalLeaseOperation.Release,
+    _ => throw new Exception("unknown_lease_operation"),
+};
+static TerminalStreamEndKind ParseStreamEnd(string value) => value switch
+{
+    "none" => TerminalStreamEndKind.None,
+    "stdout_eof" => TerminalStreamEndKind.StdoutEof,
+    "terminal_closed" => TerminalStreamEndKind.TerminalClosed,
+    "bridge_process_exit" => TerminalStreamEndKind.BridgeProcessExit,
+    "unknown" => TerminalStreamEndKind.Unknown,
+    _ => throw new Exception("unknown_stream_end"),
+};
+static TerminalControlSignal ParseControlSignal(string? value) => value switch
+{
+    null or "none" => TerminalControlSignal.None,
+    "busy" => TerminalControlSignal.Busy,
+    "rejected" => TerminalControlSignal.Rejected,
+    "takeover_required" => TerminalControlSignal.TakeoverRequired,
+    "takeover_confirmed" => TerminalControlSignal.TakeoverConfirmed,
+    "released" => TerminalControlSignal.Released,
+    "unknown" => TerminalControlSignal.Unknown,
+    _ => throw new Exception("unknown_control_signal"),
+};
+static TerminalLeaseObservation ReadLeaseObservation(JsonElement observation) =>
+    new(
+        ParseLeaseOperation(observation.GetProperty("operation").GetString()!),
+        ParseTerminalAccess(observation.GetProperty("access_before").GetString()!),
+        Flag(observation, "control_verified_before"),
+        Flag(observation, "stdout_eof_seen"),
+        Flag(observation, "terminal_closed_seen"),
+        Flag(observation, "bridge_process_exited"),
+        OptionalBool(observation, "pane_alive_observed"),
+        OptionalBool(observation, "daemon_alive_observed"),
+        Flag(observation, "first_frame_seen"),
+        Flag(observation, "process_alive"),
+        Flag(observation, "window_focused"),
+        Flag(observation, "input_sent"),
+        Flag(observation, "input_acknowledged"),
+        Flag(observation, "adapter_proved_write_ownership"),
+        Flag(observation, "takeover_confirmed"),
+        Flag(observation, "resize_attempted"),
+        Flag(observation, "resize_acknowledged"),
+        Flag(observation, "release_acknowledged"),
+        ParseControlSignal(OptionalString(observation, "control_signal")),
+        OptionalString(observation, "observed_wire_type"));
+static void AssertLeaseCase(JsonElement item)
+{
+    Check(item.GetProperty("simulation").GetBoolean());
+    Check(item.GetProperty("live_result").GetString() == "blocked");
+    Check(item.GetProperty("evidence_level").GetString() == "synthetic");
+    var result = TerminalLeaseProbe.Map(ReadLeaseObservation(item.GetProperty("observation")));
+    var expect = item.GetProperty("expect");
+    Check(result.Access == ParseTerminalAccess(expect.GetProperty("access").GetString()!));
+    Check(result.ControlVerified == expect.GetProperty("control_verified").GetBoolean());
+    Check(result.StreamEnd == ParseStreamEnd(expect.GetProperty("stream_end").GetString()!));
+    Check(result.PaneExitVerified == expect.GetProperty("pane_exit_verified").GetBoolean());
+    Check(result.Code == expect.GetProperty("code").GetString());
+    AssertRedacted(result.Code);
+    AssertRedacted(result.DiagnosticId);
+    if (result.ControlVerified)
+        Check(result.Access == TerminalAccess.Controlling);
+}
 
 var pane = new PaneKey(new SessionKey(new DeviceId(Guid.NewGuid()), "test-only-api", "test"), "w1", "p1");
 var epoch = new ConnectionEpoch(1);
@@ -365,6 +453,185 @@ var cases = new (string Name, Action Run)[]
         Check(!deviceNs.Resolved && deviceNs.Failure is not null);
         Check(deviceNs.Failure!.Code == "explicit_configuration_required");
         Check(deviceNs.Endpoint is null);
+    }),
+    ("lease fixture is not runtime proof", () =>
+    {
+        using var document = LoadJsonFixture("lease-cases.json");
+        var root = document.RootElement;
+        Check(root.GetProperty("simulation").GetBoolean());
+        Check(root.GetProperty("runtime_pass").GetBoolean() is false);
+        Check(root.GetProperty("windows_verified").GetBoolean() is false);
+        Check(root.GetProperty("ac05_passed").GetBoolean() is false);
+        Check(root.GetProperty("herdr_executed").GetBoolean() is false);
+        Check(root.GetProperty("real_captures").GetBoolean() is false);
+        Check(root.GetProperty("all_live_checks").GetString() == "blocked");
+        Check(root.GetProperty("blocked_category").GetString() ==
+            "no_authorized_isolated_pane_or_live_herdr_grant");
+        var count = 0;
+        foreach (var item in root.GetProperty("cases").EnumerateArray())
+        {
+            count++;
+            AssertLeaseCase(item);
+        }
+        Check(count == 14);
+    }),
+    ("lease does not set ControlVerified from frame process or focus", () =>
+    {
+        var result = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.RequestControl,
+            TerminalAccess.Observing,
+            false,
+            FirstFrameSeen: true,
+            ProcessAlive: true,
+            WindowFocused: true));
+        Check(result.Access == TerminalAccess.Acquiring);
+        Check(!result.ControlVerified);
+        Check(result.Code == "control_unconfirmed");
+        var denied = InputPolicy.Evaluate(
+            context with { Access = result.Access, ControlVerified = result.ControlVerified },
+            request);
+        Check(!denied.Allowed);
+        Check(denied.Code == "control_not_verified");
+    }),
+    ("lease observe cannot send input", () =>
+    {
+        var result = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.Observe,
+            TerminalAccess.Observing,
+            false,
+            FirstFrameSeen: true,
+            InputSent: true));
+        Check(result.Access == TerminalAccess.Observing);
+        Check(!result.ControlVerified);
+        Check(result.Code == "observe_input_denied");
+    }),
+    ("lease EOF is not pane exit", () =>
+    {
+        Check(TerminalLeaseProbe.ClassifyStreamEnd(true, false, false) ==
+            TerminalStreamEndKind.StdoutEof);
+        var eof = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.Observe,
+            TerminalAccess.Observing,
+            false,
+            StdoutEofSeen: true,
+            FirstFrameSeen: true));
+        Check(eof.StreamEnd == TerminalStreamEndKind.StdoutEof);
+        Check(!eof.PaneExitVerified);
+        Check(!eof.ControlVerified);
+        var closed = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.Observe,
+            TerminalAccess.Observing,
+            false,
+            TerminalClosedSeen: true));
+        Check(closed.StreamEnd == TerminalStreamEndKind.TerminalClosed);
+        Check(!closed.PaneExitVerified);
+    }),
+    ("lease fictional granted is not a grant", () =>
+    {
+        var result = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.RequestControl,
+            TerminalAccess.Observing,
+            false,
+            AdapterProvedWriteOwnership: true,
+            ObservedWireType: "terminal.granted"));
+        Check(result.Access == TerminalAccess.Unknown);
+        Check(!result.ControlVerified);
+        Check(result.Code == "fictional_granted_rejected");
+    }),
+    ("lease observe frame does not verify control for input", () =>
+    {
+        var mapped = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.Observe,
+            TerminalAccess.Disconnected,
+            false,
+            FirstFrameSeen: true,
+            ProcessAlive: true,
+            WindowFocused: true));
+        Check(mapped.Access == TerminalAccess.Observing);
+        Check(!mapped.ControlVerified);
+        Check(!InputPolicy.Evaluate(
+            context with { Access = mapped.Access, ControlVerified = mapped.ControlVerified },
+            request).Allowed);
+    }),
+    ("lease stdin write is not ControlVerified", () =>
+    {
+        var unknown = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.RequestControl,
+            TerminalAccess.Acquiring,
+            false,
+            InputSent: true));
+        Check(unknown.Code == "input_result_unknown");
+        Check(!unknown.ControlVerified);
+        var acked = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.RequestControl,
+            TerminalAccess.Acquiring,
+            false,
+            InputSent: true,
+            InputAcknowledged: true));
+        Check(acked.Access == TerminalAccess.Acquiring);
+        Check(acked.Code == "control_unconfirmed");
+        Check(!acked.ControlVerified);
+        Check(!InputPolicy.Evaluate(
+            context with { Access = acked.Access, ControlVerified = acked.ControlVerified },
+            request).Allowed);
+    }),
+    ("lease rejected is not a grant", () =>
+    {
+        var result = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.RequestControl,
+            TerminalAccess.Observing,
+            false,
+            ControlSignal: TerminalControlSignal.Rejected));
+        Check(result.Access == TerminalAccess.Observing);
+        Check(result.Code == "rejected");
+        Check(!result.ControlVerified);
+    }),
+    ("lease observe adapter proof does not verify", () =>
+    {
+        var result = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.Observe,
+            TerminalAccess.Disconnected,
+            false,
+            FirstFrameSeen: true,
+            AdapterProvedWriteOwnership: true));
+        Check(result.Access == TerminalAccess.Observing);
+        Check(result.Code == "observing");
+        Check(!result.ControlVerified);
+    }),
+    ("lease resize EOF is not verified control", () =>
+    {
+        var eof = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.ResizeWhileVerified,
+            TerminalAccess.Controlling,
+            true,
+            StdoutEofSeen: true,
+            AdapterProvedWriteOwnership: true,
+            ResizeAttempted: true,
+            ResizeAcknowledged: true));
+        Check(eof.Access == TerminalAccess.Disconnected);
+        Check(eof.StreamEnd == TerminalStreamEndKind.StdoutEof);
+        Check(!eof.PaneExitVerified);
+        Check(!eof.ControlVerified);
+        Check(eof.Code == "disconnected");
+        var dead = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.ResizeWhileVerified,
+            TerminalAccess.Controlling,
+            true,
+            PaneAliveObserved: false,
+            AdapterProvedWriteOwnership: true,
+            ResizeAttempted: true,
+            ResizeAcknowledged: true));
+        Check(dead.Access == TerminalAccess.Disconnected);
+        Check(dead.PaneExitVerified);
+        Check(!dead.ControlVerified);
+        var stale = TerminalLeaseProbe.Map(new TerminalLeaseObservation(
+            TerminalLeaseOperation.ResizeWhileVerified,
+            TerminalAccess.Controlling,
+            true,
+            ResizeAttempted: true));
+        Check(stale.Code == "control_not_verified");
+        Check(stale.Access != TerminalAccess.Controlling);
+        Check(!stale.ControlVerified);
     }),
 };
 int failed = 0;

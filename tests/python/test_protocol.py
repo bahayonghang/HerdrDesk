@@ -12,7 +12,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from herddesk_g0.protocol import (Limits, ProtocolError, NdjsonDecoder,
-    TerminalCaptureValidator, analyze_capture, strict_json_loads, validate_frame, validate_input)
+    TerminalCaptureValidator, analyze_capture, classify_stream_end, strict_json_loads,
+    validate_frame, validate_input)
 
 
 def frame(seq=1, data=b'hello', full=True, **changes):
@@ -229,6 +230,10 @@ class CaptureTests(unittest.TestCase):
         report=analyze_capture([(ROOT/'tests/fixtures/terminal-valid.ndjson').read_bytes()])
         self.assertTrue(report['validated']);self.assertFalse(report['windows_verified'])
         self.assertFalse(report['input_execution_verified'])
+        self.assertTrue(report['saw_terminal_closed'])
+        self.assertFalse(report['pane_exit_verified'])
+        self.assertEqual(report['stream_end_kind'],'terminal_closed')
+        self.assertTrue(report['stdout_eof_is_not_pane_exit'])
 
     def test_random_chunk_boundaries(self):
         content=b''.join(line(frame(i,data='你好'.encode(),full=i==1)) for i in range(1,30))
@@ -242,6 +247,12 @@ class CaptureTests(unittest.TestCase):
     def test_no_closed_envelope_is_not_pane_death(self):
         report=analyze_capture([line(frame())])
         self.assertFalse(report['saw_terminal_closed']);self.assertFalse(report['daemon_or_pane_exit_verified'])
+        self.assertFalse(report['pane_exit_verified'])
+        self.assertEqual(report['stream_end_kind'],'none')
+        self.assertTrue(report['stdout_eof_is_not_pane_exit'])
+        end=classify_stream_end(stdout_eof_seen=True,terminal_closed_seen=False)
+        self.assertEqual(end['kind'],'stdout_eof')
+        self.assertFalse(end['pane_exit_verified'])
 
     def test_total_budget(self):
         with self.assertRaisesRegex(ProtocolError,'capture_bytes_limit'):

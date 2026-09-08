@@ -63,6 +63,13 @@ class ProbeSafetyTests(unittest.TestCase):
         process.wait.side_effect=[subprocess.TimeoutExpired('fake',1),0]
         probe.stop_owned(process);process.kill.assert_called_once_with()
 
+    def test_probe_does_not_claim_write_ownership_or_pane_death(self):
+        text=(ROOT/'scripts'/'probe_herdr.py').read_text(encoding='utf-8')
+        self.assertIn('classify_stream_end',text)
+        self.assertIn("report['control_verified'] = False",text)
+        self.assertNotIn("report['control_verified'] = True",text)
+        self.assertNotIn("report['pane_exit_verified'] = True",text)
+
     def test_default_report_redacts_output_and_arguments(self):
         result={'returncode':0,'timed_out':False,'overflow':False,'duration_ms':1,'errors':[],
                 'stdout':b'PRIVATE_TERMINAL','stderr':b'PRIVATE_PATH','argv':['PRIVATE_ARGUMENT']}

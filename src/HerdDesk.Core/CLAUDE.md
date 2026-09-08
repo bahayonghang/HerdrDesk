@@ -2,13 +2,14 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略与 endpoint 纯映射。DeviceSession actor、Store、未读、错误语义等规划能力尚未实现。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射与终端 lease 观测映射。DeviceSession actor、Store、未读、错误语义等规划能力尚未实现。
 
 ## 职责
 
 - 解析一条完整 JSON 记录（不含尾部 LF），产出 `TerminalFrame` 或 `TerminalClosed`。
 - 在可信 `InputContext` 上判定 `RendererInput` 是否允许写入。
 - 把 `DeviceId` / `SessionKey` / `EndpointPreference` 与受控配置映射到 API endpoint 候选。
+- 把已观察的 observe/control/takeover/resize/release 信号映射到 `TerminalAccess`。
 - 失败后锁存：同一 parser 实例不再接受后续记录。
 
 传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。
@@ -47,6 +48,16 @@
 
 失败码：`invalid_identity`、`invalid_preference`、`explicit_configuration_required`、`named_session_unmapped`、`endpoint_not_found`、`permission_denied`、`cross_user_denied`、`remote_unc_rejected`、`unicode_encoding_error`、`ambiguous_mapping`。码与 `DiagnosticId` 不含路径。
 
+### `TerminalLeaseProbe`
+
+静态 `Map(TerminalLeaseObservation) → TerminalLeaseResult`。纯映射。不启动 herdr、不发送输入、不伪造 `terminal.granted`。
+
+`ControlVerified` 仅当 `Access=Controlling` 且观测含 `AdapterProvedWriteOwnership`。首帧、进程存活、窗口焦点、stdin 写入都不能置位。Observe 发送输入返回 `observe_input_denied`。stdout EOF 与 `terminal.closed` 不是 pane 退出。无明确授权时为 `Acquiring`/`Unknown`。
+
+结果码包括：`observing`、`observe_input_denied`、`acquiring`、`control_unconfirmed`、`control_verified`、`busy`、`rejected`、`takeover_not_confirmed`、`takeover_required`、`control_not_verified`、`resize_unacknowledged`、`resized`、`released`、`release_unacknowledged`、`input_result_unknown`、`fictional_granted_rejected`、`unknown_control_signal`、`disconnected`、`invalid_observation`。
+
+`ClassifyStreamEnd` 区分 stdout EOF、`terminal.closed` 与桥进程退出。pane 死亡只能来自独立观测。
+
 ## 依赖
 
 - 项目引用：`../HerdDesk.Contracts/HerdDesk.Contracts.csproj`。
@@ -59,13 +70,14 @@
 
 ## 测试
 
-[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略与 endpoint resolver 断言。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
+[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
 
 ## 关键文件
 
 - `TerminalFrameParser.cs` — 失败锁存解析器。
 - `InputPolicy.cs` — 纯函数策略。
 - `EndpointResolver.cs` — 受控配置到 endpoint 的纯映射。
+- `TerminalLeaseProbe.cs` — 已观察 lease 信号到 `TerminalAccess` 的纯映射。
 - `HerdDesk.Core.csproj` — 仅 Contracts 引用。
 
 ## 约束

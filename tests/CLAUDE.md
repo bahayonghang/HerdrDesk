@@ -10,8 +10,8 @@
 | C# smoke | [HerdDesk.Core.SmokeTests](HerdDesk.Core.SmokeTests/CLAUDE.md) | 以本次 `dotnet run` 为准 | `dotnet run --project tests/HerdDesk.Core.SmokeTests` |
 | 合成 fixture | [fixtures](fixtures/CLAUDE.md) | NDJSON/JSON | `check_capture.py`、probe `selftest` |
 
-probe `selftest` 另有 23 项合成检查，入口在 [../scripts](../scripts/CLAUDE.md)。
+probe `selftest` 合成检查计数以本次运行为准，入口在 [../scripts](../scripts/CLAUDE.md)。
 
-规划层级 L0–L4 见 `docs/plan/docs/10_测试与验收.md`。当前 CI 只跑 L0/L1 离线部分。L2 真机目录拟建 `tests/fixtures/real-terminal-v082/`（HD-004），仓库中尚不存在。
+规划层级 L0–L4 见 `docs/plan/docs/10_测试与验收.md`。当前 CI 只跑 L0/L1 离线部分。`tests/fixtures/real-terminal-v082/` 是 HD-004 占位索引，不是 runtime 通过证据。
 
 无 xUnit、无 `dotnet test`、无 pytest。

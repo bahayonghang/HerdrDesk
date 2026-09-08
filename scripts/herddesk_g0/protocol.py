@@ -236,6 +236,35 @@ class NdjsonDecoder:
             raise ProtocolError('truncated_ndjson_record')
 
 
+def classify_stream_end(
+    *,
+    stdout_eof_seen: bool = False,
+    terminal_closed_seen: bool = False,
+    bridge_process_exited: bool = False,
+    pane_alive_observed: bool | None = None,
+    daemon_alive_observed: bool | None = None,
+) -> dict[str, Any]:
+    """Classify stream end. stdout EOF and terminal.closed are not pane death."""
+    del daemon_alive_observed
+    if terminal_closed_seen:
+        kind = 'terminal_closed'
+    elif stdout_eof_seen:
+        kind = 'stdout_eof'
+    elif bridge_process_exited:
+        kind = 'bridge_process_exit'
+    else:
+        kind = 'none'
+    pane_exit_verified = pane_alive_observed is False
+    return {
+        'kind': kind,
+        'pane_exit_verified': pane_exit_verified,
+        'daemon_or_pane_exit_verified': pane_exit_verified,
+        'stdout_eof_is_not_pane_exit': True,
+        'terminal_closed_is_not_pane_exit': True,
+        'bridge_exit_is_not_pane_exit': True,
+    }
+
+
 class TerminalCaptureValidator:
     """Single epoch, ordered frames. Construct a new instance after reconnect."""
 
@@ -285,9 +314,20 @@ def analyze_capture(chunks: Iterable[bytes], limits: Limits = DEFAULT_LIMITS,
     decoder.finish()
     if not validator.frames:
         raise ProtocolError('no_terminal_frames')
+    end = classify_stream_end(
+        stdout_eof_seen=False,
+        terminal_closed_seen=validator.closed,
+        bridge_process_exited=False,
+        pane_alive_observed=None,
+        daemon_alive_observed=None,
+    )
     return {'kind': 'offline_terminal_capture_validation', 'validated': True,
             'frame_count': validator.frames, 'decoded_bytes': validator.decoded_bytes,
             'capture_bytes': size, 'capture_sha256': digest.hexdigest(),
             'last_sequence': validator.previous, 'saw_terminal_closed': validator.closed,
-            'daemon_or_pane_exit_verified': False, 'windows_verified': False,
+            'stream_end_kind': end['kind'],
+            'pane_exit_verified': end['pane_exit_verified'],
+            'daemon_or_pane_exit_verified': end['daemon_or_pane_exit_verified'],
+            'stdout_eof_is_not_pane_exit': end['stdout_eof_is_not_pane_exit'],
+            'windows_verified': False,
             'ime_verified': False, 'input_execution_verified': False}

@@ -1,0 +1,334 @@
+{
+  "kind": "synthetic_terminal_lease_matrix",
+  "simulation": true,
+  "runtime_pass": false,
+  "windows_verified": false,
+  "ac05_passed": false,
+  "ac05_c1": "blocked",
+  "ac06_c1": "blocked",
+  "ac07_c1": "blocked",
+  "ac14_c1": "blocked",
+  "ac15_c1": "blocked",
+  "ac16_c1": "blocked",
+  "bridge_implemented": false,
+  "all_live_checks": "blocked",
+  "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+  "herdr_executed": false,
+  "real_captures": false,
+  "fixture_origin": "synthetic",
+  "note": "Fourteen-row lease mapping simulation from observed CLI/protocol facts. Not a live herdr capture. Not AC05 pass. Offline parser/selftest is not runtime proof.",
+  "cases": [
+    {
+      "id": "TL01",
+      "scenario": "observe_first_frame",
+      "simulation": true,
+      "observation": {
+        "operation": "observe",
+        "access_before": "disconnected",
+        "control_verified_before": false,
+        "first_frame_seen": true,
+        "process_alive": true,
+        "window_focused": true
+      },
+      "expect": {
+        "access": "observing",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "observing"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "A first frame is Observing. Process alive and window focus do not set ControlVerified."
+    },
+    {
+      "id": "TL02",
+      "scenario": "observe_stdout_eof_not_pane_exit",
+      "simulation": true,
+      "observation": {
+        "operation": "observe",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "stdout_eof_seen": true,
+        "first_frame_seen": true
+      },
+      "expect": {
+        "access": "disconnected",
+        "control_verified": false,
+        "stream_end": "stdout_eof",
+        "pane_exit_verified": false,
+        "code": "disconnected"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "stdout EOF ends this stream. It is not pane death."
+    },
+    {
+      "id": "TL03",
+      "scenario": "observe_terminal_closed_not_pane_exit",
+      "simulation": true,
+      "observation": {
+        "operation": "observe",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "terminal_closed_seen": true,
+        "first_frame_seen": true
+      },
+      "expect": {
+        "access": "disconnected",
+        "control_verified": false,
+        "stream_end": "terminal_closed",
+        "pane_exit_verified": false,
+        "code": "disconnected"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "terminal.closed is a stream envelope. It is not pane death."
+    },
+    {
+      "id": "TL04",
+      "scenario": "observe_cannot_send_input",
+      "simulation": true,
+      "observation": {
+        "operation": "observe",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "first_frame_seen": true,
+        "input_sent": true
+      },
+      "expect": {
+        "access": "observing",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "observe_input_denied"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Observe mode cannot send input."
+    },
+    {
+      "id": "TL05",
+      "scenario": "control_unconfirmed_stays_acquiring",
+      "simulation": true,
+      "observation": {
+        "operation": "request_control",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "first_frame_seen": true,
+        "process_alive": true
+      },
+      "expect": {
+        "access": "acquiring",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "control_unconfirmed"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "No grant ACK exists. Unconfirmed control stays Acquiring."
+    },
+    {
+      "id": "TL06",
+      "scenario": "control_busy_second_controller_no_takeover",
+      "simulation": true,
+      "observation": {
+        "operation": "request_control",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "control_signal": "busy",
+        "takeover_confirmed": false
+      },
+      "expect": {
+        "access": "observing",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "busy"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Second controller without takeover stays Observing. Busy is not a grant."
+    },
+    {
+      "id": "TL07",
+      "scenario": "control_not_inferred_from_frame_process_focus",
+      "simulation": true,
+      "observation": {
+        "operation": "request_control",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "first_frame_seen": true,
+        "process_alive": true,
+        "window_focused": true,
+        "adapter_proved_write_ownership": false
+      },
+      "expect": {
+        "access": "acquiring",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "control_unconfirmed"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "First frame, process alive, and window focus do not set ControlVerified."
+    },
+    {
+      "id": "TL08",
+      "scenario": "fictional_granted_rejected",
+      "simulation": true,
+      "observation": {
+        "operation": "request_control",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "observed_wire_type": "terminal.granted",
+        "adapter_proved_write_ownership": true
+      },
+      "expect": {
+        "access": "unknown",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "fictional_granted_rejected"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "terminal.granted is not an upstream message. It cannot prove control."
+    },
+    {
+      "id": "TL09",
+      "scenario": "takeover_without_confirmation",
+      "simulation": true,
+      "observation": {
+        "operation": "request_takeover",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "takeover_confirmed": false
+      },
+      "expect": {
+        "access": "observing",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "takeover_not_confirmed"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Default is not takeover. Confirmation is required."
+    },
+    {
+      "id": "TL10",
+      "scenario": "takeover_confirmed_adapter_proved",
+      "simulation": true,
+      "observation": {
+        "operation": "request_takeover",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "takeover_confirmed": true,
+        "adapter_proved_write_ownership": true
+      },
+      "expect": {
+        "access": "controlling",
+        "control_verified": true,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "control_verified"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "ControlVerified requires an adapter proof after explicit takeover confirmation. This row is synthetic."
+    },
+    {
+      "id": "TL11",
+      "scenario": "no_input_ack_unknown",
+      "simulation": true,
+      "observation": {
+        "operation": "request_control",
+        "access_before": "acquiring",
+        "control_verified_before": false,
+        "input_sent": true,
+        "input_acknowledged": false
+      },
+      "expect": {
+        "access": "acquiring",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "input_result_unknown"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "A stdin write is not delivery confirmation."
+    },
+    {
+      "id": "TL12",
+      "scenario": "resize_requires_verified_writer",
+      "simulation": true,
+      "observation": {
+        "operation": "resize_while_verified",
+        "access_before": "observing",
+        "control_verified_before": false,
+        "resize_attempted": true
+      },
+      "expect": {
+        "access": "observing",
+        "control_verified": false,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "control_not_verified"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Resize is writer-only after ControlVerified."
+    },
+    {
+      "id": "TL13",
+      "scenario": "resize_unacknowledged_while_verified",
+      "simulation": true,
+      "observation": {
+        "operation": "resize_while_verified",
+        "access_before": "controlling",
+        "control_verified_before": true,
+        "adapter_proved_write_ownership": true,
+        "resize_attempted": true,
+        "resize_acknowledged": false
+      },
+      "expect": {
+        "access": "controlling",
+        "control_verified": true,
+        "stream_end": "none",
+        "pane_exit_verified": false,
+        "code": "resize_unacknowledged"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Resize has no command ACK. Unacknowledged resize is not UI proof."
+    },
+    {
+      "id": "TL14",
+      "scenario": "release_ends_bridge_pane_continues",
+      "simulation": true,
+      "observation": {
+        "operation": "release",
+        "access_before": "controlling",
+        "control_verified_before": true,
+        "bridge_process_exited": true,
+        "pane_alive_observed": true,
+        "daemon_alive_observed": true,
+        "release_acknowledged": false
+      },
+      "expect": {
+        "access": "observing",
+        "control_verified": false,
+        "stream_end": "bridge_process_exit",
+        "pane_exit_verified": false,
+        "code": "release_unacknowledged"
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Release ends the bridge. Pane and daemon continue. Probe does not fabricate a release ACK."
+    }
+  ]
+}

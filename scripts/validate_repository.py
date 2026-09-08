@@ -11,6 +11,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0,str(SCRIPTS))
 from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
+from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import validate_licensing
 
 
@@ -57,14 +58,18 @@ def validate() -> dict:
     endpoint=validate_endpoint_matrix(ROOT)
     assert endpoint['windows_verified'] is False
     assert endpoint['ac03_passed'] is False
+    lease=validate_terminal_lease_matrix(ROOT)
+    assert lease['windows_verified'] is False
+    assert lease['ac05_passed'] is False
     licensing=validate_licensing(ROOT)
     assert licensing['windows_verified'] is False
     assert licensing['ac02_passed'] is False
     return {'structural_validation':'passed','json_files':count,'projects':len(projects),
             'tasks':len(tasks),'csharp_compiled':False,'windows_verified':False,
-            'ac02_passed':False,'ac03_passed':False,
+            'ac02_passed':False,'ac03_passed':False,'ac05_passed':False,
             'evidence_validation':evidence['evidence_validation'],
             'endpoint_validation':endpoint['endpoint_validation'],
+            'lease_validation':lease['lease_validation'],
             'licensing_validation':licensing['licensing_validation']}
 
 

@@ -6,7 +6,7 @@
 
 ## 职责
 
-提供身份、终端信封、输入上下文、决策与 API endpoint 解析类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。
+提供身份、终端信封、输入上下文、决策、API endpoint 解析与终端 lease 观测类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。
 
 ## 已实现类型（`TerminalModels.cs`）
 
@@ -44,6 +44,20 @@
 | `ResolvedEndpoint` | `Kind`, `CanonicalLocation`, `EvidenceId`, `AccessScope` |
 | `EndpointResolutionFailure` | 稳定 `Code`、`DiagnosticId`、`RequiresExplicitConfiguration` |
 | `EndpointResolutionResult` | 成功 `Endpoint` 或失败 `Failure` |
+
+## 已实现类型（`LeaseModels.cs`）
+
+由可信 host 创建，禁止从 renderer 消息反序列化。不存在 `Granted` 线类型。
+
+| 类型 | 作用 |
+|---|---|
+| `TerminalLeaseOperation` | `Observe`, `RequestControl`, `RequestTakeover`, `ResizeWhileVerified`, `Release` |
+| `TerminalStreamEndKind` | `None`, `StdoutEof`, `TerminalClosed`, `BridgeProcessExit`, `Unknown`。EOF 不是 pane exit |
+| `TerminalControlSignal` | `None`, `Busy`, `Rejected`, `TakeoverRequired`, `TakeoverConfirmed`, `Released`, `Unknown`。无 `Granted` |
+| `TerminalLeaseObservation` | 已观察 CLI/协议事实；`AdapterProvedWriteOwnership` 才是写权证明 |
+| `TerminalLeaseResult` | `Access`, `ControlVerified`, `StreamEnd`, `PaneExitVerified`, 稳定 `Code` |
+
+首帧、进程存活、窗口焦点不是 `ControlVerified` 证据。
 
 ## 草案多出、src 未实现
 

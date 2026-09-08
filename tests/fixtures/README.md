@@ -7,3 +7,5 @@ terminal-valid.ndjson 故意把一个中文 UTF-8 字符拆在两帧，防止逐
 验证器的初始 full、连续 seq、输入非空和大小限制是 HerdDesk 客户端门禁；如真实桥不满足，应记录差异，不擅自宣称上游违反通用标准。
 
 endpoint-cases.json 是 HD-003 resolver 模拟矩阵，不是 named-pipe 真机证据，不能把 AC03 标为通过。
+
+lease-cases.json 是 HD-004 lease 映射模拟，不是 observe/control 真机证据，不能把 AC05 标为通过。real-terminal-v082/ 是空占位索引。

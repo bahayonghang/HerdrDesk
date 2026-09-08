@@ -1,0 +1,19 @@
+{
+  "kind": "real_terminal_capture_index",
+  "origin": "placeholder",
+  "simulation": false,
+  "runtime_pass": false,
+  "windows_verified": false,
+  "ac05_passed": false,
+  "ac05_c1": "blocked",
+  "ac06_c1": "blocked",
+  "ac07_c1": "blocked",
+  "ac14_c1": "blocked",
+  "ac15_c1": "blocked",
+  "ac16_c1": "blocked",
+  "herdr_executed": false,
+  "live_matrix": "blocked",
+  "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+  "captures": [],
+  "note": "Authorized isolated pane and live herdr were not granted. This directory is not a successful capture corpus. Do not treat synthetic lease-cases.json as a file in this index."
+}

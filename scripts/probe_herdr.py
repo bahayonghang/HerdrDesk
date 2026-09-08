@@ -20,7 +20,9 @@ import sys
 import threading
 import time
 from typing import Any
-from herddesk_g0.protocol import validate_frame, validate_input, strict_json_loads
+from herddesk_g0.protocol import (
+    validate_frame, validate_input, strict_json_loads, classify_stream_end,
+)
 
 MAX_LINE = 16 * 1024 * 1024
 MAX_FRAME = 8 * 1024 * 1024
@@ -292,6 +294,16 @@ def stream_probe(args: argparse.Namespace) -> dict[str, Any]:
                   duration_ms=round((time.monotonic()-start)*1000,1),
                   bridge_exit_code=p.returncode, stderr_bytes=len(stderr),
                   stderr_truncated=stderr_truncated.is_set())
+    end = classify_stream_end(
+        stdout_eof_seen=report['stdout_eof_seen'],
+        terminal_closed_seen=report['terminal_closed_seen'],
+        bridge_process_exited=p.returncode is not None,
+        pane_alive_observed=None,
+        daemon_alive_observed=None,
+    )
+    report['stream_end'] = end['kind']
+    report['pane_exit_verified'] = end['pane_exit_verified']
+    report['control_verified'] = False
     report['wire_shape_checks_passed'] = frame_count > 0 and not report['errors']
     report['release_acknowledged'] = False  # no fabricated command acknowledgement
     if args.include_diagnostics:
@@ -328,6 +340,19 @@ def selftest() -> dict[str, Any]:
     assert timed['timed_out'];checks+=1
     big=capture([sys.executable,'-c','import sys;sys.stdout.write("x"*8192)'],2,1024)
     assert big['overflow'] and len(big['stdout'])<=1024;checks+=1
+    from herddesk_g0.lease import map_lease
+    eof=classify_stream_end(stdout_eof_seen=True)
+    assert eof['kind']=='stdout_eof' and eof['pane_exit_verified'] is False;checks+=1
+    mapped=map_lease({'operation':'observe','access_before':'disconnected',
+                      'control_verified_before':False,'first_frame_seen':True,
+                      'process_alive':True,'window_focused':True})
+    assert mapped['access']=='observing' and mapped['control_verified'] is False;checks+=1
+    granted=map_lease({'operation':'request_control','access_before':'observing',
+                       'control_verified_before':False,
+                       'observed_wire_type':'terminal.granted',
+                       'adapter_proved_write_ownership':True})
+    assert granted['code']=='fictional_granted_rejected' and granted['control_verified'] is False
+    checks+=1
     return {'selftest_passed':True,'checks':checks,'platform':sys.platform,
             'uses_synthetic_fixtures':True,'herdr_executed':False,'windows_gui_tested':False}
 

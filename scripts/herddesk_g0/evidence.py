@@ -66,7 +66,8 @@ SOURCE_FIELD_SOURCE_KEYS = (
     'runtime_schema_sha256', 'daemon_version',
 )
 VERIFICATION_KEYS = (
-    'windows_local', 'remote_linux', 'named_pipe_acl', 'windows_endpoint', 'ime',
+    'windows_local', 'remote_linux', 'named_pipe_acl', 'windows_endpoint',
+    'windows_terminal_lease', 'ime',
 )
 
 GIT_BLOB_RE = re.compile(r'^[0-9a-f]{40}$')
@@ -376,7 +377,7 @@ def _check_runtime_summaries(
         raise EvidenceError('runtime_summary_mismatch')
     if verification.get('remote_linux') != remote['result']:
         raise EvidenceError('runtime_summary_mismatch')
-    for key in ('named_pipe_acl', 'windows_endpoint', 'ime'):
+    for key in ('named_pipe_acl', 'windows_endpoint', 'windows_terminal_lease', 'ime'):
         if _is_success(verification.get(key)):
             raise EvidenceError('evidence_level_promotion')
 
