@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Audit lease ownership, public port depth, and separation from resource commands"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Verify busy, unknown, revocation, stale token, no replay, and redacted outcomes"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Check exhaustive transitions, generation guards, fake tests, and L2 labels"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Review pane, projection epoch, transport epoch, attempt, lease, and input boundaries"}
+{"file":".trellis/tasks/09-08-windows-hd-004/design.md","reason":"Reject inferred ownership or invented grant and takeover behavior"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Do not promote G0 InputPolicy tests into real controller evidence"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

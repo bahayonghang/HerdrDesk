@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Keep terminal lease and input policy in Core behind typed transport and renderer ports"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Implement fail-closed unknown ownership, stale confirmation, input disposition, and redaction"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Preserve current-context validation, bounded actors, deterministic races, and live-evidence limits"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Trace user intent through Store freshness, candidate transport, ownership proof, renderer, and writer"}
+{"file":".trellis/tasks/09-08-windows-hd-004/design.md","reason":"Use only runtime-observed busy, ownership, takeover, and release signals"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Retain the compiled ControlVerified safety boundary and planned-only UI distinction"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

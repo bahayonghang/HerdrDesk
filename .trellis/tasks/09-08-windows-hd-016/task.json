@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-016",
+  "name": "windows-hd-016",
+  "title": "HD-016 控制权状态机",
+  "description": "显式申请、busy、takeover确认、release、断线回到observe",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 ControlLeaseCoordinator landed. Default observe. Takeover is one-shot after busy. L2 live lease UNVERIFIED. AC07/AC14/AC16/G0 not passed.",
+  "meta": {
+    "source_task": "HD-016",
+    "phase": "P2"
+  }
+}
