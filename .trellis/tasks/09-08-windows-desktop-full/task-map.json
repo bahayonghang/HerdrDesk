@@ -1,0 +1,922 @@
+{
+  "schema_note": "Implementation planning index only; source product status remains planning/backlog.json. No runtime validator or status authority is introduced.",
+  "baseline_commit": "1cce6e4",
+  "scope": "core-v1-required; EP-01..07 documented separately as conditional proposals",
+  "root": ".trellis/tasks/09-08-windows-desktop-full",
+  "source_backlog": "planning/backlog.json",
+  "source_acceptance": "planning/acceptance.json",
+  "tasks": [
+    {
+      "source_id": "HD-001",
+      "phase": "G0",
+      "title": "锁定上游事实与版本",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-001",
+      "depends_on": [],
+      "acceptance_contributions": [
+        "AC01"
+      ],
+      "source_status_at_planning": "in_progress",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 0.5,
+        "max": 1
+      },
+      "implementation_prerequisites": [],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-002",
+      "phase": "G0",
+      "title": "名称和授权清点",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-002",
+      "depends_on": [],
+      "acceptance_contributions": [
+        "AC02"
+      ],
+      "source_status_at_planning": "in_progress",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 0.5,
+        "max": 1
+      },
+      "implementation_prerequisites": [],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-003",
+      "phase": "G0",
+      "title": "API endpoint 与 pipe 映射验证",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-003",
+      "depends_on": [
+        "HD-001"
+      ],
+      "acceptance_contributions": [
+        "AC03"
+      ],
+      "source_status_at_planning": "blocked",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-001"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-004",
+      "phase": "G0",
+      "title": "终端桥协议探针",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-004",
+      "depends_on": [
+        "HD-001"
+      ],
+      "acceptance_contributions": [
+        "AC05"
+      ],
+      "source_status_at_planning": "blocked",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-001"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-005",
+      "phase": "G0",
+      "title": "WinUI renderer与中文输入spike",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-005",
+      "depends_on": [
+        "HD-004"
+      ],
+      "acceptance_contributions": [
+        "AC08",
+        "AC09"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 4
+      },
+      "reason": "执行小型spike前批准依赖及交互桌面测试；不创建产品业务模块",
+      "implementation_prerequisites": [
+        "HD-004"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-006",
+      "phase": "G0",
+      "title": "安全边界与ADR定稿",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-006",
+      "depends_on": [
+        "HD-002",
+        "HD-003",
+        "HD-005"
+      ],
+      "acceptance_contributions": [
+        "AC44"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-002",
+        "HD-003",
+        "HD-005"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-007",
+      "phase": "P1",
+      "title": "仓库骨架与CI",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-007",
+      "depends_on": [
+        "HD-006"
+      ],
+      "acceptance_contributions": [
+        "AC39",
+        "AC40",
+        "AC47"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "reason": "G0验收与HD006规则边界更新完成后开始；远端required-check治理单独授权",
+      "implementation_prerequisites": [
+        "HD-006"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-008",
+      "phase": "P1",
+      "title": "RPC stdio bridge和请求层",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-008",
+      "depends_on": [
+        "HD-003",
+        "HD-007"
+      ],
+      "acceptance_contributions": [
+        "AC03",
+        "AC04"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-003",
+        "HD-007"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-009",
+      "phase": "P1",
+      "title": "类型契约与状态投影",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-009",
+      "depends_on": [
+        "HD-008"
+      ],
+      "acceptance_contributions": [
+        "AC04",
+        "AC11"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-008"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-010",
+      "phase": "P1",
+      "title": "订阅与收敛策略",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-010",
+      "depends_on": [
+        "HD-009"
+      ],
+      "acceptance_contributions": [
+        "AC12"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-009"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-011",
+      "phase": "P1",
+      "title": "本地导航与搜索",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-011",
+      "depends_on": [
+        "HD-009"
+      ],
+      "acceptance_contributions": [
+        "AC19"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-009",
+        "HD-010"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-012",
+      "phase": "P1",
+      "title": "通知与未读",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-012",
+      "depends_on": [
+        "HD-010",
+        "HD-011"
+      ],
+      "acceptance_contributions": [
+        "AC17",
+        "AC18"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-010",
+        "HD-011"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-013",
+      "phase": "P2",
+      "title": "TerminalCliTransport与生命周期",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-013",
+      "depends_on": [
+        "HD-008",
+        "HD-010"
+      ],
+      "acceptance_contributions": [
+        "AC05",
+        "AC06",
+        "AC15"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-008",
+        "HD-010"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-014",
+      "phase": "P2",
+      "title": "可交付WebView2终端adapter",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-014",
+      "depends_on": [
+        "HD-005",
+        "HD-007",
+        "HD-013"
+      ],
+      "acceptance_contributions": [
+        "AC08",
+        "AC27"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 3,
+        "max": 5
+      },
+      "reason": "依赖HD005交付路线；native失败保留WebView主线不自动扩为native正式交付",
+      "implementation_prerequisites": [
+        "HD-005",
+        "HD-007",
+        "HD-013"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-015",
+      "phase": "P2",
+      "title": "输入法、键盘与选择",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-015",
+      "depends_on": [
+        "HD-014"
+      ],
+      "acceptance_contributions": [
+        "AC09",
+        "AC10"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 4
+      },
+      "implementation_prerequisites": [
+        "HD-014"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-016",
+      "phase": "P2",
+      "title": "控制权状态机",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-016",
+      "depends_on": [
+        "HD-013",
+        "HD-014"
+      ],
+      "acceptance_contributions": [
+        "AC07",
+        "AC14",
+        "AC16"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-013",
+        "HD-014"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-017",
+      "phase": "P2",
+      "title": "workspace与agent基本操作",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-017",
+      "depends_on": [
+        "HD-009",
+        "HD-016"
+      ],
+      "acceptance_contributions": [
+        "AC20"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "reason": "基本创建/重命名/关闭属1.0；完整排序/高级启动配置另在EP03候选",
+      "implementation_prerequisites": [
+        "HD-009",
+        "HD-016"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-018",
+      "phase": "P2",
+      "title": "断连和崩溃恢复",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-018",
+      "depends_on": [
+        "HD-010",
+        "HD-013",
+        "HD-016"
+      ],
+      "acceptance_contributions": [
+        "AC13",
+        "AC14",
+        "AC15"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-010",
+        "HD-013",
+        "HD-016"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-019",
+      "phase": "P2",
+      "title": "本地MVP综合验收",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-019",
+      "depends_on": [
+        "HD-012",
+        "HD-015",
+        "HD-017",
+        "HD-018"
+      ],
+      "acceptance_contributions": [
+        "AC06",
+        "AC07",
+        "AC10",
+        "AC15"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "reason": "本地闭环不等于全部远端/文件/发行完成",
+      "implementation_prerequisites": [
+        "HD-012",
+        "HD-015",
+        "HD-017",
+        "HD-018"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-020",
+      "phase": "P3",
+      "title": "SSH设备配置与身份",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-020",
+      "depends_on": [
+        "HD-019"
+      ],
+      "acceptance_contributions": [
+        "AC22",
+        "AC23"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-019"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-021",
+      "phase": "P3",
+      "title": "跨平台helper构建与部署",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-021",
+      "depends_on": [
+        "HD-008",
+        "HD-020"
+      ],
+      "acceptance_contributions": [
+        "AC25"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 4
+      },
+      "reason": "多平台构建与正式支持分开；Linux x64首发，其余逐组合晋级",
+      "implementation_prerequisites": [
+        "HD-008",
+        "HD-020"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-022",
+      "phase": "P3",
+      "title": "远端RPC与terminal通道",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-022",
+      "depends_on": [
+        "HD-020",
+        "HD-021"
+      ],
+      "acceptance_contributions": [
+        "AC24",
+        "AC26"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-020",
+        "HD-021"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-023",
+      "phase": "P3",
+      "title": "多设备聚合与搜索",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-023",
+      "depends_on": [
+        "HD-011",
+        "HD-022"
+      ],
+      "acceptance_contributions": [
+        "AC19",
+        "AC21"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-011",
+        "HD-022"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-024",
+      "phase": "P3",
+      "title": "认证异常与重连退避",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-024",
+      "depends_on": [
+        "HD-022"
+      ],
+      "acceptance_contributions": [
+        "AC22",
+        "AC26"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-022"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-025",
+      "phase": "P3",
+      "title": "连接与带宽预算",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-025",
+      "depends_on": [
+        "HD-023",
+        "HD-024"
+      ],
+      "acceptance_contributions": [
+        "AC27"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-023",
+        "HD-024"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-026",
+      "phase": "P3",
+      "title": "多设备MVP验收",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-026",
+      "depends_on": [
+        "HD-023",
+        "HD-024",
+        "HD-025"
+      ],
+      "acceptance_contributions": [
+        "AC21",
+        "AC23",
+        "AC24",
+        "AC26"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-023",
+        "HD-024",
+        "HD-025"
+      ],
+      "final_evidence_prerequisites": [],
+      "supplemental_final_acceptance": [
+        "AC13",
+        "AC14",
+        "AC15",
+        "AC19",
+        "AC22"
+      ]
+    },
+    {
+      "source_id": "HD-027",
+      "phase": "P4",
+      "title": "文件helper协议与安全设计",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-027",
+      "depends_on": [
+        "HD-026"
+      ],
+      "acceptance_contributions": [
+        "AC30",
+        "AC34"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "reason": "wire协议为P4显式设计交付，不伪造已存在的filebridge命令",
+      "implementation_prerequisites": [
+        "HD-026"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-028",
+      "phase": "P4",
+      "title": "文件枚举与传输后端",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-028",
+      "depends_on": [
+        "HD-027"
+      ],
+      "acceptance_contributions": [
+        "AC30",
+        "AC31",
+        "AC32"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 4
+      },
+      "implementation_prerequisites": [
+        "HD-027"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-029",
+      "phase": "P4",
+      "title": "双栏文件界面",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-029",
+      "depends_on": [
+        "HD-028"
+      ],
+      "acceptance_contributions": [
+        "AC31",
+        "AC33"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 4
+      },
+      "implementation_prerequisites": [
+        "HD-028"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-030",
+      "phase": "P4",
+      "title": "文件与图片投入agent",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-030",
+      "depends_on": [
+        "HD-017",
+        "HD-029"
+      ],
+      "acceptance_contributions": [
+        "AC35"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-017",
+        "HD-029"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-031",
+      "phase": "P4",
+      "title": "剪贴板与缓存策略",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-031",
+      "depends_on": [
+        "HD-030"
+      ],
+      "acceptance_contributions": [
+        "AC36"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "implementation_prerequisites": [
+        "HD-030"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-032",
+      "phase": "P4",
+      "title": "文件故障与安全测试",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-032",
+      "depends_on": [
+        "HD-028",
+        "HD-029",
+        "HD-031"
+      ],
+      "acceptance_contributions": [
+        "AC32",
+        "AC33",
+        "AC34",
+        "AC35"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "implementation_prerequisites": [
+        "HD-028",
+        "HD-029",
+        "HD-031"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-033",
+      "phase": "P5",
+      "title": "性能、可访问性与soak",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-033",
+      "depends_on": [
+        "HD-026",
+        "HD-032"
+      ],
+      "acceptance_contributions": [
+        "AC27",
+        "AC28",
+        "AC29",
+        "AC37",
+        "AC38",
+        "AC46"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 4
+      },
+      "implementation_prerequisites": [
+        "HD-026",
+        "HD-032"
+      ],
+      "final_evidence_prerequisites": []
+    },
+    {
+      "source_id": "HD-034",
+      "phase": "P5",
+      "title": "签名、安装与更新回滚",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-034",
+      "depends_on": [
+        "HD-007",
+        "HD-021"
+      ],
+      "acceptance_contributions": [
+        "AC41",
+        "AC42"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "reason": "打包准备可先行；最终验收要求HD019、HD032和HD033候选证据",
+      "implementation_prerequisites": [
+        "HD-007",
+        "HD-021"
+      ],
+      "final_evidence_prerequisites": [
+        "HD-019",
+        "HD-032",
+        "HD-033"
+      ]
+    },
+    {
+      "source_id": "HD-035",
+      "phase": "P5",
+      "title": "最终安全与许可审查",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-035",
+      "depends_on": [
+        "HD-006",
+        "HD-031",
+        "HD-034"
+      ],
+      "acceptance_contributions": [
+        "AC02",
+        "AC43",
+        "AC44"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 2,
+        "max": 3
+      },
+      "reason": "最终审核需HD032、HD033同一候选SHA",
+      "implementation_prerequisites": [
+        "HD-006",
+        "HD-031",
+        "HD-034"
+      ],
+      "final_evidence_prerequisites": [
+        "HD-032",
+        "HD-033"
+      ]
+    },
+    {
+      "source_id": "HD-036",
+      "phase": "P5",
+      "title": "发布文档与追踪归档",
+      "task_dir": ".trellis/tasks/09-08-windows-hd-036",
+      "depends_on": [
+        "HD-033",
+        "HD-034",
+        "HD-035"
+      ],
+      "acceptance_contributions": [
+        "AC45",
+        "AC48"
+      ],
+      "source_status_at_planning": "planned",
+      "planning_status": "planning",
+      "effort_original": {
+        "min": 1,
+        "max": 2
+      },
+      "reason": "完整1.0所有48项汇总；外部发布不由规划授权",
+      "implementation_prerequisites": [
+        "HD-033",
+        "HD-034",
+        "HD-035"
+      ],
+      "final_evidence_prerequisites": [],
+      "supplemental_final_acceptance": [
+        "AC39",
+        "AC40",
+        "AC47"
+      ]
+    }
+  ]
+}

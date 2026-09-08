@@ -1,0 +1,721 @@
+{
+  "source": "planning/acceptance.json",
+  "note": "All original clauses retained; final_owner collects contributions, it does not execute other owners' code or change status by planning.",
+  "criteria": [
+    {
+      "source_ac": "AC01",
+      "title": "版本与schema",
+      "acceptance": "本地/远端各记录 CLI version、daemon ping、schema protocol与hash；不把客户端schema当服务器证明。",
+      "requirements": [
+        "R1"
+      ],
+      "contributors": [
+        "HD-001"
+      ],
+      "final_owner": "HD-001",
+      "required_evidence": "L2",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC02",
+      "title": "授权与名称",
+      "acceptance": "登记上游/依赖许可、品牌/素材来源；没有复用未授权 herdrm 源码。",
+      "requirements": [
+        "R1"
+      ],
+      "contributors": [
+        "HD-002",
+        "HD-035"
+      ],
+      "final_owner": "HD-035",
+      "required_evidence": "artifact",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC03",
+      "title": "端点发现",
+      "acceptance": "default/named session、显式path、Unicode路径各连到预期API endpoint；错误用户/权限可诊断。",
+      "requirements": [
+        "R1"
+      ],
+      "contributors": [
+        "HD-003",
+        "HD-008"
+      ],
+      "final_owner": "HD-008",
+      "required_evidence": "L2",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC04",
+      "title": "RPC契约",
+      "acceptance": "snapshot/订阅及required字段依据实际schema，通过error/unknown字段fixture。",
+      "requirements": [
+        "R3"
+      ],
+      "contributors": [
+        "HD-008",
+        "HD-009"
+      ],
+      "final_owner": "HD-009",
+      "required_evidence": "L1+L2",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC05",
+      "title": "terminal帧",
+      "acceptance": "observe获得可解码完整基线；seq/尺寸/Base64正确；EOF被报告而非冒充pane退出。",
+      "requirements": [
+        "R5"
+      ],
+      "contributors": [
+        "HD-004",
+        "HD-013"
+      ],
+      "final_owner": "HD-013",
+      "required_evidence": "L2",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC06",
+      "title": "control与release",
+      "acceptance": "一次输入仅一次到达；resize实际生效；release结束桥但pane继续运行。",
+      "requirements": [
+        "R5"
+      ],
+      "contributors": [
+        "HD-013",
+        "HD-019"
+      ],
+      "final_owner": "HD-019",
+      "required_evidence": "L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC07",
+      "title": "控制者互斥",
+      "acceptance": "两个observer并存，第二controller不takeover时不夺权；确认takeover后旧控制者停止写入。",
+      "requirements": [
+        "R5"
+      ],
+      "contributors": [
+        "HD-016",
+        "HD-019"
+      ],
+      "final_owner": "HD-019",
+      "required_evidence": "L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC08",
+      "title": "字节正确性",
+      "acceptance": "中文/emoji/组合字符跨块拆分后无替换字符、无重复；bytes模式可准确传输控制键。",
+      "requirements": [
+        "R5"
+      ],
+      "contributors": [
+        "HD-005",
+        "HD-014",
+        "HD-015"
+      ],
+      "final_owner": "HD-015",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC09",
+      "title": "中文输入法",
+      "acceptance": "预编辑不提前发送，提交恰好一次，候选窗定位和IME快捷键优先级通过真机测试。",
+      "requirements": [
+        "R5"
+      ],
+      "contributors": [
+        "HD-005",
+        "HD-015"
+      ],
+      "final_owner": "HD-015",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC10",
+      "title": "Agent文本TUI",
+      "acceptance": "Claude Code、Codex、OpenCode各记录实际版本；导航、确认、取消、输入、滚动通过；图形另列。",
+      "requirements": [
+        "R5"
+      ],
+      "contributors": [
+        "HD-015",
+        "HD-019"
+      ],
+      "final_owner": "HD-019",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC11",
+      "title": "兼容性降级",
+      "acceptance": "未知enum/字段不崩溃；缺少能力禁用相关按钮；未知protocol不自动执行写操作。",
+      "requirements": [
+        "R3"
+      ],
+      "contributors": [
+        "HD-009"
+      ],
+      "final_owner": "HD-009",
+      "required_evidence": "L1+L2",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC12",
+      "title": "同步竞态",
+      "acceptance": "订阅与snapshot交错期间创建/关闭/改状态后，最终投影收敛，旧epoch消息不回写。",
+      "requirements": [
+        "R3"
+      ],
+      "contributors": [
+        "HD-010"
+      ],
+      "final_owner": "HD-010",
+      "required_evidence": "L1+L2",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC13",
+      "title": "断线恢复",
+      "acceptance": "EOF、daemon重启、网络中断后状态显示过期；恢复先observe、重建基线。",
+      "requirements": [
+        "R6"
+      ],
+      "contributors": [
+        "HD-018",
+        "HD-022",
+        "HD-024",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC14",
+      "title": "无输入重放",
+      "acceptance": "断网前后排队的敏感输入不被自动重发；状态明确显示未发送或结果未知。",
+      "requirements": [
+        "R6"
+      ],
+      "contributors": [
+        "HD-016",
+        "HD-018",
+        "HD-022",
+        "HD-024",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC15",
+      "title": "进程所有权",
+      "acceptance": "关闭/崩溃GUI后herdr daemon与已有agent继续；不调用server stop或杀进程树中的daemon。",
+      "requirements": [
+        "R6"
+      ],
+      "contributors": [
+        "HD-013",
+        "HD-018",
+        "HD-019",
+        "HD-022",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC16",
+      "title": "主动授权",
+      "acceptance": "默认不takeover、不自动批准、不默默开启agent bypass；破坏操作有目标确认。",
+      "requirements": [
+        "R6"
+      ],
+      "contributors": [
+        "HD-016"
+      ],
+      "final_owner": "HD-016",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC17",
+      "title": "通知一致性",
+      "acceptance": "blocked/done转换限流去重；初始snapshot和重连不补发历史done；失联不报运行成功。",
+      "requirements": [
+        "R4"
+      ],
+      "contributors": [
+        "HD-012"
+      ],
+      "final_owner": "HD-012",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC18",
+      "title": "通知跳转",
+      "acceptance": "点击通知定位原device/session/pane；已关闭目标显示过期，不跳到同ID的另一设备。",
+      "requirements": [
+        "R4"
+      ],
+      "contributors": [
+        "HD-012"
+      ],
+      "final_owner": "HD-012",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC19",
+      "title": "全局搜索",
+      "acceptance": "跨3台设备/100条投影搜索p95小于100ms；聚焦目标正确；不需要100个terminal桥。",
+      "requirements": [
+        "R4"
+      ],
+      "contributors": [
+        "HD-011",
+        "HD-023",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC20",
+      "title": "资源操作",
+      "acceptance": "创建/关闭/重命名按实际schema验证；超时后查询再决定，不盲重试非幂等操作。",
+      "requirements": [
+        "R6"
+      ],
+      "contributors": [
+        "HD-017"
+      ],
+      "final_owner": "HD-017",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC21",
+      "title": "跨设备隔离",
+      "acceptance": "两台设备均有w1:p1，快速切换/并发事件/旧消息下100次操作零串写。",
+      "requirements": [
+        "R6"
+      ],
+      "contributors": [
+        "HD-023",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC22",
+      "title": "SSH主机身份",
+      "acceptance": "未知host显示人工核验流程；host-key变更阻断；日志与argv不含密码。",
+      "requirements": [
+        "R7"
+      ],
+      "contributors": [
+        "HD-020",
+        "HD-024",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC23",
+      "title": "SSH配置",
+      "acceptance": "明确的alias/端口/identity/agent/ProxyJump支持组合通过；未支持认证模式显式标注。",
+      "requirements": [
+        "R7"
+      ],
+      "contributors": [
+        "HD-020",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC24",
+      "title": "SSH透明流",
+      "acceptance": "使用-T而非-tt；远端stdout banner污染会明确失败；stderr不被当作NDJSON。",
+      "requirements": [
+        "R7"
+      ],
+      "contributors": [
+        "HD-022",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC25",
+      "title": "helper部署",
+      "acceptance": "安装需同意；平台架构正确；签名/可信hash检查；临时写入和原子替换；不使用sudo。",
+      "requirements": [
+        "R7"
+      ],
+      "contributors": [
+        "HD-021"
+      ],
+      "final_owner": "HD-021",
+      "required_evidence": "L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC26",
+      "title": "多设备恢复",
+      "acceptance": "一设备失联不阻塞其他设备；指数退避有jitter；认证错误不无限后台重试。",
+      "requirements": [
+        "R7"
+      ],
+      "contributors": [
+        "HD-022",
+        "HD-024",
+        "HD-026"
+      ],
+      "final_owner": "HD-026",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC27",
+      "title": "背压与限额",
+      "acceptance": "超长行、慢renderer、高输出后内存有界；不丢delta维持假正常；取消可终止本进程。",
+      "requirements": [
+        "R9"
+      ],
+      "contributors": [
+        "HD-014",
+        "HD-025",
+        "HD-033"
+      ],
+      "final_owner": "HD-033",
+      "required_evidence": "L1+L2+L3+L4",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC28",
+      "title": "性能预算",
+      "acceptance": "按docs/10统一硬件与负载实测冷启动、内存、CPU、输入到呈现p95并留原始数据。",
+      "requirements": [
+        "R9"
+      ],
+      "contributors": [
+        "HD-033"
+      ],
+      "final_owner": "HD-033",
+      "required_evidence": "L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC29",
+      "title": "资源回收",
+      "acceptance": "连接/关闭pane视图100次后桥进程和句柄回到基线容差；无持续增长。",
+      "requirements": [
+        "R9"
+      ],
+      "contributors": [
+        "HD-033"
+      ],
+      "final_owner": "HD-033",
+      "required_evidence": "L2+L4",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC30",
+      "title": "文件列举",
+      "acceptance": "空格/Unicode/长文件名/symlink/权限拒绝准确；不通过ls文本猜文件元数据。",
+      "requirements": [
+        "R8"
+      ],
+      "contributors": [
+        "HD-027",
+        "HD-028"
+      ],
+      "final_owner": "HD-028",
+      "required_evidence": "L1+L2+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC31",
+      "title": "传输完整性",
+      "acceptance": "0B、1KiB、50MiB和大文件成功传输，hash一致；进度和目标设备正确。",
+      "requirements": [
+        "R8"
+      ],
+      "contributors": [
+        "HD-028",
+        "HD-029",
+        "HD-032"
+      ],
+      "final_owner": "HD-032",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC32",
+      "title": "取消与清理",
+      "acceptance": "取消/断网仅清理本job临时文件；不删除源文件或其他job文件；无假完成。",
+      "requirements": [
+        "R8"
+      ],
+      "contributors": [
+        "HD-028",
+        "HD-032"
+      ],
+      "final_owner": "HD-032",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC33",
+      "title": "冲突处理",
+      "acceptance": "Replace/KeepBoth/Cancel均有确定结果；竞争创建与同名文件不导致静默覆盖。",
+      "requirements": [
+        "R8"
+      ],
+      "contributors": [
+        "HD-029",
+        "HD-032"
+      ],
+      "final_owner": "HD-032",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC34",
+      "title": "路径攻击",
+      "acceptance": "遍历、symlink、保留名、非法Windows字符、并发替换攻击被正确限制/询问。",
+      "requirements": [
+        "R8"
+      ],
+      "contributors": [
+        "HD-027",
+        "HD-032"
+      ],
+      "final_owner": "HD-032",
+      "required_evidence": "L1+L3+L4",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC35",
+      "title": "附件能力",
+      "acceptance": "按agent+平台展示已验证能力；路径输入不声称等于附件接受；上传不自动提交。",
+      "requirements": [
+        "R8"
+      ],
+      "contributors": [
+        "HD-030",
+        "HD-032"
+      ],
+      "final_owner": "HD-032",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC36",
+      "title": "剪贴板",
+      "acceptance": "文字/文件/图像意图区分；OSC52读取默认拒绝；高危多行粘贴有保护。",
+      "requirements": [
+        "R8"
+      ],
+      "contributors": [
+        "HD-031"
+      ],
+      "final_owner": "HD-031",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC37",
+      "title": "可访问性",
+      "acceptance": "键盘与屏幕阅读器可完成搜索、控制、释放、关闭确认；颜色不是唯一状态编码。",
+      "requirements": [
+        "R4"
+      ],
+      "contributors": [
+        "HD-033"
+      ],
+      "final_owner": "HD-033",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC38",
+      "title": "DPI和主题",
+      "acceptance": "100/150/200%及多显示器、深浅色、高对比通过；无持续resize抖动。",
+      "requirements": [
+        "R4"
+      ],
+      "contributors": [
+        "HD-033"
+      ],
+      "final_owner": "HD-033",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC39",
+      "title": "构建可复现",
+      "acceptance": "精确依赖锁定、SDK记录、干净机还原成功；不写伪造package version。",
+      "requirements": [
+        "R2"
+      ],
+      "contributors": [
+        "HD-007",
+        "HD-036"
+      ],
+      "final_owner": "HD-036",
+      "required_evidence": "clean-machine+CI",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC40",
+      "title": "CI质量门禁",
+      "acceptance": "format/analyzers/unit/contract失败会阻断合并；synthetic fixture与real fixture分开。",
+      "requirements": [
+        "R2"
+      ],
+      "contributors": [
+        "HD-007",
+        "HD-036"
+      ],
+      "final_owner": "HD-036",
+      "required_evidence": "CI+GitHub-rules",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC41",
+      "title": "安装包",
+      "acceptance": "干净受支持Windows可安装启动卸载；WebView2/runtime依赖、Publisher身份明确。",
+      "requirements": [
+        "R10"
+      ],
+      "contributors": [
+        "HD-034"
+      ],
+      "final_owner": "HD-034",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC42",
+      "title": "更新回滚",
+      "acceptance": "更新签名验证和失败回滚通过；配置兼容；不强制停止/升级herdr。",
+      "requirements": [
+        "R10"
+      ],
+      "contributors": [
+        "HD-034"
+      ],
+      "final_owner": "HD-034",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC43",
+      "title": "安全与许可",
+      "acceptance": "依赖扫描日期/工具/结果可追溯；无已确认可利用严重问题或未处理分发授权。",
+      "requirements": [
+        "R10"
+      ],
+      "contributors": [
+        "HD-035"
+      ],
+      "final_owner": "HD-035",
+      "required_evidence": "artifact+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC44",
+      "title": "特权边界",
+      "acceptance": "不可信renderer消息不能任意执行命令/读取文件/切目标；标准用户运行。",
+      "requirements": [
+        "R1"
+      ],
+      "contributors": [
+        "HD-006",
+        "HD-035"
+      ],
+      "final_owner": "HD-035",
+      "required_evidence": "L1+L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC45",
+      "title": "支持文档",
+      "acceptance": "安装、认证、能力矩阵、故障诊断、日志隐私和不支持项与实际测试一致。",
+      "requirements": [
+        "R10"
+      ],
+      "contributors": [
+        "HD-036"
+      ],
+      "final_owner": "HD-036",
+      "required_evidence": "L3",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC46",
+      "title": "稳定性",
+      "acceptance": "8小时代表负载及100次断连/切换通过；失败注入不破坏pane存活。",
+      "requirements": [
+        "R9"
+      ],
+      "contributors": [
+        "HD-033"
+      ],
+      "final_owner": "HD-033",
+      "required_evidence": "L4",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC47",
+      "title": "依赖边界",
+      "acceptance": "Core/Contracts不依赖WinUI/WebView2/SSH实现；业务可用fake transport单测。",
+      "requirements": [
+        "R2"
+      ],
+      "contributors": [
+        "HD-007",
+        "HD-036"
+      ],
+      "final_owner": "HD-036",
+      "required_evidence": "L1+CI",
+      "current_status": "not_run"
+    },
+    {
+      "source_ac": "AC48",
+      "title": "可追溯发布",
+      "acceptance": "需求→任务→AC→测试证据→产物hash可追踪；未跑项不写Passed。",
+      "requirements": [
+        "R10"
+      ],
+      "contributors": [
+        "HD-036"
+      ],
+      "final_owner": "HD-036",
+      "required_evidence": "artifact",
+      "current_status": "not_run"
+    }
+  ]
+}
