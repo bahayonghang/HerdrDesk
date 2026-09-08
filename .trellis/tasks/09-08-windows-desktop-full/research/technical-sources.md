@@ -11,4 +11,4 @@
 
 本轮没有重新确认所有上游 herdr 方法，也没有把网页信息升级成目标机器可用性证据。
 
-2026-09-08 规划基线改为 GitHub 稳定 tag **v0.9.0**（`PROTOCOL_VERSION=22`，`ENDPOINT_PROTOCOL_GENERATION=1`）。详见 [herdr-0.9.0.md](herdr-0.9.0.md)。v0.8.2/protocol 20 保留为历史对照。https://herdr.dev/latest.json 在核验时仍显示 0.8.2/20，以 GitHub release 为准。本机 preview daemon 不作为稳定 tag 证明，也不授权 `herdr channel set`。
+2026-09-08 规划基线改为 GitHub 稳定 tag **v0.9.0** commit `b99002ac99b09e00b4ca692436cb15a6b0d676f1`（`PROTOCOL_VERSION=22`，schema `protocol=22`/`schema_version=1`，`ENDPOINT_PROTOCOL_GENERATION=1`，Rust `1.96.1`）。详见 [herdr-0.9.0.md](herdr-0.9.0.md)。v0.8.2/protocol 20 保留为历史对照。tag 内 `distribution/latest.json` 仍为 0.8.2/20，以 GitHub release 为准。本机 preview daemon 不作为稳定 tag 证明，也不授权 `herdr channel set`。Windows 稳定 zip SHA-256 `b4508c445de1c1a68c760a01735da2aba2fa214b2aafd4b07f732e49b2a64b11` 已记录，未下载安装。

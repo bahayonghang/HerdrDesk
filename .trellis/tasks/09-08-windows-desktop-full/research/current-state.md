@@ -2,7 +2,7 @@
 
 核查日期：2026-09-08。仓库起点：main，HEAD `1cce6e4`；开始时工作树干净。本次为源码、文档与任务结构核查，未运行产品或现场测试。
 
-2026-09-08 晚间规划修订：上游规划基线改为 GitHub **v0.9.0 / protocol 22**（见 [herdr-0.9.0.md](herdr-0.9.0.md)）。G0 子任务 HD-001–006 已归档；`phase_gate` 仍为 not_passed。本机 preview `0.9.0-preview.2026-09-08` 已记入 `evidence/`，不得与 v0.8.2/20 互证。IME/SSH L3 与 named-pipe ACL 仍缺。HD-007 未 start。
+2026-09-08 规划修订：上游规划基线为 GitHub **v0.9.0 / protocol 22** / commit `b99002a`（见 [herdr-0.9.0.md](herdr-0.9.0.md)）。G0 子任务 HD-001–006 已归档；`phase_gate` 仍为 not_passed。本机 preview `0.9.0-preview.2026-09-08` 已记入 `evidence/`，不得与 v0.8.2/20 互证。IME/SSH L3 与 named-pipe ACL 仍缺。HD-007 产品骨架已提交 `00e9aa6`；WinUI 包未准入；planning 待归档。官方 Windows 多机（`herdr machine`）未支持。Q1–Q3=A/A/A：1.0 默认仍为 API socket + `herdr terminal session`；endpoint generation 1 并行；不切 channel；AC10 不扩大。
 
 ## 1. 事实来源与复用边界
 

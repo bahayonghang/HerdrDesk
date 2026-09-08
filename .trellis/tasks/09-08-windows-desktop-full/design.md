@@ -57,9 +57,11 @@ flowchart LR
 
 ### 状态同步
 
-每个 session 分开请求RPC和事件订阅连接。先确认订阅，再读 snapshot；期间事件只标 dirty，安装快照后再读dirty实体，无getter则全量snapshot。初始250ms合并、5s校准；同session串行安装，不同时启动无界snapshot任务。UI使用不可变投影或可控差分一次派发；读取/解码/文件IO不上UI线程。
+每个 session 分开请求RPC和事件订阅连接。v0.9.0 起 lifecycle 订阅从请求被接受时开始、不回放保留历史（#1270），因此必须先确认订阅，再读 snapshot；期间事件只标 dirty，安装快照后再读dirty实体，无getter则全量snapshot。初始250ms合并、5s校准；同session串行安装，不同时启动无界snapshot任务。UI使用不可变投影或可控差分一次派发；读取/解码/文件IO不上UI线程。
 
-不假设事件可回放、revision存在或持久exactly-once。首次/重连快照建立通知基线，禁止历史done补发；晚到旧epoch消息不改变当前Store。未知protocol禁写，缺能力使按钮禁用并给原因。
+不假设事件可回放、revision存在或持久exactly-once。首次/重连快照建立通知基线，禁止历史done补发；晚到旧epoch消息不改变当前Store。未知protocol禁写，缺能力使按钮禁用并给原因。`workspace.close` 在关联 worktree 仍打开时需要显式 `close_group: true`，缺省返回 `workspace_group_close_required`，不得静默升级为组关闭。
+
+官方 `herdr machine` 多机在 Windows 客户端尚未支持。Q1=A：1.0 默认走 API socket + `herdr terminal session` stdio。`herdr terminal session` 丢弃内部 `Graphics` 消息；renderer 不宣称 Kitty/Sixel。endpoint generation 1 与 `herdr machine` catalog 保持并行合同，HD-008/020 不实现为默认路径。
 
 ### 操作与控制
 
