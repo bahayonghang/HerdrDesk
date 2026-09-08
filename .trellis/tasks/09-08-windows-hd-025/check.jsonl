@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Check hard limits, dependency boundaries, and full offline gate."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check fail-closed overload and stale-epoch behavior."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Check metrics remain bounded and redacted."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Check one budget owner across all consumers."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Prevent planned modules or historical CI from being reported as current proof."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

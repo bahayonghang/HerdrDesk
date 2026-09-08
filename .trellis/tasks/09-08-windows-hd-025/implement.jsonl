@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/index.md","reason":"G0 boundary and future backend dependency direction."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Queue limits, offline gate, and evidence boundaries."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Redacted queue and process telemetry requirements."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Budget state crosses Core, transports, renderer, and UI."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Verified current modules, missing transports, and G0 status."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/technical-sources.md","reason":"Renderer flow-control evidence and its limits."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

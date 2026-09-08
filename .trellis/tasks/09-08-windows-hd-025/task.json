@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-025",
+  "name": "windows-hd-025",
+  "title": "HD-025 连接与带宽预算",
+  "description": "按设备限制连接，隐藏pane停渲染；测高RTT和丢包",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 admission, 24 MiB terminal queue, dirty-set, SSH lease, and pane visibility landed. L2 live SSH/perf UNVERIFIED. B_ssh unmeasured. AC27/G0 not passed.",
+  "meta": {
+    "source_task": "HD-025",
+    "phase": "P3"
+  }
+}
