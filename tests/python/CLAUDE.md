@@ -25,7 +25,8 @@ python -m unittest discover -s tests/python -v
 | `test_protocol.py` | `StrictJsonTests`, `FramerTests`, `FrameTests`, `InputTests`, `CaptureTests` | 重复键、非有限数字、深度脱敏、分块 NDJSON、无分隔符 EOF 失败、字段名 `bytes` 而非 `data`、非 canonical Base64、跨帧 UTF-8 不解码、关闭后锁存、新实例重置 seq、input text/bytes 互斥、surrogate、scroll/resize 整数类型、100 轮随机分块、`check_capture.py` 拒绝覆盖且路径脱敏 |
 | `test_probe_safety.py` | `ProbeSafetyTests` | 无 disposable 时 control 不 `Popen`；observe 不能带 input；input 需单独 `--allow-input`；非法 target/session；`stop_owned` 不杀进程树；terminate 超时只 kill 自有 handle；默认报告去掉输出与 argv；probe 不宣称 ControlVerified 或 pane 死亡 |
 | `test_publish.py` | `PublisherTests` | 清单 hash、路径穿越、未列出的 `.env` 不入库、错误 GitHub 身份、create 为 public 且非 force、dry-run 输出 `kind=historical_bundle_audit`、漂移退出码 2、已有 checkout/已有仓库拒绝 |
-| `test_repository.py` | `RepositoryPortabilityTests` | `validate()` 通过；元数据 `read_text` 必须 `encoding='utf-8'`；`terminal-valid.ndjson` 无 CRLF，SHA-256 `d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599`；`ac44_passed` 与 `g0_passed` 恒为 false |
+| `test_repository.py` | `RepositoryPortabilityTests` | `validate()` 通过；元数据 `read_text` 必须 `encoding='utf-8'`；`terminal-valid.ndjson` 无 CRLF，SHA-256 `d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599`；`ac44_passed` 与 `g0_passed` 恒为 false；`project_graph` passed；`github_required_check` UNVERIFIED |
+| `test_project_graph.py` | `ProjectGraphTests` | 允许边通过；Core→WinUI/WebView2/SSH、Contracts 第三方、生产→测试、未知 Integration.Windows、`Directory.Packages.props`、`packages.lock.json`、csproj `2.4.0` 钉均失败 |
 | `test_evidence.py` | `EvidenceBaselineTests` | 驱动 `herddesk_g0.evidence` 与仓库内真实 evidence 文件；拒绝 hash 混同、无采集文件的 runtime 成功、source/synthetic/hosted CI 提升、protocol 22 标成与 protocol 20 兼容、preview 进入默认兼容集、schema/snapshot 正文入库；Windows recorded 与 remote `not_run` 必须独立；ACL/IME 保持 blocked；结构校验 `windows_verified` 恒为 false |
 | `test_licensing.py` | `LicensingRegisterTests` | 驱动 `herddesk_g0.licensing` 与 `docs/licensing` 真实台账/模板；拒绝 pending/blocked 当 approved、herdrm 拷贝宣称、公开可见当授权；`ac02_passed` 与 `windows_verified` 恒为 false |
 | `test_endpoint.py` | `EndpointMatrixTests` | 驱动 `herddesk_g0.endpoint` 与 `tests/fixtures/endpoint-cases.json`；七行模拟矩阵；拒绝 APPDATA 猜测、常规 pipe 名猜测、named 回退、UNC、PaneKey 当身份、跨 DeviceId 映射、fixture 当 runtime/AC03 通过；`windows_verified` 与 `ac03_passed` 恒为 false |
@@ -35,7 +36,7 @@ python -m unittest discover -s tests/python -v
 
 ## 依赖
 
-- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`endpoint.py`、`lease.py`、`renderer.py`、`adr.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
+- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`endpoint.py`、`lease.py`、`renderer.py`、`adr.py`、`project_graph.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
 - 数据：[../fixtures](../fixtures/CLAUDE.md)。
 
 与 C# smoke、probe selftest 分开报告，不合并为覆盖率。hosted SHA `629bb01` 为 Python 73 / C# smoke 22 / probe 23。

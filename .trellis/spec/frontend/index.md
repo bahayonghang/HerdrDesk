@@ -1,6 +1,6 @@
 # Frontend Development Guidelines
 
-**Deferred / N/A for G0.** This repository has no WinUI product window, no React app, no WebView2 renderer, and no `src/HerdDesk.App` project.
+**Deferred WinUI/React templates.** `src/HerdDesk.App` exists as a BCL composition-root host stub. There is no WinUI product window, no React app, and no WebView2 renderer host. `App.xaml` / Shell / settings content belongs to HD-011.
 
 The Markdown files in this folder are Trellis init templates (component / hook / React-style type safety). They are **not** live implementation contracts. Do not write React, Next.js, Vue, or generic CSS from those templates. Do not treat hook-guidelines or state-management as if a UI exists.
 
@@ -31,7 +31,7 @@ Do not implement features by “filling” those templates as if they described 
 
 ## Pre-Development Checklist
 
-- [ ] Confirm an approved task actually asks for UI. G0 backend/protocol/harness work must not create `HerdDesk.App`.
+- [ ] Confirm an approved task actually asks for UI. Do not fill `App.xaml` from this HD-007 stub. Do not add WinUI PackageReference until the package is admitted.
 - [ ] Read [AGENTS.md](../../../AGENTS.md): no live WinUI writes in the G0 gate.
 - [ ] Use Contracts types (`PaneKey`, `ConnectionEpoch`, `TerminalAccess`, `ControlVerified`) when UI work starts. Do not invent a second identity model.
 

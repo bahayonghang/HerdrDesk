@@ -2,8 +2,14 @@
   <Folder Name="/src/">
     <Project Path="src/HerdDesk.Contracts/HerdDesk.Contracts.csproj" />
     <Project Path="src/HerdDesk.Core/HerdDesk.Core.csproj" />
+    <Project Path="src/HerdDesk.Infrastructure/HerdDesk.Infrastructure.csproj" />
+    <Project Path="src/HerdDesk.Terminal.Web/HerdDesk.Terminal.Web.csproj" />
+    <Project Path="src/HerdDesk.App/HerdDesk.App.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/HerdDesk.Core.SmokeTests/HerdDesk.Core.SmokeTests.csproj" />
+    <Project Path="tests/Unit/HerdDesk.Core.Tests/HerdDesk.Core.Tests.csproj" />
+    <Project Path="tests/Unit/HerdDesk.Infrastructure.Tests/HerdDesk.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Contract/HerdDesk.ContractTests.csproj" />
   </Folder>
 </Solution>

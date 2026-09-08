@@ -14,7 +14,7 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 
 ## Forbidden Patterns
 
-- `PackageReference` in G0 C# projects. `NuGet.Config` keeps package sources empty.
+- `PackageReference` in C# projects until a unit is license-admitted and a real restore lock is committed. `NuGet.Config` keeps package sources empty. Do not invent Windows App SDK versions.
 - Core referencing WinUI, WebView2, SSH, OS credentials, or process control.
 - Overwriting `src/HerdDesk.Contracts` with `docs/plan/contracts/HerdDesk.Contracts.cs`.
 - Per-frame `Encoding.UTF8.GetString` on terminal payload bytes.
@@ -46,8 +46,11 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 | Python | `python -m unittest discover -s tests/python -v` | Protocol, probe gates, setup stubs, repository, evidence, licensing, endpoint, lease, renderer, ADR baseline, publish synthetic |
 | Probe selftest | `python scripts/probe_herdr.py selftest` | Synthetic; `herdr_executed=false` |
 | Capture | `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson` | Offline NDJSON |
-| Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, UTF-8; calls `herddesk_g0.evidence`, `herddesk_g0.endpoint`, `herddesk_g0.lease`, `herddesk_g0.renderer`, `herddesk_g0.licensing`, and `herddesk_g0.adr`; `windows_verified`, `ac02_passed`, `ac03_passed`, `ac05_passed`, `ac08_passed`, `ac09_passed`, `ac44_passed`, and `g0_passed` stay false |
+| Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, no `Directory.Packages.props`, no `packages.lock.json`, no unverified `2.4.0` pin in csproj, UTF-8, `herddesk_g0.project_graph`; calls evidence/endpoint/lease/renderer/licensing/adr; `github_required_check` stays `UNVERIFIED`; `windows_verified` and AC/G0 flags stay false |
 | C# smoke | `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build` | Parser, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, and renderer L1 specimens; not `dotnet test` |
+| Core unit | `dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build` | Fake-port Core checks; BCL runner |
+| Infrastructure unit | `dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build` | Config atomic write/backup/restore; diagnostic privacy |
+| Contract | `dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build` | Assembly graph and production composition |
 
 `just ci` runs the full offline set. Counts in `implementation/status.json` may lag; use the current command output.
 

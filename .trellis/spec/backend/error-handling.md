@@ -36,6 +36,10 @@ Python `herddesk_g0.lease.LeaseError` uses stable codes (`evidence_level_promoti
 
 Python `herddesk_g0.renderer.RendererError` uses stable codes (`evidence_level_promotion`, `ac08_ac09_claimed_passed`, `missing_matrix_row`, …). L1 helpers do not launch WinUI or WebView2.
 
+`AtomicConfigurationStore` returns `ConfigurationLoadResult` / `ConfigurationWriteResult` with a stable `Code`. It does not throw for malformed, forbidden, conflict, or replace failures. Codes: `configuration_missing`, `configuration_malformed`, `configuration_forbidden_field`, `configuration_version_unsupported`, `configuration_write_conflict`, `configuration_serialize_failed`, `configuration_replace_failed`, `configuration_backup_missing`, `invalid_identity`, `invalid_profile`, `duplicate_session`. A failed write leaves the original file bytes and does not promote a temp file. Restore reads only `device-profiles.json.bak`.
+
+`JsonlDiagnosticSink.TryWrite` returns false and increments `DroppedCount` for invalid events, a full queue, or I/O failure. Writer-thread exceptions are dropped; they must not crash the host or grant control. Log files are UTF-8 without BOM. `DiagnosticEvent` has no message, exception, or payload field.
+
 C# and Python need not share every internal code string. They must share reject/accept intent on `tests/fixtures/protocol-edge-cases.json`, `tests/fixtures/endpoint-cases.json`, `tests/fixtures/lease-cases.json`, and `tests/fixtures/renderer-cases.json`.
 
 ---

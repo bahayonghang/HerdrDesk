@@ -8,10 +8,13 @@
 |---|---|---|---|
 | Python unittest | [python](python/CLAUDE.md) | 以本次 discover 为准 | `python -m unittest discover -s tests/python -v` |
 | C# smoke | [HerdDesk.Core.SmokeTests](HerdDesk.Core.SmokeTests/CLAUDE.md) | 以本次 `dotnet run` 为准 | `dotnet run --project tests/HerdDesk.Core.SmokeTests` |
+| Core unit | [Unit/HerdDesk.Core.Tests](Unit/HerdDesk.Core.Tests/CLAUDE.md) | BCL runner | `dotnet run --project tests/Unit/HerdDesk.Core.Tests` |
+| Infrastructure unit | [Unit/HerdDesk.Infrastructure.Tests](Unit/HerdDesk.Infrastructure.Tests/CLAUDE.md) | BCL runner | `dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests` |
+| Contract | [Contract](Contract/CLAUDE.md) | BCL runner | `dotnet run --project tests/Contract/HerdDesk.ContractTests` |
 | 合成 fixture | [fixtures](fixtures/CLAUDE.md) | NDJSON/JSON | `check_capture.py`、probe `selftest` |
 
 probe `selftest` 合成检查计数以本次运行为准，入口在 [../scripts](../scripts/CLAUDE.md)。
 
 规划层级 L0–L4 见 `docs/plan/docs/10_测试与验收.md`。当前 CI 只跑 L0/L1 离线部分。`tests/fixtures/real-terminal-v082/` 是 HD-004 占位索引，不是 runtime 通过证据。
 
-无 xUnit、无 `dotnet test`、无 pytest。
+无 xUnit、无 `dotnet test`、无 pytest。测试框架 NuGet 未准入 lock。Integration.Windows 由 HD-011 建立。

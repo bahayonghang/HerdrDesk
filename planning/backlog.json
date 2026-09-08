@@ -149,7 +149,8 @@
       "proposed_output": "src/ 与 .github/workflows/",
       "risk": "UI/协议耦合，依赖无法还原",
       "rollback": "先保留Contracts/Core与离线测试",
-      "status": "planned"
+      "status": "planned",
+      "implementation_note": "HD-007 BCL skeleton in progress: App/Infrastructure/Terminal.Web stubs and unit/contract runners. WinUI packages not admitted. AC39/AC40/AC47 not passed."
     },
     {
       "id": "HD-008",

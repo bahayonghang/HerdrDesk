@@ -13,7 +13,7 @@
 | [adr/approved-baseline.md](adr/approved-baseline.md) | HD-006 冻结规划 ADR-001 至 ADR-007 与 HD-001/003/004/005 门。机器台账 [adr/approved-baseline.json](adr/approved-baseline.json)。不是 G0/AC44 通过。R5 未执行。 |
 | [implementation-g0.md](implementation-g0.md) | 建仓前第一笔实施的历史记录。其中“未推送”“C# 未编译”已被后续托管状态取代。 |
 | [publication.md](publication.md) | 2026-09-07 首次导入 GitHub。可复查 CI run `34138627135`，commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`。 |
-| [licensing-register.md](licensing-register.md) | HD-002 名称与单元台账。无 herdrm 源码/图标。项目许可仍待维护者决定。AC02 未完成。 |
+| [licensing-register.md](licensing-register.md) | HD-002 名称与单元台账。HD-007 另记 pending NuGet 探针。无 herdrm 源码/图标。项目许可仍待维护者决定。AC02 未完成。 |
 | [licensing/](licensing/README.md) | 机器可读 `register.json` 与候选准入模板。`admission` 与 technical/security 分栏。模板不是 approved。 |
 | [source-verification.md](source-verification.md) | 本轮重读上游 blob：`client/mod.rs`、`ipc.rs`、`render_stream.rs`、schema header。限额是 HerdDesk 客户端策略。 |
 | [plan/](plan/CLAUDE.md) | 12 专题档案。 |

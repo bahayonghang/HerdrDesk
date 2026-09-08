@@ -38,9 +38,33 @@ jobs:
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5; resolved 2026-09-07
         with:
           global-json-file: global.json
-      - name: Build BCL-only projects
+      - name: Build BCL projects
         run: dotnet build HerdDesk.slnx --configuration Release
+      - name: Verify formatting
+        run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include tests/Unit --include tests/Contract
       - name: Run C# G0 smoke tests
         run: dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
+      - name: Run Core unit tests
+        run: dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build
+      - name: Run Infrastructure unit tests
+        run: dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build
+      - name: Run contract tests
+        run: dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build
       # No daemon installation, SSH access, terminal takeover, release publishing,
       # UI acceptance or credentials belong to this offline G0 job.
+      # Linux must not compile WinUI. This job is not full-application green.
+
+  windows-desktop:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6; resolved 2026-09-07
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6; resolved 2026-09-07
+        with:
+          python-version: '3.12'
+      - name: Windows desktop restore gate
+        run: python scripts/run_windows_desktop_gate.py
+      # Job success is not merge-blocking proof. GitHub required-check remains UNVERIFIED.
+      # WinUI packages are not admitted; this helper skips restore rather than compiling WinUI.

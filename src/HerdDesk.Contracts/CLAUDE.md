@@ -6,7 +6,7 @@
 
 ## 职责
 
-提供身份、终端信封、输入上下文、决策、API endpoint 解析、终端 lease 观测与 renderer 标本类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。`ITerminalRenderer` 仍只存在于草案，不在本目录编译。
+提供身份、终端信封、输入上下文、决策、API endpoint 解析、终端 lease 观测、renderer 标本、配置/诊断端口与 unavailable adapter 类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。`ITerminalRenderer` 仍只存在于草案，不在本目录编译。
 
 ## 已实现类型（`TerminalModels.cs`）
 
@@ -91,11 +91,15 @@
 
 - `HerdDesk.Contracts.csproj`：空 SDK 项目，属性来自根 `Directory.Build.props`。
 - 允许：BCL。禁止：WinUI、SSH、RPC 方法名、进程启动。
-- 被 `HerdDesk.Core` 与 SmokeTests 引用。
+- 被 Core、Infrastructure、Terminal.Web、App 与测试引用。
+
+## HD-007 增补
+
+`ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。仍不编译 `ITerminalRenderer`。
 
 ## 入口与测试
 
-类库，无可执行入口。行为由 [../HerdDesk.Core](../HerdDesk.Core/CLAUDE.md) 与 [../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖。
+类库，无可执行入口。行为由 [../HerdDesk.Core](../HerdDesk.Core/CLAUDE.md)、[../HerdDesk.Infrastructure](../HerdDesk.Infrastructure/CLAUDE.md)、[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md)、[../../tests/Unit](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 与 [../../tests/Contract](../../tests/Contract/CLAUDE.md) 覆盖。
 
 ## 约束
 

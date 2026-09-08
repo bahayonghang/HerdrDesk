@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HerdDesk.Core/HerdDesk.Core.csproj" />
+    <ProjectReference Include="../HerdDesk.Infrastructure/HerdDesk.Infrastructure.csproj" />
+    <ProjectReference Include="../HerdDesk.Terminal.Web/HerdDesk.Terminal.Web.csproj" />
+  </ItemGroup>
+</Project>

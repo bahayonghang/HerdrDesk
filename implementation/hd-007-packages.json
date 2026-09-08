@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd007_package_probe",
+  "sdk": {
+    "global_json": "10.0.400",
+    "roll_forward": "disable",
+    "dotnet_version_observed": "10.0.400"
+  },
+  "nuget_config_product": "empty_package_sources",
+  "directory_packages_props": false,
+  "windows_desktop_restore": "not_admitted",
+  "github_required_check": "UNVERIFIED",
+  "ac39_passed": false,
+  "ac40_passed": false,
+  "ac47_passed": false,
+  "phase_gate": "not_passed",
+  "product_lock": "no third-party PackageReference; pending units cannot enter lock",
+  "probes": [
+    {
+      "id": "Microsoft.WindowsAppSDK",
+      "metadata_version": "2.4.0",
+      "metadata_source": "https://api.nuget.org/v3-flatcontainer/microsoft.windowsappsdk/index.json",
+      "nuspec_license": "license.txt file in nupkg",
+      "temp_restore": "passed",
+      "temp_build_library": "passed",
+      "admitted": false,
+      "lock_allowed": false,
+      "reason": "License file not reviewed; transitive AI/ML/WebView2/WinUI; HD-005 renderer packages UNVERIFIED; WASDK workload not installed; pending admission cannot enter lock; Linux must not compile WinUI unconditionally. Product display 2.4.0 was confirmed as a real NuGet version via metadata, then skipped for lock."
+    },
+    {
+      "id": "Microsoft.WindowsAppSDK.WinUI",
+      "metadata_latest_stable_observed": "2.3.6",
+      "note": "2.4.0 is not a Microsoft.WindowsAppSDK.WinUI version. WASDK 2.4.0 restore pulled WinUI 2.3.6 transitively.",
+      "admitted": false,
+      "lock_allowed": false
+    },
+    {
+      "id": "Microsoft.NET.Test.Sdk",
+      "metadata_version": "18.9.0",
+      "nuspec_license": "MIT",
+      "temp_restore": "passed",
+      "admitted": false,
+      "lock_allowed": false,
+      "reason": "Pending admission cannot enter lock. Unit and contract tests use BCL console runners."
+    },
+    {
+      "id": "xunit",
+      "metadata_version": "2.9.3",
+      "nuspec_license": "Apache-2.0",
+      "admitted": false,
+      "lock_allowed": false
+    }
+  ],
+  "residuals": [
+    "IME L3 UNVERIFIED",
+    "named-pipe ACL UNVERIFIED",
+    "SSH L3 UNVERIFIED",
+    "GitHub required-check and branch ruleset UNVERIFIED",
+    "WinUI product UI deferred to HD-011",
+    "dotnet format --verify-no-changes on the full solution is blocked by pre-existing SmokeTests whitespace; HD-007 files are included explicitly"
+  ]
+}

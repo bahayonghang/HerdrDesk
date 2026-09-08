@@ -1,12 +1,12 @@
 # Logging Guidelines
 
-G0 has no logging framework (`ILogger`, Serilog, Python `logging` config). Diagnostics are stable exception codes and bounded JSON reports.
+G0 has no logging framework (`ILogger`, Serilog, Python `logging` config). Diagnostics are stable exception codes, bounded JSON reports, and the HD-007 `JsonlDiagnosticSink` restricted event stream.
 
 ---
 
 ## Overview
 
-Do not add a log package. G0 C# forbids `PackageReference`. Python stays in the standard library; the protocol module raises `ProtocolError` instead of logging payloads.
+Do not add a log package. C# still forbids `PackageReference`. Python stays in the standard library; the protocol module raises `ProtocolError` instead of logging payloads. `DiagnosticEvent` has no free-text message, exception, or payload field. `JsonlDiagnosticSink` writes UTF-8 JSONL without a BOM. Writer failures increment `DroppedCount` and must not crash the host.
 
 ---
 

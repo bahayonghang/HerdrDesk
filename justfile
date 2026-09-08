@@ -67,8 +67,33 @@ capture:
 structure:
     {{python}} scripts/validate_repository.py
 
-# Full offline G0 gate used by GitHub Actions.
+[group('dotnet')]
+format-check: build
+    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include tests/Unit --include tests/Contract
+
+[group('dotnet')]
+unit-tests: build
+    {{dotnet}} run --project tests/Unit/HerdDesk.Core.Tests --configuration {{configuration}} --no-build
+    {{dotnet}} run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration {{configuration}} --no-build
+
+[group('dotnet')]
+contract-tests: build
+    {{dotnet}} run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration {{configuration}} --no-build
+
+[windows]
 [group('ci')]
-ci: test-python selftest capture structure smoke
+desktop:
+    {{python}} scripts/run_windows_desktop_gate.py
+
+[unix]
+[group('ci')]
+desktop:
+    {{python}} -c "print('windows_desktop_restore skipped on this platform; not full-application green')"
+
+# Offline gate used by GitHub Actions. G0 BCL/Python on every OS.
+# Windows desktop restore runs only the skip/admit helper; it is not live WinUI.
+# Do not add cargo/npm recipes until HD-008/014 create those trees.
+[group('ci')]
+ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop
 
 alias check := ci

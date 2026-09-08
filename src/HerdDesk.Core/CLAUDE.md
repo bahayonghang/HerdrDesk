@@ -79,11 +79,11 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 
 ## 入口
 
-类库。由 smoke runner 与未来 Infrastructure 调用。
+类库。由 smoke runner、[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 与 App 组合根引用。Infrastructure 项目引用 Core；本任务未从 Infrastructure 调用 Core 类型。
 
 ## 测试
 
-[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
+[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 覆盖 InputPolicy、parser latch 与 Core 程序集边界。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
 
 ## 关键文件
 

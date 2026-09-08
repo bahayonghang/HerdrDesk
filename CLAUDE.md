@@ -23,7 +23,7 @@
 
 ## 架构
 
-当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本，以及 Python 诊断探针。规划目标（尚未建仓）：WinUI 外壳、独立 Core、可替换终端 renderer、自有 `herddesk-bridge`、系统 OpenSSH。P4 另增按调用启动的 `herddesk-filebridge`。
+当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本、配置/诊断基础设施、组合根宿主 stub，以及 Python 诊断探针。WinUI 外壳内容、Native renderer、自有 `herddesk-bridge` 与 `herddesk-filebridge` 尚未建仓。
 
 两条通信平面必须分离：JSON RPC 走 API socket 或自有 bridge；终端帧走 `herdr terminal session` 的 stdio。禁止把 JSON RPC 发到 herdr 二进制 client socket。远端使用 `ssh -T`；stdout banner 视为协议污染。文件面不解析 `ls` 文本。
 
@@ -34,7 +34,11 @@ flowchart TB
   subgraph current [当前 G0]
     Contracts["src/HerdDesk.Contracts"]
     Core["src/HerdDesk.Core"]
+    Infra["src/HerdDesk.Infrastructure"]
+    WebTerm["src/HerdDesk.Terminal.Web"]
+    App["src/HerdDesk.App composition stub"]
     Smoke["tests/HerdDesk.Core.SmokeTests"]
+    Unit["tests/Unit + tests/Contract"]
     Proto["scripts/herddesk_g0"]
     Probe["scripts/probe_herdr.py"]
     PyTests["tests/python"]
@@ -42,7 +46,14 @@ flowchart TB
     PlanDocs["docs/plan"]
     Active["planning + tasks"]
     Contracts --> Core
+    Contracts --> Infra
+    Core --> Infra
+    Contracts --> WebTerm
+    Core --> App
+    Infra --> App
+    WebTerm --> App
     Core --> Smoke
+    Core --> Unit
     Proto --> Probe
     Proto --> PyTests
     Fixtures --> PyTests
@@ -50,17 +61,12 @@ flowchart TB
     PlanDocs -.-> Active
   end
   subgraph planned [规划尚未建仓]
-    App["HerdDesk.App"]
-    Infra["HerdDesk.Infrastructure"]
-    WebTerm["HerdDesk.Terminal.Web"]
     NativeTerm["HerdDesk.Terminal.Native"]
+    WinUiShell["WinUI App.xaml / HD-011"]
     Bridge["herddesk-bridge"]
     FileBr["herddesk-filebridge"]
-    App --> Core
-    App --> WebTerm
-    Infra --> Contracts
-    WebTerm --> Contracts
     NativeTerm --> Contracts
+    WinUiShell --> App
   end
   herdr["herdr daemon"]
   Probe -.->|默认只读| herdr
@@ -75,10 +81,16 @@ flowchart TB
 | 路径 | 职责 | 索引 |
 |---|---|---|
 | [src](src/CLAUDE.md) | C# solution 入口 | 已生成 |
-| [src/HerdDesk.Contracts](src/HerdDesk.Contracts/CLAUDE.md) | 身份、帧、输入决策类型 | 已生成 |
+| [src/HerdDesk.Contracts](src/HerdDesk.Contracts/CLAUDE.md) | 身份、帧、输入决策、配置/诊断端口 | 已生成 |
 | [src/HerdDesk.Core](src/HerdDesk.Core/CLAUDE.md) | 单 epoch 帧解析器与输入策略 | 已生成 |
-| [tests](tests/CLAUDE.md) | 三套检查的导航 | 已生成 |
+| [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储与诊断 | 已生成 |
+| [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | renderer capability stub | 已生成 |
+| [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub | 已生成 |
+| [tests](tests/CLAUDE.md) | 检查导航 | 已生成 |
 | [tests/HerdDesk.Core.SmokeTests](tests/HerdDesk.Core.SmokeTests/CLAUDE.md) | C# G0 smoke runner | 已生成 |
+| [tests/Unit/HerdDesk.Core.Tests](tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) | Core unit runner | 已生成 |
+| [tests/Unit/HerdDesk.Infrastructure.Tests](tests/Unit/HerdDesk.Infrastructure.Tests/CLAUDE.md) | Infrastructure unit runner | 已生成 |
+| [tests/Contract](tests/Contract/CLAUDE.md) | Contract runner | 已生成 |
 | [tests/python](tests/python/CLAUDE.md) | Python 回归 | 已生成 |
 | [tests/fixtures](tests/fixtures/CLAUDE.md) | 合成 NDJSON / 案例 | 已生成 |
 | [scripts](scripts/CLAUDE.md) | Python 协议库、探针、结构校验、发布脚本 | 已生成 |
@@ -90,7 +102,7 @@ flowchart TB
 | [implementation](implementation/CLAUDE.md) | 已运行检查的 JSON | 已生成 |
 | [.github](.github/CLAUDE.md) | G0 CI | 已生成 |
 
-尚未建仓、仅出现在规划中的模块：`HerdDesk.App`、`HerdDesk.Infrastructure`、`HerdDesk.Terminal.Web`、`HerdDesk.Terminal.Native`、`bridge/`、`herddesk-filebridge`。HD-007 仍为 `planned`：现有 CI 是 G0 建仓准备。
+尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、`bridge/`、`herddesk-filebridge`、WinUI `App.xaml`（HD-011）。HD-007 骨架已落地；AC39/AC40/AC47 与 `phase_gate` 仍未通过。
 
 `docs/plan/` 保存原规划正文。活动状态以根目录 `planning/` 与 `tasks/` 为准。`docs/implementation-g0.md` 是建仓前历史记录；其中“未推送”“C# 未编译”不代表当前托管状态。
 
@@ -129,7 +141,11 @@ python scripts/probe_herdr.py selftest
 python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson
 python scripts/validate_repository.py
 dotnet build HerdDesk.slnx --configuration Release
+dotnet format HerdDesk.slnx --verify-no-changes --no-restore
 dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
+dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build
+dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build
+dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build
 ```
 
 可写探针必须指定 disposable target，输入另需 `--allow-input`。只终止探针自己的直接子进程。

@@ -117,6 +117,16 @@ class LicensingRegisterTests(unittest.TestCase):
             self.assertIsNone(doc['license'])
         _check()
 
+    def test_hd007_nuget_probes_are_pending_and_out_of_lock(self):
+        register = _load('docs/licensing/register.json')
+        for name in ('Microsoft.WindowsAppSDK', 'Microsoft.NET.Test.Sdk'):
+            unit = _unit(register, name)
+            self.assertEqual(unit['admission'], 'pending')
+            self.assertIs(unit['lock_allowed'], False)
+            self.assertIs(unit['enters_package_lock'], False)
+            self.assertEqual(unit['owner'], 'HD-007')
+        _check()
+
     def test_pending_candidate_lock_flag_is_rejected(self):
         _, candidates, _, _ = _bundle()
         candidates[REQUIRED_TEMPLATES[0]]['lock_allowed'] = True

@@ -36,6 +36,10 @@ Source, prebuilt binary, and runtime download stay on separate records.
 
 Owner: HD-002. Final review: HD-035. Evidence date: 2026-09-08.
 
+HD-007 recorded NuGet metadata for `Microsoft.WindowsAppSDK` 2.4.0 and
+`Microsoft.NET.Test.Sdk` 18.9.0 as **pending** units. They are not approved,
+`lock_allowed` stays false, and they are not PackageReference inputs.
+
 About-box intent from planning: “Independent Windows client for herdr; not an
 official herdr/herdrm release.” That sentence is a naming rule, not a license.
 
@@ -53,7 +57,7 @@ Every unit below has `lock_allowed` and all `enters_*` flags **false**. None is
 | license / notice | not selected; project-wide license pending maintainer / none until selected |
 | notice_status | pending |
 | modification | original |
-| distribution | `src/HerdDesk.Contracts`; `src/HerdDesk.Core`; `tests/HerdDesk.Core.SmokeTests`; `HerdDesk.slnx`; `Directory.Build.props`; `global.json`; `NuGet.Config` |
+| distribution | `src/HerdDesk.Contracts`; `src/HerdDesk.Core`; `src/HerdDesk.Infrastructure`; `src/HerdDesk.Terminal.Web`; `src/HerdDesk.App`; `tests/HerdDesk.Core.SmokeTests`; `tests/Unit`; `tests/Contract`; `HerdDesk.slnx`; `Directory.Build.props`; `global.json`; `NuGet.Config` |
 | technical / security / admission | feasible / not_evaluated / pending |
 | conflict | false |
 

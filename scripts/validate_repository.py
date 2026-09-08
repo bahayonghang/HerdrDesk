@@ -14,6 +14,7 @@ from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import validate_licensing
+from herddesk_g0.project_graph import validate_project_graph
 from herddesk_g0.renderer import validate_renderer_matrix
 
 
@@ -23,14 +24,17 @@ def validate() -> dict:
     for path in files:
         if any(part in {'.git','obj','bin','probe-results','.test-results'} for part in path.parts):continue
         json.loads(path.read_text(encoding='utf-8'));count+=1
+    graph=validate_project_graph(ROOT)
     projects=list((ROOT/'src').rglob('*.csproj'))+list((ROOT/'tests').rglob('*.csproj'))
-    for path in projects:
-        doc=ET.parse(path)
-        assert not doc.findall('.//PackageReference'), 'Unexpected dependency before G0 approval'
-        for reference in doc.findall('.//ProjectReference'):
-            assert (path.parent/reference.attrib['Include']).is_file(),'Missing project reference'
-    for project in ET.parse(ROOT/'HerdDesk.slnx').findall('.//Project'):
-        assert (ROOT/project.attrib['Path']).is_file(),'Missing solution project'
+    packages=json.loads((ROOT/'implementation/hd-007-packages.json').read_text(encoding='utf-8'))
+    assert not (ROOT/'Directory.Packages.props').is_file()
+    assert packages.get('directory_packages_props') is False
+    assert packages['github_required_check']=='UNVERIFIED'
+    assert packages['windows_desktop_restore']=='not_admitted'
+    assert packages.get('ac39_passed') is not True
+    assert packages.get('ac40_passed') is not True
+    assert packages.get('ac47_passed') is not True
+    assert packages.get('phase_gate')!='passed'
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'
@@ -79,6 +83,9 @@ def validate() -> dict:
             'ac02_passed':False,'ac03_passed':False,'ac05_passed':False,
             'ac08_passed':False,'ac09_passed':False,'ac44_passed':False,
             'g0_passed':False,
+            'project_graph':graph['project_graph'],
+            'github_required_check':packages['github_required_check'],
+            'windows_desktop_restore':packages['windows_desktop_restore'],
             'evidence_validation':evidence['evidence_validation'],
             'endpoint_validation':endpoint['endpoint_validation'],
             'lease_validation':lease['lease_validation'],

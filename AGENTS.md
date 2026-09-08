@@ -21,9 +21,9 @@ Default observe. herdr owns the agent and PTY. HerdDesk owns the connection. Con
 
 GitHub repository name: `HerdrDesk`. Application, solution, and C# namespace: `HerdDesk`. Chinese work name: 牧台.
 
-**Current G0 in `src/`:** `HerdDesk.Contracts` (BCL-only types) and `HerdDesk.Core` (one-epoch frame parser and input policy). Python diagnostics live under `scripts/herddesk_g0` and `scripts/probe_herdr.py`. Tests live under `tests/`.
+**Current G0 in `src/`:** `HerdDesk.Contracts` (BCL-only types), `HerdDesk.Core` (one-epoch frame parser and input policy), `HerdDesk.Infrastructure` (config store and diagnostics), `HerdDesk.Terminal.Web` (renderer capability stub), and `HerdDesk.App` (composition-root host stub, not WinUI). Python diagnostics live under `scripts/herddesk_g0` and `scripts/probe_herdr.py`. Tests live under `tests/`.
 
-**Not in the tree:** `HerdDesk.App`, `HerdDesk.Infrastructure`, `HerdDesk.Terminal.Web`, `HerdDesk.Terminal.Native`, `herddesk-bridge`, `herddesk-filebridge`. Do not add those modules unless a later approved task asks for them.
+**Not in the tree:** `HerdDesk.Terminal.Native`, `herddesk-bridge`, `herddesk-filebridge`, WinUI `App.xaml` content. Do not add those modules unless a later approved task asks for them. Windows App SDK / test-framework packages are pending and not in the product lock.
 
 Dependency direction: Contracts depends on BCL only. Core depends on Contracts only. Core must not reference WinUI, WebView2, SSH, or OS credentials. The draft `docs/plan/contracts/HerdDesk.Contracts.cs` must not overwrite `src/HerdDesk.Contracts`.
 
@@ -39,7 +39,7 @@ Offline gate (same steps as `.github/workflows/ci.yml`):
 just ci
 ```
 
-Equivalent steps: Python unittest under `tests/python`, `python scripts/probe_herdr.py selftest`, `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson`, `python scripts/validate_repository.py`, `dotnet build HerdDesk.slnx --configuration Release`, `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build`.
+Equivalent steps: Python unittest under `tests/python`, `python scripts/probe_herdr.py selftest`, `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson`, `python scripts/validate_repository.py`, `dotnet build HerdDesk.slnx --configuration Release`, `dotnet format HerdDesk.slnx --verify-no-changes --no-restore`, C# smoke plus `tests/Unit` and `tests/Contract` console runners, and `python scripts/run_windows_desktop_gate.py` on Windows (skip is not full-application green).
 
 `just setup` is read-only. The pin is `global.json` (`10.0.400`, `rollForward=disable`). Default setup does not call winget and does not write User environment. Opt-in only:
 

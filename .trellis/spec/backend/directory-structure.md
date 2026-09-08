@@ -6,16 +6,22 @@ Where G0 backend code lives. There are no route or controller folders.
 
 ## Overview
 
-C# product code is two class libraries under `src/`. Python protocol and probes live under `scripts/`. Tests are not nested inside `src/`.
+C# product code lives under `src/`. Python protocol and probes live under `scripts/`. Tests are not nested inside `src/`.
 
 ---
 
 ## Directory Layout
 
 ```
-src/HerdDesk.Contracts/     BCL types only (TerminalModels.cs, EndpointModels.cs, LeaseModels.cs, RendererModels.cs)
+src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels)
 src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens
+src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter
+src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
+src/HerdDesk.App/           composition root / console host stub
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
+tests/Unit/HerdDesk.Core.Tests/  BCL unit runner
+tests/Unit/HerdDesk.Infrastructure.Tests/  config/diagnostics unit runner
+tests/Contract/             composition and assembly contract runner
 tests/python/               stdlib unittest (sys.path → scripts/)
 tests/fixtures/             synthetic NDJSON, protocol-edge-cases.json, endpoint-cases.json, lease-cases.json, renderer-cases.json; real-terminal-v082/ placeholder
 docs/licensing/             register.json and candidate admission templates
@@ -31,7 +37,7 @@ global.json                 SDK 10.0.400, rollForward=disable
 NuGet.Config                empty package sources
 ```
 
-Planned and **not** present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.*`, `bridge/`, `herddesk-filebridge`.
+Present as BCL stubs: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `bridge/`, `herddesk-filebridge`.
 
 ---
 
