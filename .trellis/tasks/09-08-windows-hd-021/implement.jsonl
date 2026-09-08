@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/index.md","reason":"Current module, BCL and sidecar boundaries to preserve while adding deployment adapters"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Fail-closed redacted errors and recovery expectations"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Secret, path, argv and payload logging exclusions"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Manifest to selection to consent to remote activation data-flow review"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Verified missing bridge, App and Infrastructure starting point"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

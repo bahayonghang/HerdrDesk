@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Toolchain, dependency, gate and evidence-boundary review"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Atomic failure, stable error and previous-version recovery review"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Deployment diagnostics must exclude credentials, private paths and argv"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Cross-check release manifest consumers, UI consent and deployment state"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Prevent planned artifacts from being reported as current implementation"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

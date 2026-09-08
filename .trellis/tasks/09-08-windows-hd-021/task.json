@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-021",
+  "name": "windows-hd-021",
+  "title": "HD-021 跨平台helper构建与部署",
+  "description": "多架构bridge产物、显式安装确认、校验、原子更新",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 helper manifest/consent/publisher landed. Five targets remain not_run. L2 live deploy UNVERIFIED. AC25/G0 not passed.",
+  "meta": {
+    "source_task": "HD-021",
+    "phase": "P3"
+  }
+}
