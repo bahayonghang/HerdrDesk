@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-013",
+  "name": "windows-hd-013",
+  "title": "HD-013 TerminalCliTransport与生命周期",
+  "description": "实现长期CLI进程、单reader、stdin串行写、stderr、退出原因",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 TerminalCliTransport fake-child tests landed. L2 live herdr UNVERIFIED. AC05/AC06/G0 not passed. Default never takeover. Graphics absence is not parse failure.",
+  "meta": {
+    "source_task": "HD-013",
+    "phase": "P2"
+  }
+}

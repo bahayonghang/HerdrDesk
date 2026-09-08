@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Place terminal ports in Contracts and process, framing, writer, and lifecycle code in Infrastructure"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Apply stable redacted protocol, EOF, cancellation, backpressure, and unknown-outcome errors"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Preserve dependency direction, bounded async ownership, fake-process tests, and no-live defaults"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Trace CLI stdout and stderr through parser, receipts, lease policy, renderer, and lifecycle"}
+{"file":".trellis/tasks/09-08-windows-hd-004/design.md","reason":"Use only observed argv, control signals, release behavior, and evidence boundaries"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Keep the compiled G0 parser and future production transport claims distinct"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
