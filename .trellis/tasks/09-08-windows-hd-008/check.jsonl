@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Audit Rust/C# ownership and project reference boundaries"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Verify fail-closed NDJSON, pending cleanup, late-response rejection, and redacted errors"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Verify exact lockfiles, no terminal-plane RPC, and no unauthorized live operations"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Review request/subscription separation and owned JsonElement lifetimes end to end"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Keep live endpoint and product acceptance evidence distinct from offline tests"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

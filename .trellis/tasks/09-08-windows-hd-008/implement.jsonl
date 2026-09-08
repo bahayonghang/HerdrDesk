@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Place bridge, Infrastructure RPC, Contracts ports, and tests in their owning modules"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Apply bounded framing, failed-epoch, stable-code, and redaction rules"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Preserve plane separation, exact dependencies, cancellation, and no-live default gate"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Trace raw bytes, JSON ownership, pending responses, subscription events, and epoch handoff"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Use verified current gaps and avoid claiming G0 probes are a production RPC connection"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
