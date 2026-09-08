@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-018",
+  "name": "windows-hd-018",
+  "title": "HD-018 断连和崩溃恢复",
+  "description": "旧epoch隔离、state stale、终端重新observe、daemon不自动复活",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 RecoveryPolicy and stale-first reconnect landed. L2 live disconnect UNVERIFIED. AC13/AC14/AC15/G0 not passed. HD-026 owns product AC13-15.",
+  "meta": {
+    "source_task": "HD-018",
+    "phase": "P2"
+  }
+}
