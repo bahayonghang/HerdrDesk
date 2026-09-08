@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Audit the final solution and exact allowed dependency graph"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Verify locked restore, warnings, analyzers, gate propagation, and evidence labels"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Verify structured diagnostics omit payloads, credentials, and private paths"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Review data ownership and avoid duplicated dependency or configuration rules"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Prevent planned modules or old CI records from being reported as current product proof"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/technical-sources.md","reason":"Check that product display versions were not copied into unverified package pins"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Reject parallel or unwired test projects and verify canonical project ownership"}
