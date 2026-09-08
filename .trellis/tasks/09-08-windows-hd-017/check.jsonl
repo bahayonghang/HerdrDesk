@@ -1,0 +1,4 @@
+{"file":"planning/acceptance.json","reason":"复核 AC20 最终验收及 AC10、AC11、AC12、AC16 贡献边界"}
+{"file":"tasks/HD-017.md","reason":"核对资源操作任务范围、依赖、风险与回滚"}
+{"file":"docs/plan/docs/08_安全与威胁模型.md","reason":"无 generic exec、明确目标确认和标准用户边界"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

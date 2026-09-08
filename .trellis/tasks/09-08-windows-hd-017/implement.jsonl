@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"UI intent、Core command gate、RPC adapter 与 Store 后置条件的跨层数据流"}
+{"file":"docs/plan/docs/02_产品定义与名称.md","reason":"创建、重命名、关闭及危险操作产品范围"}
+{"file":"docs/plan/docs/03_架构与数据流.md","reason":"App/Core/Infrastructure 权限与依赖边界"}
+{"file":"docs/plan/docs/07_多设备SSH与文件.md","reason":"mutation timeout 后查询且不盲重试契约"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Core/App/contract/Windows 资源操作测试唯一入口"}
