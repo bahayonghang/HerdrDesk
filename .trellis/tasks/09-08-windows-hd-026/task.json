@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-026",
+  "name": "windows-hd-026",
+  "title": "HD-026 多设备MVP验收",
+  "description": "Windows本地+Linux远端，macOS/ARM64按独立支持表晋级",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 P3 closeout catalog landed. Live SSH/WinUI/three-device/crash UNVERIFIED. AC13/14/15/19/21/22/23/24/26/G0 not passed.",
+  "meta": {
+    "source_task": "HD-026",
+    "phase": "P3"
+  }
+}
