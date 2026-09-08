@@ -19,7 +19,8 @@ tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
 tests/python/               stdlib unittest (sys.path → scripts/)
 tests/fixtures/             synthetic NDJSON, protocol-edge-cases.json, endpoint-cases.json, lease-cases.json, renderer-cases.json; real-terminal-v082/ placeholder
 docs/licensing/             register.json and candidate admission templates
-scripts/herddesk_g0/        protocol.py, evidence.py, licensing.py, endpoint.py, lease.py, renderer.py
+docs/adr/                   0001-g0-bootstrap.md, approved-baseline.md, approved-baseline.json
+scripts/herddesk_g0/        protocol.py, evidence.py, licensing.py, endpoint.py, lease.py, renderer.py, adr.py
 scripts/probe_herdr.py      herdr probe
 scripts/Invoke-HerdDeskDotnetSetup.ps1
 scripts/validate_repository.py
@@ -50,6 +51,8 @@ Planned and **not** present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, 
 | Renderer L1 diagnostics | `scripts/herddesk_g0/renderer.py` |
 | Licensing register rules | `scripts/herddesk_g0/licensing.py` |
 | Licensing inventory and templates | `docs/licensing/` |
+| Approved G0 ADR freeze | `scripts/herddesk_g0/adr.py` |
+| ADR freeze documents | `docs/adr/` |
 | Shared synthetic records | `tests/fixtures/` (LF, UTF-8) |
 | C# assertions | `tests/HerdDesk.Core.SmokeTests/Program.cs` |
 | Python assertions | `tests/python/test_*.py` |
@@ -77,3 +80,4 @@ Do not place domain policy in a probe script. Do not place WinUI or SSH types in
 - Renderer L1: `src/HerdDesk.Core/Utf8ChunkAssembler.cs`, `RendererEpochGate.cs`, `CompositionPolicy.cs`, `RendererByteWindow.cs` (FIFO, oldest-frame ack), `WebMessagePolicy.cs`
 - Python latching capture: `scripts/herddesk_g0/protocol.py` (`TerminalCaptureValidator`)
 - Licensing register rules: `scripts/herddesk_g0/licensing.py`
+- ADR freeze rules: `scripts/herddesk_g0/adr.py`

@@ -1,0 +1,649 @@
+{
+  "schema_version": 1,
+  "document_kind": "approved_baseline",
+  "source_numbering": "docs/plan/docs/04_技术选型与ADR.md",
+  "markdown": "docs/adr/approved-baseline.md",
+  "bootstrap_adr": "docs/adr/0001-g0-bootstrap.md",
+  "owner": "HD-006",
+  "final_review_task": "HD-035",
+  "evidence_date": "2026-09-08",
+  "phase": "G0",
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "ac44_passed": false,
+  "ac44_status": "not_run",
+  "windows_verified": false,
+  "r5_phase_rule_sync": "not_executed",
+  "r5_blocked_reason": "HD-001 through HD-005 G0 target evidence is not accepted",
+  "note": "Policy freeze only. Structural validation is not AC44 passed and does not set windows_verified or phase_gate. Unknown remains Unknown. A blocked capability stays observe or explicit configuration.",
+  "ac44_child": {
+    "AC44-C1": "recorded",
+    "AC44-C2": "recorded",
+    "AC44": "not_run"
+  },
+  "adrs": [
+    {
+      "id": "ADR-001",
+      "title": "Independent implementation; do not fork the macOS App",
+      "problem": "A Windows client needs herdr protocol behaviour without copying herdrm assets or Swift sources.",
+      "decision": "Keep the herdr protocol and product behaviour. Reimplement the Windows application. Do not copy herdrm icons, layout resources, or Swift files.",
+      "evidence_class": "source_inspection_only",
+      "input_evidence": [
+        "docs/licensing-register.md",
+        "docs/licensing/register.json",
+        "LICENSE-STATUS.md"
+      ],
+      "input_tasks": ["HD-002"],
+      "allow_callers": [
+        "herddesk_first_party_source",
+        "herdr_protocol_reference"
+      ],
+      "deny_callers": [
+        "herdrm_source",
+        "herdrm_icons_fonts_screenshots_layout",
+        "unapproved_third_party_copy"
+      ],
+      "fail_state": "keep_independent_substitute_or_drop_feature",
+      "rollback": "Remove unapproved copies. Do not stop herdr or an agent.",
+      "owner_module": "docs/licensing; future HD-007/034/035",
+      "verification_task": "HD-035",
+      "spec_update_trigger": "An approved unit enters package lock, WebView bundle, MSIX, or release manifest.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "ADR-002",
+      "title": "Keep the native shell; terminal uses a replaceable renderer",
+      "problem": "The terminal view needs a delivery adapter. Native raw-stream has not met the replacement bar.",
+      "decision": "WebView2 plus xterm.js is the delivery baseline. EWTC/native stays an independent spike. Native is UNVERIFIED and is not promoted.",
+      "evidence_class": "synthetic",
+      "input_evidence": [
+        "docs/spikes/renderer-decision.md",
+        "tests/fixtures/renderer-cases.json",
+        "evidence/runtime/windows-renderer-ime.blocked.json"
+      ],
+      "input_tasks": ["HD-005"],
+      "allow_callers": [
+        "webview2_xterm_delivery_baseline",
+        "ITerminalRenderer_replacement_port"
+      ],
+      "deny_callers": [
+        "native_promotion_without_gate",
+        "cdn_renderer_assets",
+        "generic_host_exec"
+      ],
+      "fail_state": "stay_on_webview2_xterm_baseline",
+      "rollback": "Keep ITerminalRenderer. Destroy only the failed view child processes. Do not stop herdr or an agent.",
+      "owner_module": "HerdDesk.Core WebMessagePolicy L1; future HerdDesk.Terminal.Web",
+      "verification_task": "HD-014",
+      "spec_update_trigger": "A WebView2 host or a native adapter is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "ADR-003",
+      "title": "State plane uses RPC; terminal plane stays CLI",
+      "problem": "api schema/snapshot is not a generic RPC proxy. Terminal frames must not share that socket.",
+      "decision": "JSON RPC uses an API socket or a future herddesk-bridge. Terminal frames use herdr terminal session stdio. Do not send JSON RPC to the herdr binary client socket.",
+      "evidence_class": "source_inspection_only",
+      "input_evidence": [
+        "docs/plan/docs/03_架构与数据流.md",
+        "tests/fixtures/endpoint-cases.json",
+        "evidence/runtime/windows-endpoint-matrix.blocked.json"
+      ],
+      "input_tasks": ["HD-003", "HD-004"],
+      "allow_callers": [
+        "future_herddesk_bridge_api_socket",
+        "herdr_terminal_session_stdio"
+      ],
+      "deny_callers": [
+        "json_rpc_on_terminal_stdio",
+        "json_rpc_on_herdr_binary_client_socket",
+        "appdata_pipe_name_guess"
+      ],
+      "fail_state": "explicit_configuration_required",
+      "rollback": "Stay observe-only. Do not open a live API or terminal write path.",
+      "owner_module": "HerdDesk.Core EndpointResolver; future Infrastructure and bridge",
+      "verification_task": "HD-008",
+      "spec_update_trigger": "herddesk-bridge or a production RPC transport is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "ADR-004",
+      "title": "SSH exec; do not copy the macOS Unix-to-Unix tunnel",
+      "problem": "Windows OpenSSH Unix-socket forwarding is unverified. A local unauthenticated TCP API port is out of scope.",
+      "decision": "Remote RPC runs the owned bridge. Remote terminal runs the remote herdr CLI. Both use ssh -T. Do not allocate a PTY. Do not open a local unauthenticated TCP API port.",
+      "evidence_class": "source_inspection_only",
+      "input_evidence": [
+        "docs/plan/docs/07_多设备SSH与文件.md",
+        "evidence/compatibility-baseline.json"
+      ],
+      "input_tasks": ["HD-001", "HD-003"],
+      "allow_callers": [
+        "ssh_T_remote_bridge",
+        "ssh_T_remote_herdr_cli"
+      ],
+      "deny_callers": [
+        "ssh_tt_pty",
+        "local_unauthenticated_tcp_api",
+        "pane_output_in_remote_argv"
+      ],
+      "fail_state": "protocol_stream_polluted_or_auth_failed",
+      "rollback": "Disable the SSH path. Keep local observe-only diagnostics.",
+      "owner_module": "future HerdDesk.Infrastructure SSH; not in G0 Core",
+      "verification_task": "HD-020",
+      "spec_update_trigger": "An SSH transport project is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "ADR-005",
+      "title": "Do not own the agent; manage the daemon only by user intent",
+      "problem": "Closing the GUI must not stop herdr or an existing agent.",
+      "decision": "v0.1 requires the user to start herdr. After a successful connect, if the server disappears, do not auto-revive. Closing the GUI stops only this application's direct child processes.",
+      "evidence_class": "synthetic",
+      "input_evidence": [
+        "tests/fixtures/lease-cases.json",
+        "evidence/runtime/windows-terminal-lease.blocked.json",
+        "scripts/probe_herdr.py"
+      ],
+      "input_tasks": ["HD-004"],
+      "allow_callers": [
+        "stop_owned_bridge_child",
+        "stop_owned_ssh_child"
+      ],
+      "deny_callers": [
+        "server_stop",
+        "kill_daemon",
+        "kill_agent",
+        "job_object_including_daemon"
+      ],
+      "fail_state": "leave_daemon_and_agent_running",
+      "rollback": "Disable auto-start. Return to manual daemon start.",
+      "owner_module": "probe_herdr stop_owned; future Infrastructure process spec",
+      "verification_task": "HD-013",
+      "spec_update_trigger": "A process host or Job Object policy is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "ADR-006",
+      "title": "Least privilege and confirmed side effects",
+      "problem": "Control, takeover, input, and upload can write to a live pane. Reconnect must not replay queued bytes.",
+      "decision": "Default observe. Control does not imply takeover. Auto-reconnect returns to observe. Upload, close pane, delete workspace, and skip-agent-approval need an explicit grant. After disconnect, do not replay input. ControlVerified is true only after the adapter proves write ownership.",
+      "evidence_class": "synthetic",
+      "input_evidence": [
+        "src/HerdDesk.Core/InputPolicy.cs",
+        "src/HerdDesk.Core/TerminalLeaseProbe.cs",
+        "tests/fixtures/lease-cases.json",
+        "tests/fixtures/renderer-cases.json"
+      ],
+      "input_tasks": ["HD-004", "HD-005"],
+      "allow_callers": [
+        "observe_without_grant",
+        "control_after_adapter_proved",
+        "takeover_after_confirmation"
+      ],
+      "deny_callers": [
+        "control_verified_from_first_frame",
+        "control_verified_from_process_alive",
+        "control_verified_from_window_focus",
+        "input_replay_after_disconnect",
+        "fictional_terminal_granted"
+      ],
+      "fail_state": "acquiring_or_unknown_no_write",
+      "rollback": "Return to observe. Drop the queued input. Do not send release as a substitute for process kill.",
+      "owner_module": "HerdDesk.Core InputPolicy and TerminalLeaseProbe; future HD-016/018",
+      "verification_task": "HD-016",
+      "spec_update_trigger": "A compiled control state machine is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "ADR-007",
+      "title": "Modular monolith; no private agent backend",
+      "problem": "A second source of truth or a private scheduler would split runtime state from herdr.",
+      "decision": "App Core plus sidecar. Do not rewrite agent detection. Do not store full terminal history for cloud sync. Do not build a private scheduler. Identity keys are DeviceId, SessionKey, PaneKey, and ConnectionEpoch. seq compares only inside the current epoch. herddesk-filebridge is a narrow on-demand helper.",
+      "evidence_class": "source_inspection_only",
+      "input_evidence": [
+        "src/HerdDesk.Contracts",
+        "src/HerdDesk.Core",
+        "docs/plan/docs/03_架构与数据流.md"
+      ],
+      "input_tasks": ["HD-002"],
+      "allow_callers": [
+        "HerdDesk.Contracts_bcl_types",
+        "HerdDesk.Core_one_epoch_specimens",
+        "future_narrow_filebridge_job"
+      ],
+      "deny_callers": [
+        "private_agent_backend",
+        "cloud_terminal_history_sync",
+        "pane_id_as_global_key",
+        "seq_across_epochs"
+      ],
+      "fail_state": "reject_stale_epoch_or_unknown_identity",
+      "rollback": "Keep Contracts and Core. Do not add App, Infrastructure, or filebridge in G0.",
+      "owner_module": "HerdDesk.Contracts and HerdDesk.Core; future HD-009/023/027/028",
+      "verification_task": "HD-009",
+      "spec_update_trigger": "App, Infrastructure, bridge, or filebridge modules are added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    }
+  ],
+  "subcontracts": [
+    {
+      "id": "dependency_admission",
+      "parent_adr": "ADR-001",
+      "title": "Dependency admission",
+      "child_ac": "AC02-C2",
+      "problem": "A pending or blocked unit must not enter a lockfile or release.",
+      "decision": "Admission stays approved, blocked, or pending and is distinct from technical and security. Only approved units may enter package lock, WebView bundle, MSIX, or release manifest. Public visibility is not a license grant. herdrm stays blocked.",
+      "evidence_class": "source_inspection_only",
+      "input_evidence": [
+        "docs/licensing/register.json",
+        "docs/licensing/candidates"
+      ],
+      "allow_callers": ["approved_register_unit"],
+      "deny_callers": [
+        "pending_as_approved",
+        "blocked_as_approved",
+        "herdrm_copy",
+        "public_visibility_as_license_grant"
+      ],
+      "fail_state": "keep_out_of_build_inputs",
+      "rollback": "Remove the candidate from lock and bundle inputs.",
+      "owner_module": "herddesk_g0.licensing; future HD-007/014/021/034",
+      "verification_task": "HD-035",
+      "spec_update_trigger": "The first PackageReference or npm lock is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "renderer_ipc",
+      "parent_adr": "ADR-002",
+      "title": "Renderer IPC capability, origin, and schema",
+      "child_ac": "AC44-C1",
+      "problem": "Untrusted renderer messages must not execute commands, read files, or switch targets.",
+      "decision": "Versioned allowlist: frame.apply, parse.consumed, input.user_key, input.committed_text, input.explicit_paste, terminal.resize. Unknown type, oversize, wrong epoch, wrong pane, host.exec, navigation, and downloads are rejects. InputContext is never taken from the renderer message. ime.preedit is never transport. input.emulator_reply is known and denied by InputPolicy. Local origin. No CDN. No host objects. No generic exec.",
+      "evidence_class": "synthetic",
+      "input_evidence": [
+        "src/HerdDesk.Core/WebMessagePolicy.cs",
+        "tests/fixtures/renderer-cases.json"
+      ],
+      "allow_callers": [
+        "allowlisted_web_message_after_origin_epoch_pane_check"
+      ],
+      "deny_callers": [
+        "host.exec",
+        "navigation",
+        "download",
+        "unknown_web_message_type",
+        "generic_exec_proxy",
+        "input_context_from_renderer"
+      ],
+      "fail_state": "reject_web_message",
+      "rollback": "Keep the L1 allowlist. Do not add a WebView2 host in G0.",
+      "owner_module": "HerdDesk.Core WebMessagePolicy; future HerdDesk.Terminal.Web",
+      "verification_task": "HD-014",
+      "spec_update_trigger": "A WebView2 PostWebMessage host is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "endpoint_discovery",
+      "parent_adr": "ADR-003",
+      "title": "Endpoint discovery",
+      "child_ac": "AC03-C1",
+      "problem": "Default session, named session, and explicit path must map to a local expected API endpoint. Guessing APPDATA or UNC is unsafe.",
+      "decision": "EndpointResolver maps DeviceId, SessionKey, and a trusted-host config object. Default does not guess %APPDATA% or conventional pipe names. Named does not fall back to default. Remote UNC is rejected. PaneKey is not an endpoint key. Unmapped default requires explicit configuration. Named-pipe ACL remains blocked.",
+      "evidence_class": "synthetic",
+      "input_evidence": [
+        "src/HerdDesk.Core/EndpointResolver.cs",
+        "tests/fixtures/endpoint-cases.json",
+        "evidence/runtime/windows-endpoint-matrix.blocked.json"
+      ],
+      "allow_callers": [
+        "explicit_canonical_location",
+        "verified_mapping_for_same_device"
+      ],
+      "deny_callers": [
+        "appdata_environment_guess",
+        "named_fallback_to_default",
+        "remote_unc",
+        "pane_key_as_endpoint"
+      ],
+      "fail_state": "explicit_configuration_required",
+      "rollback": "Refuse the connect. Stay observe-only.",
+      "owner_module": "HerdDesk.Core EndpointResolver; future HD-008",
+      "verification_task": "HD-008",
+      "spec_update_trigger": "A live named-pipe connect path is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "logging_redaction",
+      "parent_adr": "ADR-006",
+      "title": "Logging redaction",
+      "child_ac": null,
+      "problem": "Terminal bytes, credentials, and private paths must not appear in diagnostics.",
+      "decision": "G0 has no log framework. Failures use a stable redacted code. Probe default summaries keep counts and lengths. Stderr text requires --include-diagnostics. Public issues use synthetic data or an isolated disposable session.",
+      "evidence_class": "source_inspection_only",
+      "input_evidence": [
+        ".trellis/spec/backend/logging-guidelines.md",
+        "SECURITY.md",
+        "scripts/probe_herdr.py"
+      ],
+      "allow_callers": [
+        "stable_error_code",
+        "payload_sha256",
+        "redacted_diagnostic_id"
+      ],
+      "deny_callers": [
+        "terminal_payload_in_exception",
+        "credentials_in_log",
+        "private_path_in_log",
+        "default_argv_in_probe_summary"
+      ],
+      "fail_state": "omit_field",
+      "rollback": "Strip the field. Keep the stable code.",
+      "owner_module": "HerdDesk.Core exceptions; herddesk_g0.protocol; probe_herdr safe_summary",
+      "verification_task": "HD-026",
+      "spec_update_trigger": "A logging package is admitted.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    },
+    {
+      "id": "filebridge_capability",
+      "parent_adr": "ADR-007",
+      "title": "filebridge capability",
+      "child_ac": "AC44-C2",
+      "problem": "A file helper must not become an arbitrary command, arbitrary file, or cross-target channel.",
+      "decision": "herddesk-filebridge is a future on-demand helper. Narrow commands: list, stat, read, write, rename. No exec. No recursive delete. No arbitrary command. Not an SFTP claim. Separate from herddesk-bridge. Protocol locks in P4. G0 does not ship the module.",
+      "evidence_class": "source_inspection_only",
+      "input_evidence": [
+        "docs/plan/docs/07_多设备SSH与文件.md",
+        "docs/plan/docs/08_安全与威胁模型.md"
+      ],
+      "allow_callers": [
+        "future_narrow_file_job_same_ssh_identity"
+      ],
+      "deny_callers": [
+        "arbitrary_command",
+        "arbitrary_file",
+        "cross_target_reinterpret",
+        "rpc_bridge_file_exec",
+        "sftp_claim"
+      ],
+      "fail_state": "job_refused",
+      "rollback": "Do not add filebridge. Keep file features out of G0.",
+      "owner_module": "future herddesk-filebridge; not in the G0 tree",
+      "verification_task": "HD-027",
+      "spec_update_trigger": "A filebridge protocol or project is added.",
+      "adoption": "adopted_as_policy",
+      "runtime_verified": false
+    }
+  ],
+  "gates": [
+    {
+      "id": "hd001-source-protocol",
+      "task": "HD-001",
+      "capability": "herdr_source_tag_blob_protocol",
+      "path": "confirmed",
+      "evidence_class": "source_inspection_only",
+      "result": "recorded",
+      "live_result": "blocked",
+      "blocked_category": null,
+      "degrade": "source_inspection_is_not_runtime_proof",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/compatibility-baseline.json",
+        "docs/source-verification.md"
+      ],
+      "verification_task": "HD-001"
+    },
+    {
+      "id": "hd001-windows-runtime",
+      "task": "HD-001",
+      "capability": "windows_local_runtime",
+      "path": "blocked",
+      "evidence_class": "blocked",
+      "result": "blocked",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "degrade": "observe_and_unknown",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/runtime/windows-runtime.blocked.json"
+      ],
+      "verification_task": "HD-001"
+    },
+    {
+      "id": "hd001-named-pipe-acl",
+      "task": "HD-001",
+      "capability": "named_pipe_acl",
+      "path": "blocked",
+      "evidence_class": "blocked",
+      "result": "blocked",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "degrade": "explicit_configuration_required",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/runtime/windows-runtime.blocked.json"
+      ],
+      "verification_task": "HD-001"
+    },
+    {
+      "id": "hd001-remote-runtime",
+      "task": "HD-001",
+      "capability": "remote_linux_runtime",
+      "path": "unknown",
+      "evidence_class": "not_run",
+      "result": "not_run",
+      "live_result": "not_run",
+      "blocked_category": null,
+      "degrade": "observe_and_unknown",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/runtime/remote-runtime.not-run.json"
+      ],
+      "verification_task": "HD-001"
+    },
+    {
+      "id": "hd001-runtime-hashes",
+      "task": "HD-001",
+      "capability": "runtime_and_distribution_hashes",
+      "path": "unknown",
+      "evidence_class": "not_run",
+      "result": "unknown",
+      "live_result": "not_run",
+      "blocked_category": null,
+      "degrade": "keep_hash_fields_null",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/compatibility-baseline.json"
+      ],
+      "verification_task": "HD-001"
+    },
+    {
+      "id": "hd003-endpoint-l1",
+      "task": "HD-003",
+      "capability": "endpoint_resolver_l1",
+      "path": "confirmed",
+      "evidence_class": "synthetic",
+      "result": "recorded",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_windows_endpoint_or_live_herdr_grant",
+      "degrade": "synthetic_is_not_windows_runtime_proof",
+      "claim_passed": false,
+      "attachments": [
+        "tests/fixtures/endpoint-cases.json"
+      ],
+      "verification_task": "HD-003"
+    },
+    {
+      "id": "hd003-windows-endpoint",
+      "task": "HD-003",
+      "capability": "windows_endpoint_runtime",
+      "path": "blocked",
+      "evidence_class": "blocked",
+      "result": "blocked",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_windows_endpoint_or_live_herdr_grant",
+      "degrade": "explicit_configuration_required",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/runtime/windows-endpoint-matrix.blocked.json"
+      ],
+      "verification_task": "HD-003"
+    },
+    {
+      "id": "hd003-unc-and-env-guess",
+      "task": "HD-003",
+      "capability": "unc_and_environment_guess",
+      "path": "degrade",
+      "evidence_class": "synthetic",
+      "result": "degrade",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_windows_endpoint_or_live_herdr_grant",
+      "degrade": "reject_unc_and_require_explicit_configuration",
+      "claim_passed": false,
+      "attachments": [
+        "src/HerdDesk.Core/EndpointResolver.cs"
+      ],
+      "verification_task": "HD-003"
+    },
+    {
+      "id": "hd004-lease-l1",
+      "task": "HD-004",
+      "capability": "terminal_lease_mapper_l1",
+      "path": "confirmed",
+      "evidence_class": "synthetic",
+      "result": "recorded",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "degrade": "synthetic_is_not_observe_control_runtime_proof",
+      "claim_passed": false,
+      "attachments": [
+        "tests/fixtures/lease-cases.json"
+      ],
+      "verification_task": "HD-004"
+    },
+    {
+      "id": "hd004-windows-lease",
+      "task": "HD-004",
+      "capability": "windows_terminal_lease",
+      "path": "blocked",
+      "evidence_class": "blocked",
+      "result": "blocked",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "degrade": "observe_and_unknown",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/runtime/windows-terminal-lease.blocked.json"
+      ],
+      "verification_task": "HD-004"
+    },
+    {
+      "id": "hd004-control-inference",
+      "task": "HD-004",
+      "capability": "control_verified_inference",
+      "path": "degrade",
+      "evidence_class": "synthetic",
+      "result": "degrade",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "degrade": "deny_control_verified_from_frame_process_focus",
+      "claim_passed": false,
+      "attachments": [
+        "src/HerdDesk.Core/TerminalLeaseProbe.cs",
+        "src/HerdDesk.Core/InputPolicy.cs"
+      ],
+      "verification_task": "HD-004"
+    },
+    {
+      "id": "hd004-unknown-control-signal",
+      "task": "HD-004",
+      "capability": "unknown_control_signal",
+      "path": "unknown",
+      "evidence_class": "not_run",
+      "result": "unknown",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_isolated_pane_or_live_herdr_grant",
+      "degrade": "stay_unknown_or_acquiring_no_write",
+      "claim_passed": false,
+      "attachments": [
+        "src/HerdDesk.Core/TerminalLeaseProbe.cs"
+      ],
+      "verification_task": "HD-004"
+    },
+    {
+      "id": "hd005-renderer-l1",
+      "task": "HD-005",
+      "capability": "renderer_l1_host_specimens",
+      "path": "confirmed",
+      "evidence_class": "synthetic",
+      "result": "recorded",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_winui_interactive_desktop_or_ime_grant",
+      "degrade": "synthetic_is_not_winui_ime_proof",
+      "claim_passed": false,
+      "attachments": [
+        "tests/fixtures/renderer-cases.json",
+        "docs/spikes/renderer-decision.md"
+      ],
+      "verification_task": "HD-005"
+    },
+    {
+      "id": "hd005-ime-desktop",
+      "task": "HD-005",
+      "capability": "ime_and_interactive_desktop",
+      "path": "blocked",
+      "evidence_class": "blocked",
+      "result": "blocked",
+      "live_result": "blocked",
+      "blocked_category": "no_authorized_winui_interactive_desktop_or_ime_grant",
+      "degrade": "observe_and_preedit_not_sent",
+      "claim_passed": false,
+      "attachments": [
+        "evidence/runtime/windows-renderer-ime.blocked.json"
+      ],
+      "verification_task": "HD-015"
+    },
+    {
+      "id": "hd005-native-raw-stream",
+      "task": "HD-005",
+      "capability": "native_raw_stream",
+      "path": "unknown",
+      "evidence_class": "not_run",
+      "result": "unverified",
+      "live_result": "not_run",
+      "blocked_category": "no_authorized_winui_interactive_desktop_or_ime_grant",
+      "degrade": "do_not_promote_native",
+      "claim_passed": false,
+      "attachments": [
+        "docs/spikes/renderer-decision.md"
+      ],
+      "verification_task": "HD-005"
+    },
+    {
+      "id": "hd005-webview-origin-runtime",
+      "task": "HD-005",
+      "capability": "webview2_origin_cdn_host_objects",
+      "path": "unknown",
+      "evidence_class": "not_run",
+      "result": "unverified",
+      "live_result": "not_run",
+      "blocked_category": "no_authorized_winui_interactive_desktop_or_ime_grant",
+      "degrade": "keep_l1_allowlist_no_webview_host",
+      "claim_passed": false,
+      "attachments": [
+        "docs/spikes/renderer-decision.md"
+      ],
+      "verification_task": "HD-014"
+    }
+  ]
+}

@@ -9,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 SCRIPTS=Path(__file__).resolve().parent
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0,str(SCRIPTS))
+from herddesk_g0.adr import validate_adr_baseline
 from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
@@ -69,15 +70,21 @@ def validate() -> dict:
     licensing=validate_licensing(ROOT)
     assert licensing['windows_verified'] is False
     assert licensing['ac02_passed'] is False
+    adr=validate_adr_baseline(ROOT)
+    assert adr['windows_verified'] is False
+    assert adr['ac44_passed'] is False
+    assert adr['g0_passed'] is False
     return {'structural_validation':'passed','json_files':count,'projects':len(projects),
             'tasks':len(tasks),'csharp_compiled':False,'windows_verified':False,
             'ac02_passed':False,'ac03_passed':False,'ac05_passed':False,
-            'ac08_passed':False,'ac09_passed':False,
+            'ac08_passed':False,'ac09_passed':False,'ac44_passed':False,
+            'g0_passed':False,
             'evidence_validation':evidence['evidence_validation'],
             'endpoint_validation':endpoint['endpoint_validation'],
             'lease_validation':lease['lease_validation'],
             'renderer_validation':renderer['renderer_validation'],
-            'licensing_validation':licensing['licensing_validation']}
+            'licensing_validation':licensing['licensing_validation'],
+            'adr_validation':adr['adr_validation']}
 
 
 if __name__=='__main__':

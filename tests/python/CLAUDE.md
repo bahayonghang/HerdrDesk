@@ -6,7 +6,7 @@
 
 ## 职责
 
-回归 Python 协议、探针安全门、发布清单、仓库可移植性、许可台账、endpoint 矩阵、terminal lease 映射、renderer L1 矩阵。不执行 herdr，不启动 GUI。
+回归 Python 协议、探针安全门、发布清单、仓库可移植性、许可台账、endpoint 矩阵、terminal lease 映射、renderer L1 矩阵、ADR 冻结台账。不执行 herdr，不启动 GUI。
 
 ## 入口
 
@@ -25,16 +25,17 @@ python -m unittest discover -s tests/python -v
 | `test_protocol.py` | `StrictJsonTests`, `FramerTests`, `FrameTests`, `InputTests`, `CaptureTests` | 重复键、非有限数字、深度脱敏、分块 NDJSON、无分隔符 EOF 失败、字段名 `bytes` 而非 `data`、非 canonical Base64、跨帧 UTF-8 不解码、关闭后锁存、新实例重置 seq、input text/bytes 互斥、surrogate、scroll/resize 整数类型、100 轮随机分块、`check_capture.py` 拒绝覆盖且路径脱敏 |
 | `test_probe_safety.py` | `ProbeSafetyTests` | 无 disposable 时 control 不 `Popen`；observe 不能带 input；input 需单独 `--allow-input`；非法 target/session；`stop_owned` 不杀进程树；terminate 超时只 kill 自有 handle；默认报告去掉输出与 argv；probe 不宣称 ControlVerified 或 pane 死亡 |
 | `test_publish.py` | `PublisherTests` | 清单 hash、路径穿越、未列出的 `.env` 不入库、错误 GitHub 身份、create 为 public 且非 force、dry-run 输出 `kind=historical_bundle_audit`、漂移退出码 2、已有 checkout/已有仓库拒绝 |
-| `test_repository.py` | `RepositoryPortabilityTests` | `validate()` 通过；元数据 `read_text` 必须 `encoding='utf-8'`；`terminal-valid.ndjson` 无 CRLF，SHA-256 `d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599` |
+| `test_repository.py` | `RepositoryPortabilityTests` | `validate()` 通过；元数据 `read_text` 必须 `encoding='utf-8'`；`terminal-valid.ndjson` 无 CRLF，SHA-256 `d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599`；`ac44_passed` 与 `g0_passed` 恒为 false |
 | `test_evidence.py` | `EvidenceBaselineTests` | 驱动 `herddesk_g0.evidence` 与仓库内真实 evidence 文件；拒绝 hash 混同、无采集文件的 runtime 成功、source/synthetic/hosted CI 提升；Windows blocked 与 remote `not_run` 必须独立；结构校验 `windows_verified` 恒为 false |
 | `test_licensing.py` | `LicensingRegisterTests` | 驱动 `herddesk_g0.licensing` 与 `docs/licensing` 真实台账/模板；拒绝 pending/blocked 当 approved、herdrm 拷贝宣称、公开可见当授权；`ac02_passed` 与 `windows_verified` 恒为 false |
 | `test_endpoint.py` | `EndpointMatrixTests` | 驱动 `herddesk_g0.endpoint` 与 `tests/fixtures/endpoint-cases.json`；七行模拟矩阵；拒绝 APPDATA 猜测、常规 pipe 名猜测、named 回退、UNC、PaneKey 当身份、跨 DeviceId 映射、fixture 当 runtime/AC03 通过；`windows_verified` 与 `ac03_passed` 恒为 false |
 | `test_lease.py` | `TerminalLeaseTests` | 驱动 `herddesk_g0.lease` 与 `tests/fixtures/lease-cases.json`；十四行模拟矩阵；拒绝首帧/进程/焦点置 ControlVerified、observe 发送输入、EOF 当 pane 退出、虚构 Granted、fixture 当 runtime/AC05 通过；`windows_verified` 与 `ac05_passed` 恒为 false |
 | `test_renderer.py` | `RendererMatrixTests` | 驱动 `herddesk_g0.renderer` 与 `tests/fixtures/renderer-cases.json`；十八行 L1 矩阵；拒绝 AC08/AC09 宣称、IME 已执行宣称、L3 假通过；`windows_verified` 与 `ac08_passed`/`ac09_passed` 恒为 false |
+| `test_adr.py` | `ApprovedBaselineTests` | 驱动 `herddesk_g0.adr` 与 `docs/adr/approved-baseline.json` / markdown；拒绝 blocked/unknown 当 passed、G0/AC44 宣称通过、R5 已执行、平行编号、缺失证据路径、解除 AGENTS G0 禁令；`ac44_passed`、`g0_passed` 与 `windows_verified` 恒为 false |
 
 ## 依赖
 
-- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`endpoint.py`、`lease.py`、`renderer.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
+- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`endpoint.py`、`lease.py`、`renderer.py`、`adr.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
 - 数据：[../fixtures](../fixtures/CLAUDE.md)。
 
 与 C# smoke、probe selftest 分开报告，不合并为覆盖率。hosted SHA `629bb01` 为 Python 73 / C# smoke 22 / probe 23。

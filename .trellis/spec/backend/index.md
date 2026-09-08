@@ -14,7 +14,7 @@ Current backend surface:
 
 - `src/HerdDesk.Contracts` — BCL-only identity, frame, input, endpoint, and lease types.
 - `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, and renderer L1 specimens.
-- `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator, endpoint matrix, lease matrix, renderer L1 matrix.
+- `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator, endpoint matrix, lease matrix, renderer L1 matrix, ADR baseline.
 - `scripts/probe_herdr.py` — default-readonly probe; writes need a disposable target.
 - `tests/HerdDesk.Core.SmokeTests` — `dotnet run`, not `dotnet test`.
 - `tests/python` — stdlib `unittest`.
@@ -58,3 +58,4 @@ There is no HTTP API, no ORM, and no application host in `src/`.
 - [ ] `herddesk_g0.endpoint` keeps `ac03_passed` and `windows_verified` false. Synthetic endpoint fixtures are not Windows runtime proof.
 - [ ] `herddesk_g0.lease` keeps `ac05_passed` and `windows_verified` false. Synthetic lease fixtures and probe selftest are not observe/control runtime proof.
 - [ ] `herddesk_g0.renderer` keeps `ac08_passed`, `ac09_passed`, and `windows_verified` false. Synthetic renderer fixtures are not WinUI, WebView2, IME, or native runtime proof.
+- [ ] `herddesk_g0.adr` keeps `ac44_passed`, `g0_passed`, and `windows_verified` false. Blocked or unknown ledger rows are not passed. R5 is not executed.

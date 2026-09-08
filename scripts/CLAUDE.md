@@ -35,6 +35,8 @@ Python 3.10+，仅标准库。将本目录加入 `sys.path` 后 `import herddesk
 | `lease.validate_terminal_lease_matrix` / `check_terminal_lease_matrix` / `map_lease` | 十四行模拟矩阵与受控映射；拒绝首帧/进程/焦点置 ControlVerified、observe 发送输入、EOF 当 pane 退出、虚构 Granted、fixture 当 AC05 通过；`windows_verified` 与 `ac05_passed` 恒为 false |
 | `renderer.RendererError` | 稳定 renderer 规则码；消息仅为码 |
 | `renderer.validate_renderer_matrix` / `check_renderer_matrix` / `assemble_utf8` / `evaluate_web_message` | 十八行 L1 矩阵；拒绝逐块替换字符、旧 epoch、预编辑发送、observe 转发、无界队列、未知 web type；`windows_verified` 与 `ac08_passed`/`ac09_passed` 恒为 false |
+| `adr.AdrError` | 稳定 ADR 规则码；消息仅为码 |
+| `adr.validate_adr_baseline` / `check_adr_baseline` | 加载 `docs/adr/approved-baseline.json` 与 markdown；拒绝 blocked/unknown 当 passed、G0/AC44 宣称通过、R5 已执行、平行 ADR 编号、缺失证据路径、解除 AGENTS G0 禁令；`ac44_passed`、`g0_passed` 与 `windows_verified` 恒为 false |
 
 `validate_input`：`text` 与 `bytes` 必须恰好一个；空载荷拒绝。Python `bool` 不得当作 JSON 整数。Base64 必须与 `b64encode` 回比一致。终端 payload 不做 UTF-8 解码。
 
@@ -69,7 +71,7 @@ argv：`herdr [--session S] terminal session {observe|control} TARGET --cols --r
 | 文件 | 行为 |
 |---|---|
 | `check_capture.py` | `analyze_capture`；`--output` 独占创建 |
-| `validate_repository.py` | UTF-8 JSON；无 `PackageReference`；36 任务无环；48 AC；调用 `herddesk_g0.evidence`、`herddesk_g0.endpoint`、`herddesk_g0.lease`、`herddesk_g0.renderer` 与 `herddesk_g0.licensing`；baseline `api_protocol==20` 且 `default_write_capability is False`；`windows_verified`、`ac02_passed`、`ac03_passed`、`ac05_passed`、`ac08_passed` 与 `ac09_passed` 恒为 false |
+| `validate_repository.py` | UTF-8 JSON；无 `PackageReference`；36 任务无环；48 AC；调用 `herddesk_g0.evidence`、`herddesk_g0.endpoint`、`herddesk_g0.lease`、`herddesk_g0.renderer`、`herddesk_g0.licensing` 与 `herddesk_g0.adr`；baseline `api_protocol==20` 且 `default_write_capability is False`；`windows_verified`、`ac02_passed`、`ac03_passed`、`ac05_passed`、`ac08_passed`、`ac09_passed`、`ac44_passed` 与 `g0_passed` 恒为 false |
 | `publish_github.py` | 历史 `PUBLICATION_MANIFEST.json` 审计（`kind=historical_bundle_audit`）。默认 dry-run，漂移退出码 2。日常门禁是 `just ci`。`--publish` 仅历史空仓建仓，已有仓库拒绝 |
 | `Invoke-HerdDeskPreflight.ps1` | pwsh 7 包装 `preflight`；仓库内无 Windows 执行证据 |
 
