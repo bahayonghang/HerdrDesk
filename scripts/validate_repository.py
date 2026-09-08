@@ -28,6 +28,7 @@ def validate() -> dict:
     projects=list((ROOT/'src').rglob('*.csproj'))+list((ROOT/'tests').rglob('*.csproj'))
     packages=json.loads((ROOT/'implementation/hd-007-packages.json').read_text(encoding='utf-8'))
     hd011=json.loads((ROOT/'implementation/hd-011-l2.json').read_text(encoding='utf-8'))
+    hd012=json.loads((ROOT/'implementation/hd-012-l2.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -42,6 +43,12 @@ def validate() -> dict:
     assert hd011.get('g0_passed') is not True
     assert hd011.get('winui_admitted') is not True
     assert hd011.get('phase_gate')!='passed'
+    assert hd012.get('l2_windows_toast_activation')=='UNVERIFIED'
+    assert hd012.get('ac17_passed') is not True
+    assert hd012.get('ac18_passed') is not True
+    assert hd012.get('g0_passed') is not True
+    assert hd012.get('winui_admitted') is not True
+    assert hd012.get('phase_gate')!='passed'
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd012_l2_status",
+  "l2_windows_toast_activation": "UNVERIFIED",
+  "l3_toast_click_narrator_focus": "UNVERIFIED",
+  "winui_admitted": false,
+  "windows_toast_registration": "not_admitted",
+  "l1_reducer_viewmodel": "required; does not close product AC17 or AC18",
+  "ac17_passed": false,
+  "ac18_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "HD-012 ships the L1 attention reducer, unread aggregation, and in-app NotificationCenter ViewModel. Windows toast registration and activation stay UNVERIFIED. This file is not AC pass evidence."
+}

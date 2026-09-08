@@ -19,4 +19,4 @@ probe `selftest` 合成检查计数以本次运行为准，入口在 [../scripts
 
 规划层级 L0–L4 见 `docs/plan/docs/10_测试与验收.md`。当前 CI 只跑 L0/L1 离线部分。`tests/fixtures/real-terminal-v082/` 是 HD-004 占位索引，不是 runtime 通过证据。
 
-无 xUnit、无 `dotnet test`、无 pytest。测试框架 NuGet 未准入 lock。HD-011 L1 ViewModel 测试在 `tests/Unit/HerdDesk.App.Tests`。`tests/Integration.Windows` 未建仓：WinUI 未准入，L2/L3 为 UNVERIFIED。
+无 xUnit、无 `dotnet test`、无 pytest。测试框架 NuGet 未准入 lock。HD-011 L1 ViewModel 测试在 `tests/Unit/HerdDesk.App.Tests`。HD-012 Attention reducer 测试在 `tests/Unit/HerdDesk.Core.Tests/Attention`；通知路由测试在 `tests/Unit/HerdDesk.App.Tests/Notifications`。`tests/Integration.Windows` 未建仓：WinUI 未准入，L2/L3 与 Windows toast 为 UNVERIFIED。

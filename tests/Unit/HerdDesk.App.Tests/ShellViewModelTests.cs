@@ -126,7 +126,6 @@ internal static class ShellViewModelTests
         var snapshot = AppTestHost.TwoNamedPanes();
         var pane = snapshot.Devices[0].Sessions[0].Panes[0].Key;
         var catalog = new ProjectionCatalog { Snapshot = snapshot, DaemonAvailable = true };
-        catalog.SetUnread(pane, 4);
         catalog.SetAccess(pane, TerminalAccess.Observing, false);
         var shell = AppTestHost.Shell(new MemoryDeviceProfileStore
         {
@@ -141,16 +140,19 @@ internal static class ShellViewModelTests
         shell.StartAsync().AsTask().GetAwaiter().GetResult();
         shell.ExpandAll();
         shell.Select(shell.VisibleItems.First(item => item.Pane == pane));
-        AppTestHost.Check(shell.UnreadCount == 4);
+        AppTestHost.Check(shell.UnreadCount == 0);
         AppTestHost.Check(shell.Access == TerminalAccess.Observing);
         AppTestHost.Check(!shell.ControlVerified);
         AppTestHost.Check(shell.AgentStatus.Known == AgentStatusKind.Idle);
-        catalog.SetUnread(pane, 7);
+        catalog.Snapshot = AppTestHost.WithAgentStatus(snapshot, pane, AppTestHost.Blocked());
         catalog.SetAccess(pane, TerminalAccess.Observing, false);
         shell.RefreshFromCatalog();
-        AppTestHost.Check(shell.UnreadCount == 7);
+        shell.Select(shell.VisibleItems.First(item => item.Pane == pane));
+        AppTestHost.Check(shell.UnreadCount == 1);
+        AppTestHost.Check(shell.NotificationUnread == 1);
         AppTestHost.Check(shell.Access == TerminalAccess.Observing);
         AppTestHost.Check(!shell.ControlVerified);
+        AppTestHost.Check(shell.AgentStatus.Known == AgentStatusKind.Blocked);
         catalog.SetAccess(pane, TerminalAccess.Controlling, true);
         shell.RefreshFromCatalog();
         shell.Select(shell.VisibleItems.First(item => item.Pane == pane));

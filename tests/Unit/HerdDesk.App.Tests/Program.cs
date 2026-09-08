@@ -7,7 +7,8 @@ cases =
     .. LocalDeviceSettingsTests.All,
     .. DiagnosticExportPreviewTests.All,
     .. TerminalDisplaySettingsTests.All,
-    .. ActivationAndExitTests.All
+    .. ActivationAndExitTests.All,
+    .. DeepLinkRoutingTests.All
 ];
 
 var failed = 0;

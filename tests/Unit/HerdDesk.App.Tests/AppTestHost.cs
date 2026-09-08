@@ -2,6 +2,7 @@ using HerdDesk.App;
 using HerdDesk.Contracts;
 using HerdDesk.Core;
 using HerdDesk.Infrastructure.Configuration;
+using HerdDesk.Infrastructure.Diagnostics;
 
 internal static class AppTestHost
 {
@@ -59,9 +60,40 @@ internal static class AppTestHost
     public static SessionProjection SessionState(
         SessionKey session,
         IReadOnlyList<WorkspaceProjection> workspaces,
-        IReadOnlyList<PaneProjection> panes) =>
-        new(session, "0.9.0", 22, workspaces.FirstOrDefault()?.WorkspaceId, "t1",
-            panes.FirstOrDefault()?.Key.PaneId, workspaces, [], panes, [], []);
+        IReadOnlyList<PaneProjection> panes)
+    {
+        var agents = panes.Select(pane => new AgentProjection(
+            session, pane.TerminalId, pane.TabId, pane.Key, pane.Label, pane.AgentRaw, pane.AgentKind,
+            pane.DisplayAgent, pane.AgentStatus, pane.Focused, pane.Revision)).ToArray();
+        return new(session, "0.9.0", 22, workspaces.FirstOrDefault()?.WorkspaceId, "t1",
+            panes.FirstOrDefault()?.Key.PaneId, workspaces, [], panes, [], agents);
+    }
+
+    public static DeviceProjectionSnapshot WithAgentStatus(
+        DeviceProjectionSnapshot snapshot,
+        PaneKey pane,
+        WireEnum<AgentStatusKind> status)
+    {
+        var devices = snapshot.Devices.Select(device =>
+        {
+            var sessions = device.Sessions.Select(session =>
+            {
+                var panes = session.Panes.Select(item =>
+                    item.Key == pane ? item with { AgentStatus = status } : item).ToArray();
+                var agents = session.Agents.Select(item =>
+                    item.Pane == pane ? item with { AgentStatus = status } : item).ToArray();
+                return session with { Panes = panes, Agents = agents };
+            }).ToArray();
+            return device with { Sessions = sessions };
+        }).ToArray();
+        return snapshot with { Devices = devices };
+    }
+
+    public static WireEnum<AgentStatusKind> Blocked() => new("blocked", AgentStatusKind.Blocked);
+
+    public static WireEnum<AgentStatusKind> Done() => new("done", AgentStatusKind.Done);
+
+    public static WireEnum<AgentStatusKind> Working() => new("working", AgentStatusKind.Working);
 
     public static DeviceProjectionSnapshot Snapshot(
         ConnectionEpoch epoch,
@@ -152,7 +184,10 @@ internal static class AppTestHost
         IConfigurationOwnership? ownership = null,
         ITerminalDisplaySurface? surface = null,
         AppExitCoordinator? exit = null,
-        UiPreferenceStore? ui = null)
+        UiPreferenceStore? ui = null,
+        IDiagnosticSink? diagnostics = null,
+        INotificationSink? notifications = null,
+        DiagnosticAliasProjector? aliases = null)
     {
         paths ??= AppDataPaths.FromRoot(TempRoot());
         profiles ??= new AtomicConfigurationStore(paths);
@@ -165,6 +200,9 @@ internal static class AppTestHost
             UiPreferences = ui,
             DisplaySurface = surface ?? new NullDisplaySurface(),
             Exit = exit ?? new AppExitCoordinator(),
+            DiagnosticSink = diagnostics,
+            NotificationSink = notifications,
+            Aliases = aliases,
             Unavailable =
             [
                 new UnavailableCapability("rpc-connection", "rpc_bridge_unavailable"),
@@ -270,4 +308,18 @@ internal sealed class FakeDaemon
 internal sealed class FixedClock : IClock
 {
     public DateTimeOffset UtcNow { get; set; } = new(2026, 9, 8, 0, 0, 0, TimeSpan.Zero);
+}
+
+internal sealed class RecordingDiagnosticSink : IDiagnosticSink
+{
+    public List<DiagnosticEvent> Events { get; } = [];
+    public long DroppedCount => 0;
+
+    public bool TryWrite(DiagnosticEvent evt)
+    {
+        Events.Add(evt);
+        return true;
+    }
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

@@ -13,11 +13,11 @@ Shared facts: [AGENTS.md](../../../AGENTS.md). Module indexes: nested `CLAUDE.md
 Current backend surface:
 
 - `src/HerdDesk.Contracts` — BCL-only identity, frame, input, endpoint, lease, configuration, diagnostic, adapter-capability, and HD-009 projection types.
-- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, renderer L1 specimens, in-memory projection Store, and HD-010 `DeviceSession` actor.
+- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, renderer L1 specimens, in-memory projection Store, HD-010 `DeviceSession` actor, and HD-012 attention reducer.
 - `src/HerdDesk.Infrastructure` — `AppDataPaths`, atomic device-profile store, JSONL diagnostic sink, owned child process, RPC stdio, SchemaV1 decoder.
 - `bridge/herddesk-bridge` — stdio ↔ local-socket byte relay. L2 named-pipe ACL UNVERIFIED.
 - `src/HerdDesk.Terminal.Web` — WebView2/xterm capability stub; packages `UNVERIFIED`.
-- `src/HerdDesk.App` — unique composition root / console host stub plus HD-011 L1 ViewModels. WinUI XAML is not admitted.
+- `src/HerdDesk.App` — unique composition root / console host stub plus HD-011 L1 ViewModels and HD-012 L1 NotificationCenter. WinUI XAML is not admitted. Windows toast L2 is UNVERIFIED.
 - `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator, endpoint matrix, lease matrix, renderer L1 matrix, ADR baseline, project graph.
 - `scripts/probe_herdr.py` — default-readonly probe; writes need a disposable target.
 - `tests/HerdDesk.Core.SmokeTests` — `dotnet run`, not `dotnet test`.

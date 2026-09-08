@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本、HD-009 内存投影 Store，以及 HD-010 每 SessionKey 一个 `DeviceSession` actor。未读与命令编排尚未实现。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本、HD-009 内存投影 Store、HD-010 每 SessionKey 一个 `DeviceSession` actor，以及 HD-012 L1 注意力 reducer / 未读聚合。命令编排尚未实现。
 
 ## 职责
 
@@ -83,7 +83,7 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 
 ## 测试
 
-[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 覆盖 InputPolicy、parser latch、Core 程序集边界、HD-009 mapper/Store（fake decoded 输入），以及 HD-010 DeviceSession L1 race（fake RPC ports、barrier，不用 sleep）。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。L2 live subscribe interleave 为 UNVERIFIED，见 `implementation/hd-010-l2.json`。
+[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 覆盖 InputPolicy、parser latch、Core 程序集边界、HD-009 mapper/Store（fake decoded 输入）、HD-010 DeviceSession L1 race（fake RPC ports、barrier，不用 sleep），以及 HD-012 Attention reducer（基线/去重/未读/stale）。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。L2 live subscribe interleave 为 UNVERIFIED，见 `implementation/hd-010-l2.json`。HD-012 Windows toast L2 为 UNVERIFIED，见 `implementation/hd-012-l2.json`。
 
 ## 关键文件
 
@@ -99,6 +99,7 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 - `DeviceSessions/DeviceSession.cs` — 单 reader mailbox actor：subscribe ack → snapshot → dirty 权威重读；event 不 patch Store。
 - `DeviceSessions/ReconcilePlanner.cs` — create/close/graph 风险全量 snapshot；已验证 getter 定向读取。
 - `DeviceSessions/DeviceSessionOptions.cs` — 250 ms coalesce、5 s calibration、可注入 `TimeProvider`。
+- `Attention/AttentionReducer.cs` — HD-012 L1 纯 reducer：首次/重连基线抑制、transition 去重、stale/mute/限流、层级未读。Windows toast 不在 Core。
 
 ## 约束
 

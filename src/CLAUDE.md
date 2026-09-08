@@ -9,10 +9,10 @@
 | 项目 | 索引 |
 |---|---|
 | [HerdDesk.Contracts](HerdDesk.Contracts/CLAUDE.md) | 身份、信封、配置/诊断/adapter 端口 |
-| [HerdDesk.Core](HerdDesk.Core/CLAUDE.md) | 帧解析 + 输入策略 + endpoint 映射 + lease 映射 + renderer L1 标本 + HD-009 投影 Store + HD-010 DeviceSession actor |
+| [HerdDesk.Core](HerdDesk.Core/CLAUDE.md) | 帧解析 + 输入策略 + endpoint 映射 + lease 映射 + renderer L1 标本 + HD-009 投影 Store + HD-010 DeviceSession actor + HD-012 Attention reducer |
 | [HerdDesk.Infrastructure](HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断 sink、owned process、RPC stdio、SchemaV1 decoder |
 | [HerdDesk.Terminal.Web](HerdDesk.Terminal.Web/CLAUDE.md) | Web renderer capability stub |
-| [HerdDesk.App](HerdDesk.App/CLAUDE.md) | 组合根 / 控制台宿主 stub + HD-011 L1 ViewModels（无 WinUI） |
+| [HerdDesk.App](HerdDesk.App/CLAUDE.md) | 组合根 / 控制台宿主 stub + HD-011 L1 ViewModels + HD-012 L1 NotificationCenter（无 WinUI） |
 
 测试项目在 [../tests](../tests/CLAUDE.md)。
 

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using HerdDesk.Contracts;
+using HerdDesk.Core;
 using HerdDesk.Infrastructure.Diagnostics;
 
 namespace HerdDesk.App;
@@ -17,6 +18,9 @@ public sealed class ShellDependencies
     public DiagnosticAliasProjector? Aliases { get; init; }
     public IReadOnlyList<UnavailableCapability> Unavailable { get; init; } = [];
     public AppActivationCoordinator? Activation { get; init; }
+    public AttentionReducer? Attention { get; init; }
+    public INotificationSink? NotificationSink { get; init; }
+    public IDiagnosticSink? DiagnosticSink { get; init; }
 }
 
 public sealed class ShellViewModel
@@ -29,6 +33,7 @@ public sealed class ShellViewModel
     private readonly NavigationCoordinator _navigation;
     private SearchHit? _pendingFocus;
     private FocusRegion _focusBeforeSearch = FocusRegion.Title;
+    private ConnectionEpoch _attentionEpoch;
 
     public ShellViewModel(ShellDependencies dependencies)
     {
@@ -43,6 +48,13 @@ public sealed class ShellViewModel
         Settings = new SettingsViewModel(
             dependencies.Profiles, Display, dependencies.Ownership, dependencies.UiPreferences);
         Diagnostics = new DiagnosticsViewModel(dependencies.Catalog, dependencies.Unavailable, dependencies.Aliases);
+        Notifications = new NotificationCenterViewModel(
+            dependencies.Catalog,
+            dependencies.Attention,
+            dependencies.NotificationSink,
+            dependencies.DiagnosticSink,
+            dependencies.Clock,
+            dependencies.Aliases);
         Exit = dependencies.Exit;
         FilesAvailability = new RouteAvailability(
             RouteAvailabilityKind.Disabled, ShellCodes.FilesProviderPending, ShellStrings.FilesPending);
@@ -60,6 +72,7 @@ public sealed class ShellViewModel
     public SearchPaletteViewModel Search { get; }
     public SettingsViewModel Settings { get; }
     public DiagnosticsViewModel Diagnostics { get; }
+    public NotificationCenterViewModel Notifications { get; }
     public TerminalDisplayCoordinator Display { get; }
     public AppExitCoordinator Exit { get; }
     public ShellLifecycle Lifecycle { get; private set; }
@@ -93,6 +106,7 @@ public sealed class ShellViewModel
     public WireEnum<AgentStatusKind> AgentStatus { get; private set; } =
         new("unknown", AgentStatusKind.Unknown);
     public int UnreadCount { get; private set; }
+    public int NotificationUnread => Notifications.UnreadCount;
     public TerminalAccess Access { get; private set; } = TerminalAccess.Disconnected;
     public bool ControlVerified { get; private set; }
     public string AddDeviceLabel => ShellStrings.AddDevice;
@@ -141,9 +155,11 @@ public sealed class ShellViewModel
 
     public void RefreshFromCatalog()
     {
+        SyncAttention();
         _navigation.Rebuild(Lifecycle == ShellLifecycle.Starting);
         Search.Refresh();
         ApplyPendingFocus();
+        CompleteNotificationFocus();
         UpdateChrome();
     }
 
@@ -281,6 +297,36 @@ public sealed class ShellViewModel
         CurrentFocus = new FocusToken("about");
     }
 
+    public void OpenNotifications()
+    {
+        Route = ShellRoute.Notifications;
+        Notifications.Open();
+        CurrentFocus = new FocusToken("notifications");
+        FocusedRegion = FocusRegion.Notifications;
+    }
+
+    public bool ActivateNotification(string token)
+    {
+        var result = Notifications.Activate(token);
+        if (result.Expired)
+        {
+            ActivationExpired = true;
+            _navigation.MarkExpired();
+            UpdateChrome();
+            return false;
+        }
+
+        if (result.Pending || !result.Succeeded || result.Target is null)
+        {
+            UpdateChrome();
+            return false;
+        }
+
+        ReceiveActivation(ToIntent(result.Target));
+        UpdateChrome();
+        return !ActivationExpired;
+    }
+
     public void RequestAddDevice()
     {
         OpenSettings();
@@ -386,6 +432,59 @@ public sealed class ShellViewModel
     }
 
     public ValueTask ExitAsync() => Exit.ExitAsync();
+
+    private void SyncAttention()
+    {
+        var epoch = Catalog.Snapshot.Epoch;
+        AttentionSyncKind kind;
+        if (Lifecycle == ShellLifecycle.Starting || _attentionEpoch.Value == 0)
+            kind = AttentionSyncKind.Baseline;
+        else if (epoch != _attentionEpoch)
+            kind = AttentionSyncKind.ReconnectBaseline;
+        else if (Catalog.Freshness == DeviceFreshness.Refreshing)
+            kind = AttentionSyncKind.DirtyRefresh;
+        else
+            kind = AttentionSyncKind.Live;
+        if (Catalog.Freshness == DeviceFreshness.Stale)
+        {
+            foreach (var device in Catalog.Snapshot.Devices)
+                Notifications.MarkDeviceStale(device.Device);
+        }
+        else if (Catalog.Snapshot.Phase == ConnectionPhase.Offline)
+        {
+            foreach (var device in Catalog.Snapshot.Devices)
+                Notifications.MarkDeviceOffline(device.Device);
+        }
+
+        Notifications.SetGlobalMute(!Settings.CommittedUi.NotificationsEnabled);
+        Notifications.Synchronize(kind, Lifecycle == ShellLifecycle.Starting);
+        _attentionEpoch = epoch;
+    }
+
+    private void CompleteNotificationFocus()
+    {
+        var pending = Notifications.CompletePending();
+        if (pending.Cancelled || pending.Pending)
+            return;
+        if (pending.Expired)
+        {
+            ActivationExpired = true;
+            _navigation.MarkExpired();
+            return;
+        }
+
+        if (pending.Succeeded && pending.Target is { } target)
+            ReceiveActivation(ToIntent(target));
+    }
+
+    private static ActivationIntent ToIntent(NotificationTarget target) =>
+        new(
+            ActivationKind.NotificationTarget,
+            target.Key.Pane.Session.Device,
+            target.Key.Pane.Session,
+            target.Key.Pane.WorkspaceId,
+            target.Key.Pane,
+            target.Epoch);
 
     private void TryFocusPane(PaneKey pane, ConnectionEpoch epoch)
     {

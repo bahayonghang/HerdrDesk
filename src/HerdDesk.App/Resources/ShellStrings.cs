@@ -33,4 +33,12 @@ public static class ShellStrings
     public const string FilesPending = "文件区尚未启用";
     public const string SaveFailed = "保存失败，已恢复上次有效值";
     public const string PermissionDenied = "当前实例不能写入配置";
+    public const string Notifications = "通知中心";
+    public const string NotificationBlocked = "已阻塞";
+    public const string NotificationDone = "已结束";
+    public const string NotificationDoneBody = "状态为 done";
+    public const string NotificationWorking = "工作中";
+    public const string NotificationIdle = "空闲";
+    public const string NotificationStale = "连接已过期，状态可能已变化";
+    public const string Muted = "已静默";
 }

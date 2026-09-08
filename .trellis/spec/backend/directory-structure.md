@@ -14,11 +14,11 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 
 ```
 src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels, State projection ports)
-src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor
+src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
-src/HerdDesk.App/           composition root / console host stub + HD-011 L1 ViewModels (no WinUI)
+src/HerdDesk.App/           composition root / console host stub + HD-011 L1 ViewModels + HD-012 L1 NotificationCenter (no WinUI)
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
 tests/Unit/HerdDesk.Core.Tests/  BCL unit runner
 tests/Unit/HerdDesk.Infrastructure.Tests/  config/diagnostics unit runner
@@ -52,6 +52,8 @@ Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels), `src/HerdDesk.Infras
 | Snapshot DTO / SchemaV1 decoder | `src/HerdDesk.Infrastructure/Rpc/SchemaV1/` |
 | Projection mapper and in-memory Store | `src/HerdDesk.Core/Store/` |
 | DeviceSession actor / reconcile planner | `src/HerdDesk.Core/DeviceSessions/` |
+| Attention reducer / unread aggregation | `src/HerdDesk.Core/Attention/` |
+| Notification center ViewModel / toast sink stub | `src/HerdDesk.App/ViewModels/NotificationCenterViewModel.cs`, `src/HerdDesk.App/Notifications/` |
 | DeviceSession ports and freshness | `src/HerdDesk.Contracts/State/IDeviceSession.cs` |
 | Endpoint mapping types | `src/HerdDesk.Contracts/EndpointModels.cs` |
 | Terminal lease observation types | `src/HerdDesk.Contracts/LeaseModels.cs` |

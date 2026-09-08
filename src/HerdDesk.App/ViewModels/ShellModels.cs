@@ -34,7 +34,8 @@ public enum ShellRoute
     Settings,
     Diagnostics,
     About,
-    Pane
+    Pane,
+    Notifications
 }
 
 public enum RouteAvailabilityKind
@@ -123,7 +124,8 @@ public enum FocusRegion
     Tree,
     Content,
     Details,
-    Search
+    Search,
+    Notifications
 }
 
 public enum UiThemeKind
@@ -153,6 +155,7 @@ public static class ShellCodes
     public const string Loading = "loading";
     public const string Empty = "empty";
     public const string Error = "error";
+    public const string Muted = "muted";
 }
 
 public readonly record struct FocusToken(string ControlId);
