@@ -4,5 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/HerdDesk.Infrastructure/HerdDesk.Infrastructure.csproj" />
+    <Compile Include="../../HerdDesk.TestSupport/FakeBridgeHost.cs" Link="FakeBridgeHost.cs" />
   </ItemGroup>
 </Project>

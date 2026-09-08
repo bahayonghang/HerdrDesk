@@ -21,13 +21,13 @@ Default observe. herdr owns the agent and PTY. HerdDesk owns the connection. Con
 
 GitHub repository name: `HerdrDesk`. Application, solution, and C# namespace: `HerdDesk`. Chinese work name: 牧台.
 
-**Current G0 in `src/`:** `HerdDesk.Contracts` (BCL-only types), `HerdDesk.Core` (one-epoch frame parser and input policy), `HerdDesk.Infrastructure` (config store and diagnostics), `HerdDesk.Terminal.Web` (renderer capability stub), and `HerdDesk.App` (composition-root host stub, not WinUI). Python diagnostics live under `scripts/herddesk_g0` and `scripts/probe_herdr.py`. Tests live under `tests/`.
+**Current G0 in `src/`:** `HerdDesk.Contracts` (BCL-only types), `HerdDesk.Core` (one-epoch frame parser and input policy), `HerdDesk.Infrastructure` (config store, diagnostics, owned process, RPC stdio), `HerdDesk.Terminal.Web` (renderer capability stub), and `HerdDesk.App` (composition-root host stub, not WinUI). Rust `bridge/herddesk-bridge` is an L1 byte relay. Python diagnostics live under `scripts/herddesk_g0` and `scripts/probe_herdr.py`. Tests live under `tests/`.
 
-**Not in the tree:** `HerdDesk.Terminal.Native`, `herddesk-bridge`, `herddesk-filebridge`, WinUI `App.xaml` content. Do not add those modules unless a later approved task asks for them. Windows App SDK / test-framework packages are pending and not in the product lock.
+**Not in the tree:** `HerdDesk.Terminal.Native`, `herddesk-filebridge`, WinUI `App.xaml` content. Do not add those modules unless a later approved task asks for them. Windows App SDK / test-framework packages are pending and not in the product lock. L2 named-pipe ACL remains UNVERIFIED.
 
 Dependency direction: Contracts depends on BCL only. Core depends on Contracts only. Core must not reference WinUI, WebView2, SSH, or OS credentials. The draft `docs/plan/contracts/HerdDesk.Contracts.cs` must not overwrite `src/HerdDesk.Contracts`.
 
-Keep two communication planes separate. JSON RPC (snapshot / event subscribe) uses an API socket or a future HerdDesk bridge. Terminal frames use `herdr terminal session` stdio. Do not send JSON RPC to the herdr binary client socket.
+Keep two communication planes separate. JSON RPC (snapshot / event subscribe) uses an API socket or `herddesk-bridge`. Terminal frames use `herdr terminal session` stdio. Do not send JSON RPC to the herdr binary client socket.
 
 Identity names: `DeviceId`, `SessionKey`, `PaneKey`, `ConnectionEpoch`, `TerminalAccess`, `ControlVerified`. Pane id, window title, and agent type are not global keys. Compare terminal `seq` only inside the current connection epoch. The full name table is in [CLAUDE.md](CLAUDE.md).
 

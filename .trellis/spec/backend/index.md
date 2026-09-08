@@ -14,7 +14,8 @@ Current backend surface:
 
 - `src/HerdDesk.Contracts` — BCL-only identity, frame, input, endpoint, lease, configuration, diagnostic, and adapter-capability types.
 - `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, and renderer L1 specimens.
-- `src/HerdDesk.Infrastructure` — `AppDataPaths`, atomic device-profile store, JSONL diagnostic sink.
+- `src/HerdDesk.Infrastructure` — `AppDataPaths`, atomic device-profile store, JSONL diagnostic sink, owned child process, RPC stdio.
+- `bridge/herddesk-bridge` — stdio ↔ local-socket byte relay. L2 named-pipe ACL UNVERIFIED.
 - `src/HerdDesk.Terminal.Web` — WebView2/xterm capability stub; packages `UNVERIFIED`.
 - `src/HerdDesk.App` — unique composition root / console host stub. WinUI XAML is HD-011.
 - `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator, endpoint matrix, lease matrix, renderer L1 matrix, ADR baseline, project graph.

@@ -10,7 +10,7 @@
 |---|---|
 | [HerdDesk.Contracts](HerdDesk.Contracts/CLAUDE.md) | 身份、信封、配置/诊断/adapter 端口 |
 | [HerdDesk.Core](HerdDesk.Core/CLAUDE.md) | 帧解析 + 输入策略 + endpoint 映射 + lease 映射 + renderer L1 标本 |
-| [HerdDesk.Infrastructure](HerdDesk.Infrastructure/CLAUDE.md) | 配置存储与诊断 sink |
+| [HerdDesk.Infrastructure](HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断 sink、owned process、RPC stdio |
 | [HerdDesk.Terminal.Web](HerdDesk.Terminal.Web/CLAUDE.md) | Web renderer capability stub |
 | [HerdDesk.App](HerdDesk.App/CLAUDE.md) | 组合根 / 控制台宿主 stub |
 
@@ -18,7 +18,7 @@
 
 ## 规划尚未建仓
 
-`HerdDesk.Terminal.Native`、`herddesk-bridge`、`herddesk-filebridge`、WinUI `App.xaml` 内容（HD-011）。
+`HerdDesk.Terminal.Native`、`herddesk-filebridge`、WinUI `App.xaml` 内容（HD-011）。`bridge/herddesk-bridge` 已由 HD-008 L1 建仓；L2 ACL 仍为 UNVERIFIED。
 
 ## 约束
 

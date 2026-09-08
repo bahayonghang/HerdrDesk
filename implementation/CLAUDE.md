@@ -30,5 +30,7 @@
 | `structure-check.json` | 结构通过；当时 `csharp_compiled=false`（本地）。CI 之后的编译状态见 `status.json` |
 | `original-plan-validation.json` | 规划包校验：36 任务、48 AC、272 本地链接、76 清单 hash；未执行 herdr/Windows |
 | `hd-007-packages.json` | HD-007 NuGet 探针。WASDK 2.4.0 与 Test.Sdk 18.9.0 在临时目录 restore 过，未准入 lock。`github_required_check=UNVERIFIED`。不是 AC39/40/47 通过。 |
+| `hd-008-packages.json` | HD-008 Rust 探针。`interprocess` 2.4.4（0BSD OR Apache-2.0），toolchain 1.98.0。不是 AC03/AC04 通过。 |
+| `hd-008-l2.json` | L2 Windows named-pipe ACL / live EP01–EP05 = `UNVERIFIED`。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。

@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import sys
 import tempfile
 import unittest
@@ -9,10 +10,12 @@ from herddesk_g0.project_graph import (
     ALLOWED_PROJECTS,
     ProjectGraphError,
     allowed_graph,
+    cargo_lock_package_version,
     check_graph,
     check_product_lock_absence,
     check_project,
     validate_project_graph,
+    validate_rust_bridge_lock,
 )
 import validate_repository as repository
 
@@ -29,6 +32,12 @@ class ProjectGraphTests(unittest.TestCase):
         self.assertEqual(repo['windows_desktop_restore'], 'not_admitted')
         self.assertFalse((ROOT / 'Directory.Packages.props').is_file())
         check_product_lock_absence(ROOT)
+        rust = validate_rust_bridge_lock(ROOT)
+        self.assertEqual(rust['l2_windows_named_pipe_acl'], 'UNVERIFIED')
+        self.assertEqual(result['l2_windows_named_pipe_acl'], 'UNVERIFIED')
+        lock_text = (ROOT / 'bridge' / 'Cargo.lock').read_text(encoding='utf-8')
+        self.assertEqual(cargo_lock_package_version(lock_text, 'interprocess'), rust['interprocess'])
+        self.assertEqual(result['interprocess_lock_version'], rust['interprocess'])
 
     def test_allowed_edges_pass_individually(self):
         for rel, refs in ALLOWED_PROJECTS.items():
@@ -174,6 +183,46 @@ class ProjectGraphTests(unittest.TestCase):
             with self.assertRaises(ProjectGraphError) as ctx:
                 check_product_lock_absence(root)
             self.assertEqual(str(ctx.exception), 'forbidden_package_edge')
+
+    def test_missing_cargo_lock_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'bridge').mkdir()
+            with self.assertRaises(ProjectGraphError) as ctx:
+                validate_rust_bridge_lock(root)
+            self.assertEqual(str(ctx.exception), 'missing_cargo_lock')
+
+    def test_cargo_lock_version_mismatch_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'bridge').mkdir()
+            (root / 'implementation').mkdir()
+            (root / 'bridge' / 'Cargo.lock').write_text(
+                '[[package]]\nname = "interprocess"\nversion = "0.0.0"\n',
+                encoding='utf-8',
+            )
+            (root / 'implementation' / 'hd-008-packages.json').write_text(
+                json.dumps({
+                    'crates': [{'id': 'interprocess', 'requested': '2.4.4', 'lock_version': '2.4.4'}],
+                    'l2_windows_named_pipe_acl': 'UNVERIFIED',
+                    'ac03_passed': False,
+                    'ac04_passed': False,
+                    'phase_gate': 'not_passed',
+                }),
+                encoding='utf-8',
+            )
+            (root / 'implementation' / 'hd-008-l2.json').write_text(
+                json.dumps({
+                    'l2_windows_named_pipe_acl': 'UNVERIFIED',
+                    'ac03_passed': False,
+                    'ac04_passed': False,
+                    'phase_gate': 'not_passed',
+                }),
+                encoding='utf-8',
+            )
+            with self.assertRaises(ProjectGraphError) as ctx:
+                validate_rust_bridge_lock(root)
+            self.assertEqual(str(ctx.exception), 'cargo_lock_version_mismatch')
 
     def test_packages_lock_json_fails(self):
         with tempfile.TemporaryDirectory() as tmp:

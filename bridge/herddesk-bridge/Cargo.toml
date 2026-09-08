@@ -1,0 +1,18 @@
+[package]
+name = "herddesk-bridge"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+description = "Byte-only stdio ↔ local-socket relay for HerdDesk JSON RPC"
+readme = false
+
+[dependencies]
+interprocess = "2.4.4"
+
+[lib]
+name = "herddesk_bridge"
+path = "src/lib.rs"
+
+[[bin]]
+name = "herddesk-bridge"
+path = "src/main.rs"

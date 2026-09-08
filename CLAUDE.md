@@ -23,7 +23,7 @@
 
 ## 架构
 
-当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本、配置/诊断基础设施、组合根宿主 stub，以及 Python 诊断探针。WinUI 外壳内容、Native renderer、自有 `herddesk-bridge` 与 `herddesk-filebridge` 尚未建仓。
+当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本、配置/诊断基础设施、组合根宿主 stub、Python 诊断探针，以及 HD-008 L1 `bridge/herddesk-bridge` 字节转发。WinUI 外壳内容、Native renderer、`herddesk-filebridge` 尚未建仓。named-pipe ACL 仍为 UNVERIFIED。
 
 两条通信平面必须分离：JSON RPC 走 API socket 或自有 bridge；终端帧走 `herdr terminal session` 的 stdio。禁止把 JSON RPC 发到 herdr 二进制 client socket。远端使用 `ssh -T`；stdout banner 视为协议污染。文件面不解析 `ls` 文本。
 
@@ -59,18 +59,18 @@ flowchart TB
     Fixtures --> PyTests
     Fixtures --> Probe
     PlanDocs -.-> Active
+    Bridge["bridge/herddesk-bridge L1"]
   end
   subgraph planned [规划尚未建仓]
     NativeTerm["HerdDesk.Terminal.Native"]
     WinUiShell["WinUI App.xaml / HD-011"]
-    Bridge["herddesk-bridge"]
     FileBr["herddesk-filebridge"]
     NativeTerm --> Contracts
     WinUiShell --> App
   end
   herdr["herdr daemon"]
   Probe -.->|默认只读| herdr
-  Bridge -.-> herdr
+  Bridge -.->|L2 UNVERIFIED| herdr
   FileBr -.-> herdr
 ```
 
@@ -83,7 +83,8 @@ flowchart TB
 | [src](src/CLAUDE.md) | C# solution 入口 | 已生成 |
 | [src/HerdDesk.Contracts](src/HerdDesk.Contracts/CLAUDE.md) | 身份、帧、输入决策、配置/诊断端口 | 已生成 |
 | [src/HerdDesk.Core](src/HerdDesk.Core/CLAUDE.md) | 单 epoch 帧解析器与输入策略 | 已生成 |
-| [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储与诊断 | 已生成 |
+| [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断、RPC stdio | 已生成 |
+| [bridge](bridge/CLAUDE.md) | herddesk-bridge L1 字节转发 | 已生成 |
 | [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | renderer capability stub | 已生成 |
 | [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub | 已生成 |
 | [tests](tests/CLAUDE.md) | 检查导航 | 已生成 |
@@ -102,7 +103,7 @@ flowchart TB
 | [implementation](implementation/CLAUDE.md) | 已运行检查的 JSON | 已生成 |
 | [.github](.github/CLAUDE.md) | G0 CI | 已生成 |
 
-尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、`bridge/`、`herddesk-filebridge`、WinUI `App.xaml`（HD-011）。HD-007 骨架已落地；AC39/AC40/AC47 与 `phase_gate` 仍未通过。
+尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、`herddesk-filebridge`、WinUI `App.xaml`（HD-011）。`bridge/herddesk-bridge` 为 HD-008 L1；named-pipe ACL L2 仍 UNVERIFIED。HD-007 骨架已落地；AC39/AC40/AC47 与 `phase_gate` 仍未通过。
 
 `docs/plan/` 保存原规划正文。活动状态以根目录 `planning/` 与 `tasks/` 为准。`docs/implementation-g0.md` 是建仓前历史记录；其中“未推送”“C# 未编译”不代表当前托管状态。
 

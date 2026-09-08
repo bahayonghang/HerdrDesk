@@ -1,0 +1,6 @@
+# Pinned to the stable toolchain that builds on this machine.
+# Do not copy herdr's 1.96.1; that pin is not the build authority here.
+[toolchain]
+channel = "1.98.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

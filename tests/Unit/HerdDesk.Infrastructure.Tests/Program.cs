@@ -3,6 +3,10 @@ using HerdDesk.Contracts;
 using HerdDesk.Infrastructure.Configuration;
 using HerdDesk.Infrastructure.Diagnostics;
 
+if (args.Length > 0 && args[0] == "--fake-bridge")
+    return FakeBridgeHost.Run(args.Skip(1).ToArray());
+
+
 static void Check(bool condition)
 {
     if (!condition)
@@ -51,6 +55,8 @@ static DiagnosticEvent OkEvent(string component = "configuration", string operat
 
 var cases = new (string Name, Action Run)[]
 {
+    // HD-007 configuration and diagnostics
+
     ("two sessions and endpoints round-trip on one device", () =>
     {
         var root = TempRoot();
@@ -406,6 +412,8 @@ var cases = new (string Name, Action Run)[]
         finally { Directory.Delete(root, true); }
     }),
 };
+
+cases = [.. cases, .. RpcCases.All];
 
 var failed = 0;
 foreach (var test in cases)

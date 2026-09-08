@@ -11,6 +11,7 @@
 | Core unit | [Unit/HerdDesk.Core.Tests](Unit/HerdDesk.Core.Tests/CLAUDE.md) | BCL runner | `dotnet run --project tests/Unit/HerdDesk.Core.Tests` |
 | Infrastructure unit | [Unit/HerdDesk.Infrastructure.Tests](Unit/HerdDesk.Infrastructure.Tests/CLAUDE.md) | BCL runner | `dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests` |
 | Contract | [Contract](Contract/CLAUDE.md) | BCL runner | `dotnet run --project tests/Contract/HerdDesk.ContractTests` |
+| Rust bridge | [../bridge/CLAUDE.md](../bridge/CLAUDE.md) | cargo | `cargo test --manifest-path bridge/Cargo.toml --workspace --locked` |
 | 合成 fixture | [fixtures](fixtures/CLAUDE.md) | NDJSON/JSON | `check_capture.py`、probe `selftest` |
 
 probe `selftest` 合成检查计数以本次运行为准，入口在 [../scripts](../scripts/CLAUDE.md)。

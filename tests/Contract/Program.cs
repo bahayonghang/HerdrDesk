@@ -1,10 +1,17 @@
 using System.Reflection;
+using System.Text.Json;
 using HerdDesk.App.Composition;
 using HerdDesk.Contracts;
 using HerdDesk.Core;
 using HerdDesk.Infrastructure.Configuration;
 using HerdDesk.Infrastructure.Host;
+using HerdDesk.Infrastructure.Process;
+using HerdDesk.Infrastructure.Rpc;
 using HerdDesk.Terminal.Web;
+
+if (args.Length > 0 && args[0] == "--fake-bridge")
+    return FakeBridgeHost.Run(args.Skip(1).ToArray());
+
 
 static void Check(bool condition)
 {
@@ -128,6 +135,68 @@ var cases = new (string Name, Action Run)[]
             Directory.Delete(root, true);
         }
     }),
+    ("rpc request and subscription use two os processes", () =>
+    {
+        var exe = Environment.ProcessPath!;
+        Check(Path.IsPathFullyQualified(exe));
+        var requestChild = OwnedChildProcess.Start(exe, ["--fake-bridge", "rpc"]);
+        var subscribeChild = OwnedChildProcess.Start(exe, ["--fake-bridge", "subscribe"]);
+        using var empty = JsonDocument.Parse("{}");
+        var request = new RpcRequestConnection(requestChild, new ConnectionEpoch(3), null);
+        var subscribe = new RpcSubscriptionConnection(
+            subscribeChild, new ConnectionEpoch(3), empty.RootElement.Clone());
+        try
+        {
+            Check(request.ChildProcessId != subscribe.ChildProcessId);
+            using var ping = request.RequestAsync("ping", empty.RootElement.Clone()).AsTask()
+                .GetAwaiter().GetResult();
+            Check(ping.Succeeded);
+            var count = 0;
+            var read = Task.Run(async () =>
+            {
+                await foreach (var item in subscribe.ReadEventsAsync())
+                {
+                    _ = item;
+                    count++;
+                    if (count >= 3)
+                        break;
+                }
+            });
+            Check(read.Wait(TimeSpan.FromSeconds(5)));
+            Check(count == 3);
+        }
+        finally
+        {
+            subscribe.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            request.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }),
+    ("production composition still does not auto-connect rpc", () =>
+    {
+        var root = Path.Combine(Path.GetTempPath(), "herddesk-hd008-compose-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var services = AppServices.CreateProduction(AppDataPaths.FromRoot(root));
+            try
+            {
+                Check(!services.RpcConnections.Available);
+                Check(services.RpcConnections.OpenRequestAsync(
+                    new SessionKey(new DeviceId(Guid.Parse("11111111-1111-4111-8111-111111111111")),
+                        "local-api", null),
+                    new ConnectionEpoch(1),
+                    "/tmp/herdr.sock").AsTask().GetAwaiter().GetResult() is null);
+            }
+            finally
+            {
+                services.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }),
 };
 
 var failed = 0;
@@ -152,4 +221,25 @@ sealed class FakeSuccessAdapter : IRpcConnectionFactory
     public string Name => "fake-rpc";
     public bool Available => true;
     public bool IsFakeSuccess => true;
+
+    public ValueTask<IRpcRequestConnection?> OpenRequestAsync(
+        SessionKey session,
+        ConnectionEpoch epoch,
+        string socketPath,
+        CancellationToken cancellationToken = default)
+    {
+        _ = (session, epoch, socketPath, cancellationToken);
+        return ValueTask.FromResult<IRpcRequestConnection?>(null);
+    }
+
+    public ValueTask<IRpcSubscriptionConnection?> OpenSubscriptionAsync(
+        SessionKey session,
+        ConnectionEpoch epoch,
+        string socketPath,
+        JsonElement subscribeParameters,
+        CancellationToken cancellationToken = default)
+    {
+        _ = (session, epoch, socketPath, subscribeParameters, cancellationToken);
+        return ValueTask.FromResult<IRpcSubscriptionConnection?>(null);
+    }
 }

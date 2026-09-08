@@ -1,3 +1,4 @@
+using System.Text.Json;
 using HerdDesk.Contracts;
 
 namespace HerdDesk.Infrastructure.Host;
@@ -22,6 +23,27 @@ public sealed class UnavailableAdapter :
     public bool IsFakeSuccess => false;
 
     public UnavailableCapability Capability => new(Name, Code);
+
+    public ValueTask<IRpcRequestConnection?> OpenRequestAsync(
+        SessionKey session,
+        ConnectionEpoch epoch,
+        string socketPath,
+        CancellationToken cancellationToken = default)
+    {
+        _ = (session, epoch, socketPath, cancellationToken);
+        return ValueTask.FromResult<IRpcRequestConnection?>(null);
+    }
+
+    public ValueTask<IRpcSubscriptionConnection?> OpenSubscriptionAsync(
+        SessionKey session,
+        ConnectionEpoch epoch,
+        string socketPath,
+        JsonElement subscribeParameters,
+        CancellationToken cancellationToken = default)
+    {
+        _ = (session, epoch, socketPath, subscribeParameters, cancellationToken);
+        return ValueTask.FromResult<IRpcSubscriptionConnection?>(null);
+    }
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

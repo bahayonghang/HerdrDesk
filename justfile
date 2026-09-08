@@ -69,7 +69,7 @@ structure:
 
 [group('dotnet')]
 format-check: build
-    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include tests/Unit --include tests/Contract
+    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
 
 [group('dotnet')]
 unit-tests: build
@@ -90,10 +90,22 @@ desktop:
 desktop:
     {{python}} -c "print('windows_desktop_restore skipped on this platform; not full-application green')"
 
-# Offline gate used by GitHub Actions. G0 BCL/Python on every OS.
+[group('rust')]
+bridge-fmt:
+    cargo fmt --manifest-path bridge/Cargo.toml --all -- --check
+
+[group('rust')]
+bridge-clippy:
+    cargo clippy --manifest-path bridge/Cargo.toml --workspace --all-targets --locked -- -D warnings
+
+[group('rust')]
+bridge-test:
+    cargo test --manifest-path bridge/Cargo.toml --workspace --locked
+
+# Offline gate used by GitHub Actions. G0 BCL/Python/Rust on every OS.
 # Windows desktop restore runs only the skip/admit helper; it is not live WinUI.
-# Do not add cargo/npm recipes until HD-008/014 create those trees.
+# Cargo recipes belong to HD-008. npm stays deferred until HD-014.
 [group('ci')]
-ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop
+ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop bridge-fmt bridge-clippy bridge-test
 
 alias check := ci

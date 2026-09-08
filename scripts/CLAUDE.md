@@ -87,3 +87,4 @@ argv：`herdr [--session S] terminal session {observe|control} TARGET --cols --r
 - 真实报告放 `probe-results/`（gitignore）。
 - `safe_summary` 默认去掉 stdout/stderr 正文与 argv。
 - 已有 GitHub 仓库禁止运行 `--publish`。
+- `just ci` 在 HD-008 后包含 `cargo fmt/clippy/test --locked`（`bridge/`）。L2 named-pipe ACL 仍为 UNVERIFIED。

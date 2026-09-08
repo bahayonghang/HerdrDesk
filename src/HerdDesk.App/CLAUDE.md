@@ -7,7 +7,7 @@ HD-007 composition root / host stub. `App.xaml`、`MainWindow`、Shell、setting
 ## 职责
 
 - 唯一组合根：`Composition/AppServices.CreateProduction`。
-- 注册配置、诊断、Core 可调用的 BCL 类型，以及 unavailable adapter（RPC/transport/renderer）。
+- 注册配置、诊断、Core 可调用的 BCL 类型，以及 unavailable adapter（RPC/transport/renderer）。HD-008 的 `RpcStdioConnectionFactory` 需显式 bridge 路径；生产组合根仍不自动连接。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
 - 释放顺序：renderer → transports → RPC → diagnostics。尚无 session actor。
 

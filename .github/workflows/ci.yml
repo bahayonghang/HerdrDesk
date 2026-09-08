@@ -19,7 +19,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6; resolved 2026-09-07
         with:
@@ -41,7 +41,7 @@ jobs:
       - name: Build BCL projects
         run: dotnet build HerdDesk.slnx --configuration Release
       - name: Verify formatting
-        run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include tests/Unit --include tests/Contract
+        run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
       - name: Run C# G0 smoke tests
         run: dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
       - name: Run Core unit tests
@@ -50,6 +50,18 @@ jobs:
         run: dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build
       - name: Run contract tests
         run: dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build
+      - name: Install pinned Rust toolchain
+        working-directory: bridge
+        run: rustup show
+      - name: Bridge fmt
+        working-directory: bridge
+        run: cargo fmt --all -- --check
+      - name: Bridge clippy
+        working-directory: bridge
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Bridge tests
+        working-directory: bridge
+        run: cargo test --workspace --locked
       # No daemon installation, SSH access, terminal takeover, release publishing,
       # UI acceptance or credentials belong to this offline G0 job.
       # Linux must not compile WinUI. This job is not full-application green.

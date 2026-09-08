@@ -15,7 +15,8 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 ```
 src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels)
 src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens
-src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter
+src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio
+bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
 src/HerdDesk.App/           composition root / console host stub
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
@@ -37,7 +38,7 @@ global.json                 SDK 10.0.400, rollForward=disable
 NuGet.Config                empty package sources
 ```
 
-Present as BCL stubs: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `bridge/`, `herddesk-filebridge`.
+Present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web`, `bridge/herddesk-bridge`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge`. L2 named-pipe ACL is UNVERIFIED.
 
 ---
 

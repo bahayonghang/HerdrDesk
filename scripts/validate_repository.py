@@ -22,7 +22,7 @@ def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
     for path in files:
-        if any(part in {'.git','obj','bin','probe-results','.test-results'} for part in path.parts):continue
+        if any(part in {'.git','obj','bin','target','probe-results','.test-results'} for part in path.parts):continue
         json.loads(path.read_text(encoding='utf-8'));count+=1
     graph=validate_project_graph(ROOT)
     projects=list((ROOT/'src').rglob('*.csproj'))+list((ROOT/'tests').rglob('*.csproj'))

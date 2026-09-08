@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd008_l2_status",
+  "l2_windows_named_pipe_acl": "UNVERIFIED",
+  "live_endpoint_ep01_ep05": "skipped",
+  "hd003_acl_residual": "not a skip of L1; L2 still blocked",
+  "ac03_passed": false,
+  "ac04_passed": false,
+  "phase_gate": "not_passed",
+  "note": "No authorized isolated Windows herdr API endpoint. HD-003 mapping Unknown/ACL UNVERIFIED. This file is not AC pass evidence."
+}

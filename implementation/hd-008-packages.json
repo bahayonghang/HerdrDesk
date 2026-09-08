@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd008_package_probe",
+  "rust": {
+    "toolchain_file": "bridge/rust-toolchain.toml",
+    "channel": "1.98.0",
+    "note": "Pinned to the stable toolchain that builds here. Not copied from herdr 1.96.1."
+  },
+  "crates": [
+    {
+      "id": "interprocess",
+      "requested": "2.4.4",
+      "lock_version": "2.4.4",
+      "license": "0BSD OR Apache-2.0",
+      "crates_io": "https://crates.io/crates/interprocess/2.4.4",
+      "source": "cargo info interprocess",
+      "features": "default (sync local sockets)",
+      "admitted": true,
+      "note": "Planning text mentioned 2.4.2 as a historical herdr alignment hint, not a pin. Lock is the crates.io 2.4.4 restore."
+    }
+  ],
+  "csharp_product_lock": "no third-party PackageReference",
+  "ac03_passed": false,
+  "ac04_passed": false,
+  "phase_gate": "not_passed",
+  "l1": "offline fake local-socket and fake-child RPC tests",
+  "l2_windows_named_pipe_acl": "UNVERIFIED"
+}

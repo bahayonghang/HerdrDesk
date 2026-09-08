@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <InternalsVisibleTo Include="HerdDesk.Infrastructure.Tests" />
+    <InternalsVisibleTo Include="HerdDesk.ContractTests" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../HerdDesk.Contracts/HerdDesk.Contracts.csproj" />

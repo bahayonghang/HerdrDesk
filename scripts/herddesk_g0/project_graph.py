@@ -1,7 +1,8 @@
-"""Allowed C# project graph for HD-007. Structural only; not product AC pass."""
+"""Allowed C# project graph plus HD-008 Cargo.lock pin. Structural only; not product AC pass."""
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import xml.etree.ElementTree as ET
 from typing import Any
 
@@ -58,12 +59,13 @@ FORBIDDEN_CSPROJ_TEXT = (
     'renci.sshnet',
 )
 
-SKIP_DIR_PARTS = frozenset({'.git', 'obj', 'bin', 'probe-results', '.test-results', '__pycache__'})
+SKIP_DIR_PARTS = frozenset({'.git', 'obj', 'bin', 'target', 'probe-results', '.test-results', '__pycache__'})
 
 
 def validate_project_graph(root: Path) -> dict[str, Any]:
     root = Path(root)
     check_product_lock_absence(root)
+    rust = validate_rust_bridge_lock(root)
     projects = load_tree_projects(root)
     check_graph(projects)
     solution = load_solution_projects(root)
@@ -73,6 +75,55 @@ def validate_project_graph(root: Path) -> dict[str, Any]:
         'project_graph': 'passed',
         'projects': len(projects),
         'package_references': 0,
+        'interprocess_lock_version': rust['interprocess'],
+        'l2_windows_named_pipe_acl': rust['l2_windows_named_pipe_acl'],
+    }
+
+
+def cargo_lock_package_version(text: str, crate: str) -> str | None:
+    lines = text.splitlines()
+    target = f'name = "{crate}"'
+    for index, line in enumerate(lines):
+        if line != target:
+            continue
+        for follow in lines[index + 1:index + 8]:
+            if follow.startswith('version = '):
+                return follow.split('=', 1)[1].strip().strip('"')
+            if follow.startswith('name = '):
+                break
+    return None
+
+
+def validate_rust_bridge_lock(root: Path) -> dict[str, Any]:
+    root = Path(root)
+    lock_path = root / 'bridge' / 'Cargo.lock'
+    if not lock_path.is_file():
+        raise ProjectGraphError('missing_cargo_lock')
+    lock_text = lock_path.read_text(encoding='utf-8')
+    version = cargo_lock_package_version(lock_text, 'interprocess')
+    if version is None:
+        raise ProjectGraphError('missing_cargo_lock_crate')
+    probe_path = root / 'implementation' / 'hd-008-packages.json'
+    l2_path = root / 'implementation' / 'hd-008-l2.json'
+    if not probe_path.is_file() or not l2_path.is_file():
+        raise ProjectGraphError('missing_hd008_probe')
+    probe = json.loads(probe_path.read_text(encoding='utf-8'))
+    l2 = json.loads(l2_path.read_text(encoding='utf-8'))
+    recorded = next((item for item in probe.get('crates') or [] if item.get('id') == 'interprocess'), None)
+    if recorded is None or recorded.get('lock_version') != version or recorded.get('requested') != version:
+        raise ProjectGraphError('cargo_lock_version_mismatch')
+    if probe.get('l2_windows_named_pipe_acl') != 'UNVERIFIED' or l2.get('l2_windows_named_pipe_acl') != 'UNVERIFIED':
+        raise ProjectGraphError('l2_claimed_verified')
+    if probe.get('ac03_passed') is True or probe.get('ac04_passed') is True:
+        raise ProjectGraphError('ac03_claimed_passed')
+    if l2.get('ac03_passed') is True or l2.get('ac04_passed') is True:
+        raise ProjectGraphError('ac03_claimed_passed')
+    if probe.get('phase_gate') == 'passed' or l2.get('phase_gate') == 'passed':
+        raise ProjectGraphError('phase_gate_claimed_passed')
+    return {
+        'rust_lock': 'passed',
+        'interprocess': version,
+        'l2_windows_named_pipe_acl': 'UNVERIFIED',
     }
 
 

@@ -6,7 +6,7 @@
 
 ## 触发与权限
 
-`push` 到 `main`、`pull_request`、`workflow_dispatch`。`permissions.contents: read`。concurrency 组 `g0-${{ github.workflow }}-${{ github.ref }}`，取消进行中的 run。矩阵：`ubuntu-latest`、`windows-latest`，`fail-fast: false`，15 分钟超时。
+`push` 到 `main`、`pull_request`、`workflow_dispatch`。`permissions.contents: read`。concurrency 组 `g0-${{ github.workflow }}-${{ github.ref }}`，取消进行中的 run。矩阵：`ubuntu-latest`、`windows-latest`，`fail-fast: false`，25 分钟超时。
 
 ## 步骤
 
@@ -18,8 +18,9 @@
 6. `python scripts/validate_repository.py`
 7. setup-dotnet，读取根 `global.json`（pin v5）
 8. `dotnet build HerdDesk.slnx --configuration Release`
-9. `dotnet format` on HD-007 paths only (full-solution format is blocked by pre-existing SmokeTests whitespace)
+9. `dotnet format` on HD-007/HD-008 paths (`src/HerdDesk.Contracts/Rpc`、`tests/HerdDesk.TestSupport` 已纳入；full-solution format 仍被既有 SmokeTests 空白挡住)
 10. C# smoke + Core/Infrastructure unit + contract（均为 `dotnet run`）
+11. `working-directory: bridge`：`rustup show`，`cargo fmt --check`，`clippy -D warnings`，`cargo test --locked`
 
 另有 `windows-desktop` job：只跑 `scripts/run_windows_desktop_gate.py`。WinUI 未准入时跳过 restore。Job 成功不是 merge-blocking 证据（`github_required_check=UNVERIFIED`）。
 
