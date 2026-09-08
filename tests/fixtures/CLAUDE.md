@@ -15,7 +15,7 @@
 | `terminal-valid.ndjson` | 合法帧流。故意把一个中文 UTF-8 字符拆到两帧。LF 结尾。SHA-256 `d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599` |
 | `input-valid.ndjson` | 合法 stdin 命令。含 Ctrl+C 的 Base64 示例。selftest 不会把它发到真实终端 |
 | `invalid-cases.json` | 应拒绝的对象。含故意伪造的 `terminal.granted`（上游无此消息） |
-| `endpoint-cases.json` | HD-003 手工案例清单：显式 default/named、Unicode 路径、跨用户 ACL、二进制 client socket。`all_live_checks=not_run` |
+| `endpoint-cases.json` | HD-003 七行模拟矩阵：explicit / default / named / Unicode / ACL denied / cross-user / remote UNC。`simulation=true`，`runtime_pass=false`，`ac03_passed=false`，`all_live_checks=blocked`。不是 Windows 真机连接 |
 | `README.md` | 生成说明与门禁边界 |
 
 ## 入口

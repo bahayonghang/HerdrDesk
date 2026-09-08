@@ -2,12 +2,13 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析与输入放行策略。DeviceSession actor、Store、未读、错误语义等规划能力尚未实现。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略与 endpoint 纯映射。DeviceSession actor、Store、未读、错误语义等规划能力尚未实现。
 
 ## 职责
 
 - 解析一条完整 JSON 记录（不含尾部 LF），产出 `TerminalFrame` 或 `TerminalClosed`。
 - 在可信 `InputContext` 上判定 `RendererInput` 是否允许写入。
+- 把 `DeviceId` / `SessionKey` / `EndpointPreference` 与受控配置映射到 API endpoint 候选。
 - 失败后锁存：同一 parser 实例不再接受后续记录。
 
 传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。
@@ -38,6 +39,14 @@
 
 本策略不获取控制权，也不能从终端帧推断授权。
 
+### `EndpointResolver`
+
+静态 `Resolve(DeviceId, SessionKey, EndpointPreference, EndpointResolutionConfig) → EndpointResolutionResult`。纯映射。不查询 OS 凭据、环境变量或 named pipe。不创建 terminal session，不发送 JSON RPC。
+
+规则：explicit 只返回同一 canonical location；Default 无已验证映射时失败并要求显式配置，不猜 `%APPDATA%`；Named 不回退 default；Unicode 不改写为替换字符；permission-denied 与 cross-user 只分类、不改用户重试；远程 UNC/SMB 拒绝。
+
+失败码：`invalid_identity`、`invalid_preference`、`explicit_configuration_required`、`named_session_unmapped`、`endpoint_not_found`、`permission_denied`、`cross_user_denied`、`remote_unc_rejected`、`unicode_encoding_error`、`ambiguous_mapping`。码与 `DiagnosticId` 不含路径。
+
 ## 依赖
 
 - 项目引用：`../HerdDesk.Contracts/HerdDesk.Contracts.csproj`。
@@ -50,12 +59,13 @@
 
 ## 测试
 
-[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖 22 项解析与策略断言。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。
+[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略与 endpoint resolver 断言。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
 
 ## 关键文件
 
 - `TerminalFrameParser.cs` — 失败锁存解析器。
 - `InputPolicy.cs` — 纯函数策略。
+- `EndpointResolver.cs` — 受控配置到 endpoint 的纯映射。
 - `HerdDesk.Core.csproj` — 仅 Contracts 引用。
 
 ## 约束

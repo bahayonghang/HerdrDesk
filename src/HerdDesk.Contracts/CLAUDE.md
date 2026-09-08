@@ -6,7 +6,7 @@
 
 ## 职责
 
-提供身份、终端信封、输入上下文与决策的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。
+提供身份、终端信封、输入上下文、决策与 API endpoint 解析类型的 BCL 记录类型。本目录是 **G0 已编译子集**。规划端口草案在 [docs/plan/contracts/HerdDesk.Contracts.cs](../../docs/plan/contracts/HerdDesk.Contracts.cs)，尚未进入 `src/`。
 
 ## 已实现类型（`TerminalModels.cs`）
 
@@ -26,6 +26,24 @@
 | `InputDecision` | `Allowed` + 稳定 `Code` |
 
 `InputContext.ControlVerified` 默认 `false`。
+
+## 已实现类型（`EndpointModels.cs`）
+
+由可信 host 创建，禁止从 renderer 消息反序列化。`DeviceId` / `SessionKey` 是 endpoint 身份输入。`PaneKey`、窗口标题、agent 类型不能替代 endpoint identity。
+
+| 类型 | 作用 |
+|---|---|
+| `EndpointPreferenceKind` | `Explicit`, `Default`, `Named` |
+| `EndpointKind` | `NamedPipe`, `UnixSocket`, `FilesystemPath` |
+| `EndpointAccessScope` | `LocalUser`, `Unknown` |
+| `EndpointObservationKind` | `Missing`, `PermissionDenied`, `CrossUser` |
+| `EndpointPreference` | 解析偏好；工厂 `Explicit` / `Default` / `Named` |
+| `VerifiedEndpointMapping` | 受控已验证映射，不是 OS 发现结果 |
+| `EndpointObservation` | 受控 ACL/缺失事实 |
+| `EndpointResolutionConfig` | 映射表 + 观察；`Empty` 无映射 |
+| `ResolvedEndpoint` | `Kind`, `CanonicalLocation`, `EvidenceId`, `AccessScope` |
+| `EndpointResolutionFailure` | 稳定 `Code`、`DiagnosticId`、`RequiresExplicitConfiguration` |
+| `EndpointResolutionResult` | 成功 `Endpoint` 或失败 `Failure` |
 
 ## 草案多出、src 未实现
 

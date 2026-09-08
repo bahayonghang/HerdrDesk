@@ -34,7 +34,7 @@ Real probe reports go to gitignored `probe-results/`. The public tree holds synt
 
 ## What to Log
 
-- Stable error code (`malformed_terminal_record`, `terminal_stream_not_active`, `control_not_verified`, …).
+- Stable error code (`malformed_terminal_record`, `terminal_stream_not_active`, `control_not_verified`, `explicit_configuration_required`, `remote_unc_rejected`, …).
 - Frame counts, decoded byte lengths, hashes of payloads when a capture report needs them (`sha256` of decoded bytes in Python frame summary).
 - SDK version and `dotnet` host path on setup (not User profile tool dirs as a pin).
 

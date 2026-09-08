@@ -12,9 +12,9 @@ Shared facts: [AGENTS.md](../../../AGENTS.md). Module indexes: nested `CLAUDE.md
 
 Current backend surface:
 
-- `src/HerdDesk.Contracts` — BCL-only identity, frame, and input types.
-- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser` and `InputPolicy`.
-- `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator.
+- `src/HerdDesk.Contracts` — BCL-only identity, frame, input, and endpoint types.
+- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, and `EndpointResolver`.
+- `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator, endpoint matrix.
 - `scripts/probe_herdr.py` — default-readonly probe; writes need a disposable target.
 - `tests/HerdDesk.Core.SmokeTests` — `dotnet run`, not `dotnet test`.
 - `tests/python` — stdlib `unittest`.
@@ -55,3 +55,4 @@ There is no HTTP API, no ORM, and no application host in `src/`.
 - [ ] Diagnostics omit terminal payload, credentials, and private paths.
 - [ ] Do not mark G0 or AC01–AC48 passed.
 - [ ] `herddesk_g0.licensing` keeps `ac02_passed` and `windows_verified` false. Pending or blocked is not approved. Public visibility is not a license grant.
+- [ ] `herddesk_g0.endpoint` keeps `ac03_passed` and `windows_verified` false. Synthetic endpoint fixtures are not Windows runtime proof.

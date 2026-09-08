@@ -326,6 +326,13 @@ class EvidenceBaselineTests(unittest.TestCase):
             _check(baseline=baseline)
         self.assertEqual(str(ctx.exception), 'evidence_level_promotion')
 
+    def test_windows_endpoint_success_without_runtime_is_rejected(self):
+        baseline, _, _ = _bundle()
+        baseline['runtime_verification']['windows_endpoint'] = 'passed'
+        with self.assertRaises(EvidenceError) as ctx:
+            _check(baseline=baseline)
+        self.assertEqual(str(ctx.exception), 'evidence_level_promotion')
+
     def test_ime_success_is_rejected(self):
         baseline, _, _ = _bundle()
         baseline['runtime_verification']['ime'] = 'passed'

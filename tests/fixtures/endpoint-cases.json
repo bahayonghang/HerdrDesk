@@ -1,31 +1,289 @@
 {
-  "kind": "planned_manual_cases",
-  "all_live_checks": "not_run",
+  "kind": "synthetic_endpoint_matrix",
+  "simulation": true,
+  "runtime_pass": false,
+  "windows_verified": false,
+  "ac03_passed": false,
+  "ac03_c1": "blocked",
+  "ac03_c2": "hd-008_not_implemented",
+  "bridge_implemented": false,
+  "all_live_checks": "blocked",
+  "blocked_category": "no_authorized_isolated_windows_endpoint_or_live_herdr_grant",
+  "live_connect": false,
+  "note": "Seven-row resolver simulation. Not Windows runtime proof. Not AC03 pass. Live named-pipe connect was not granted.",
   "cases": [
     {
       "id": "EP01",
-      "case": "Explicit default-session Windows API endpoint",
-      "expected": "same expected session; do not open marker as byte stream"
+      "scenario": "explicit_endpoint",
+      "simulation": true,
+      "device": "11111111-1111-4111-8111-111111111111",
+      "session": {
+        "endpoint_key": "local-api",
+        "session_name": null
+      },
+      "preference": {
+        "kind": "explicit",
+        "location": "\\\\.\\pipe\\herdr-api"
+      },
+      "config": {
+        "verified_mappings": [],
+        "observations": []
+      },
+      "expect": {
+        "resolved": true,
+        "code": null,
+        "kind": "named_pipe",
+        "canonical_location": "\\\\.\\pipe\\herdr-api",
+        "access_scope": "local_user",
+        "requires_explicit_configuration": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Returns the explicit location unchanged. Does not open a pipe."
     },
     {
       "id": "EP02",
-      "case": "Explicit named-session endpoint",
-      "expected": "no fallback to default session"
+      "scenario": "default_session",
+      "simulation": true,
+      "device": "11111111-1111-4111-8111-111111111111",
+      "session": {
+        "endpoint_key": "local-api",
+        "session_name": null
+      },
+      "preference": {
+        "kind": "default"
+      },
+      "config": {
+        "verified_mappings": [
+          {
+            "device": "11111111-1111-4111-8111-111111111111",
+            "endpoint_key": "local-api",
+            "session_name": null,
+            "canonical_location": "\\\\.\\pipe\\herdr-api",
+            "kind": "named_pipe",
+            "evidence_id": "synthetic-default-mapping",
+            "access_scope": "local_user"
+          }
+        ],
+        "observations": []
+      },
+      "expect": {
+        "resolved": true,
+        "code": null,
+        "kind": "named_pipe",
+        "canonical_location": "\\\\.\\pipe\\herdr-api",
+        "access_scope": "local_user",
+        "requires_explicit_configuration": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Uses only a controlled verified mapping. Does not expand APPDATA."
     },
     {
       "id": "EP03",
-      "case": "Unicode endpoint path",
-      "expected": "preserve exact logical name; no guessed APPDATA mapping"
+      "scenario": "named_session",
+      "simulation": true,
+      "device": "11111111-1111-4111-8111-111111111111",
+      "session": {
+        "endpoint_key": "local-api",
+        "session_name": "work"
+      },
+      "preference": {
+        "kind": "named",
+        "session_name": "work"
+      },
+      "config": {
+        "verified_mappings": [
+          {
+            "device": "11111111-1111-4111-8111-111111111111",
+            "endpoint_key": "local-api",
+            "session_name": null,
+            "canonical_location": "\\\\.\\pipe\\herdr-api",
+            "kind": "named_pipe",
+            "evidence_id": "synthetic-default-mapping",
+            "access_scope": "local_user"
+          },
+          {
+            "device": "11111111-1111-4111-8111-111111111111",
+            "endpoint_key": "local-api",
+            "session_name": "work",
+            "canonical_location": "\\\\.\\pipe\\herdr-work",
+            "kind": "named_pipe",
+            "evidence_id": "synthetic-named-mapping",
+            "access_scope": "local_user"
+          }
+        ],
+        "observations": []
+      },
+      "expect": {
+        "resolved": true,
+        "code": null,
+        "kind": "named_pipe",
+        "canonical_location": "\\\\.\\pipe\\herdr-work",
+        "access_scope": "local_user",
+        "requires_explicit_configuration": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Named session must not fall back to the default mapping."
     },
     {
       "id": "EP04",
-      "case": "Endpoint owned by another user / denied ACL",
-      "expected": "diagnosable denial; no elevation"
+      "scenario": "unicode_endpoint",
+      "simulation": true,
+      "device": "11111111-1111-4111-8111-111111111111",
+      "session": {
+        "endpoint_key": "local-api",
+        "session_name": null
+      },
+      "preference": {
+        "kind": "explicit",
+        "location": "\\\\.\\pipe\\牧台-api-测试"
+      },
+      "config": {
+        "verified_mappings": [],
+        "observations": []
+      },
+      "expect": {
+        "resolved": true,
+        "code": null,
+        "kind": "named_pipe",
+        "canonical_location": "\\\\.\\pipe\\牧台-api-测试",
+        "access_scope": "local_user",
+        "requires_explicit_configuration": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Unicode location is preserved. No replacement-character rewrite."
     },
     {
       "id": "EP05",
-      "case": "Binary client socket supplied in place of JSON API socket",
-      "expected": "reject protocol mismatch; never send terminal input"
+      "scenario": "acl_denied",
+      "simulation": true,
+      "device": "11111111-1111-4111-8111-111111111111",
+      "session": {
+        "endpoint_key": "local-api",
+        "session_name": null
+      },
+      "preference": {
+        "kind": "explicit",
+        "location": "\\\\.\\pipe\\herdr-api"
+      },
+      "config": {
+        "verified_mappings": [
+          {
+            "device": "11111111-1111-4111-8111-111111111111",
+            "endpoint_key": "local-api",
+            "session_name": null,
+            "canonical_location": "\\\\.\\pipe\\herdr-api",
+            "kind": "named_pipe",
+            "evidence_id": "synthetic-default-mapping",
+            "access_scope": "local_user"
+          }
+        ],
+        "observations": [
+          {
+            "canonical_location": "\\\\.\\pipe\\herdr-api",
+            "kind": "permission_denied",
+            "diagnostic_id": "synthetic-acl-denied"
+          }
+        ]
+      },
+      "expect": {
+        "resolved": false,
+        "code": "permission_denied",
+        "kind": null,
+        "canonical_location": null,
+        "access_scope": null,
+        "requires_explicit_configuration": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Permission denied is classified. The resolver does not retry as another user."
+    },
+    {
+      "id": "EP06",
+      "scenario": "cross_user",
+      "simulation": true,
+      "device": "11111111-1111-4111-8111-111111111111",
+      "session": {
+        "endpoint_key": "local-api",
+        "session_name": null
+      },
+      "preference": {
+        "kind": "explicit",
+        "location": "\\\\.\\pipe\\herdr-api"
+      },
+      "config": {
+        "verified_mappings": [
+          {
+            "device": "11111111-1111-4111-8111-111111111111",
+            "endpoint_key": "local-api",
+            "session_name": null,
+            "canonical_location": "\\\\.\\pipe\\herdr-api",
+            "kind": "named_pipe",
+            "evidence_id": "synthetic-default-mapping",
+            "access_scope": "local_user"
+          }
+        ],
+        "observations": [
+          {
+            "canonical_location": "\\\\.\\pipe\\herdr-api",
+            "kind": "cross_user",
+            "diagnostic_id": "synthetic-cross-user"
+          }
+        ]
+      },
+      "expect": {
+        "resolved": false,
+        "code": "cross_user_denied",
+        "kind": null,
+        "canonical_location": null,
+        "access_scope": null,
+        "requires_explicit_configuration": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Cross-user isolation is classified. The resolver does not retry as another user."
+    },
+    {
+      "id": "EP07",
+      "scenario": "remote_unc",
+      "simulation": true,
+      "device": "11111111-1111-4111-8111-111111111111",
+      "session": {
+        "endpoint_key": "local-api",
+        "session_name": null
+      },
+      "preference": {
+        "kind": "explicit",
+        "location": "\\\\fileserver\\share\\herdr"
+      },
+      "config": {
+        "verified_mappings": [
+          {
+            "device": "11111111-1111-4111-8111-111111111111",
+            "endpoint_key": "local-api",
+            "session_name": null,
+            "canonical_location": "\\\\.\\pipe\\herdr-api",
+            "kind": "named_pipe",
+            "evidence_id": "synthetic-default-mapping",
+            "access_scope": "local_user"
+          }
+        ],
+        "observations": []
+      },
+      "expect": {
+        "resolved": false,
+        "code": "remote_unc_rejected",
+        "kind": null,
+        "canonical_location": null,
+        "access_scope": null,
+        "requires_explicit_configuration": false
+      },
+      "live_result": "blocked",
+      "evidence_level": "synthetic",
+      "note": "Remote UNC is rejected. The resolver does not convert it to a local pipe."
     }
   ]
 }

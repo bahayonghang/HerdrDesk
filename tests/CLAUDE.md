@@ -6,8 +6,8 @@
 
 | 套件 | 索引 | 规模 | 运行方式 |
 |---|---|---|---|
-| Python unittest | [python](python/CLAUDE.md) | 73 | `python -m unittest discover -s tests/python -v` |
-| C# smoke | [HerdDesk.Core.SmokeTests](HerdDesk.Core.SmokeTests/CLAUDE.md) | 22 | `dotnet run --project tests/HerdDesk.Core.SmokeTests` |
+| Python unittest | [python](python/CLAUDE.md) | 以本次 discover 为准 | `python -m unittest discover -s tests/python -v` |
+| C# smoke | [HerdDesk.Core.SmokeTests](HerdDesk.Core.SmokeTests/CLAUDE.md) | 以本次 `dotnet run` 为准 | `dotnet run --project tests/HerdDesk.Core.SmokeTests` |
 | 合成 fixture | [fixtures](fixtures/CLAUDE.md) | NDJSON/JSON | `check_capture.py`、probe `selftest` |
 
 probe `selftest` 另有 23 项合成检查，入口在 [../scripts](../scripts/CLAUDE.md)。

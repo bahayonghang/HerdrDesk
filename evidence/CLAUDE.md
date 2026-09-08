@@ -22,6 +22,7 @@
 | `runtime_verification.windows_local` | `blocked`（`no_authorized_isolated_pane_or_live_herdr_grant`） |
 | `runtime_verification.remote_linux` | `not_run`（独立条目，不借用 Windows） |
 | `runtime_verification.named_pipe_acl` | `blocked`（与 Windows runtime 同一授权缺口） |
+| `runtime_verification.windows_endpoint` | `blocked`（`no_authorized_isolated_windows_endpoint_or_live_herdr_grant`；HD-001 C2 残余） |
 | `runtime_verification.ime` | `not_run` |
 | `default_write_capability` | false |
 
@@ -42,6 +43,7 @@ UTF-8 JSON。采集记录字段：`capture_id`、`kind`、`captured_at_utc`、`o
 | `remote-runtime.template.json` | remote 线模板；不得填成一次成功运行 |
 | `windows-runtime.blocked.json` | AC01-C2 当前记录：blocked |
 | `remote-runtime.not-run.json` | AC01-C3 独立 `not_run` 记录 |
+| `windows-endpoint-matrix.blocked.json` | AC03-C1 当前记录：blocked；合成矩阵不是 runtime pass |
 
 模板不是成功运行。runtime 成功结论必须指向非模板采集文件。
 

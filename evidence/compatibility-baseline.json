@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "collected_at": "2026-09-07",
-  "updated_at": "2026-09-08T01:42:17Z",
+  "updated_at": "2026-09-08T02:53:25Z",
   "evidence_level": "source_inspection_only",
   "matrix_path": "evidence/version-support-matrix.json",
   "herdr": {
@@ -25,6 +25,7 @@
     "windows_local": "blocked",
     "remote_linux": "not_run",
     "named_pipe_acl": "blocked",
+    "windows_endpoint": "blocked",
     "ime": "not_run"
   },
   "default_write_capability": false,
@@ -134,6 +135,35 @@
       "attachments": [
         "evidence/runtime/remote-runtime.not-run.json"
       ]
+    },
+    {
+      "subject": "herdr-windows-endpoint-matrix",
+      "environment": "windows_endpoint",
+      "observed_at": "2026-09-08T02:53:25Z",
+      "evidence_level": "blocked",
+      "version": {
+        "tag": "v0.8.2",
+        "commit": "9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c",
+        "cli": null,
+        "daemon": null
+      },
+      "hashes": {
+        "git_blob_sha": null,
+        "distribution_binary_sha256": null,
+        "runtime_binary_sha256": null,
+        "runtime_schema_sha256": null
+      },
+      "result": "blocked",
+      "blocked_category": "no_authorized_isolated_windows_endpoint_or_live_herdr_grant",
+      "redaction": "path_redacted_no_runtime_output",
+      "limitations": [
+        "Local implementation was authorized. Live herdr, live named-pipe connect, and disposable pane were not granted.",
+        "Synthetic endpoint-cases.json is a resolver simulation, not Windows runtime proof.",
+        "AC03-C1 is blocked. AC03-C2 is HD-008. AC03 remains not_run."
+      ],
+      "attachments": [
+        "evidence/runtime/windows-endpoint-matrix.blocked.json"
+      ]
     }
   ],
   "attachments_index": [
@@ -160,6 +190,11 @@
     {
       "path": "evidence/runtime/remote-runtime.not-run.json",
       "kind": "remote_runtime",
+      "template": false
+    },
+    {
+      "path": "evidence/runtime/windows-endpoint-matrix.blocked.json",
+      "kind": "windows_endpoint_matrix",
       "template": false
     },
     {

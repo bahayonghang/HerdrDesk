@@ -6,7 +6,7 @@
 
 ## 职责
 
-用 `dotnet run` 执行 22 项断言。覆盖 `TerminalFrameParser` 与 `InputPolicy`。不启动 WinUI，不连接 herdr。
+用 `dotnet run` 执行解析、输入策略与 endpoint resolver 断言。不启动 WinUI，不连接 herdr。计数以本次运行为准。
 
 ## 入口
 
@@ -23,6 +23,8 @@ dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no
 解析：full 帧、有序 delta、拒绝初始 delta、缺口、失败锁存、重放、重复键、非法 UTF-8、跨帧 UTF-8 字节 `0xe4` 原样保留、closed、关闭后再帧、`ulong.MaxValue` seq。
 
 策略：已验证控制允许中文 `CommittedText`；未验证 / Observing / 旧 epoch / 其他 pane / `EmulatorReply` / 空输入 / 超限 / 未知 origin / 默认 identity 均拒绝。
+
+Endpoint：加载 `tests/fixtures/endpoint-cases.json` 七行模拟矩阵；Default 不猜 `%APPDATA%` 或常规 pipe 名；Named 不回退 default；拒绝 UNC；`PaneKey` / 标题 / agent 类型不是 endpoint 身份；其他 DeviceId 的映射忽略；fixture 不得当作 runtime pass。合成数据，不是 Windows 真机连接。
 
 ## 依赖
 

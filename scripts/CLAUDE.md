@@ -28,6 +28,8 @@ Python 3.10+，仅标准库。将本目录加入 `sys.path` 后 `import herddesk
 | `evidence.validate_evidence` / `check_evidence` | 基线/矩阵/采集结构；拒绝 hash 混同与非 runtime 提升；`windows_verified` 恒为 false |
 | `licensing.LicensingError` | 稳定许可规则码；消息仅为码 |
 | `licensing.validate_licensing` / `check_licensing` | 加载 `docs/licensing` 台账与模板；拒绝 pending/blocked 当 approved、herdrm 拷贝、公开可见当授权；`ac02_passed` 恒为 false |
+| `endpoint.EndpointError` | 稳定 endpoint 规则码；消息仅为码 |
+| `endpoint.validate_endpoint_matrix` / `check_endpoint_matrix` / `resolve_endpoint` | 七行模拟矩阵与受控映射；拒绝 APPDATA 猜测、named 回退、UNC、fixture 当 runtime/AC03 通过；`windows_verified` 与 `ac03_passed` 恒为 false |
 
 `validate_input`：`text` 与 `bytes` 必须恰好一个；空载荷拒绝。Python `bool` 不得当作 JSON 整数。Base64 必须与 `b64encode` 回比一致。终端 payload 不做 UTF-8 解码。
 
@@ -62,7 +64,7 @@ argv：`herdr [--session S] terminal session {observe|control} TARGET --cols --r
 | 文件 | 行为 |
 |---|---|
 | `check_capture.py` | `analyze_capture`；`--output` 独占创建 |
-| `validate_repository.py` | UTF-8 JSON；无 `PackageReference`；36 任务无环；48 AC；调用 `herddesk_g0.evidence` 与 `herddesk_g0.licensing`；baseline `api_protocol==20` 且 `default_write_capability is False`；`windows_verified` 与 `ac02_passed` 恒为 false |
+| `validate_repository.py` | UTF-8 JSON；无 `PackageReference`；36 任务无环；48 AC；调用 `herddesk_g0.evidence`、`herddesk_g0.endpoint` 与 `herddesk_g0.licensing`；baseline `api_protocol==20` 且 `default_write_capability is False`；`windows_verified`、`ac02_passed` 与 `ac03_passed` 恒为 false |
 | `publish_github.py` | 历史 `PUBLICATION_MANIFEST.json` 审计（`kind=historical_bundle_audit`）。默认 dry-run，漂移退出码 2。日常门禁是 `just ci`。`--publish` 仅历史空仓建仓，已有仓库拒绝 |
 | `Invoke-HerdDeskPreflight.ps1` | pwsh 7 包装 `preflight`；仓库内无 Windows 执行证据 |
 

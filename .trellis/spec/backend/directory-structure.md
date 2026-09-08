@@ -13,11 +13,11 @@ C# product code is two class libraries under `src/`. Python protocol and probes 
 ## Directory Layout
 
 ```
-src/HerdDesk.Contracts/     BCL types only (TerminalModels.cs)
-src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs
+src/HerdDesk.Contracts/     BCL types only (TerminalModels.cs, EndpointModels.cs)
+src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
 tests/python/               stdlib unittest (sys.path → scripts/)
-tests/fixtures/             synthetic NDJSON and protocol-edge-cases.json
+tests/fixtures/             synthetic NDJSON, protocol-edge-cases.json, endpoint-cases.json
 docs/licensing/             register.json and candidate admission templates
 scripts/herddesk_g0/        protocol.py, evidence.py, licensing.py
 scripts/probe_herdr.py      herdr probe
@@ -39,9 +39,11 @@ Planned and **not** present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, 
 | New work | Location |
 |---|---|
 | Identity / envelope types | `src/HerdDesk.Contracts/TerminalModels.cs` unless an approved task adds a file |
-| Frame parse and input grant | `src/HerdDesk.Core` |
+| Endpoint mapping types | `src/HerdDesk.Contracts/EndpointModels.cs` |
+| Frame parse, input grant, endpoint mapping | `src/HerdDesk.Core` |
 | Python wire checks | `scripts/herddesk_g0/protocol.py` |
 | Compatibility evidence rules | `scripts/herddesk_g0/evidence.py` |
+| Endpoint matrix diagnostics | `scripts/herddesk_g0/endpoint.py` |
 | Licensing register rules | `scripts/herddesk_g0/licensing.py` |
 | Licensing inventory and templates | `docs/licensing/` |
 | Shared synthetic records | `tests/fixtures/` (LF, UTF-8) |
@@ -63,8 +65,9 @@ Do not place domain policy in a probe script. Do not place WinUI or SSH types in
 
 ## Examples
 
-- Contracts types: `src/HerdDesk.Contracts/TerminalModels.cs`
+- Contracts types: `src/HerdDesk.Contracts/TerminalModels.cs`, `src/HerdDesk.Contracts/EndpointModels.cs`
 - Fail-closed parser: `src/HerdDesk.Core/TerminalFrameParser.cs`
 - Input grant: `src/HerdDesk.Core/InputPolicy.cs`
+- Endpoint mapping: `src/HerdDesk.Core/EndpointResolver.cs`
 - Python latching capture: `scripts/herddesk_g0/protocol.py` (`TerminalCaptureValidator`)
 - Licensing register rules: `scripts/herddesk_g0/licensing.py`

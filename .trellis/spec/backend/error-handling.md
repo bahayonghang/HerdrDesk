@@ -20,11 +20,15 @@ Defined in `src/HerdDesk.Core/TerminalFrameParser.cs`. Codes include:
 
 `InputPolicy.Evaluate` returns `InputDecision` with `Allowed` and `Code`. It does not throw for a denied grant. Deny codes: `invalid_identity`, `wrong_pane`, `stale_epoch`, `control_not_verified`, `input_origin_denied`, `input_bytes_limit`. Allow code: `allowed`.
 
+`EndpointResolver.Resolve` returns `EndpointResolutionResult`. It does not throw for a mapping failure and does not connect to a pipe. Failure codes: `invalid_identity`, `invalid_preference`, `explicit_configuration_required`, `named_session_unmapped`, `endpoint_not_found`, `permission_denied`, `cross_user_denied`, `remote_unc_rejected`, `unicode_encoding_error`, `ambiguous_mapping`. Codes and `DiagnosticId` omit paths, `%APPDATA%`, and unpaired surrogates.
+
 ### Python `ProtocolError`
 
 `strict_json_loads` maps duplicate keys, non-finite numbers, illegal UTF-8, unpaired UTF-16 surrogates, and depth > 64 to `ProtocolError` (`duplicate_json_key`, `nonfinite_json_number`, `json_depth_limit`, or `invalid_json`). Frame and input validators use their own codes (`object_required`, `noncanonical_base64`, `input_bytes_limit`, …). `NdjsonDecoder` uses `decoder_not_active`, `line_bytes_limit`, `truncated_ndjson_record`. `TerminalCaptureValidator` uses `terminal_stream_not_active` after close or failure.
 
-C# and Python need not share every internal code string. They must share reject/accept intent on `tests/fixtures/protocol-edge-cases.json`.
+Python `herddesk_g0.endpoint.EndpointError` uses stable codes (`evidence_level_promotion`, `ac03_claimed_passed`, `missing_matrix_row`, …). `resolve_endpoint` returns a result dict and does not connect to a pipe.
+
+C# and Python need not share every internal code string. They must share reject/accept intent on `tests/fixtures/protocol-edge-cases.json` and `tests/fixtures/endpoint-cases.json`.
 
 ---
 
