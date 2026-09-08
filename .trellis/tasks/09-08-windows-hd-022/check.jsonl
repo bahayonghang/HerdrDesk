@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Dependency direction, protocol-plane separation and evidence gate"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Review EOF, parser failure, cancellation and stale epoch behavior"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Verify stdout/stderr/payload and argv privacy"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Trace request, event and terminal contracts through all consumers"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Prevent L1 plans from being reported as implemented runtime support"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Verify every transport test is discovered through the shared project and gate layout"}

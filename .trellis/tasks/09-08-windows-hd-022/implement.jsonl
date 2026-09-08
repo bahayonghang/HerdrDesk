@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/index.md","reason":"Current Contracts and Core boundaries plus absent transport modules"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Fail-closed parser, epoch, redacted error and transport recovery rules"}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Terminal, RPC, stderr, argv and private-path logging exclusions"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Remote process to framer to port to DeviceSession data-flow review"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Verified current transport and runtime evidence gaps"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Use the single registered Infrastructure, contract and SSH integration test targets"}

@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-022",
+  "name": "windows-hd-022",
+  "title": "HD-022 远端RPC与terminal通道",
+  "description": "ssh-T透明stdio、remote schema、长连接与退出分类",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 ssh -T RPC/terminal transport set landed. L2 live SSH UNVERIFIED. AC24/AC26/G0 not passed.",
+  "meta": {
+    "source_task": "HD-022",
+    "phase": "P3"
+  }
+}
