@@ -20,6 +20,9 @@ public sealed class AppDataPaths
         ConfigurationBackupFile = ConfigurationFile + ".bak";
         KnownHostsFile = Path.Combine(SettingsDirectory, "ssh-known-hosts.json");
         KnownHostsBackupFile = KnownHostsFile + ".bak";
+        HelperReceiptsFile = Path.Combine(SettingsDirectory, "helper-receipts.json");
+        HelperReceiptsBackupFile = HelperReceiptsFile + ".bak";
+        HelperReceiptsLockFile = Path.Combine(SettingsDirectory, "helper-receipts.lock");
         DiagnosticSaltFile = Path.Combine(SettingsDirectory, "diagnostic-alias.salt");
         DiagnosticLogFile = Path.Combine(LogDirectory, "diagnostics.jsonl");
     }
@@ -32,6 +35,9 @@ public sealed class AppDataPaths
     public string ConfigurationBackupFile { get; }
     public string KnownHostsFile { get; }
     public string KnownHostsBackupFile { get; }
+    public string HelperReceiptsFile { get; }
+    public string HelperReceiptsBackupFile { get; }
+    public string HelperReceiptsLockFile { get; }
     public string DiagnosticSaltFile { get; }
     public string DiagnosticLogFile { get; }
 

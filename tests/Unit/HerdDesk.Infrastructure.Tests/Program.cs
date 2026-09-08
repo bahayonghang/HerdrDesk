@@ -426,7 +426,11 @@ cases =
     .. OpenSshConfigResolverTests.All,
     .. SshProcessSpecFactoryTests.All,
     .. HostKeyTrustStoreTests.All,
-    .. SshConnectionTestServiceTests.All
+    .. SshConnectionTestServiceTests.All,
+    .. TrustedHelperManifestProviderTests.All,
+    .. RemotePlatformProbeTests.All,
+    .. HelperDeploymentReceiptStoreTests.All,
+    .. RemoteHelperDeploymentServiceTests.All
 ];
 
 var failed = 0;

@@ -30,6 +30,34 @@ internal sealed class SshOwnedProcessRunner : ISshProcessRunner
             linked.CancelAfter(spec.Timeout);
             var stdoutTask = ReadBoundedAsync(child.StandardOutput, linked.Token);
             var stderrTask = ReadBoundedAsync(child.StandardError, linked.Token);
+            if (!spec.StandardInput.IsEmpty)
+            {
+                try
+                {
+                    await child.StandardInput.WriteAsync(spec.StandardInput, linked.Token)
+                        .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    child.CloseStandardInput();
+                    await child.DisposeAsync().ConfigureAwait(false);
+                    return new(
+                        255,
+                        "",
+                        "",
+                        !cancellationToken.IsCancellationRequested,
+                        cancellationToken.IsCancellationRequested,
+                        id);
+                }
+                catch (IOException)
+                {
+                    child.CloseStandardInput();
+                    await child.DisposeAsync().ConfigureAwait(false);
+                    return new(255, "", "", false, false, id);
+                }
+            }
+
+            child.CloseStandardInput();
             try
             {
                 await child.WaitForExitAsync(linked.Token).ConfigureAwait(false);

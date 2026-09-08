@@ -7,4 +7,9 @@
     <ProjectReference Include="../HerdDesk.Contracts/HerdDesk.Contracts.csproj" />
     <ProjectReference Include="../HerdDesk.Core/HerdDesk.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../../bridge/release/targets.json" LogicalName="HerdDesk.Infrastructure.HelperRelease.targets.json" />
+    <EmbeddedResource Include="../../bridge/release/manifest.json" LogicalName="HerdDesk.Infrastructure.HelperRelease.manifest.json" />
+    <EmbeddedResource Include="../../bridge/release/index.json" LogicalName="HerdDesk.Infrastructure.HelperRelease.index.json" />
+  </ItemGroup>
 </Project>

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "bridge_source": "bridge/herddesk-bridge",
+  "lockfile": "bridge/Cargo.lock",
+  "targets": [
+    {
+      "triple": "x86_64-pc-windows-msvc",
+      "os": "windows",
+      "arch": "x86_64",
+      "uname_s": "windows",
+      "uname_m": "x86_64",
+      "artifact": "herddesk-bridge-x86_64-pc-windows-msvc.exe",
+      "remote_deploy": false,
+      "atomic_publish": "unsupported"
+    },
+    {
+      "triple": "x86_64-unknown-linux-gnu",
+      "os": "linux",
+      "arch": "x86_64",
+      "uname_s": "linux",
+      "uname_m": "x86_64",
+      "artifact": "herddesk-bridge-x86_64-unknown-linux-gnu",
+      "remote_deploy": true,
+      "atomic_publish": "hardlink_noclobber"
+    },
+    {
+      "triple": "aarch64-unknown-linux-gnu",
+      "os": "linux",
+      "arch": "aarch64",
+      "uname_s": "linux",
+      "uname_m": "aarch64",
+      "artifact": "herddesk-bridge-aarch64-unknown-linux-gnu",
+      "remote_deploy": true,
+      "atomic_publish": "hardlink_noclobber"
+    },
+    {
+      "triple": "x86_64-apple-darwin",
+      "os": "darwin",
+      "arch": "x86_64",
+      "uname_s": "darwin",
+      "uname_m": "x86_64",
+      "artifact": "herddesk-bridge-x86_64-apple-darwin",
+      "remote_deploy": true,
+      "atomic_publish": "hardlink_noclobber"
+    },
+    {
+      "triple": "aarch64-apple-darwin",
+      "os": "darwin",
+      "arch": "arm64",
+      "uname_s": "darwin",
+      "uname_m": "arm64",
+      "artifact": "herddesk-bridge-aarch64-apple-darwin",
+      "remote_deploy": true,
+      "atomic_publish": "hardlink_noclobber"
+    }
+  ]
+}

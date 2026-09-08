@@ -50,6 +50,11 @@ public static class ShellStrings
     public const string HostKeySideChannel =
         "请通过可信侧信道核对该指纹后再确认。未确认前不会写入信任库。";
     public const string HostKeyChangedBlocked = "主机密钥已变更，连接已阻断。旧记录未覆盖。";
+    public const string HelperInstall = "安装 helper";
+    public const string HelperConfirm = "确认安装";
+    public const string HelperCancel = "取消";
+    public const string HelperRollback = "回滚 helper";
+    public const string HelperConsentRequired = "安装 helper 需要确认当前设备、版本与 hash";
     public const string FilesPending = "文件区尚未启用";
     public const string SaveFailed = "保存失败，已恢复上次有效值";
     public const string PermissionDenied = "当前实例不能写入配置";

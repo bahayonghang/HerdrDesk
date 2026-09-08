@@ -6,7 +6,8 @@ internal static class SshProcessSpecFactoryTests
     public static (string Name, Action Run)[] All =>
     [
         ("config and probe argv stay tokenized without shell or password", ArgvTokens),
-        ("alias dash and relative helper are rejected before start", RejectsInjection)
+        ("alias dash and relative helper are rejected before start", RejectsInjection),
+        ("helper bootstrap argv is ssh -T with allowlisted positional args", HelperArgv)
     ];
 
     static void ArgvTokens()
@@ -47,5 +48,41 @@ internal static class SshProcessSpecFactoryTests
         var unknown = SshFixtures.Settings() with { AuthMode = SshDeviceSettings.ParseAuthMode("password") };
         SshFixtures.Check(!SshProcessSpecFactory.TryConfigPreview(locator, unknown, out _, out var authCode));
         SshFixtures.Check(authCode == SshCodes.AuthUnsupported);
+    }
+
+    static void HelperArgv()
+    {
+        var locator = SshFixtures.Locator();
+        var known = OperatingSystem.IsWindows()
+            ? @"C:\HerdDesk\settings\ssh-known-hosts.json"
+            : "/tmp/herddesk/ssh-known-hosts.json";
+        var payload = HelperFixtures.Payload;
+        var hash = HelperRemoteScripts.PayloadSha256(payload);
+        var staging = HelperRemoteScripts.NewStagingId();
+        SshFixtures.Check(SshProcessSpecFactory.TryHelperBootstrap(
+            locator,
+            HelperFixtures.Settings(),
+            known,
+            "0.1.0",
+            HelperFixtures.LinuxX64,
+            hash,
+            payload.Length,
+            staging,
+            HelperRemoteScripts.HashSha256Sum,
+            payload,
+            out var spec,
+            out _));
+        SshFixtures.Check(spec.Kind == SshProcessKind.HelperBootstrap);
+        SshFixtures.Check(spec.Arguments.Contains("-T"));
+        SshFixtures.Check(spec.Arguments.Contains(HelperRemoteScripts.Bootstrap));
+        SshFixtures.Check(spec.Arguments.Contains("herddesk-helper"));
+        SshFixtures.Check(spec.Arguments.Contains(HelperFixtures.LinuxX64));
+        SshFixtures.Check(spec.Arguments.Contains(staging));
+        SshFixtures.Check(!spec.Arguments.Any(RemoteHelperPublisher.ForbiddenArgument));
+        SshFixtures.Check(!spec.Arguments.Contains("sudo"));
+        SshFixtures.Check(SshProcessSpecFactory.TryPlatformProbe(
+            locator, HelperFixtures.Settings(), known, out var probe, out _));
+        SshFixtures.Check(probe.Arguments.Contains(HelperRemoteScripts.Probe));
+        SshFixtures.Check(probe.Kind == SshProcessKind.PlatformProbe);
     }
 }

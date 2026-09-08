@@ -1,0 +1,49 @@
+{
+  "manifest_version": 1,
+  "bridge_version": "0.1.0",
+  "protocol_version": "1",
+  "source_commit": "not_run",
+  "application_version": "0.0.0-g0",
+  "artifacts": {
+    "x86_64-pc-windows-msvc": {
+      "file": "herddesk-bridge-x86_64-pc-windows-msvc.exe",
+      "length": 0,
+      "sha256": "",
+      "os": "windows",
+      "arch": "x86_64",
+      "build_status": "not_run"
+    },
+    "x86_64-unknown-linux-gnu": {
+      "file": "herddesk-bridge-x86_64-unknown-linux-gnu",
+      "length": 0,
+      "sha256": "",
+      "os": "linux",
+      "arch": "x86_64",
+      "build_status": "not_run"
+    },
+    "aarch64-unknown-linux-gnu": {
+      "file": "herddesk-bridge-aarch64-unknown-linux-gnu",
+      "length": 0,
+      "sha256": "",
+      "os": "linux",
+      "arch": "aarch64",
+      "build_status": "not_run"
+    },
+    "x86_64-apple-darwin": {
+      "file": "herddesk-bridge-x86_64-apple-darwin",
+      "length": 0,
+      "sha256": "",
+      "os": "darwin",
+      "arch": "x86_64",
+      "build_status": "not_run"
+    },
+    "aarch64-apple-darwin": {
+      "file": "herddesk-bridge-aarch64-apple-darwin",
+      "length": 0,
+      "sha256": "",
+      "os": "darwin",
+      "arch": "arm64",
+      "build_status": "not_run"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "application_version": "0.0.0-g0",
+  "source_commit": "not_run",
+  "manifest_sha256": "798e02e481e79c5abc8a91b5bf27c2e8217b476286406fa3c2e16ea599d08b88",
+  "bridge_source": "bridge/herddesk-bridge",
+  "lockfile": "bridge/Cargo.lock"
+}

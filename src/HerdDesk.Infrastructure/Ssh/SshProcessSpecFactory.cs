@@ -10,6 +10,9 @@ internal static class SshProcessSpecFactory
     public static readonly TimeSpan ConfigTimeout = TimeSpan.FromSeconds(8);
     public static readonly TimeSpan ScanTimeout = TimeSpan.FromSeconds(8);
     public static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(15);
+    public static readonly TimeSpan PlatformProbeTimeout = TimeSpan.FromSeconds(15);
+    public static readonly TimeSpan HelperBootstrapTimeout = TimeSpan.FromSeconds(120);
+    public static readonly TimeSpan HelperCleanupTimeout = TimeSpan.FromSeconds(15);
 
     public static bool TryVersion(OpenSshLocator locator, out SshProcessSpec spec, out string code)
     {
@@ -128,6 +131,159 @@ internal static class SshProcessSpecFactory
             WithPrefix(locator, arguments),
             ProbeTimeout,
             SshProcessKind.AuthProbe);
+        code = SshCodes.Ok;
+        return true;
+    }
+
+    public static bool TryPlatformProbe(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!TrySshT(locator, settings, knownHostsFile, out var arguments, out code))
+            return false;
+
+        arguments.Add("sh");
+        arguments.Add("-c");
+        arguments.Add(HelperRemoteScripts.Probe);
+        spec = new(
+            locator.SshExecutable,
+            WithPrefix(locator, arguments),
+            PlatformProbeTimeout,
+            SshProcessKind.PlatformProbe);
+        code = SshCodes.Ok;
+        return true;
+    }
+
+    public static bool TryHelperBootstrap(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        string version,
+        string target,
+        string sha256,
+        long length,
+        string stagingId,
+        string hashCommand,
+        ReadOnlyMemory<byte> payload,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!HelperRemoteScripts.IsSafeVersion(version) ||
+            !HelperRemoteScripts.IsDeployableTriple(target) ||
+            !HelperRemoteScripts.IsSha256(sha256) ||
+            !HelperRemoteScripts.IsPositiveLength(length) ||
+            !HelperRemoteScripts.IsStagingId(stagingId) ||
+            !HelperRemoteScripts.IsHashCommand(hashCommand))
+        {
+            code = HelperCodes.ManifestInvalid;
+            return false;
+        }
+
+        if (!TrySshT(locator, settings, knownHostsFile, out var arguments, out code))
+            return false;
+
+        arguments.Add("sh");
+        arguments.Add("-c");
+        arguments.Add(HelperRemoteScripts.Bootstrap);
+        arguments.Add("herddesk-helper");
+        arguments.Add(version);
+        arguments.Add(target);
+        arguments.Add(sha256);
+        arguments.Add(length.ToString());
+        arguments.Add(stagingId);
+        arguments.Add(hashCommand);
+        spec = new(
+            locator.SshExecutable,
+            WithPrefix(locator, arguments),
+            HelperBootstrapTimeout,
+            SshProcessKind.HelperBootstrap,
+            payload);
+        code = SshCodes.Ok;
+        return true;
+    }
+
+    public static bool TryHelperCleanup(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        string version,
+        string target,
+        string stagingId,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!HelperRemoteScripts.IsSafeVersion(version) ||
+            !HelperRemoteScripts.IsDeployableTriple(target) ||
+            !HelperRemoteScripts.IsStagingId(stagingId))
+        {
+            code = HelperCodes.ManifestInvalid;
+            return false;
+        }
+
+        if (!TrySshT(locator, settings, knownHostsFile, out var arguments, out code))
+            return false;
+
+        arguments.Add("sh");
+        arguments.Add("-c");
+        arguments.Add(HelperRemoteScripts.Cleanup);
+        arguments.Add("herddesk-helper");
+        arguments.Add(version);
+        arguments.Add(target);
+        arguments.Add(stagingId);
+        spec = new(
+            locator.SshExecutable,
+            WithPrefix(locator, arguments),
+            HelperCleanupTimeout,
+            SshProcessKind.HelperCleanup);
+        code = SshCodes.Ok;
+        return true;
+    }
+
+    private static bool TrySshT(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        out List<string> arguments,
+        out string code)
+    {
+        arguments = [];
+        var probeError = Validate(locator.SshExecutable, settings);
+        if (probeError is not null)
+        {
+            code = probeError;
+            return false;
+        }
+
+        if (!Path.IsPathFullyQualified(knownHostsFile) ||
+            knownHostsFile.Contains("..", StringComparison.Ordinal) ||
+            AtomicConfigurationStore.LooksLikeSecret(knownHostsFile))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        var globalKnown = OperatingSystem.IsWindows() ? "NUL" : "/dev/null";
+        arguments =
+        [
+            "-T",
+            "-o", "BatchMode=yes",
+            "-o", "StrictHostKeyChecking=yes",
+            "-o", "UserKnownHostsFile=" + knownHostsFile,
+            "-o", "GlobalKnownHostsFile=" + globalKnown,
+            "-o", "PasswordAuthentication=no",
+            "-o", "KbdInteractiveAuthentication=no",
+            "-o", "PreferredAuthentications=publickey"
+        ];
+        if (!string.IsNullOrEmpty(settings.IdentityFilePath))
+            arguments.AddRange(["-o", "IdentitiesOnly=yes"]);
+        AddTypedFields(arguments, settings);
+        arguments.Add(settings.HostAlias);
         code = SshCodes.Ok;
         return true;
     }

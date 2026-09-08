@@ -1,0 +1,39 @@
+name: HD-021 bridge release matrix
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Not part of just ci / G0. Missing runners stay not_run. Do not mark AC25 passed.
+# Do not sudo. Do not write /usr or /opt. Do not deploy a live helper.
+jobs:
+  matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            triple: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            triple: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            triple: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            triple: aarch64-apple-darwin
+          - os: macos-latest
+            triple: x86_64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6; resolved 2026-09-07
+        with:
+          persist-credentials: false
+      - name: Verify HD-008 source identity
+        run: |
+          python -c "import json,pathlib; p=pathlib.Path('bridge/release/targets.json'); t=json.loads(p.read_text(encoding='utf-8')); assert t['bridge_source']=='bridge/herddesk-bridge'; assert t['lockfile']=='bridge/Cargo.lock'; assert len(t['targets'])==5; print('triple=${{ matrix.triple }} not_run_unless_native_host'); print('ac25_passed=false')"
+      - name: Windows verify-only script
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -NoLogo -File scripts/Build-HerdDeskBridgeRelease.ps1 -VerifyOnly

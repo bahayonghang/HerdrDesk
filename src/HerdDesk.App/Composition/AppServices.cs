@@ -19,7 +19,8 @@ public sealed class AppServices : IAsyncDisposable
         ITerminalRendererFactory terminalRenderers,
         DiagnosticAliasProjector aliases,
         IReadOnlyList<UnavailableCapability> unavailable,
-        ISshConnectionTester? sshTester = null)
+        ISshConnectionTester? sshTester = null,
+        IHelperDeploymentService? helperDeployment = null)
     {
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(clock);
@@ -40,6 +41,7 @@ public sealed class AppServices : IAsyncDisposable
         Aliases = aliases;
         Unavailable = unavailable;
         SshTester = sshTester;
+        HelperDeployment = helperDeployment;
         HasFakeSuccessAdapter =
             rpcConnections.IsFakeSuccess ||
             terminalTransports.IsFakeSuccess ||
@@ -56,6 +58,7 @@ public sealed class AppServices : IAsyncDisposable
     public DiagnosticAliasProjector Aliases { get; }
     public IReadOnlyList<UnavailableCapability> Unavailable { get; }
     public ISshConnectionTester? SshTester { get; }
+    public IHelperDeploymentService? HelperDeployment { get; }
     public bool HasFakeSuccessAdapter { get; }
 
     public static AppServices CreateProduction(AppDataPaths paths, IClock? clock = null)
@@ -79,14 +82,17 @@ public sealed class AppServices : IAsyncDisposable
             WebRendererHost.Capability
         ];
         var ssh = new SshConnectionTestService(paths, clock);
+        var helper = new RemoteHelperDeploymentService(paths, ProductInfo.Version, clock);
         return new AppServices(
-            paths, clock, store, diagnostics, rpc, transports, renderers, aliases, unavailable, ssh);
+            paths, clock, store, diagnostics, rpc, transports, renderers, aliases, unavailable, ssh, helper);
     }
 
     public async ValueTask DisposeAsync()
     {
         if (SshTester is not null)
             await SshTester.CancelAsync().ConfigureAwait(false);
+        if (HelperDeployment is not null)
+            await HelperDeployment.CancelAsync().ConfigureAwait(false);
         if (TerminalRenderers is IAsyncDisposable renderer)
             await renderer.DisposeAsync().ConfigureAwait(false);
         if (TerminalTransports is IAsyncDisposable transport)

@@ -39,7 +39,7 @@ Python 3.10+，仅标准库。将本目录加入 `sys.path` 后 `import herddesk
 | `adr.validate_adr_baseline` / `check_adr_baseline` | 加载 `docs/adr/approved-baseline.json` 与 markdown；拒绝 blocked/unknown 当 passed、G0/AC44 宣称通过、R5 已执行、平行 ADR 编号、缺失证据路径、解除 AGENTS G0 禁令；`ac44_passed`、`g0_passed` 与 `windows_verified` 恒为 false |
 | `project_graph.validate_project_graph` | HD-007 允许依赖图；禁止 Core→WinUI/WebView2/SSH、Contracts 第三方、生产→测试、任意 PackageReference、`Directory.Packages.props`、`packages.lock.json`、csproj 中的未核验 `2.4.0` 钉 |
 
-`validate_repository.py` 另读取 `implementation/hd-019-l2.json`、`implementation/hd-019-l3.json` 与 `evidence/local-mvp/catalog.json`。L2/L3 live local MVP 保持 `UNVERIFIED`。产品 AC06/AC07/AC10/AC15 与 `g0_passed` 保持 false。`tests/Integration.Windows` 不得存在。
+`validate_repository.py` 另读取 `implementation/hd-019-l2.json`、`implementation/hd-019-l3.json`、`implementation/hd-020-l2.json`、`implementation/hd-021-l2.json` 与 `evidence/local-mvp/catalog.json`。L2/L3 live local MVP 保持 `UNVERIFIED`。L2 live helper deploy 保持 `UNVERIFIED`。产品 AC06/AC07/AC10/AC15/AC25 与 `g0_passed` 保持 false。`tests/Integration.Windows` 与 `tests/Integration.Ssh` 不得存在。
 
 `validate_input`：`text` 与 `bytes` 必须恰好一个；空载荷拒绝。Python `bool` 不得当作 JSON 整数。Base64 必须与 `b64encode` 回比一致。终端 payload 不做 UTF-8 解码。
 

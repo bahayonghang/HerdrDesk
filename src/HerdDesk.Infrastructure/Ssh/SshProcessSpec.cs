@@ -7,14 +7,18 @@ internal enum SshProcessKind
     Version,
     ConfigPreview,
     HostKeyScan,
-    AuthProbe
+    AuthProbe,
+    PlatformProbe,
+    HelperBootstrap,
+    HelperCleanup
 }
 
 internal sealed record SshProcessSpec(
     string Executable,
     IReadOnlyList<string> Arguments,
     TimeSpan Timeout,
-    SshProcessKind Kind);
+    SshProcessKind Kind,
+    ReadOnlyMemory<byte> StandardInput = default);
 
 internal sealed record SshProcessRunResult(
     int ExitCode,

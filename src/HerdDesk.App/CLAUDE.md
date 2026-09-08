@@ -16,8 +16,9 @@ HD-007 composition root / host stub plus HD-011 L1 navigation ViewModels and HD-
 - HD-018 L1：`Recovery/RecoveryBindings.cs` 把 `DeviceSessionState` 路由给 lease 的 stale/ready 信号，并投影 `RecoveryViewState`。无 timer、epoch 或 mutation 权。不启动 daemon，不 `RecoverControl`。`AppExitCoordinator` kill ledger 只含 owned bridge/CLI。L2 live disconnect 为 UNVERIFIED。
 - HD-019 L1：Shell/Terminal composition 测试驱动已交付 coordinators 与 ViewModels。默认观察；`RequestControl` 不 takeover；断开后无重放；GUI 关闭只杀 owned pids。L2 live local MVP 与 L3 IME/TUI 为 UNVERIFIED。产品 AC06/AC07/AC10/AC15 未通过。
 - HD-020 L1：`Devices/EditDeviceViewModel.cs` 编辑 SSH `DeviceProfile`、预览与分阶段测试。无 WinUI XAML。无 raw argv。L2 隔离 OpenSSH 为 UNVERIFIED。产品 AC22/AC23 未通过。
+- HD-021 L1：`Devices/HelperInstallViewModel.cs` 展示不可变 `DeploymentPlan`、本次确认、取消与回滚。无 always-allow。无 WinUI XAML。L2 live helper deploy 为 UNVERIFIED。产品 AC25 未通过。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
-- 释放顺序：SSH tester cancel → renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
+- 释放顺序：SSH tester cancel → helper cancel → renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
 
 ## 入口
 

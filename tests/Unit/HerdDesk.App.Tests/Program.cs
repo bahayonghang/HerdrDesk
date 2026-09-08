@@ -14,7 +14,8 @@ cases =
     .. ResourceCommandViewModelTests.All,
     .. RecoveryBindingsTests.All,
     .. LocalMvpShellCompositionTests.All,
-    .. EditDeviceViewModelTests.All
+    .. EditDeviceViewModelTests.All,
+    .. HelperInstallViewModelTests.All
 ];
 
 var failed = 0;
