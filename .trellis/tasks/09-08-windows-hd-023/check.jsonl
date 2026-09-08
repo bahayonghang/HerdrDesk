@@ -1,0 +1,4 @@
+{"file":"planning/acceptance.json","reason":"复核 AC19、AC21 最终归 HD-026 及 AC18、AC26 贡献边界"}
+{"file":"tasks/HD-023.md","reason":"核对多设备聚合任务范围、依赖和回滚"}
+{"file":"docs/plan/docs/10_测试与验收.md","reason":"3 设备 100 投影性能和 L2/L3 证据"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

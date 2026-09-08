@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-023",
+  "name": "windows-hd-023",
+  "title": "HD-023 多设备聚合与搜索",
+  "description": "全局Store按设备隔离，合并搜索和通知目标",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 multi-device aggregation and projection search landed. L2 live 3-device p95 UNVERIFIED. AC19/AC21/G0 not passed.",
+  "meta": {
+    "source_task": "HD-023",
+    "phase": "P3"
+  }
+}
