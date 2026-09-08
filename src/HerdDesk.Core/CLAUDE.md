@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射，以及 HD-005 renderer L1 纯函数标本。DeviceSession actor、Store、未读、错误语义等规划能力尚未实现。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本，以及 HD-009 内存投影 Store。DeviceSession actor、未读、命令编排尚未实现。
 
 ## 职责
 
@@ -13,7 +13,7 @@
 - 失败后锁存：同一 parser 实例不再接受后续记录。
 - renderer L1：跨块 UTF-8 组装、epoch/seq 门、预编辑拒绝、有界队列分类、web message allowlist。不启动 WinUI 或 WebView2。
 
-传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。
+传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。HD-009 mapper 只消费 Contracts decoded 输入，不解析 raw JSON。
 
 ## 接口
 
@@ -79,11 +79,11 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 
 ## 入口
 
-类库。由 smoke runner、[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 与 App 组合根引用。Infrastructure 项目引用 Core；本任务未从 Infrastructure 调用 Core 类型。
+类库。由 smoke runner、[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 与 App 组合根引用。Infrastructure 项目引用 Core。HD-009 `CapabilityGate` 在 Core；Infrastructure decoder 不判定能力。
 
 ## 测试
 
-[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 覆盖 InputPolicy、parser latch 与 Core 程序集边界。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
+[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 覆盖 InputPolicy、parser latch、Core 程序集边界，以及 HD-009 mapper/Store（fake decoded 输入）。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
 
 ## 关键文件
 
@@ -93,6 +93,9 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 - `TerminalLeaseProbe.cs` — 已观察 lease 信号到 `TerminalAccess` 的纯映射。
 - `Utf8ChunkAssembler.cs` / `RendererEpochGate.cs` / `CompositionPolicy.cs` / `RendererByteWindow.cs` / `WebMessagePolicy.cs` — HD-005 L1 标本。
 - `HerdDesk.Core.csproj` — 仅 Contracts 引用。
+- `Store/CapabilityGate.cs` — protocol/schema/hash 不匹配时 `VerifiedOperations` 为空。
+- `Store/ProjectionMapper.cs` — 先校验全图再构造 immutable graph。
+- `Store/DeviceProjectionStore.cs` — 当前 epoch、原子安装、stale、本地 revision。
 
 ## 约束
 

@@ -48,9 +48,9 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 | Capture | `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson` | Offline NDJSON |
 | Structure | `python scripts/validate_repository.py` | Layout, no PackageReference, no `Directory.Packages.props`, no `packages.lock.json`, no unverified `2.4.0` pin in csproj, UTF-8, `herddesk_g0.project_graph`; calls evidence/endpoint/lease/renderer/licensing/adr; `github_required_check` stays `UNVERIFIED`; `windows_verified` and AC/G0 flags stay false |
 | C# smoke | `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build` | Parser, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, and renderer L1 specimens; not `dotnet test` |
-| Core unit | `dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build` | Fake-port Core checks; BCL runner |
+| Core unit | `dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build` | Fake-port Core checks including HD-009 mapper/Store; BCL runner |
 | Infrastructure unit | `dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build` | Config atomic write/backup/restore; diagnostic privacy |
-| Contract | `dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build` | Assembly graph, production composition, fake-bridge RPC |
+| Contract | `dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build` | Assembly graph, production composition, fake-bridge RPC, SchemaV1 decoder |
 | Rust bridge | `cargo fmt/clippy/test --manifest-path bridge/Cargo.toml --locked` | Byte relay, mapping, Unix half-close; L2 UNVERIFIED |
 
 `just ci` runs the full offline set. Counts in `implementation/status.json` may lag; use the current command output.

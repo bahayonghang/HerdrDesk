@@ -1,0 +1,23 @@
+{
+  "kind": "synthetic_rpc_schema_v1_fixtures",
+  "simulation": true,
+  "runtime_pass": false,
+  "windows_verified": false,
+  "ac04_passed": false,
+  "ac11_passed": false,
+  "phase_gate": "not_passed",
+  "fixture_origin": "synthetic",
+  "herdr_executed": false,
+  "real_captures": false,
+  "note": "Synthetic session.snapshot and event documents aligned to herdr v0.9.0 schema protocol 22 / schema_version 1. Not a live daemon capture. Runtime schema hash remains UNVERIFIED.",
+  "schema": {
+    "tag": "v0.9.0",
+    "commit": "b99002ac99b09e00b4ca692436cb15a6b0d676f1",
+    "protocol": 22,
+    "schema_version": 1,
+    "schema_document_sha256": "5fb46b13fdaf39c88cf699b9806685868c7ee6b0142523d84391b1606416dc0a",
+    "schema_document_path": "docs/next/api/herdr-api.schema.json",
+    "runtime_schema_sha256": "UNVERIFIED",
+    "provenance": "source document content SHA-256 from GitHub v0.9.0; not daemon proof"
+  }
+}

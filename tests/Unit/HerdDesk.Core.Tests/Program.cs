@@ -76,9 +76,12 @@ var cases = new (string Name, Action Run)[]
             Check(!lower.Contains("ssh"));
             Check(!lower.Contains("herddesk.app"));
             Check(!lower.Contains("tests"));
+            Check(!lower.Contains("herddesk.infrastructure"));
         }
     }),
 };
+
+cases = [.. cases, .. ProjectionCases.All];
 
 var failed = 0;
 foreach (var test in cases)

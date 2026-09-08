@@ -199,6 +199,8 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
+cases = [.. cases, .. RpcSchemaCases.All];
+
 var failed = 0;
 foreach (var test in cases)
 {

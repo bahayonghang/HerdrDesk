@@ -13,9 +13,9 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 ## Directory Layout
 
 ```
-src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels)
-src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens
-src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio
+src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels, State projection ports)
+src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper
+src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
 src/HerdDesk.App/           composition root / console host stub
@@ -47,6 +47,9 @@ Present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, `src/HerdDesk.Termin
 | New work | Location |
 |---|---|
 | Identity / envelope types | `src/HerdDesk.Contracts/TerminalModels.cs` unless an approved task adds a file |
+| Projection / capability / decoded RPC state | `src/HerdDesk.Contracts/State/` |
+| Snapshot DTO / SchemaV1 decoder | `src/HerdDesk.Infrastructure/Rpc/SchemaV1/` |
+| Projection mapper and in-memory Store | `src/HerdDesk.Core/Store/` |
 | Endpoint mapping types | `src/HerdDesk.Contracts/EndpointModels.cs` |
 | Terminal lease observation types | `src/HerdDesk.Contracts/LeaseModels.cs` |
 | Renderer L1 host types | `src/HerdDesk.Contracts/RendererModels.cs` |
@@ -79,7 +82,7 @@ Do not place domain policy in a probe script. Do not place WinUI or SSH types in
 
 ## Examples
 
-- Contracts types: `src/HerdDesk.Contracts/TerminalModels.cs`, `src/HerdDesk.Contracts/EndpointModels.cs`, `src/HerdDesk.Contracts/LeaseModels.cs`, `src/HerdDesk.Contracts/RendererModels.cs`
+- Contracts types: `src/HerdDesk.Contracts/TerminalModels.cs`, `src/HerdDesk.Contracts/EndpointModels.cs`, `src/HerdDesk.Contracts/LeaseModels.cs`, `src/HerdDesk.Contracts/RendererModels.cs`, `src/HerdDesk.Contracts/State/`
 - Fail-closed parser: `src/HerdDesk.Core/TerminalFrameParser.cs`
 - Input grant: `src/HerdDesk.Core/InputPolicy.cs`
 - Endpoint mapping: `src/HerdDesk.Core/EndpointResolver.cs`

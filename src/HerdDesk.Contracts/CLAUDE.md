@@ -75,9 +75,7 @@
 
 | 草案符号 | 说明 |
 |---|---|
-| `ConnectionPhase` | 设备会话相位 |
 | `TerminalMode` | Observe / Control |
-| `CapabilityProfile` | 缺能力为 unknown，禁止写成“已测 false” |
 | `TerminalEvent` 层次 | 草案 `TerminalFrame` 含 `Epoch`；另有 `TransportEnded(ExitCode, SawClosedEnvelope)` |
 | `IRpcConnection` | 请求与订阅分离；mutation 不盲目重试 |
 | `ITerminalTransport` | 领域层先授权再构造；`ReleaseAsync` 不关 pane |
@@ -97,6 +95,10 @@
 
 `ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。仍不编译 `ITerminalRenderer`。不覆盖规划草案整文件。
 
+## HD-009 增补
+
+`State/`：`ConnectionPhase`、`CapabilityProfile`（`VerifiedOperations`，缺能力不写成已测 false）、投影与 decoded snapshot/event、`IRpcStateDecoder`。身份仍为 `DeviceId` / `SessionKey` / `PaneKey` / `ConnectionEpoch`。Muse/Qwen 为未知 agent。运行时 schema hash 默认 `UNVERIFIED`。不覆盖规划草案整文件。
+
 ## 入口与测试
 
 类库，无可执行入口。行为由 [../HerdDesk.Core](../HerdDesk.Core/CLAUDE.md)、[../HerdDesk.Infrastructure](../HerdDesk.Infrastructure/CLAUDE.md)、[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md)、[../../tests/Unit](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 与 [../../tests/Contract](../../tests/Contract/CLAUDE.md) 覆盖。
@@ -104,4 +106,4 @@
 ## 约束
 
 - `Bytes` 保持 `ReadOnlyMemory<byte>`，消费完成前不得回收缓冲。
-- 当前无 JSON 映射；未来未知 enum 应保留原值并降级。
+- 未知 enum 用 `WireEnum<T>` 保留 raw；未知 object field 的 owned clone 在 decoded 输入上，不进入 UI snapshot。

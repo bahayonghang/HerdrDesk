@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Infrastructure
 
-HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child process, bounded NDJSON, request/subscription RPC over two `herddesk-bridge` children. No WinUI, SSH, or herdr daemon control.
+HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child process, bounded NDJSON, request/subscription RPC over two `herddesk-bridge` children. HD-009: SchemaV1 RPC document decoder. No WinUI, SSH, or herdr daemon control.
 
 ## 职责
 
@@ -19,7 +19,7 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 
 ## 入口
 
-类库。由 `HerdDesk.App` 组合根构造。测试：`tests/Unit/HerdDesk.Infrastructure.Tests`。
+类库。由 `HerdDesk.App` 组合根构造。测试：`tests/Unit/HerdDesk.Infrastructure.Tests`。SchemaV1 decoder 失败用例在 `tests/Contract`。
 
 ## 关键文件
 
@@ -34,3 +34,4 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 - `Rpc/RpcRequestConnection.cs`
 - `Rpc/RpcSubscriptionConnection.cs`
 - `Rpc/RpcEnvelopeParser.cs`
+- `Rpc/SchemaV1/` — snapshot/event DTOs and `RpcStateDecoder` (owned `JsonElement` extensions; runtime schema hash UNVERIFIED)

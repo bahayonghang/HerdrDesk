@@ -42,7 +42,7 @@ Python `herddesk_g0.renderer.RendererError` uses stable codes (`evidence_level_p
 
 C# and Python need not share every internal code string. They must share reject/accept intent on `tests/fixtures/protocol-edge-cases.json`, `tests/fixtures/endpoint-cases.json`, `tests/fixtures/lease-cases.json`, and `tests/fixtures/renderer-cases.json`.
 
-`herddesk-bridge` stderr codes: `bridge_usage`, `bridge_endpoint_invalid`, `bridge_connect_denied`, `bridge_connect_failed`, `bridge_relay_failed`. C# RPC codes include `rpc_protocol_pollution`, `rpc_envelope_invalid`, `rpc_connection_lost`, `rpc_unknown_response_id`, `rpc_subscribe_ack_failed`, `rpc_event_queue_overflow`, `rpc_not_sent`, `rpc_cancelled_after_write`, `rpc_binary_client_socket_rejected`. Messages omit raw JSON, endpoint paths, terminal text, and credentials.
+`herddesk-bridge` stderr codes: `bridge_usage`, `bridge_endpoint_invalid`, `bridge_connect_denied`, `bridge_connect_failed`, `bridge_relay_failed`. C# RPC codes include `rpc_protocol_pollution`, `rpc_envelope_invalid`, `rpc_connection_lost`, `rpc_unknown_response_id`, `rpc_subscribe_ack_failed`, `rpc_event_queue_overflow`, `rpc_not_sent`, `rpc_cancelled_after_write`, `rpc_binary_client_socket_rejected`. Projection/decoder codes: `rpc_required_field_missing`, `rpc_field_type_invalid`, `rpc_duplicate_identity`, `rpc_parent_missing`, `rpc_schema_incompatible`, `rpc_error_envelope`, `stale_epoch`, `full_snapshot_required`. Messages omit raw JSON, titles, cwd, endpoint paths, terminal text, and credentials.
 
 ---
 

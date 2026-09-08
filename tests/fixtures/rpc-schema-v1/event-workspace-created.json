@@ -1,0 +1,17 @@
+{
+  "event": "workspace_created",
+  "data": {
+    "type": "workspace_created",
+    "workspace": {
+      "workspace_id": "w2",
+      "number": 2,
+      "label": "other",
+      "focused": false,
+      "pane_count": 1,
+      "tab_count": 1,
+      "active_tab_id": "w2:t1",
+      "agent_status": "idle",
+      "close_group": true
+    }
+  }
+}

@@ -69,7 +69,7 @@ structure:
 
 [group('dotnet')]
 format-check: build
-    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
+    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Core/Store --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
 
 [group('dotnet')]
 unit-tests: build

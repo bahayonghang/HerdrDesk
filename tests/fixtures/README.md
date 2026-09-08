@@ -11,3 +11,5 @@ endpoint-cases.json 是 HD-003 resolver 模拟矩阵，不是 named-pipe 真机�
 lease-cases.json 是 HD-004 lease 映射模拟，不是 observe/control 真机证据，不能把 AC05 标为通过。real-terminal-v082/ 是空占位索引。
 
 renderer-cases.json 是 HD-005 renderer L1 宿主标本，不是 WinUI、WebView2、IME 或 native 真机证据，不能把 AC08/AC09 标为通过。
+
+rpc-schema-v1/ 是 HD-009 合成 RPC snapshot/event，按 herdr v0.9.0 schema protocol 22 / schema_version 1 字段编写。源码 schema 文档 SHA-256 已记录；runtime schema hash 为 UNVERIFIED。不是 live capture，不能把 AC04/AC11 或 G0 标为通过。

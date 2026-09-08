@@ -41,7 +41,7 @@ jobs:
       - name: Build BCL projects
         run: dotnet build HerdDesk.slnx --configuration Release
       - name: Verify formatting
-        run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
+        run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Core/Store --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
       - name: Run C# G0 smoke tests
         run: dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
       - name: Run Core unit tests
