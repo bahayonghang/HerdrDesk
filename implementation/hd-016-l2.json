@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd016_l2_status",
+  "l2_live_lease": "UNVERIFIED",
+  "live_herdr": false,
+  "resource_crud": "hd-017",
+  "l1_control_lease_coordinator": "required; does not close product AC07, AC14, or AC16",
+  "ac07_passed": false,
+  "ac14_passed": false,
+  "ac16_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "HD-016 ships L1 ControlLeaseCoordinator on fake HD-013 events. Default observe. RequestControl never sends takeover. Takeover is a one-shot confirmed busy challenge. ControlVerified requires adapter proof, full baseline, renderer ack, and a still-fresh Store. This file is not AC pass evidence. L2 live lease stays UNVERIFIED."
+}

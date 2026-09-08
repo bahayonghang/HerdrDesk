@@ -93,11 +93,15 @@
 
 ## HD-007 增补
 
-`ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。HD-014 增量编译 `Terminal/ITerminalRenderer.cs` 与 `Terminal/IRenderFlowController.cs`。不覆盖规划草案整文件。
+`ConfigurationModels.cs`：`DeviceProfile` / `SessionProfile` / `IDeviceProfileStore`。`DiagnosticModels.cs`：受限 `DiagnosticEvent` 与 `IDiagnosticSink`。`HostModels.cs`：unavailable adapter 端口。`Rpc/RpcPorts.cs`：`IRpcConnectionFactory`、`IRpcRequestConnection`、`IRpcSubscriptionConnection`、`RpcRequestId`、`RpcFailure`。HD-014 增量编译 `Terminal/ITerminalRenderer.cs` 与 `Terminal/IRenderFlowController.cs`。HD-016 增量编译 `Terminal/TerminalControlPorts.cs`（`IControlLeaseCoordinator`、`ControlLeaseState`、attempt outcome、public challenge view）。不覆盖规划草案整文件。公开 challenge view 不含 nonce。`busy`/`rejected`/`cancelled` 不是 `TerminalAccess` 值。
 
 ## HD-013 增补
 
 `Terminal/`：`TerminalMode`、`TerminalOpenRequest`、`ITerminalTransport`、`ITerminalTransportFactory.OpenAsync`、typed input/resize/scroll commands、`TerminalWriteReceipt`（NotSent / WrittenUnacknowledged / UnknownAfterDisconnect）、owned frame events。公开 port 不暴露 `Process`、stdin writer 或 raw stderr。`ControlVerified` 不由首帧/进程存活/焦点置位。L2 live herdr 为 UNVERIFIED。
+
+## HD-016 增补
+
+`Terminal/TerminalControlPorts.cs`：`IControlLeaseCoordinator`、`ILeaseTargetStore`、`IControlBindingHost`、`ControlLeaseState`、`ControlAttemptOutcome`、`TakeoverChallengeView`、`InputSubmissionOutcome`。`RequestControl` 不能携带 takeover。公开 API 无 raw argv、nonce 或 resource CRUD。L2 live lease 为 UNVERIFIED。
 
 ## HD-014 增补
 

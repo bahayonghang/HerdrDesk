@@ -11,6 +11,7 @@ HD-007 composition root / host stub plus HD-011 L1 navigation ViewModels and HD-
 - HD-011 L1：`ShellViewModel` 与 identity coordinators 消费 Store 投影和 HD-007 配置端口。不创建隐藏 terminal bridge，不编译 WinUI。
 - HD-012 L1：`NotificationCenterViewModel` 消费 Core `AttentionReducer`；`WindowsNotificationSink.Available` 恒为 false。点击只定位完整 `PaneKey`，不携带 takeover/input/command。
 - HD-015 L1：`TerminalFocusCoordinator` 在 renderer Ready 后恢复焦点；`TerminalInputViewModel` 展示观察/申请控制/控制/输入暂停/连接过期。焦点不置位 `ControlVerified`。`RequestControl` 不授予 lease。
+- HD-016 L1：`TerminalControlViewModel` 调用 `ControlLeaseCoordinator`。无 WinUI ControlBar。无 always-takeover。选择变化使 takeover handle 失效。L2 live lease 为 UNVERIFIED。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
 - 释放顺序：renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
 

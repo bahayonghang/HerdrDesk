@@ -201,7 +201,7 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. Hd014Cases.All, .. Hd015Cases.All, .. TerminalWireCases.All];
+cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. Hd014Cases.All, .. Hd015Cases.All, .. Hd016Cases.All, .. TerminalWireCases.All];
 
 var failed = 0;
 foreach (var test in cases)

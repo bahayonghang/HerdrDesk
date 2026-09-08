@@ -35,6 +35,7 @@ internal static class TerminalCliTransportCases
         ("loaded hd-004 fingerprint can verify with attempt", LoadedFingerprintVerified),
         ("observe send input is denied", ObserveInputDenied),
         ("invalid target and takeover are rejected before start", RejectsBadOpen),
+        ("confirmed control takeover adds the takeover flag", ConfirmedTakeoverArgv),
         ("serializer emits canonical stdin commands", SerializerWire),
         ("l2 live herdr remains unverified", L2Unverified)
     ];
@@ -507,6 +508,7 @@ internal static class TerminalCliTransportCases
             Check(argv.Contains("terminal"));
             Check(argv.Contains("session"));
             Check(argv.Contains("control"));
+            Check(!argv.Contains("--takeover"));
             Check(!argv.Contains("stop"));
             Check(!argv.Contains("server"));
             if (File.Exists(harness.StdinFile))
@@ -687,6 +689,77 @@ internal static class TerminalCliTransportCases
         catch (TerminalProtocolException error)
         {
             Check(error.Message == TerminalTransportCodes.InvalidEpoch);
+        }
+
+        try
+        {
+            factory.OpenAsync(Request(exe, TerminalMode.Control, attempt: "attempt-1") with
+            {
+                Takeover = new TerminalTakeoverAuthorization(false, "attempt-1")
+            }).AsTask().GetAwaiter().GetResult();
+            throw new Exception("assertion_failed");
+        }
+        catch (TerminalProtocolException error)
+        {
+            Check(error.Message == TerminalTransportCodes.TakeoverNotConfirmed);
+        }
+
+        try
+        {
+            factory.OpenAsync(Request(exe, TerminalMode.Control, attempt: "attempt-1") with
+            {
+                Takeover = new TerminalTakeoverAuthorization(true, "other-attempt")
+            }).AsTask().GetAwaiter().GetResult();
+            throw new Exception("assertion_failed");
+        }
+        catch (TerminalProtocolException error)
+        {
+            Check(error.Message == TerminalTransportCodes.TakeoverUnverified);
+        }
+    }
+
+    static void ConfirmedTakeoverArgv()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "herddesk-hd016-takeover-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var stdinFile = Path.Combine(root, "stdin.ndjson");
+        var argvFile = Path.Combine(root, "argv.txt");
+        var exe = SelfExe();
+        var factory = new TerminalCliProcessFactory(
+            exe, null, null, ["--fake-terminal", "frames", "--stdin-file", stdinFile, "--argv-file", argvFile]);
+        var transport = factory.OpenAsync(Request(exe, TerminalMode.Control, attempt: "attempt-1") with
+        {
+            Takeover = new TerminalTakeoverAuthorization(true, "attempt-1")
+        }).AsTask().GetAwaiter().GetResult();
+        Check(transport is not null);
+        try
+        {
+            var seen = new List<TerminalTransportEvent>();
+            var drain = Task.Run(async () =>
+            {
+                await foreach (var item in transport!.ReadEventsAsync())
+                {
+                    seen.Add(item);
+                    if (item is TerminalFrameArrived frame)
+                        frame.Dispose();
+                    if (item is TerminalTransportEnded)
+                        break;
+                }
+            });
+            var clock = DateTime.UtcNow;
+            while (seen.OfType<TerminalFrameArrived>().Count() < 1 && DateTime.UtcNow - clock < TimeSpan.FromSeconds(5))
+                Thread.Sleep(20);
+            transport!.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            drain.Wait(TimeSpan.FromSeconds(5));
+            var argv = File.ReadAllLines(argvFile);
+            Check(argv.Contains("--takeover"));
+            Check(argv.Contains("control"));
+            Check(!argv.Contains("observe"));
+        }
+        finally
+        {
+            transport!.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            Directory.Delete(root, true);
         }
     }
 

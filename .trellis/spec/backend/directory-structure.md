@@ -14,7 +14,7 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 
 ```
 src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels, State projection ports)
-src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer
+src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer, HD-016 ControlLeaseCoordinator
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder, TerminalCliTransport
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  HD-014 L1 validator + BCL renderer adapter + HD-015 L1 input coordinators (no WebView2 packages)
@@ -63,7 +63,7 @@ Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels + HD-015 focus/input V
 | Renderer L1 host types | `src/HerdDesk.Contracts/RendererModels.cs` |
 | Terminal CLI transport ports | `src/HerdDesk.Contracts/Terminal/` |
 | Terminal CLI process / pumps | `src/HerdDesk.Infrastructure/Terminal/` |
-| Frame parse, input grant, endpoint mapping, lease mapping, renderer L1 | `src/HerdDesk.Core` |
+| Frame parse, input grant, endpoint mapping, lease mapping, renderer L1, control lease actor | `src/HerdDesk.Core` |
 | Python wire checks | `scripts/herddesk_g0/protocol.py` |
 | Compatibility evidence rules | `scripts/herddesk_g0/evidence.py` |
 | Endpoint matrix diagnostics | `scripts/herddesk_g0/endpoint.py` |

@@ -88,9 +88,13 @@ public sealed class TerminalCliProcessFactory : ITerminalTransportFactory, IAsyn
             throw new TerminalProtocolException(TerminalTransportCodes.ExecutableInvalid);
         if (request.Takeover is not null)
         {
+            if (request.Mode != TerminalMode.Control)
+                throw new TerminalProtocolException(TerminalTransportCodes.TakeoverUnverified);
             if (!request.Takeover.Confirmed)
                 throw new TerminalProtocolException(TerminalTransportCodes.TakeoverNotConfirmed);
-            throw new TerminalProtocolException(TerminalTransportCodes.TakeoverUnverified);
+            if (string.IsNullOrWhiteSpace(request.ControlAttemptId) ||
+                !string.Equals(request.Takeover.ControlAttemptId, request.ControlAttemptId, StringComparison.Ordinal))
+                throw new TerminalProtocolException(TerminalTransportCodes.TakeoverUnverified);
         }
     }
 

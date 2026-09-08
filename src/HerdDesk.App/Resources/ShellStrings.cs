@@ -32,6 +32,13 @@ public static class ShellStrings
     public const string InputPaused = "输入暂停";
     public const string ConnectionExpired = "连接过期";
     public const string Disconnected = "未连接";
+    public const string RequestControl = "请求控制";
+    public const string CancelAcquire = "取消";
+    public const string KeepObserving = "保持观察";
+    public const string TakeOver = "接管…";
+    public const string ReturnToObserve = "状态未知，返回观察";
+    public const string ReleaseControl = "释放控制";
+    public const string TakeoverReplacesController = "确认后将取代现有控制者";
     public const string ObserveScroll = "只读，滚动由当前控制者决定";
     public const string SshPending = "SSH 由 HD-020 提供";
     public const string FilesPending = "文件区尚未启用";

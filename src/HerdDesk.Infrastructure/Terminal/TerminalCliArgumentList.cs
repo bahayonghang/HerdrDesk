@@ -22,6 +22,8 @@ internal static class TerminalCliArgumentList
         arguments.Add(request.Columns.ToString(CultureInfo.InvariantCulture));
         arguments.Add("--rows");
         arguments.Add(request.Rows.ToString(CultureInfo.InvariantCulture));
+        if (request.Mode == TerminalMode.Control && request.Takeover?.Confirmed == true)
+            arguments.Add("--takeover");
         return arguments;
     }
 }

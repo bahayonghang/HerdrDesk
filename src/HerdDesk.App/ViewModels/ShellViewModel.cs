@@ -22,6 +22,7 @@ public sealed class ShellDependencies
     public INotificationSink? NotificationSink { get; init; }
     public IDiagnosticSink? DiagnosticSink { get; init; }
     public TerminalInputViewModel? TerminalInput { get; init; }
+    public TerminalControlViewModel? TerminalControl { get; init; }
 }
 
 public sealed class ShellViewModel
@@ -57,6 +58,7 @@ public sealed class ShellViewModel
             dependencies.Clock,
             dependencies.Aliases);
         TerminalInput = dependencies.TerminalInput;
+        TerminalControl = dependencies.TerminalControl;
         FocusRestore = new TerminalFocusCoordinator();
         Exit = dependencies.Exit;
         FilesAvailability = new RouteAvailability(
@@ -77,6 +79,7 @@ public sealed class ShellViewModel
     public DiagnosticsViewModel Diagnostics { get; }
     public NotificationCenterViewModel Notifications { get; }
     public TerminalInputViewModel? TerminalInput { get; }
+    public TerminalControlViewModel? TerminalControl { get; }
     public TerminalFocusCoordinator FocusRestore { get; }
     public TerminalDisplayCoordinator Display { get; }
     public AppExitCoordinator Exit { get; }
@@ -179,6 +182,7 @@ public sealed class ShellViewModel
                 item.Label));
             Route = ShellRoute.Pane;
             TryFocusPane(pane, item.Epoch);
+            TerminalControl?.HandleSelectionChanged(pane);
         }
 
         UpdateChrome();

@@ -89,7 +89,9 @@ cases =
     .. BaselineSuppressionTests.All,
     .. TransitionDedupTests.All,
     .. UnreadAggregationTests.All,
-    .. StaleAndUnknownTests.All
+    .. StaleAndUnknownTests.All,
+    .. ControlTransitionTests.All,
+    .. ControlLeaseCoordinatorTests.All
 ];
 
 var failed = 0;
