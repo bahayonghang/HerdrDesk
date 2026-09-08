@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd022_l2_status",
+  "l2_live_ssh": "UNVERIFIED",
+  "live_ssh": false,
+  "live_three_child_ssh": false,
+  "tt_forced": false,
+  "herdr_machine_catalog": false,
+  "endpoint_generation_1": false,
+  "winui_admitted": false,
+  "integration_ssh_project": false,
+  "l1_remote_session_transport": "required; does not close product AC24 or AC26",
+  "ac24_passed": false,
+  "ac26_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "missing": {
+    "isolated_linux_herdr": true,
+    "isolated_windows_openssh": true,
+    "live_three_child_ssh": true
+  },
+  "note": "HD-022 ships L1 RemoteSessionTransportSet over fake ssh -T children. Request/event RPC plus per-pane terminal reuse HD-008/HD-013 ports. Stdout pollution is fail-closed. L2 live Windows OpenSSH to isolated Linux herdr/helper stays UNVERIFIED. Product AC24/AC26 stay with HD-026 and are not passed."
+}

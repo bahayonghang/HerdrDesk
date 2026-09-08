@@ -15,6 +15,8 @@ if (args.Length > 0 && args[0] == "--fake-terminal")
     return FakeTerminalHost.Run(args.Skip(1).ToArray());
 if (args.Length > 0 && args[0] == "--fake-ssh")
     return FakeSshHost.Run(args.Skip(1).ToArray());
+if (args.Length > 0 && args[0] == "--fake-ssh-channel")
+    return FakeSshChannelHost.Run(args.Skip(1).ToArray());
 
 
 static void Check(bool condition)
@@ -203,7 +205,7 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. Hd014Cases.All, .. Hd015Cases.All, .. Hd016Cases.All, .. Hd017Cases.All, .. Hd018Cases.All, .. Hd019Cases.All, .. Hd020Cases.All, .. Hd021Cases.All, .. BridgeReleaseManifestTests.All, .. ResourceCommandSchemaTests.All, .. TerminalWireCases.All];
+cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. Hd014Cases.All, .. Hd015Cases.All, .. Hd016Cases.All, .. Hd017Cases.All, .. Hd018Cases.All, .. Hd019Cases.All, .. Hd020Cases.All, .. Hd021Cases.All, .. Hd022Cases.All, .. BridgeReleaseManifestTests.All, .. ResourceCommandSchemaTests.All, .. TerminalWireCases.All, .. RemoteRpcStreamContractTests.All, .. RemoteTerminalStreamContractTests.All];
 
 var failed = 0;
 foreach (var test in cases)

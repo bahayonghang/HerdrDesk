@@ -39,6 +39,7 @@ def validate() -> dict:
     hd019l3=json.loads((ROOT/'implementation/hd-019-l3.json').read_text(encoding='utf-8'))
     hd020=json.loads((ROOT/'implementation/hd-020-l2.json').read_text(encoding='utf-8'))
     hd021=json.loads((ROOT/'implementation/hd-021-l2.json').read_text(encoding='utf-8'))
+    hd022=json.loads((ROOT/'implementation/hd-022-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
@@ -144,6 +145,17 @@ def validate() -> dict:
     assert hd021.get('winui_admitted') is not True
     assert hd021.get('integration_ssh_project') is not True
     assert hd021.get('phase_gate')!='passed'
+    assert hd022.get('l2_live_ssh')=='UNVERIFIED'
+    assert hd022.get('ac24_passed') is not True
+    assert hd022.get('ac26_passed') is not True
+    assert hd022.get('g0_passed') is not True
+    assert hd022.get('live_ssh') is not True
+    assert hd022.get('herdr_machine_catalog') is not True
+    assert hd022.get('endpoint_generation_1') is not True
+    assert hd022.get('winui_admitted') is not True
+    assert hd022.get('integration_ssh_project') is not True
+    assert hd022.get('tt_forced') is not True
+    assert hd022.get('phase_gate')!='passed'
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

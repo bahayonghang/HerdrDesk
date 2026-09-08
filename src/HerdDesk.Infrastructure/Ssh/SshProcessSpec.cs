@@ -10,7 +10,12 @@ internal enum SshProcessKind
     AuthProbe,
     PlatformProbe,
     HelperBootstrap,
-    HelperCleanup
+    HelperCleanup,
+    RemoteRpc,
+    RemoteTerminal,
+    RemoteHerdrVersion,
+    RemoteApiSchema,
+    RemoteHelperVersion
 }
 
 internal sealed record SshProcessSpec(

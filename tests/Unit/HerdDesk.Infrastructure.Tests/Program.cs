@@ -9,6 +9,8 @@ if (args.Length > 0 && args[0] == "--fake-terminal")
     return FakeTerminalHost.Run(args.Skip(1).ToArray());
 if (args.Length > 0 && args[0] == "--fake-ssh")
     return FakeSshHost.Run(args.Skip(1).ToArray());
+if (args.Length > 0 && args[0] == "--fake-ssh-channel")
+    return FakeSshChannelHost.Run(args.Skip(1).ToArray());
 
 
 static void Check(bool condition)
@@ -430,7 +432,10 @@ cases =
     .. TrustedHelperManifestProviderTests.All,
     .. RemotePlatformProbeTests.All,
     .. HelperDeploymentReceiptStoreTests.All,
-    .. RemoteHelperDeploymentServiceTests.All
+    .. RemoteHelperDeploymentServiceTests.All,
+    .. SshProcessChannelTests.All,
+    .. RemoteCompatibilityProbeTests.All,
+    .. RemoteSessionTransportSetTests.All
 ];
 
 var failed = 0;

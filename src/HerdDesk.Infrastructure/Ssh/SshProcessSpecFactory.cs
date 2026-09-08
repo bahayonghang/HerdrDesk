@@ -1,5 +1,8 @@
 using HerdDesk.Contracts;
 using HerdDesk.Infrastructure.Configuration;
+using HerdDesk.Infrastructure.Rpc;
+using HerdDesk.Infrastructure.SshTransports;
+using HerdDesk.Infrastructure.Terminal;
 
 namespace HerdDesk.Infrastructure.Ssh;
 
@@ -13,6 +16,8 @@ internal static class SshProcessSpecFactory
     public static readonly TimeSpan PlatformProbeTimeout = TimeSpan.FromSeconds(15);
     public static readonly TimeSpan HelperBootstrapTimeout = TimeSpan.FromSeconds(120);
     public static readonly TimeSpan HelperCleanupTimeout = TimeSpan.FromSeconds(15);
+    public static readonly TimeSpan RemoteProbeTimeout = TimeSpan.FromSeconds(15);
+    public static readonly TimeSpan RemoteSessionLifetime = Timeout.InfiniteTimeSpan;
 
     public static bool TryVersion(OpenSshLocator locator, out SshProcessSpec spec, out string code)
     {
@@ -241,6 +246,203 @@ internal static class SshProcessSpecFactory
             WithPrefix(locator, arguments),
             HelperCleanupTimeout,
             SshProcessKind.HelperCleanup);
+        code = SshCodes.Ok;
+        return true;
+    }
+
+    public static bool TryRemoteRpc(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        string helperPath,
+        string socketPath,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!AtomicConfigurationStore.IsSafePosixAbsolute(helperPath))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        var socketError = RpcSocketPath.RejectReason(socketPath);
+        if (socketError is not null)
+        {
+            code = socketError;
+            return false;
+        }
+
+        if (!AtomicConfigurationStore.IsSafePosixAbsolute(socketPath))
+        {
+            code = RpcCodes.EndpointInvalid;
+            return false;
+        }
+
+        return TryRemoteCommand(
+            locator,
+            settings,
+            knownHostsFile,
+            SshProcessKind.RemoteRpc,
+            RemoteSessionLifetime,
+            [helperPath, "rpc", "--socket-path", socketPath],
+            out spec,
+            out code);
+    }
+
+    public static bool TryRemoteTerminal(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        string herdrPath,
+        TerminalOpenRequest request,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!AtomicConfigurationStore.IsSafePosixAbsolute(herdrPath))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        ArgumentNullException.ThrowIfNull(request);
+        var tokens = new List<string> { herdrPath };
+        tokens.AddRange(TerminalCliArgumentList.Build(request));
+        if (tokens.Contains("machine") || tokens.Contains("-t") || tokens.Contains("-tt"))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        return TryRemoteCommand(
+            locator,
+            settings,
+            knownHostsFile,
+            SshProcessKind.RemoteTerminal,
+            RemoteSessionLifetime,
+            tokens,
+            out spec,
+            out code);
+    }
+
+    public static bool TryRemoteHerdrVersion(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        string herdrPath,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!AtomicConfigurationStore.IsSafePosixAbsolute(herdrPath))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        return TryRemoteCommand(
+            locator,
+            settings,
+            knownHostsFile,
+            SshProcessKind.RemoteHerdrVersion,
+            RemoteProbeTimeout,
+            [herdrPath, "--version"],
+            out spec,
+            out code);
+    }
+
+    public static bool TryRemoteApiSchema(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        string herdrPath,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!AtomicConfigurationStore.IsSafePosixAbsolute(herdrPath))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        return TryRemoteCommand(
+            locator,
+            settings,
+            knownHostsFile,
+            SshProcessKind.RemoteApiSchema,
+            RemoteProbeTimeout,
+            [herdrPath, "api", "schema", "--json"],
+            out spec,
+            out code);
+    }
+
+    public static bool TryRemoteHelperVersion(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        string helperPath,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!AtomicConfigurationStore.IsSafePosixAbsolute(helperPath))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        return TryRemoteCommand(
+            locator,
+            settings,
+            knownHostsFile,
+            SshProcessKind.RemoteHelperVersion,
+            RemoteProbeTimeout,
+            [helperPath, "--version"],
+            out spec,
+            out code);
+    }
+
+    public static bool HasInteractiveTtyFlag(IReadOnlyList<string> arguments)
+    {
+        ArgumentNullException.ThrowIfNull(arguments);
+        foreach (var argument in arguments)
+        {
+            if (argument is "-t" or "-tt")
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryRemoteCommand(
+        OpenSshLocator locator,
+        SshDeviceSettings settings,
+        string knownHostsFile,
+        SshProcessKind kind,
+        TimeSpan timeout,
+        IReadOnlyList<string> remoteTokens,
+        out SshProcessSpec spec,
+        out string code)
+    {
+        spec = null!;
+        if (!PosixShellQuote.TryCommand(remoteTokens, out var remote, out code))
+            return false;
+        if (!TrySshT(locator, settings, knownHostsFile, out var arguments, out code))
+            return false;
+        arguments.Add(remote);
+        if (HasInteractiveTtyFlag(arguments) || !arguments.Contains("-T"))
+        {
+            code = SshCodes.ProfileInvalid;
+            return false;
+        }
+
+        spec = new(
+            locator.SshExecutable,
+            WithPrefix(locator, arguments),
+            timeout,
+            kind);
         code = SshCodes.Ok;
         return true;
     }

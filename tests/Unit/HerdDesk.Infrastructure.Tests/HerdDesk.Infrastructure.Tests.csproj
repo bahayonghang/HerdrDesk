@@ -7,5 +7,6 @@
     <Compile Include="../../HerdDesk.TestSupport/FakeBridgeHost.cs" Link="FakeBridgeHost.cs" />
     <Compile Include="../../HerdDesk.TestSupport/FakeTerminalHost.cs" Link="FakeTerminalHost.cs" />
     <Compile Include="../../HerdDesk.TestSupport/FakeSshHost.cs" Link="FakeSshHost.cs" />
+    <Compile Include="../../HerdDesk.TestSupport/FakeSshChannelHost.cs" Link="FakeSshChannelHost.cs" />
   </ItemGroup>
 </Project>
