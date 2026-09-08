@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Audit DTO, mapper, Store, and Contracts ownership plus forbidden references"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Verify required-field failures, disposed-document ownership, stable codes, and old-epoch rejection"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Check exact schema evidence, immutable contracts, fake-port tests, and no live claims"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Detect repeated raw JSON parsing or capability inference in consumers"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Ensure existing types are extended rather than replaced by the planning draft"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

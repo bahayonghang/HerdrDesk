@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Keep HerdDesk contracts, upstream DTOs, Core projection, and tests in their owning layers"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Apply strict JSON materialization, epoch rejection, stable codes, and payload redaction"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Preserve BCL-only Contracts, Core dependency direction, and fixture evidence boundaries"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Decode raw payload once and expose typed immutable projections to all consumers"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Reuse current identities and distinguish planned DTOs from compiled source"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
