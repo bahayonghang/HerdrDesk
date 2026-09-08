@@ -41,5 +41,7 @@
 | `hd-016-l2.json` | L2 live lease = `UNVERIFIED`。L1 coordinator 不能关闭产品 AC07/AC14/AC16。`phase_gate=not_passed`。 |
 | `hd-017-l2.json` | L2 live mutation = `UNVERIFIED`。L1 coordinator 不能关闭产品 AC20。`phase_gate=not_passed`。 |
 | `hd-018-l2.json` | L2 live disconnect = `UNVERIFIED`。L1 RecoveryPolicy 不能关闭产品 AC13/AC14/AC15。`phase_gate=not_passed`。 |
+| `hd-019-l2.json` | L2 live local MVP = `UNVERIFIED`。缺 disposable pane / WebView2。L1 catalog/composition 不能关闭产品 AC06/AC07/AC10/AC15。`phase_gate=not_passed`。 |
+| `hd-019-l3.json` | L3 IME desktop 与 agent TUI versions = `UNVERIFIED`。缺 IME desktop / agent TUI versions。`phase_gate=not_passed`。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。

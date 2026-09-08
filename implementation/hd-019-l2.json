@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd019_l2_status",
+  "l2_live_local_mvp": "UNVERIFIED",
+  "live_herdr": false,
+  "winui_admitted": false,
+  "webview2_admitted": false,
+  "npm_xterm_admitted": false,
+  "integration_windows_project": false,
+  "windows_desktop_restore": "not_admitted",
+  "l1_composition": "required; does not close product AC06, AC07, AC10, or AC15",
+  "ac06_passed": false,
+  "ac07_passed": false,
+  "ac10_passed": false,
+  "ac15_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "missing": {
+    "disposable_pane": true,
+    "webview2": true,
+    "ime_desktop": true,
+    "agent_tui_versions": true
+  },
+  "note": "HD-019 ships an L1 scenario catalog and composition tests over already-shipped DeviceSession, ControlLeaseCoordinator, InputPolicy, RecoveryPolicy, ResourceCommandCoordinator, AttentionReducer, and Shell/Terminal coordinators with fakes. This file is not AC pass evidence. L2 live local MVP stays UNVERIFIED. Product AC06/AC07/AC10/AC15 stay with a later disposable-pane desktop run."
+}

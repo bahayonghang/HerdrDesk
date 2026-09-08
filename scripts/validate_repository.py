@@ -35,6 +35,9 @@ def validate() -> dict:
     hd016=json.loads((ROOT/'implementation/hd-016-l2.json').read_text(encoding='utf-8'))
     hd017=json.loads((ROOT/'implementation/hd-017-l2.json').read_text(encoding='utf-8'))
     hd018=json.loads((ROOT/'implementation/hd-018-l2.json').read_text(encoding='utf-8'))
+    hd019l2=json.loads((ROOT/'implementation/hd-019-l2.json').read_text(encoding='utf-8'))
+    hd019l3=json.loads((ROOT/'implementation/hd-019-l3.json').read_text(encoding='utf-8'))
+    catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -99,6 +102,28 @@ def validate() -> dict:
     assert hd018.get('winui_admitted') is not True
     assert hd018.get('auto_start_daemon') is not True
     assert hd018.get('phase_gate')!='passed'
+    assert hd019l2.get('l2_live_local_mvp')=='UNVERIFIED'
+    assert hd019l3.get('l3_ime_desktop')=='UNVERIFIED'
+    assert hd019l3.get('l3_agent_tui')=='UNVERIFIED'
+    assert hd019l3.get('agent_tui_versions')=='UNVERIFIED'
+    assert catalog.get('document_kind')=='hd019_local_mvp_catalog'
+    for doc in (hd019l2, hd019l3, catalog):
+        assert doc.get('ac06_passed') is not True
+        assert doc.get('ac07_passed') is not True
+        assert doc.get('ac10_passed') is not True
+        assert doc.get('ac15_passed') is not True
+        assert doc.get('g0_passed') is not True
+        assert doc.get('live_herdr') is not True
+        assert doc.get('phase_gate')!='passed'
+        assert doc.get('winui_admitted') is not True
+        assert doc.get('webview2_admitted') is not True
+        assert doc.get('integration_windows_project') is not True
+        missing=doc.get('missing') or {}
+        assert missing.get('disposable_pane') is True
+        assert missing.get('webview2') is True
+        assert missing.get('ime_desktop') is True
+        assert missing.get('agent_tui_versions') is True
+    assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'

@@ -13,11 +13,11 @@ Shared facts: [AGENTS.md](../../../AGENTS.md). Module indexes: nested `CLAUDE.md
 Current backend surface:
 
 - `src/HerdDesk.Contracts` — BCL-only identity, frame, input, endpoint, lease, configuration, diagnostic, adapter-capability, and HD-009 projection types.
-- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, renderer L1 specimens, in-memory projection Store, HD-010 `DeviceSession` actor, HD-012 attention reducer, HD-016 L1 `ControlLeaseCoordinator`, and HD-017 L1 `ResourceCommandCoordinator`.
+- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, renderer L1 specimens, in-memory projection Store, HD-010 `DeviceSession` actor, HD-012 attention reducer, HD-016 L1 `ControlLeaseCoordinator`, HD-017 L1 `ResourceCommandCoordinator`, and HD-018 L1 `RecoveryPolicy`.
 - `src/HerdDesk.Infrastructure` — `AppDataPaths`, atomic device-profile store, JSONL diagnostic sink, owned child process, RPC stdio, SchemaV1 decoder, HD-013 `TerminalCliTransport`.
 - `bridge/herddesk-bridge` — stdio ↔ local-socket byte relay. L2 named-pipe ACL UNVERIFIED.
 - `src/HerdDesk.Terminal.Web` — HD-014 L1 host↔web validator and BCL renderer adapter plus HD-015 L1 IME/keyboard/selection coordinators; WebView2/xterm packages `UNVERIFIED`.
-- `src/HerdDesk.App` — unique composition root / console host stub plus HD-011 L1 ViewModels, HD-012 L1 NotificationCenter, HD-015 L1 focus/input ViewModels, HD-016 L1 control ViewModel, and HD-017 L1 resource command ViewModel. WinUI XAML is not admitted. Windows toast L2, IME L3, HD-016 L2 live lease, and HD-017 L2 live mutation are UNVERIFIED.
+- `src/HerdDesk.App` — unique composition root / console host stub plus HD-011 L1 ViewModels, HD-012 L1 NotificationCenter, HD-015 L1 focus/input ViewModels, HD-016 L1 control ViewModel, HD-017 L1 resource command ViewModel, and HD-018 L1 RecoveryBindings. WinUI XAML is not admitted. Windows toast L2, IME L3, HD-016 L2 live lease, HD-017 L2 live mutation, HD-018 L2 live disconnect, and HD-019 L2 live local MVP / L3 IME-TUI are UNVERIFIED. HD-019 catalog lives in `evidence/local-mvp/catalog.json`.
 - `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator, endpoint matrix, lease matrix, renderer L1 matrix, ADR baseline, project graph.
 - `scripts/probe_herdr.py` — default-readonly probe; writes need a disposable target.
 - `tests/HerdDesk.Core.SmokeTests` — `dotnet run`, not `dotnet test`.

@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd019_local_mvp_catalog",
+  "simulation": true,
+  "fixture_origin": "synthetic",
+  "l1_composition": "required; does not close product AC06, AC07, AC10, or AC15",
+  "ac06_passed": false,
+  "ac07_passed": false,
+  "ac10_passed": false,
+  "ac15_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "live_herdr": false,
+  "winui_admitted": false,
+  "webview2_admitted": false,
+  "npm_xterm_admitted": false,
+  "integration_windows_project": false,
+  "windows_desktop_restore": "not_admitted",
+  "missing": {
+    "disposable_pane": true,
+    "webview2": true,
+    "ime_desktop": true,
+    "agent_tui_versions": true
+  },
+  "unknown_agents": [
+    {
+      "id": "muse",
+      "reason": "not a known TUI kind"
+    }
+  ],
+  "graphics_agents": [
+    {
+      "id": "graphics-unspecified",
+      "kind": "graphics",
+      "status": "UNVERIFIED",
+      "note": "graphics must not inherit a text TUI pass"
+    }
+  ],
+  "targets": [
+    {
+      "id": "powershell",
+      "kind": "shell",
+      "display": "PowerShell",
+      "profile": null,
+      "known_agent_kind": null,
+      "version": "UNVERIFIED",
+      "live_verified": false
+    },
+    {
+      "id": "claude-code",
+      "kind": "text-tui",
+      "display": "Claude Code",
+      "profile": "claude-code",
+      "known_agent_kind": "Claude",
+      "version": "synthetic-l1",
+      "live_verified": false
+    },
+    {
+      "id": "codex",
+      "kind": "text-tui",
+      "display": "Codex",
+      "profile": "codex",
+      "known_agent_kind": "Codex",
+      "version": "synthetic-l1",
+      "live_verified": false
+    },
+    {
+      "id": "opencode",
+      "kind": "text-tui",
+      "display": "OpenCode",
+      "profile": "opencode",
+      "known_agent_kind": "OpenCode",
+      "version": "synthetic-l1",
+      "live_verified": false
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "observe",
+      "title": "observe baseline",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "DeviceSession+ControlLeaseCoordinator+InputPolicy",
+      "ac_ids": ["AC06", "AC10"]
+    },
+    {
+      "id": "control",
+      "title": "acquire/control without unauthorized takeover",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "ControlLeaseCoordinator",
+      "ac_ids": ["AC07"]
+    },
+    {
+      "id": "ime",
+      "title": "Chinese IME preedit and commit",
+      "required_evidence": "L3",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "TerminalInputController+CompositionPolicy",
+      "ac_ids": ["AC10"]
+    },
+    {
+      "id": "input",
+      "title": "single delivery user input",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "InputPolicy+ControlLeaseCoordinator",
+      "ac_ids": ["AC06"]
+    },
+    {
+      "id": "resize",
+      "title": "writer resize",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "ControlLeaseCoordinator",
+      "ac_ids": ["AC06"]
+    },
+    {
+      "id": "scroll",
+      "title": "scroll isolation",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "ControlLeaseCoordinator+SelectionAndMousePolicy",
+      "ac_ids": ["AC06", "AC10"]
+    },
+    {
+      "id": "release",
+      "title": "release control",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "ControlLeaseCoordinator",
+      "ac_ids": ["AC06"]
+    },
+    {
+      "id": "gui-close",
+      "title": "GUI close kills only owned children",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "AppExitCoordinator+RecoveryBindings",
+      "ac_ids": ["AC15"]
+    },
+    {
+      "id": "recovery",
+      "title": "local renderer restart, EOF, daemon exit, pane exit",
+      "required_evidence": "L2",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "RecoveryPolicy+DeviceSession+ControlLeaseCoordinator",
+      "ac_ids": ["AC13", "AC15"],
+      "injections": ["renderer-restart", "eof", "daemon-exit", "pane-exit"]
+    },
+    {
+      "id": "agent-tui",
+      "title": "Claude Code / Codex / OpenCode text TUI",
+      "required_evidence": "L3",
+      "live_status": "UNVERIFIED",
+      "l1_status": "composed",
+      "l1_owner": "AgentInputProfiles+ResourceCommandCoordinator",
+      "ac_ids": ["AC10"]
+    }
+  ],
+  "live_rows": [
+    {"agent": "powershell", "scenario": "observe", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "WebView2 missing", "live herdr forbidden"]},
+    {"agent": "powershell", "scenario": "control", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "powershell", "scenario": "ime", "required_evidence": "L3", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing IME desktop", "result": "not_run", "evidence_path": null, "limitations": ["IME desktop missing", "WebView2 missing"]},
+    {"agent": "powershell", "scenario": "input", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "powershell", "scenario": "resize", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "powershell", "scenario": "scroll", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "powershell", "scenario": "release", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "powershell", "scenario": "gui-close", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "WinUI not admitted"]},
+    {"agent": "powershell", "scenario": "recovery", "required_evidence": "L2", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "powershell", "scenario": "agent-tui", "required_evidence": "L3", "status": "UNVERIFIED", "version": "UNVERIFIED", "environment": "not a text TUI agent", "result": "not_run", "evidence_path": null, "limitations": ["PowerShell is not a text TUI agent"]},
+    {"agent": "claude-code", "scenario": "observe", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "agent TUI version missing"]},
+    {"agent": "claude-code", "scenario": "control", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "claude-code", "scenario": "ime", "required_evidence": "L3", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing IME desktop", "result": "not_run", "evidence_path": null, "limitations": ["IME desktop missing", "WebView2 missing"]},
+    {"agent": "claude-code", "scenario": "input", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "agent TUI version missing"]},
+    {"agent": "claude-code", "scenario": "resize", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "claude-code", "scenario": "scroll", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "claude-code", "scenario": "release", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "claude-code", "scenario": "gui-close", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "WinUI not admitted"]},
+    {"agent": "claude-code", "scenario": "recovery", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "claude-code", "scenario": "agent-tui", "required_evidence": "L3", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing agent TUI version", "result": "not_run", "evidence_path": null, "limitations": ["agent TUI version missing", "disposable pane missing"]},
+    {"agent": "codex", "scenario": "observe", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "agent TUI version missing"]},
+    {"agent": "codex", "scenario": "control", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "codex", "scenario": "ime", "required_evidence": "L3", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing IME desktop", "result": "not_run", "evidence_path": null, "limitations": ["IME desktop missing", "WebView2 missing"]},
+    {"agent": "codex", "scenario": "input", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "agent TUI version missing"]},
+    {"agent": "codex", "scenario": "resize", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "codex", "scenario": "scroll", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "codex", "scenario": "release", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "codex", "scenario": "gui-close", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "WinUI not admitted"]},
+    {"agent": "codex", "scenario": "recovery", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "codex", "scenario": "agent-tui", "required_evidence": "L3", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing agent TUI version", "result": "not_run", "evidence_path": null, "limitations": ["agent TUI version missing", "disposable pane missing"]},
+    {"agent": "opencode", "scenario": "observe", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "agent TUI version missing"]},
+    {"agent": "opencode", "scenario": "control", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "opencode", "scenario": "ime", "required_evidence": "L3", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing IME desktop", "result": "not_run", "evidence_path": null, "limitations": ["IME desktop missing", "WebView2 missing"]},
+    {"agent": "opencode", "scenario": "input", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "agent TUI version missing"]},
+    {"agent": "opencode", "scenario": "resize", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "opencode", "scenario": "scroll", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "opencode", "scenario": "release", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing"]},
+    {"agent": "opencode", "scenario": "gui-close", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "WinUI not admitted"]},
+    {"agent": "opencode", "scenario": "recovery", "required_evidence": "L2", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing disposable pane", "result": "not_run", "evidence_path": null, "limitations": ["disposable pane missing", "live herdr forbidden"]},
+    {"agent": "opencode", "scenario": "agent-tui", "required_evidence": "L3", "status": "UNVERIFIED", "version": "synthetic-l1", "environment": "missing agent TUI version", "result": "not_run", "evidence_path": null, "limitations": ["agent TUI version missing", "disposable pane missing"]}
+  ]
+}

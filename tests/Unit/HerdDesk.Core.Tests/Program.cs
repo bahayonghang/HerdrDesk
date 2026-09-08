@@ -96,7 +96,8 @@ cases =
     .. UnknownOutcomeTests.All,
     .. RecoveryPolicyTests.All,
     .. DeviceSessionRecoveryTests.All,
-    .. ControlLeaseRecoveryTests.All
+    .. ControlLeaseRecoveryTests.All,
+    .. LocalMvpCompositionTests.All
 ];
 
 var failed = 0;

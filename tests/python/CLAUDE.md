@@ -33,6 +33,7 @@ python -m unittest discover -s tests/python -v
 | `test_lease.py` | `TerminalLeaseTests` | 驱动 `herddesk_g0.lease` 与 `tests/fixtures/lease-cases.json`；十四行模拟矩阵；隔离 pane capture 保持 `control_verified` false；拒绝首帧/进程/焦点/stdin 写置 ControlVerified、observe 发送输入、EOF/桥退出当 pane 死亡、帧 `bytes` 入库、虚构 Granted、fixture 当 runtime/AC05 通过；`windows_verified` 与 `ac05_passed` 恒为 false |
 | `test_renderer.py` | `RendererMatrixTests` | 驱动 `herddesk_g0.renderer` 与 `tests/fixtures/renderer-cases.json`；十八行 L1 矩阵；拒绝 AC08/AC09 宣称、IME 已执行宣称、L3 假通过；`windows_verified` 与 `ac08_passed`/`ac09_passed` 恒为 false |
 | `test_adr.py` | `ApprovedBaselineTests` | 驱动 `herddesk_g0.adr` 与 `docs/adr/approved-baseline.json` / markdown；拒绝 blocked/unknown 当 passed、G0/AC44 宣称通过、R5 已执行、平行编号、缺失证据路径、解除 AGENTS G0 禁令；`ac44_passed`、`g0_passed` 与 `windows_verified` 恒为 false |
+| `test_local_mvp.py` | `LocalMvpCatalogTests` | 驱动 `evidence/local-mvp/catalog.json` 与 `implementation/hd-019-l2.json` / `hd-019-l3.json`；live 行 L2/L3 且 `UNVERIFIED`；Claude/Codex/OpenCode + PowerShell；Muse 不在 targets；缺 disposable pane / WebView2 / IME desktop / agent TUI versions；`ac06/07/10/15` 与 `g0_passed` 恒为 false |
 
 ## 依赖
 

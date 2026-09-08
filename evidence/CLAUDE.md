@@ -52,6 +52,10 @@ UTF-8 JSON。采集记录字段：`capture_id`、`kind`、`captured_at_utc`、`o
 
 模板不是成功运行。runtime 成功结论必须指向非模板采集文件。
 
+## `local-mvp/`
+
+HD-019 场景目录。`catalog.json` 列出 observe/control/IME/input/resize/scroll/release/GUI close/recovery/agent TUI。每个 live 行 `required_evidence` 为 L2 或 L3，`status` 为 `UNVERIFIED`。L1 composition 不是本地 E2E pass。缺 disposable pane、WebView2、IME desktop、agent TUI versions。产品 AC06/AC07/AC10/AC15 仍未通过。
+
 ## `toolchain.json`
 
 记录首次本地实施环境：选定 SDK `10.0.400`，当时容器无 dotnet、Python 3.13.5、Linux。其中 `github_actions_status=not_run`、`dotnet_installed_in_this_execution=false` 是历史快照。当前 CI/构建以 `implementation/status.json` 为准。

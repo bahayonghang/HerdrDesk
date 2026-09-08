@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd019_l3_status",
+  "l3_ime_desktop": "UNVERIFIED",
+  "l3_agent_tui": "UNVERIFIED",
+  "agent_tui_versions": "UNVERIFIED",
+  "live_herdr": false,
+  "winui_admitted": false,
+  "webview2_admitted": false,
+  "npm_xterm_admitted": false,
+  "integration_windows_project": false,
+  "windows_desktop_restore": "not_admitted",
+  "l1_composition": "required; does not close product AC06, AC07, AC10, or AC15",
+  "ac06_passed": false,
+  "ac07_passed": false,
+  "ac10_passed": false,
+  "ac15_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "missing": {
+    "disposable_pane": true,
+    "webview2": true,
+    "ime_desktop": true,
+    "agent_tui_versions": true
+  },
+  "note": "HD-019 L1 synthetic Claude Code / Codex / OpenCode profiles are not live TUI versions. Muse stays unknown. Graphics agents are a separate unsupported matrix and must not inherit a text TUI pass. This file is not AC pass evidence. L3 IME desktop and agent TUI stay UNVERIFIED."
+}

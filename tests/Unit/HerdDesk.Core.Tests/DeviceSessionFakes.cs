@@ -509,9 +509,9 @@ internal sealed class FakeRpcFactory : IRpcConnectionFactory
 
 internal sealed class DeviceSessionHarness
 {
-    public DeviceSessionHarness()
+    public DeviceSessionHarness(SessionKey? session = null)
     {
-        Session = DeviceSessionGraphs.DefaultSession();
+        Session = session ?? DeviceSessionGraphs.DefaultSession();
         Decoder = new FakeDecoder { Snapshot = DeviceSessionGraphs.Baseline(Session, 1) };
         Factory = new FakeRpcFactory(Decoder);
         Store = new DeviceProjectionStore();
