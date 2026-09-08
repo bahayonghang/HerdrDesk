@@ -14,7 +14,7 @@ C# product code lives under `src/`. Python protocol and probes live under `scrip
 
 ```
 src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseModels, RendererModels, ConfigurationModels, DiagnosticModels, HostModels, State projection ports)
-src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper
+src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
@@ -50,6 +50,8 @@ Present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, `src/HerdDesk.Termin
 | Projection / capability / decoded RPC state | `src/HerdDesk.Contracts/State/` |
 | Snapshot DTO / SchemaV1 decoder | `src/HerdDesk.Infrastructure/Rpc/SchemaV1/` |
 | Projection mapper and in-memory Store | `src/HerdDesk.Core/Store/` |
+| DeviceSession actor / reconcile planner | `src/HerdDesk.Core/DeviceSessions/` |
+| DeviceSession ports and freshness | `src/HerdDesk.Contracts/State/IDeviceSession.cs` |
 | Endpoint mapping types | `src/HerdDesk.Contracts/EndpointModels.cs` |
 | Terminal lease observation types | `src/HerdDesk.Contracts/LeaseModels.cs` |
 | Renderer L1 host types | `src/HerdDesk.Contracts/RendererModels.cs` |
@@ -88,6 +90,7 @@ Do not place domain policy in a probe script. Do not place WinUI or SSH types in
 - Endpoint mapping: `src/HerdDesk.Core/EndpointResolver.cs`
 - Lease mapping: `src/HerdDesk.Core/TerminalLeaseProbe.cs`
 - Renderer L1: `src/HerdDesk.Core/Utf8ChunkAssembler.cs`, `RendererEpochGate.cs`, `CompositionPolicy.cs`, `RendererByteWindow.cs` (FIFO, oldest-frame ack), `WebMessagePolicy.cs`
+- DeviceSession: `src/HerdDesk.Core/DeviceSessions/DeviceSession.cs`, `ReconcilePlanner.cs`
 - Python latching capture: `scripts/herddesk_g0/protocol.py` (`TerminalCaptureValidator`)
 - Licensing register rules: `scripts/herddesk_g0/licensing.py`
 - ADR freeze rules: `scripts/herddesk_g0/adr.py`

@@ -38,6 +38,9 @@ public static class RpcCodes
     public const string BinaryClientRejected = "rpc_binary_client_socket_rejected";
     public const string RemotePipeRejected = "remote_unc_rejected";
     public const string ExecutableInvalid = "rpc_bridge_executable_invalid";
+    public const string SubscriptionLost = "rpc_subscription_lost";
+    public const string RequestLost = "rpc_request_lost";
+    public const string ReconcileFailed = "rpc_reconcile_failed";
 }
 
 public sealed record RpcFailure(string Code, RpcFailureKind Kind);
@@ -68,6 +71,8 @@ public interface IRpcRequestConnection : IAsyncDisposable
     ConnectionEpoch Epoch { get; }
     int PendingCount { get; }
     int? ChildProcessId { get; }
+    RpcFailure? Failure { get; }
+    Task WhenCompleted { get; }
     ValueTask<RpcRequestOutcome> RequestAsync(
         string method,
         JsonElement parameters,
@@ -79,6 +84,7 @@ public interface IRpcSubscriptionConnection : IAsyncDisposable
     ConnectionEpoch Epoch { get; }
     int? ChildProcessId { get; }
     RpcFailure? Failure { get; }
+    Task WhenReady { get; }
     IAsyncEnumerable<JsonElement> ReadEventsAsync(CancellationToken cancellationToken = default);
 }
 

@@ -10,7 +10,7 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 - 原子写入 `device-profiles.json`，覆盖时写一份 `.bak`，显式恢复只读该备份。失败注入钩子是 `internal`（`InternalsVisibleTo` 测试程序集）。
 - 受限 `DiagnosticEvent` 写入有界 JSONL（UTF-8 无 BOM）；ID 只出现 alias。写失败只增加 dropped，不使进程崩溃。
 - `OwnedChildProcess` 用绝对路径和 `ArgumentList` 启动；取消最多等 3 秒后只 Kill 记录的 direct PID，不杀进程树，不 `server stop`。
-- `IRpcRequestConnection` 与 `IRpcSubscriptionConnection` 各一个 OS 进程。pending map 不用于订阅事件。L2 named-pipe ACL 为 UNVERIFIED。
+- `IRpcRequestConnection` 与 `IRpcSubscriptionConnection` 各一个 OS 进程。pending map 不用于订阅事件。`WhenCompleted` / `WhenReady` 供 HD-010 区分 request EOF 与 subscribe ack。L2 named-pipe ACL 为 UNVERIFIED。
 
 ## 依赖
 

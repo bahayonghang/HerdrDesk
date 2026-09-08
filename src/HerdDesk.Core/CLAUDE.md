@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本，以及 HD-009 内存投影 Store。DeviceSession actor、未读、命令编排尚未实现。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本、HD-009 内存投影 Store，以及 HD-010 每 SessionKey 一个 `DeviceSession` actor。未读与命令编排尚未实现。
 
 ## 职责
 
@@ -13,7 +13,7 @@
 - 失败后锁存：同一 parser 实例不再接受后续记录。
 - renderer L1：跨块 UTF-8 组装、epoch/seq 门、预编辑拒绝、有界队列分类、web message allowlist。不启动 WinUI 或 WebView2。
 
-传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。HD-009 mapper 只消费 Contracts decoded 输入，不解析 raw JSON。
+传输分帧、进程生命周期、RPC、WinUI 不属于本项目。规划中的 `IControlPolicy.CanSend` 对应本目录 `InputPolicy.Evaluate`；`ITerminalTransport` 尚未实现。草案 `TerminalFrame` 含 `Epoch`，本解析器按单连接构造，帧类型本身不带 epoch。HD-009 mapper 只消费 Contracts decoded 输入，不解析 raw JSON。HD-010 actor 把 event 当 invalidation，不直接 patch Store。
 
 ## 接口
 
@@ -83,7 +83,7 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 
 ## 测试
 
-[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 覆盖 InputPolicy、parser latch、Core 程序集边界，以及 HD-009 mapper/Store（fake decoded 输入）。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。
+[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md) 覆盖解析、策略、endpoint resolver 与 lease mapper 断言。[../../tests/Unit/HerdDesk.Core.Tests](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 覆盖 InputPolicy、parser latch、Core 程序集边界、HD-009 mapper/Store（fake decoded 输入），以及 HD-010 DeviceSession L1 race（fake RPC ports、barrier，不用 sleep）。Python 侧有对等意图的校验器，见 [../../scripts/CLAUDE.md](../../scripts/CLAUDE.md)。两套实现未自动生成，不能互相替代。计数以本次 `dotnet run` 为准。L2 live subscribe interleave 为 UNVERIFIED，见 `implementation/hd-010-l2.json`。
 
 ## 关键文件
 
@@ -96,10 +96,13 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 - `Store/CapabilityGate.cs` — protocol/schema/hash 不匹配时 `VerifiedOperations` 为空。
 - `Store/ProjectionMapper.cs` — 先校验全图再构造 immutable graph。
 - `Store/DeviceProjectionStore.cs` — 当前 epoch、原子安装、stale、本地 revision。
+- `DeviceSessions/DeviceSession.cs` — 单 reader mailbox actor：subscribe ack → snapshot → dirty 权威重读；event 不 patch Store。
+- `DeviceSessions/ReconcilePlanner.cs` — create/close/graph 风险全量 snapshot；已验证 getter 定向读取。
+- `DeviceSessions/DeviceSessionOptions.cs` — 250 ms coalesce、5 s calibration、可注入 `TimeProvider`。
 
 ## 约束
 
 - 先校验全部字段，再写入 `lastSequence` / `closed`。
 - `Convert.FromBase64String` 之后必须用 `Convert.ToBase64String` 回比，拒绝非 canonical 编码。
 - `JsonDocument.Parse` 默认允许重复键；本解析器自行 `CheckDuplicateKeys`。
-- 规划中的 DeviceSession 串行 actor 尚未存在；不要在本目录加入 UI 或网络循环。
+- DeviceSession 不 await 长 RPC；effect 把 owned 结果发回 mailbox。协议事件不得静默丢弃。基线 snapshot 不调用 notification sink。重连/退避属 HD-018。

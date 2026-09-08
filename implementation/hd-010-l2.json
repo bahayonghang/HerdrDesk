@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd010_l2_status",
+  "l2_live_subscribe_interleave": "UNVERIFIED",
+  "l1_fake_race_model": "required; does not close product AC12",
+  "ac12_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "No authorized isolated herdr session for live events.subscribe interleave. HD-010 ships the L1 DeviceSession race model on fake ports. This file is not AC pass evidence."
+}

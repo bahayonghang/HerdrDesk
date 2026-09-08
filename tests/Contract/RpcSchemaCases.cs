@@ -14,7 +14,8 @@ internal static class RpcSchemaCases
         ("rpc schema duplicate identity and dangling parent reject the graph", IdentityFailures),
         ("rpc schema hash mismatch leaves mutation operations empty", HashMismatchNoMutation),
         ("rpc schema event unknown kind keeps raw value", UnknownEventKind),
-        ("rpc schema errors omit raw json titles cwd and endpoint", ErrorsAreRedacted)
+        ("rpc schema errors omit raw json titles cwd and endpoint", ErrorsAreRedacted),
+        ("rpc schema entity getter unwraps workspace payload", EntityGetterWorkspace)
     ];
 
     static void Check(bool condition)
@@ -194,5 +195,22 @@ internal static class RpcSchemaCases
         Check(!decoded.Code.Contains("title", StringComparison.Ordinal));
         Check(!decoded.Code.Contains('{'));
         Check(!decoded.Code.Contains("local-api", StringComparison.Ordinal));
+    }
+
+    static void EntityGetterWorkspace()
+    {
+        using var snapshot = JsonDocument.Parse(ReadFixture("snapshot-valid.json"));
+        var workspace = snapshot.RootElement.GetProperty("result").GetProperty("snapshot").GetProperty("workspaces")[0];
+        using var envelope = JsonDocument.Parse(
+            """{"result":{"workspace":""" + workspace.GetRawText() + "}}");
+        var decoded = Decoder().DecodeEntityRead(
+            "workspace.get", envelope.RootElement, Session(), new ConnectionEpoch(1), Matching());
+        Check(decoded.Succeeded);
+        Check(decoded.Value!.Workspaces[0].WorkspaceId == "w1");
+        Check(decoded.Value.Tabs.Count == 0);
+        var unknown = Decoder().DecodeEntityRead(
+            "future.get", envelope.RootElement, Session(), new ConnectionEpoch(1), Matching());
+        Check(!unknown.Succeeded);
+        Check(unknown.Code == ProjectionCodes.FullSnapshotRequired);
     }
 }

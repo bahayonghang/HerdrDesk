@@ -31,6 +31,8 @@ public sealed class RpcRequestConnection : IRpcRequestConnection
     private readonly Task _writer;
     private readonly Task _reader;
     private readonly Task _stderr;
+    private readonly TaskCompletionSource _completed =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
     private long _nextId;
     private int _failed;
     private string _failCode = RpcCodes.ConnectionLost;
@@ -52,6 +54,9 @@ public sealed class RpcRequestConnection : IRpcRequestConnection
     public ConnectionEpoch Epoch { get; }
     public int? ChildProcessId => _child.Id;
     public int PendingCount => _pending.Count;
+    public RpcFailure? Failure =>
+        Volatile.Read(ref _failed) == 0 ? null : new RpcFailure(_failCode, _failKind);
+    public Task WhenCompleted => _completed.Task;
 
     public async ValueTask<RpcRequestOutcome> RequestAsync(
         string method,
@@ -272,6 +277,7 @@ public sealed class RpcRequestConnection : IRpcRequestConnection
             if (_pending.TryRemove(pair.Key, out var pending))
                 pending.Completion.TrySetResult(new RpcRequestOutcome(failure));
         }
+        _completed.TrySetResult();
         try
         {
             _cts.Cancel();

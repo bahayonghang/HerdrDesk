@@ -99,6 +99,10 @@
 
 `State/`：`ConnectionPhase`、`CapabilityProfile`（`VerifiedOperations`，缺能力不写成已测 false）、投影与 decoded snapshot/event、`IRpcStateDecoder`。身份仍为 `DeviceId` / `SessionKey` / `PaneKey` / `ConnectionEpoch`。Muse/Qwen 为未知 agent。运行时 schema hash 默认 `UNVERIFIED`。不覆盖规划草案整文件。
 
+## HD-010 增补
+
+`State/IDeviceSession.cs`：`IDeviceSession`、`DeviceSessionState`、`DeviceFreshness`、`ISessionNotificationSink`。App 只订阅 typed state。`IRpcStateDecoder.DecodeEntityRead` 解码 getter 响应。`IRpcRequestConnection.WhenCompleted` / `Failure` 与 `IRpcSubscriptionConnection.WhenReady` 区分 request EOF、subscription EOF 与 ack。`RpcCodes` 增加 `rpc_subscription_lost`、`rpc_request_lost`、`rpc_reconcile_failed`。
+
 ## 入口与测试
 
 类库，无可执行入口。行为由 [../HerdDesk.Core](../HerdDesk.Core/CLAUDE.md)、[../HerdDesk.Infrastructure](../HerdDesk.Infrastructure/CLAUDE.md)、[../../tests/HerdDesk.Core.SmokeTests](../../tests/HerdDesk.Core.SmokeTests/CLAUDE.md)、[../../tests/Unit](../../tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) 与 [../../tests/Contract](../../tests/Contract/CLAUDE.md) 覆盖。

@@ -55,6 +55,77 @@ public sealed class RpcStateDecoder : IRpcStateDecoder
         }
     }
 
+    public DecodeResult<ProjectionEntityChangeSet> DecodeEntityRead(
+        string operation,
+        JsonElement document,
+        SessionKey session,
+        ConnectionEpoch epoch,
+        SchemaCompatibilityBinding binding)
+    {
+        ArgumentNullException.ThrowIfNull(binding);
+        _ = (session, epoch);
+        if (string.IsNullOrWhiteSpace(operation))
+            return DecodeResult<ProjectionEntityChangeSet>.Fail(ProjectionCodes.FullSnapshotRequired);
+        try
+        {
+            var payload = UnwrapEntity(document, PayloadName(operation));
+            return operation switch
+            {
+                "workspace.get" => DecodeResult<ProjectionEntityChangeSet>.Ok(new ProjectionEntityChangeSet(
+                    session, [ToDecoded(ReadWorkspace(payload))], [], [], [], [])),
+                "tab.get" => DecodeResult<ProjectionEntityChangeSet>.Ok(new ProjectionEntityChangeSet(
+                    session, [], [ToDecoded(ReadTab(payload))], [], [], [])),
+                "pane.get" => DecodeResult<ProjectionEntityChangeSet>.Ok(new ProjectionEntityChangeSet(
+                    session, [], [], [ToDecoded(ReadPane(payload))], [], [])),
+                "agent.get" => DecodeResult<ProjectionEntityChangeSet>.Ok(new ProjectionEntityChangeSet(
+                    session, [], [], [], [ToDecoded(ReadAgent(payload))], [])),
+                "pane.layout" => DecodeResult<ProjectionEntityChangeSet>.Ok(new ProjectionEntityChangeSet(
+                    session, [], [], [], [], [ToDecoded(ReadLayout(payload))])),
+                _ => DecodeResult<ProjectionEntityChangeSet>.Fail(ProjectionCodes.FullSnapshotRequired)
+            };
+        }
+        catch (DecodeFail error)
+        {
+            return DecodeResult<ProjectionEntityChangeSet>.Fail(error.Message);
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or FormatException)
+        {
+            return DecodeResult<ProjectionEntityChangeSet>.Fail(ProjectionCodes.FieldTypeInvalid);
+        }
+    }
+
+    private static string PayloadName(string operation) => operation switch
+    {
+        "workspace.get" => "workspace",
+        "tab.get" => "tab",
+        "pane.get" => "pane",
+        "agent.get" => "agent",
+        "pane.layout" => "layout",
+        _ => "result"
+    };
+
+    private static JsonElement UnwrapEntity(JsonElement document, string payloadName)
+    {
+        StrictJson.RequireObject(document);
+        if (document.TryGetProperty("error", out var error) &&
+            error.ValueKind is not JsonValueKind.Undefined and not JsonValueKind.Null)
+            throw new DecodeFail(ProjectionCodes.ErrorEnvelope);
+        var current = document;
+        if (document.TryGetProperty("result", out var result) &&
+            result.ValueKind is not JsonValueKind.Undefined and not JsonValueKind.Null)
+        {
+            StrictJson.RequireObject(result);
+            current = result;
+        }
+        if (current.TryGetProperty(payloadName, out var payload) &&
+            payload.ValueKind is not JsonValueKind.Undefined and not JsonValueKind.Null)
+        {
+            StrictJson.RequireObject(payload);
+            return payload;
+        }
+        return current;
+    }
+
     public DecodeResult<DecodedSessionSnapshot> DecodeSnapshotBytes(
         ReadOnlyMemory<byte> utf8,
         SessionKey session,

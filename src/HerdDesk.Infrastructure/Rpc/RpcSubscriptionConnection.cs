@@ -41,6 +41,7 @@ public sealed class RpcSubscriptionConnection : IRpcSubscriptionConnection
     public ConnectionEpoch Epoch { get; }
     public int? ChildProcessId => _child.Id;
     public RpcFailure? Failure => _failure;
+    public Task WhenReady => _ready.Task;
 
     public async IAsyncEnumerable<JsonElement> ReadEventsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)

@@ -15,4 +15,11 @@ public interface IRpcStateDecoder
         SessionKey session,
         ConnectionEpoch epoch,
         SchemaCompatibilityBinding binding);
+
+    DecodeResult<ProjectionEntityChangeSet> DecodeEntityRead(
+        string operation,
+        JsonElement document,
+        SessionKey session,
+        ConnectionEpoch epoch,
+        SchemaCompatibilityBinding binding);
 }

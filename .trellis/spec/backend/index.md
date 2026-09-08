@@ -13,7 +13,7 @@ Shared facts: [AGENTS.md](../../../AGENTS.md). Module indexes: nested `CLAUDE.md
 Current backend surface:
 
 - `src/HerdDesk.Contracts` — BCL-only identity, frame, input, endpoint, lease, configuration, diagnostic, adapter-capability, and HD-009 projection types.
-- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, renderer L1 specimens, and in-memory projection Store.
+- `src/HerdDesk.Core` — one-epoch `TerminalFrameParser`, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, renderer L1 specimens, in-memory projection Store, and HD-010 `DeviceSession` actor.
 - `src/HerdDesk.Infrastructure` — `AppDataPaths`, atomic device-profile store, JSONL diagnostic sink, owned child process, RPC stdio, SchemaV1 decoder.
 - `bridge/herddesk-bridge` — stdio ↔ local-socket byte relay. L2 named-pipe ACL UNVERIFIED.
 - `src/HerdDesk.Terminal.Web` — WebView2/xterm capability stub; packages `UNVERIFIED`.

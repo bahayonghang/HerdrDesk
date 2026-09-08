@@ -81,7 +81,7 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. ProjectionCases.All];
+cases = [.. cases, .. ProjectionCases.All, .. DeviceSessionCases.All];
 
 var failed = 0;
 foreach (var test in cases)
