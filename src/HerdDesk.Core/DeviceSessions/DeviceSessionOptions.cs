@@ -11,6 +11,8 @@ public sealed record DeviceSessionOptions
     public bool DegradedFullSnapshotOnly { get; init; }
     public ISessionNotificationSink? Notifications { get; init; }
     public IRecoveryEntropy Entropy { get; init; } = ZeroRecoveryEntropy.Instance;
+    public IRetryRandom Random { get; init; } = ZeroRetryRandom.Instance;
+    public ISessionRecoveryGate? RecoveryGate { get; init; }
 
     public static DeviceSessionOptions Default { get; } = new();
 }

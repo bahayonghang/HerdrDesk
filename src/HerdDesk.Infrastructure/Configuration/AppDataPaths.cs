@@ -23,6 +23,9 @@ public sealed class AppDataPaths
         HelperReceiptsFile = Path.Combine(SettingsDirectory, "helper-receipts.json");
         HelperReceiptsBackupFile = HelperReceiptsFile + ".bak";
         HelperReceiptsLockFile = Path.Combine(SettingsDirectory, "helper-receipts.lock");
+        RecoveryBlocksFile = Path.Combine(SettingsDirectory, "ssh-recovery-blocks.json");
+        RecoveryBlocksBackupFile = RecoveryBlocksFile + ".bak";
+        RecoveryBlocksLockFile = Path.Combine(SettingsDirectory, "ssh-recovery-blocks.lock");
         DiagnosticSaltFile = Path.Combine(SettingsDirectory, "diagnostic-alias.salt");
         DiagnosticLogFile = Path.Combine(LogDirectory, "diagnostics.jsonl");
     }
@@ -38,6 +41,9 @@ public sealed class AppDataPaths
     public string HelperReceiptsFile { get; }
     public string HelperReceiptsBackupFile { get; }
     public string HelperReceiptsLockFile { get; }
+    public string RecoveryBlocksFile { get; }
+    public string RecoveryBlocksBackupFile { get; }
+    public string RecoveryBlocksLockFile { get; }
     public string DiagnosticSaltFile { get; }
     public string DiagnosticLogFile { get; }
 

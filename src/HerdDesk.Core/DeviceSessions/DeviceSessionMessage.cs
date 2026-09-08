@@ -11,6 +11,10 @@ internal sealed record DisconnectCommand(TaskCompletionSource Completion) : Acto
 
 internal sealed record RetryNowCommand(TaskCompletionSource Completion) : ActorMessage;
 
+internal sealed record CancelRetryCommand(TaskCompletionSource Completion) : ActorMessage;
+
+internal sealed record NoteFailureCommand(RecoveryFailure Failure, TaskCompletionSource Completion) : ActorMessage;
+
 internal sealed record AppStoppingCommand(TaskCompletionSource Completion) : ActorMessage;
 
 internal sealed record StopCommand(TaskCompletionSource Completion) : ActorMessage;

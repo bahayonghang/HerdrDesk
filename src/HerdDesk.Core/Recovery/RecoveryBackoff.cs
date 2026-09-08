@@ -29,6 +29,7 @@ public static class RecoveryBackoff
     ];
 
     public static TimeSpan Cap { get; } = TimeSpan.FromSeconds(30);
+    public static TimeSpan MinDelay { get; } = TimeSpan.FromSeconds(1);
     public static int AutomaticRetryLimit { get; } = 6;
 
     public static TimeSpan Delay(int attempt, IRecoveryEntropy entropy)
@@ -46,5 +47,73 @@ public static class RecoveryBackoff
             jitter = slack;
         var total = basis + jitter;
         return total > Cap ? Cap : total;
+    }
+
+    public static TimeSpan EqualJitter(int n, double unitInterval)
+    {
+        var index = n < 0 ? 0 : n;
+        var unit = unitInterval;
+        if (double.IsNaN(unit) || double.IsInfinity(unit) || unit < 0)
+            unit = 0;
+        else if (unit >= 1)
+            unit = Math.BitDecrement(1.0);
+
+        var shift = index + 1;
+        if (shift > 5)
+            shift = 5;
+        long capSeconds;
+        try
+        {
+            checked
+            {
+                capSeconds = 1L << shift;
+            }
+        }
+        catch (OverflowException)
+        {
+            capSeconds = 30;
+        }
+
+        if (capSeconds > 30)
+            capSeconds = 30;
+        if (capSeconds < 1)
+            capSeconds = 1;
+
+        long capTicks;
+        try
+        {
+            checked
+            {
+                capTicks = capSeconds * TimeSpan.TicksPerSecond;
+            }
+        }
+        catch (OverflowException)
+        {
+            capTicks = 30 * TimeSpan.TicksPerSecond;
+        }
+
+        var half = capTicks / 2.0;
+        long delayTicks;
+        try
+        {
+            checked
+            {
+                delayTicks = (long)(half + (unit * half));
+            }
+        }
+        catch (OverflowException)
+        {
+            delayTicks = 30 * TimeSpan.TicksPerSecond;
+        }
+
+        var minTicks = TimeSpan.TicksPerSecond;
+        var maxTicks = 30 * TimeSpan.TicksPerSecond;
+        if (delayTicks >= capTicks)
+            delayTicks = capTicks - 1;
+        if (delayTicks < minTicks)
+            delayTicks = minTicks;
+        if (delayTicks > maxTicks)
+            delayTicks = maxTicks;
+        return TimeSpan.FromTicks(delayTicks);
     }
 }

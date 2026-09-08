@@ -21,7 +21,8 @@ public sealed record RecoveryViewState(
     string? Reason,
     bool CommandsEnabled,
     bool DataMayBeStale,
-    string? LastKnownLabel)
+    string? LastKnownLabel,
+    bool InputNotReplayed = false)
 {
     public static RecoveryViewState Offline { get; } =
         new(RecoveryViewKind.Offline, false, 0, null, RecoveryCodes.ManualDisconnect, false, true, null);
@@ -39,6 +40,7 @@ public static class RecoveryProjection
         var commands = session.Phase == ConnectionPhase.Ready &&
                        session.Freshness == DeviceFreshness.Current;
         var staleContext = !commands;
+        var replayed = recovery.InputNotReplayed;
         if (session.Phase == ConnectionPhase.Offline)
         {
             return new(
@@ -49,7 +51,8 @@ public static class RecoveryProjection
                 recovery.Cause ?? RecoveryCodes.ManualDisconnect,
                 false,
                 true,
-                lastKnownLabel);
+                lastKnownLabel,
+                replayed);
         }
 
         if (session.Phase == ConnectionPhase.Incompatible ||
@@ -63,7 +66,8 @@ public static class RecoveryProjection
                 recovery.Cause ?? session.LastErrorCode,
                 false,
                 true,
-                lastKnownLabel);
+                lastKnownLabel,
+                replayed);
         }
 
         if (session.Phase is ConnectionPhase.Connecting or ConnectionPhase.Synchronizing)
@@ -90,7 +94,8 @@ public static class RecoveryProjection
                 recovery.Cause ?? session.LastErrorCode,
                 false,
                 true,
-                lastKnownLabel);
+                lastKnownLabel,
+                replayed);
         }
 
         if (session.Phase == ConnectionPhase.Ready)
@@ -142,6 +147,7 @@ public static class RecoveryProjection
             recovery.Cause ?? session.LastErrorCode,
             false,
             true,
-            lastKnownLabel);
+            lastKnownLabel,
+            replayed);
     }
 }

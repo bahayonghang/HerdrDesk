@@ -507,9 +507,75 @@ internal sealed class FakeRpcFactory : IRpcConnectionFactory
     }
 }
 
+internal sealed class FakeRecoveryGate : ISessionRecoveryGate
+{
+    private readonly object _gate = new();
+    private readonly Dictionary<Guid, RecoveryBlockSnapshot> _blocks = [];
+
+    public SessionRecoveryContext Context { get; set; } = new(1, 1, 1, true, true);
+    public bool PersistFails { get; set; }
+    public List<RecoveryBlockSnapshot> Writes { get; } = [];
+
+    public SessionRecoveryContext ReadContext(SessionKey session)
+    {
+        _ = session;
+        lock (_gate)
+            return Context;
+    }
+
+    public RecoveryBlockSnapshot? ReadBlock(DeviceId device)
+    {
+        lock (_gate)
+            return _blocks.TryGetValue(device.Value, out var block) ? block : null;
+    }
+
+    public RecoveryBlockWriteResult PersistBlock(RecoveryBlockSnapshot snapshot)
+    {
+        if (PersistFails)
+            return new(false, RecoveryCodes.PersistenceFailed);
+        lock (_gate)
+        {
+            _blocks[snapshot.Device.Value] = snapshot;
+            Writes.Add(snapshot);
+        }
+
+        return new(true, null);
+    }
+
+    public void ClearBlock(DeviceId device)
+    {
+        lock (_gate)
+            _blocks.Remove(device.Value);
+    }
+
+    public void Seed(RecoveryBlockSnapshot snapshot)
+    {
+        lock (_gate)
+            _blocks[snapshot.Device.Value] = snapshot;
+    }
+}
+
+internal sealed class SequenceRetryRandom : IRetryRandom
+{
+    private readonly double[] _values;
+    private int _index;
+
+    public SequenceRetryRandom(params double[] values) => _values = values;
+
+    public double NextUnitInterval()
+    {
+        if (_values.Length == 0 || _index >= _values.Length)
+            return 0;
+        return _values[_index++];
+    }
+}
+
 internal sealed class DeviceSessionHarness
 {
-    public DeviceSessionHarness(SessionKey? session = null)
+    public DeviceSessionHarness(
+        SessionKey? session = null,
+        ISessionRecoveryGate? gate = null,
+        IRetryRandom? random = null)
     {
         Session = session ?? DeviceSessionGraphs.DefaultSession();
         Decoder = new FakeDecoder { Snapshot = DeviceSessionGraphs.Baseline(Session, 1) };
@@ -519,12 +585,16 @@ internal sealed class DeviceSessionHarness
         Diagnostics = new RecordingSink();
         Notifications = new CountingNotificationSink();
         Binding = SchemaCompatibilityBinding.PinnedMatchingRuntimeForTests("0.9.0");
+        Gate = gate ?? new FakeRecoveryGate();
+        Random = random ?? ZeroRetryRandom.Instance;
         Options = new DeviceSessionOptions
         {
             CoalesceWindow = TimeSpan.FromMilliseconds(250),
             CalibrationPeriod = TimeSpan.FromHours(1),
             SessionAlias = "sess",
-            Notifications = Notifications
+            Notifications = Notifications,
+            RecoveryGate = Gate,
+            Random = Random
         };
         Actor = new DeviceSession(Session, Factory, Decoder, Store, Binding, Time, Diagnostics, Options);
     }
@@ -538,6 +608,8 @@ internal sealed class DeviceSessionHarness
     public CountingNotificationSink Notifications { get; }
     public SchemaCompatibilityBinding Binding { get; }
     public DeviceSessionOptions Options { get; }
+    public ISessionRecoveryGate Gate { get; }
+    public IRetryRandom Random { get; }
     public DeviceSession Actor { get; }
 
     public void Connect() =>
@@ -548,6 +620,15 @@ internal sealed class DeviceSessionHarness
 
     public void RetryNow() =>
         Actor.RetryNowAsync().AsTask().GetAwaiter().GetResult();
+
+    public void CancelRetry() =>
+        Actor.CancelRetryAsync().AsTask().GetAwaiter().GetResult();
+
+    public void NoteFailure(RecoveryCause cause) =>
+        Actor.NoteFailureAsync(
+                RecoveryPolicy.Create(
+                    RecoveryScope.Rpc, cause, Session, null, Actor.Current.Epoch, false))
+            .AsTask().GetAwaiter().GetResult();
 
     public void NotifyAppStopping() =>
         Actor.NotifyAppStoppingAsync().AsTask().GetAwaiter().GetResult();

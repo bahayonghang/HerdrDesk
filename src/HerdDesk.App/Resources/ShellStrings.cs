@@ -59,6 +59,15 @@ public static class ShellStrings
     public const string SaveFailed = "保存失败，已恢复上次有效值";
     public const string PermissionDenied = "当前实例不能写入配置";
     public const string AuthRequired = "需要认证";
+    public const string ReconnectWaitingFormat = "将在 {0} 秒重试";
+    public const string AuthenticationBlocked = "认证已阻断";
+    public const string AuthenticationUnsupported = "认证方式未支持";
+    public const string HostKeyReviewRequired = "主机密钥需核验";
+    public const string ConnectionManualRetryRequired = "配置/协议需处理";
+    public const string ReconnectCancelled = "已取消重试";
+    public const string InputNotReplayed = "未重放";
+    public const string ReviewHostKey = "核验主机密钥";
+    public const string EditCredentials = "编辑凭据";
     public const string PartialResults = "部分设备尚未就绪";
     public const string Agent = "代理";
     public const string Notifications = "通知中心";

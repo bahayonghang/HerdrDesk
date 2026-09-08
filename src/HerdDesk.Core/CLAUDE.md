@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Core
 
-生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本、HD-009 内存投影 Store、HD-010 每 SessionKey 一个 `DeviceSession` actor、HD-012 L1 注意力 reducer / 未读聚合、HD-016 L1 `ControlLeaseCoordinator`、HD-017 L1 `ResourceCommandCoordinator`、HD-018 L1 `RecoveryPolicy` 与跨 owner 恢复信号，以及 HD-023 L1 多设备 partition 聚合。
+生成日期：2026-09-08。G0 领域逻辑标本：单连接帧解析、输入放行策略、endpoint 纯映射、终端 lease 观测映射、HD-005 renderer L1 纯函数标本、HD-009 内存投影 Store、HD-010 每 SessionKey 一个 `DeviceSession` actor、HD-012 L1 注意力 reducer / 未读聚合、HD-016 L1 `ControlLeaseCoordinator`、HD-017 L1 `ResourceCommandCoordinator`、HD-018 L1 `RecoveryPolicy` 与跨 owner 恢复信号、HD-023 L1 多设备 partition 聚合，以及 HD-024 L1 每 SessionKey 退避与认证/host-key 阻断（无第二 RecoveryManager）。
 
 ## 职责
 
@@ -103,7 +103,7 @@ L1 通过不是 AC08/AC09 或 IME 真机通过。
 - `Attention/AttentionReducer.cs` — HD-012 L1 纯 reducer：首次/重连基线抑制、transition 去重、stale/mute/限流、层级未读。Windows toast 不在 Core。
 - `TerminalLease/ControlLeaseCoordinator.cs` — HD-016 L1 单 pane actor：默认观察；`RequestControl` 永不 takeover；busy 后一次性 challenge；`ControlVerified` 仅在适配器证明 + full baseline + renderer ack + Store 仍 fresh。L2 live lease 为 UNVERIFIED。
 - `Commands/ResourceCommandCoordinator.cs` — HD-017 L1 schema-gated create/rename/close：capability/freshness/confirmation gate；mutation 只发送一次；timeout 后 UnknownOutcome 并只读查询；`close_group` 不得默认带上。不借用 HD-016 lease 作 CRUD 授权。L2 live mutation 为 UNVERIFIED。
-- `Recovery/RecoveryPolicy.cs` — HD-018 L1 纯函数：failure taxonomy、1–30s backoff、不启动 daemon。`DeviceSession` 异常先发布 Stale 再单 timer 重连。`ControlLeaseCoordinator` 消费 projection-stale/ready 与 terminal/renderer 故障，只 `RecoverObserve`。L2 live disconnect 为 UNVERIFIED。
+- `Recovery/RecoveryPolicy.cs` — HD-018 L1 纯函数：failure taxonomy、1–30s backoff、不启动 daemon。`DeviceSession` 异常先发布 Stale 再单 timer 重连。`ControlLeaseCoordinator` 消费 projection-stale/ready 与 terminal/renderer 故障，只 `RecoverObserve`。L2 live disconnect 为 UNVERIFIED。HD-024 在同一 actor 上扩展远端 equal-jitter 与 `DeviceId+ProfileRevision` 认证/host-key block。Core 不引用 SSH 实现。L2 live auth 为 UNVERIFIED。
 - `Aggregation/` — HD-023 L1 `GlobalProjectionStore`、`GlobalEntityRef`、`GlobalTargetResolver`、`GlobalSearchIndex`、`WriteIntentGuard`。按 DeviceId 替换 partition，不合并同名实体。搜索只索引投影，不启动 terminal，不发起网络。L2 live 3-device p95 为 UNVERIFIED。
 
 ## 约束

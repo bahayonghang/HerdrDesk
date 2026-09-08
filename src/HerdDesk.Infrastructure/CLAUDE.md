@@ -16,7 +16,7 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 ## 依赖
 
 - 项目引用：Contracts、Core。
-- `Ssh/` — HD-020 L1 `OpenSshConfigResolver`、`SshProcessSpecFactory`、`HostKeyTrustStore`、`SshConnectionTestService`。HD-021 L1 helper planner/publisher。ViewModel 不接收 raw argv。L2 隔离 Windows/OpenSSH 与 live helper deploy 为 UNVERIFIED。
+- `Ssh/` — HD-020 L1 `OpenSshConfigResolver`、`SshProcessSpecFactory`、`HostKeyTrustStore`、`SshConnectionTestService`。HD-021 L1 helper planner/publisher。HD-024 L1 `SshFailureClassifier` 与 `SshRecoveryBlockStore`（认证/host-key block 持久化）。ViewModel 不接收 raw argv。L2 隔离 Windows/OpenSSH、live helper deploy 与 live auth 为 UNVERIFIED。
 - `SshTransports/` — HD-022 L1 `RemoteSessionTransportSet`：每 SessionKey 两个 `ssh -T` RPC child 加按需 terminal child；stdout 污染 fail-closed；stderr 单独排空；重建换 epoch。L2 live SSH 为 UNVERIFIED。
 - 禁止：PackageReference、WinUI、WebView2、SSH.NET、硬编码用户目录、读写 `herdr machine` catalog。
 

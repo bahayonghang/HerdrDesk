@@ -13,6 +13,7 @@ cases =
     .. TerminalControlTests.All,
     .. ResourceCommandViewModelTests.All,
     .. RecoveryBindingsTests.All,
+    .. DeviceConnectionStatusViewModelTests.All,
     .. LocalMvpShellCompositionTests.All,
     .. EditDeviceViewModelTests.All,
     .. HelperInstallViewModelTests.All,

@@ -89,6 +89,29 @@ public sealed class RecoveryBindings
         return _session.RetryNowAsync(cancellationToken);
     }
 
+    public ValueTask CancelRetryAsync(CancellationToken cancellationToken = default)
+    {
+        if (_appStopping || _session is null)
+            return ValueTask.CompletedTask;
+        return _session.CancelRetryAsync(cancellationToken);
+    }
+
+    public void Dispatch(DeviceConnectionStatusIntent intent)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+        if (_appStopping || _session is null || intent.Session != _session.Session)
+            return;
+        switch (intent.Action)
+        {
+            case DeviceConnectionStatusAction.Retry:
+                RetryNowAsync().AsTask().GetAwaiter().GetResult();
+                break;
+            case DeviceConnectionStatusAction.Cancel:
+                CancelRetryAsync().AsTask().GetAwaiter().GetResult();
+                break;
+        }
+    }
+
     private void NoteProjectionStale()
     {
         _awaitingObserveRecovery = true;

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd024_l2_status",
+  "l2_live_auth": "UNVERIFIED",
+  "live_ssh": false,
+  "isolated_auth_lab": false,
+  "winui_admitted": false,
+  "integration_ssh_project": false,
+  "l1_auth_hostkey_backoff": "required; does not close product AC22 or AC26",
+  "ac22_passed": false,
+  "ac26_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "missing": {
+    "isolated_windows_openssh": true,
+    "disposable_ssh_account": true,
+    "host_key_change_lab": true,
+    "live_auth_deny": true
+  },
+  "note": "HD-024 ships L1 auth/host-key block and per-SessionKey equal-jitter backoff on the existing DeviceSession actor. It does not add a second RecoveryManager. This file is not AC pass evidence. L2 live auth stays UNVERIFIED. Product AC22/AC26 stay with HD-026."
+}

@@ -14,7 +14,10 @@ public sealed record SessionRecoveryProgress(
     string? Cause,
     string? Decision,
     int RetryTimerCount,
-    int ReconnectEffectCount)
+    int ReconnectEffectCount,
+    bool InputNotReplayed = false,
+    long? BlockedProfileRevision = null,
+    string? PublicCode = null)
 {
     public static SessionRecoveryProgress None { get; } = new(0, null, null, null, 0, 0);
 }
@@ -89,6 +92,7 @@ public interface IDeviceSession : IAsyncDisposable
     ValueTask ConnectAsync(string socketPath, CancellationToken cancellationToken = default);
     ValueTask DisconnectAsync(CancellationToken cancellationToken = default);
     ValueTask RetryNowAsync(CancellationToken cancellationToken = default);
+    ValueTask CancelRetryAsync(CancellationToken cancellationToken = default);
     ValueTask NotifyAppStoppingAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<DeviceSessionState> ReadStatesAsync(CancellationToken cancellationToken = default);
 }

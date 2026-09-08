@@ -43,7 +43,7 @@ public sealed class DeviceSession : IDeviceSession
     private long _nextOperation;
     private int _acceptedInvalidations;
     private int _missedReconcile;
-    private int _missedRetry;
+    private ulong _missedRetryGeneration;
     private bool _acked;
     private bool _subscriptionActive;
     private bool _baselineInstalled;
@@ -68,6 +68,11 @@ public sealed class DeviceSession : IDeviceSession
     private ulong _coalesceOp;
     private ulong _calibrationOp;
     private ulong _retryOp;
+    private ulong _retryGeneration;
+    private bool _explicitRetry;
+    private bool _inputNotReplayed;
+    private RecoveryBlockSnapshot? _block;
+    private string? _publicCode;
     private ConnectionEpoch _coalesceEpoch;
     private ConnectionEpoch _calibrationEpoch;
 
@@ -112,6 +117,7 @@ public sealed class DeviceSession : IDeviceSession
             SingleWriter = true,
             FullMode = BoundedChannelFullMode.DropOldest
         });
+        LoadPersistedBlock();
         _current = SnapshotState();
         _states.Writer.TryWrite(_current);
         _loop = Task.Run(RunAsync);
@@ -143,6 +149,24 @@ public sealed class DeviceSession : IDeviceSession
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         await _mailbox.Writer.WriteAsync(new RetryNowCommand(completion), cancellationToken)
+            .ConfigureAwait(false);
+        await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask CancelRetryAsync(CancellationToken cancellationToken = default)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await _mailbox.Writer.WriteAsync(new CancelRetryCommand(completion), cancellationToken)
+            .ConfigureAwait(false);
+        await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask NoteFailureAsync(
+        RecoveryFailure failure, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(failure);
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await _mailbox.Writer.WriteAsync(new NoteFailureCommand(failure, completion), cancellationToken)
             .ConfigureAwait(false);
         await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -216,6 +240,12 @@ public sealed class DeviceSession : IDeviceSession
             case RetryNowCommand command:
                 HandleRetryNow(command);
                 break;
+            case CancelRetryCommand command:
+                HandleCancelRetry(command);
+                break;
+            case NoteFailureCommand command:
+                HandleNoteFailure(command);
+                break;
             case AppStoppingCommand command:
                 HandleAppStopping(command);
                 break;
@@ -270,6 +300,14 @@ public sealed class DeviceSession : IDeviceSession
         _connectWait?.TrySetResult();
         _connectWait = command.Completion;
         CancelRetryTimer();
+        if (HasActiveBlock() && !_explicitRetry)
+        {
+            ApplyBlockDisplay(CurrentBlock());
+            command.Completion.TrySetResult();
+            _connectWait = null;
+            return;
+        }
+
         BeginEpoch(command.SocketPath);
     }
 
@@ -302,6 +340,13 @@ public sealed class DeviceSession : IDeviceSession
 
         _userDisconnect = false;
         CancelRetryTimer();
+        if (HasActiveBlock() && !RecoveryPolicy.CanExplicitRetry(CurrentBlock(), CurrentContext()))
+        {
+            ApplyBlockDisplay(CurrentBlock());
+            command.Completion.TrySetResult();
+            return;
+        }
+
         var decision = RecoveryPolicy.Manual(_appStopping, _recoveryCause ?? RecoveryCause.ManualDisconnect);
         if (decision.Action != RecoveryAction.RetryNow)
         {
@@ -312,6 +357,7 @@ public sealed class DeviceSession : IDeviceSession
         }
 
         _recoveryDecision = RecoveryCodes.RetryNow;
+        _explicitRetry = true;
         BeginEpoch(_socketPath);
         command.Completion.TrySetResult();
     }
@@ -327,12 +373,40 @@ public sealed class DeviceSession : IDeviceSession
         command.Completion.TrySetResult();
     }
 
+    private void HandleCancelRetry(CancelRetryCommand command)
+    {
+        CancelRetryTimer();
+        _recoveryDecision = RecoveryCodes.ReconnectCancelled;
+        _publicCode = RecoveryCodes.ReconnectCancelled;
+        Publish();
+        command.Completion.TrySetResult();
+    }
+
+    private void HandleNoteFailure(NoteFailureCommand command)
+    {
+        if (_appStopping || _stopping || _userDisconnect)
+        {
+            command.Completion.TrySetResult();
+            return;
+        }
+
+        EnterStale(command.Failure.DiagnosticId, command.Failure);
+        command.Completion.TrySetResult();
+    }
+
     private void HandleRetryDue(RetryDueMessage message)
     {
-        _ = message;
+        if (message.OperationId != _retryGeneration)
+            return;
         _retryArmed = false;
         if (_appStopping || _stopping || _intentionalClose || _userDisconnect)
             return;
+        if (HasActiveBlock())
+        {
+            ApplyBlockDisplay(CurrentBlock());
+            return;
+        }
+
         if (_phase != ConnectionPhase.Stale || _retryInFlight || string.IsNullOrWhiteSpace(_socketPath))
             return;
         BeginEpoch(_socketPath);
@@ -352,6 +426,14 @@ public sealed class DeviceSession : IDeviceSession
     {
         if (_appStopping || _stopping)
             return;
+        if (!_explicitRetry && HasActiveBlock())
+        {
+            ApplyBlockDisplay(CurrentBlock());
+            CompleteConnect();
+            return;
+        }
+
+        _explicitRetry = false;
         _socketPath = socketPath;
         _intentionalClose = true;
         CancelRetryTimer();
@@ -926,6 +1008,10 @@ public sealed class DeviceSession : IDeviceSession
             _recoveryCause = null;
             _recoveryDecision = null;
             _nextRetryUtc = null;
+            _inputNotReplayed = false;
+            _publicCode = null;
+            if (_block is not null)
+                ClearPersistedBlock();
             CancelRetryTimer();
         }
 
@@ -945,8 +1031,11 @@ public sealed class DeviceSession : IDeviceSession
 
     private void EnterStale(string code, RecoveryFailure? classified = null)
     {
-        if (_phase == ConnectionPhase.Offline)
+        if (_phase == ConnectionPhase.Offline && classified is null)
             return;
+        var hadLive = _everReady ||
+                      _phase is ConnectionPhase.Ready or ConnectionPhase.Connecting
+                          or ConnectionPhase.Synchronizing;
         _lastError = code;
         _phase = ConnectionPhase.Stale;
         _freshness = DeviceFreshness.Stale;
@@ -955,11 +1044,13 @@ public sealed class DeviceSession : IDeviceSession
         _readInFlight = false;
         _reconcileAfterRead = false;
         _retryInFlight = false;
+        _inputNotReplayed = hadLive || _inputNotReplayed;
         _capabilities = WithoutMutations(_capabilities);
         _ = _store.MarkStale(_epoch, code);
         var failure = classified ?? RecoveryPolicy.ClassifyRpc(
             _session, _epoch, code, RpcFailureKind.ConnectionLost, false, false, _userDisconnect, _appStopping);
         _recoveryCause = failure.Cause;
+        _publicCode = RecoveryPolicy.PublicCode(failure.Cause);
         PrepareRetry(failure);
         Diagnose("stale", DiagnosticOutcome.Failure, failure.DiagnosticId);
         Publish();
@@ -1001,7 +1092,9 @@ public sealed class DeviceSession : IDeviceSession
         _retryInFlight = false;
         _recoveryCause = _appStopping ? RecoveryCause.AppStopping : RecoveryCause.ManualDisconnect;
         _recoveryDecision = RecoveryCodes.Stop;
+        _publicCode = RecoveryPolicy.PublicCode(_recoveryCause.Value);
         _nextRetryUtc = null;
+        _inputNotReplayed = _everReady || _inputNotReplayed;
         _capabilities = WithoutMutations(_capabilities);
         if (_epoch.Value > 0)
             _ = _store.MarkStale(_epoch, "offline");
@@ -1096,30 +1189,57 @@ public sealed class DeviceSession : IDeviceSession
 
     private void DrainMissedRetry()
     {
-        if (Interlocked.Exchange(ref _missedRetry, 0) != 0)
-            HandleRetryDue(new RetryDueMessage(_retryOp));
+        var missed = Interlocked.Exchange(ref _missedRetryGeneration, 0);
+        if (missed != 0)
+            HandleRetryDue(new RetryDueMessage(missed));
     }
 
     private void PrepareRetry(RecoveryFailure failure)
     {
+        CancelRetryTimer();
         _pendingRetryDelay = null;
         if (_appStopping || _stopping || _userDisconnect)
         {
             _recoveryDecision = RecoveryCodes.Stop;
+            _publicCode = RecoveryPolicy.PublicCode(failure.Cause);
             _nextRetryUtc = null;
             return;
         }
 
-        var attempt = _retryAttempt + 1;
-        var decision = RecoveryPolicy.Decide(failure, attempt, _options.Entropy);
-        _recoveryDecision = decision.StartDaemon ? RecoveryCodes.Stop : decision.Reason;
-        if (decision.Action is RecoveryAction.Stop or RecoveryAction.AwaitUser)
+        if (RecoveryPolicy.IsPersistableBlock(failure.Cause))
+            PersistBlock(failure);
+
+        RecoveryDecision decision;
+        if (RecoveryPolicy.IsRemoteTransient(failure.Cause))
         {
-            _nextRetryUtc = null;
-            return;
+            var n = _retryAttempt;
+            decision = RecoveryPolicy.DecideRemote(failure, n, _options.Random);
+            _recoveryDecision = decision.StartDaemon ? RecoveryCodes.Stop : decision.Reason;
+            if (decision.Action is RecoveryAction.Stop or RecoveryAction.AwaitUser)
+            {
+                _nextRetryUtc = null;
+                _publicCode = RecoveryPolicy.PublicCode(failure.Cause);
+                return;
+            }
+
+            _retryAttempt = n + 1;
+        }
+        else
+        {
+            var attempt = _retryAttempt + 1;
+            decision = RecoveryPolicy.Decide(failure, attempt, _options.Entropy);
+            _recoveryDecision = decision.StartDaemon ? RecoveryCodes.Stop : decision.Reason;
+            if (decision.Action is RecoveryAction.Stop or RecoveryAction.AwaitUser)
+            {
+                _nextRetryUtc = null;
+                _publicCode = RecoveryPolicy.PublicCode(failure.Cause);
+                return;
+            }
+
+            _retryAttempt = attempt;
         }
 
-        _retryAttempt = attempt;
+        _publicCode = RecoveryCodes.ReconnectWaiting;
         if (decision.Action == RecoveryAction.RetryNow || decision.Delay <= TimeSpan.Zero)
         {
             _nextRetryUtc = _time.GetUtcNow();
@@ -1139,7 +1259,9 @@ public sealed class DeviceSession : IDeviceSession
             return;
         if (delay.Value <= TimeSpan.Zero)
         {
-            HandleRetryDue(new RetryDueMessage(NextOp()));
+            _retryGeneration++;
+            _retryOp = _retryGeneration;
+            HandleRetryDue(new RetryDueMessage(_retryOp));
             return;
         }
 
@@ -1149,13 +1271,14 @@ public sealed class DeviceSession : IDeviceSession
 
     private void ArmRetry(TimeSpan delay)
     {
-        _retryOp = NextOp();
+        _retryGeneration++;
+        _retryOp = _retryGeneration;
         _nextRetryUtc = _time.GetUtcNow() + delay;
         _retry ??= _time.CreateTimer(
             _ =>
             {
                 if (!TryPost(new RetryDueMessage(_retryOp)))
-                    Interlocked.Exchange(ref _missedRetry, 1);
+                    Interlocked.Exchange(ref _missedRetryGeneration, _retryOp);
             },
             null,
             Timeout.InfiniteTimeSpan,
@@ -1166,6 +1289,8 @@ public sealed class DeviceSession : IDeviceSession
 
     private void CancelRetryTimer()
     {
+        _retryGeneration++;
+        Interlocked.Exchange(ref _missedRetryGeneration, 0);
         _retry?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         _retryArmed = false;
         _nextRetryUtc = null;
@@ -1256,7 +1381,10 @@ public sealed class DeviceSession : IDeviceSession
                 _recoveryCause is { } cause ? RecoveryPolicy.Code(cause) : null,
                 _recoveryDecision,
                 _retryArmed ? 1 : 0,
-                _reconnectEffects));
+                _reconnectEffects,
+                _inputNotReplayed,
+                _block?.BlockedProfileRevision,
+                _publicCode));
 
     private void PruneEffects()
     {
@@ -1326,6 +1454,85 @@ public sealed class DeviceSession : IDeviceSession
         Publish();
         _epochCts?.Dispose();
         _states.Writer.TryComplete();
+    }
+
+    private void LoadPersistedBlock()
+    {
+        var block = _options.RecoveryGate?.ReadBlock(_session.Device);
+        if (block is null)
+            return;
+        _block = block;
+        _recoveryCause = block.Kind;
+        _recoveryDecision = RecoveryPolicy.Code(block.Kind);
+        _publicCode = string.IsNullOrEmpty(block.PublicCode)
+            ? RecoveryPolicy.PublicCode(block.Kind)
+            : block.PublicCode;
+        _phase = ConnectionPhase.Stale;
+        _freshness = DeviceFreshness.Stale;
+        _lastError = _recoveryDecision;
+    }
+
+    private SessionRecoveryContext CurrentContext() =>
+        _options.RecoveryGate?.ReadContext(_session) ?? SessionRecoveryContext.Unrestricted;
+
+    private RecoveryBlockSnapshot? CurrentBlock() =>
+        _block ?? _options.RecoveryGate?.ReadBlock(_session.Device);
+
+    private bool HasActiveBlock() => CurrentBlock() is not null;
+
+    private void ApplyBlockDisplay(RecoveryBlockSnapshot? block)
+    {
+        CancelRetryTimer();
+        _retryInFlight = false;
+        if (block is not null)
+        {
+            _block = block;
+            _recoveryCause = block.Kind;
+            _recoveryDecision = RecoveryPolicy.Code(block.Kind);
+            _publicCode = string.IsNullOrEmpty(block.PublicCode)
+                ? RecoveryPolicy.PublicCode(block.Kind)
+                : block.PublicCode;
+            _lastError = _recoveryDecision;
+        }
+
+        _phase = ConnectionPhase.Stale;
+        _freshness = DeviceFreshness.Stale;
+        Publish();
+    }
+
+    private void PersistBlock(RecoveryFailure failure)
+    {
+        var context = CurrentContext();
+        var snapshot = new RecoveryBlockSnapshot(
+            _session.Device,
+            context.ProfileRevision,
+            failure.Cause,
+            failure.Cause is RecoveryCause.Authentication or RecoveryCause.AuthenticationBlocked
+                or RecoveryCause.UnsupportedAuthentication
+                ? context.CredentialRevision
+                : null,
+            failure.Cause is RecoveryCause.HostKeyUnknown or RecoveryCause.HostKeyChanged
+                ? context.KnownHostRevision
+                : null,
+            RecoveryPolicy.PublicCode(failure.Cause));
+        _block = snapshot;
+        var gate = _options.RecoveryGate;
+        if (gate is null)
+            return;
+        var written = gate.PersistBlock(snapshot);
+        if (!written.Succeeded)
+        {
+            Diagnose(
+                "recovery-block",
+                DiagnosticOutcome.Failure,
+                written.Code ?? RecoveryCodes.PersistenceFailed);
+        }
+    }
+
+    private void ClearPersistedBlock()
+    {
+        _block = null;
+        _options.RecoveryGate?.ClearBlock(_session.Device);
     }
 
     private static ConnectionEndedMessage ToEnded(

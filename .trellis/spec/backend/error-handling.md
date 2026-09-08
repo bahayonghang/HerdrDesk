@@ -56,6 +56,8 @@ HD-017 `ResourceCommandCoordinator` uses `ResourceGateDecision` / `ResourceOpera
 
 HD-018 `RecoveryPolicy` classifies `RecoveryFailure` and returns `RecoveryDecision`. Cause codes: `request_eof`, `subscription_eof`, `rpc_bridge_exit`, `daemon_unreachable`, `schema_incompatible`, `protocol_incompatible`, `terminal_closed`, `terminal_stdout_eof`, `terminal_client_exit`, `renderer_failure`, `cancellation`, `manual_disconnect`, `app_stopping`, `authentication`, `host_key_changed`. Decision codes: `retry_after`, `retry_now`, `await_user`, `stop`, `retry_exhausted`. `StartDaemon` stays false. Abnormal RPC loss publishes Stale before any retry timer. Recovery does not call RecoverControl or replay input. L2 live disconnect stays UNVERIFIED. Product AC13/AC14/AC15 stay not passed.
 
+HD-024 extends that taxonomy with `transient_network`, `transient_transport`, `authentication_blocked`, `authentication_unsupported`, `host_key_unknown`, `daemon_unavailable`, `protocol_pollution`, `incompatible`, `cancelled`, and `unknown_blocked`. Public UI codes: `reconnect_waiting`, `authentication_action_required`, `host_key_review_required`, `authentication_unsupported`, `connection_manual_retry_required`, `reconnect_cancelled`, `input_not_replayed`. Only transient network/transport auto-retry with equal-jitter delays in `[1s,30s]`. Auth and host-key failures persist a `DeviceId+ProfileRevision` block and schedule zero timers. Unknown HD-020/022 outcomes default to manual block. L2 live auth stays UNVERIFIED. Product AC22/AC26 stay not passed.
+
 ---
 
 ## Error Handling Patterns

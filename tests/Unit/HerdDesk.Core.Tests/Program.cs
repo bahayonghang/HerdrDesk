@@ -95,6 +95,7 @@ cases =
     .. ResourceCommandGateTests.All,
     .. UnknownOutcomeTests.All,
     .. RecoveryPolicyTests.All,
+    .. RecoveryBackoffTests.All,
     .. DeviceSessionRecoveryTests.All,
     .. ControlLeaseRecoveryTests.All,
     .. LocalMvpCompositionTests.All,

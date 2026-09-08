@@ -435,7 +435,9 @@ cases =
     .. RemoteHelperDeploymentServiceTests.All,
     .. SshProcessChannelTests.All,
     .. RemoteCompatibilityProbeTests.All,
-    .. RemoteSessionTransportSetTests.All
+    .. RemoteSessionTransportSetTests.All,
+    .. SshFailureClassifierTests.All,
+    .. SshRecoveryBlockStoreTests.All
 ];
 
 var failed = 0;

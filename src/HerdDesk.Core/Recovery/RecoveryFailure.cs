@@ -26,7 +26,17 @@ public enum RecoveryCause
     RendererFailure,
     Cancellation,
     Authentication,
-    HostKeyChanged
+    HostKeyChanged,
+    TransientNetwork,
+    TransientTransport,
+    AuthenticationBlocked,
+    UnsupportedAuthentication,
+    HostKeyUnknown,
+    DaemonUnavailable,
+    ProtocolPollution,
+    Incompatible,
+    Cancelled,
+    UnknownBlocked
 }
 
 public enum RecoveryRetryClass
@@ -53,6 +63,23 @@ public static class RecoveryCodes
     public const string Cancellation = "cancellation";
     public const string Authentication = "authentication";
     public const string HostKeyChanged = "host_key_changed";
+    public const string TransientNetwork = "transient_network";
+    public const string TransientTransport = "transient_transport";
+    public const string AuthenticationBlocked = "authentication_blocked";
+    public const string UnsupportedAuthentication = "authentication_unsupported";
+    public const string HostKeyUnknown = "host_key_unknown";
+    public const string DaemonUnavailable = "daemon_unavailable";
+    public const string ProtocolPollution = "protocol_pollution";
+    public const string Incompatible = "incompatible";
+    public const string Cancelled = "cancelled";
+    public const string UnknownBlocked = "unknown_blocked";
+    public const string ReconnectWaiting = "reconnect_waiting";
+    public const string AuthenticationActionRequired = "authentication_action_required";
+    public const string HostKeyReviewRequired = "host_key_review_required";
+    public const string ConnectionManualRetryRequired = "connection_manual_retry_required";
+    public const string ReconnectCancelled = "reconnect_cancelled";
+    public const string InputNotReplayed = "input_not_replayed";
+    public const string PersistenceFailed = "persistence_failed";
     public const string RetryAfter = "retry_after";
     public const string RetryNow = "retry_now";
     public const string AwaitUser = "await_user";
