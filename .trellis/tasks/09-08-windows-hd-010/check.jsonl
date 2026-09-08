@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Audit actor, ports, Store ownership, and UI/Infrastructure separation"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Verify stale publication, old-epoch no-op, failure classification, and redacted diagnostics"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Check bounded concurrency, deterministic fake tests, and actual-schema gates"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Review every event-to-dirty-to-read-to-projection boundary for lost updates"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Keep current product evidence and planned synchronization behavior distinct"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

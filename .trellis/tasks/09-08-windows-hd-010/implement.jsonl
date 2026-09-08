@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Keep the DeviceSession actor and Store policy in Core behind Contracts ports"}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Apply epoch latching, stale-state, stable-code, and redaction behavior"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Preserve Core dependency boundaries, fake-port tests, and no-live default validation"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Trace subscription acknowledgements, dirty invalidations, authoritative reads, Store commits, and UI snapshots"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Use verified current gaps and avoid promoting G0 snapshot diagnostics into realtime state"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
