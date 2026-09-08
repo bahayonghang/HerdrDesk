@@ -2,14 +2,15 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · App
 
-HD-007 composition root / host stub. `App.xaml`、`MainWindow`、Shell、settings 内容归 HD-011。WinUI 包未准入 lock，因此本项目是 `net10.0` 控制台宿主，不是 Windows 桌面工程。
+HD-007 composition root / host stub plus HD-011 L1 navigation ViewModels. `App.xaml`、`MainWindow`、WinUI Shell 内容仍未准入。WinUI 包未准入 lock，因此本项目是 `net10.0` 控制台宿主，不是 Windows 桌面工程。
 
 ## 职责
 
 - 唯一组合根：`Composition/AppServices.CreateProduction`。
 - 注册配置、诊断、Core 可调用的 BCL 类型，以及 unavailable adapter（RPC/transport/renderer）。HD-008 的 `RpcStdioConnectionFactory` 需显式 bridge 路径；生产组合根仍不自动连接。
+- HD-011 L1：`ShellViewModel` 与 identity coordinators 消费 Store 投影和 HD-007 配置端口。不创建隐藏 terminal bridge，不编译 WinUI。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
-- 释放顺序：renderer → transports → RPC → diagnostics。尚无 session actor。
+- 释放顺序：renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
 
 ## 入口
 
@@ -17,7 +18,7 @@ HD-007 composition root / host stub. `App.xaml`、`MainWindow`、Shell、setting
 dotnet run --project src/HerdDesk.App -- --compose-only <temp-root>
 ```
 
-默认不写用户 AppData。不要在 CI 里对真实用户目录跑宿主。
+默认不写用户 AppData。不要在 CI 里对真实用户目录跑宿主。L1 测试：`dotnet run --project tests/Unit/HerdDesk.App.Tests`。
 
 ## 依赖
 

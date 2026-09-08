@@ -18,10 +18,11 @@ src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointReso
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
 src/HerdDesk.Terminal.Web/  WebRendererHost stub (no WinUI packages)
-src/HerdDesk.App/           composition root / console host stub
+src/HerdDesk.App/           composition root / console host stub + HD-011 L1 ViewModels (no WinUI)
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
 tests/Unit/HerdDesk.Core.Tests/  BCL unit runner
 tests/Unit/HerdDesk.Infrastructure.Tests/  config/diagnostics unit runner
+tests/Unit/HerdDesk.App.Tests/  HD-011 L1 ViewModel runner
 tests/Contract/             composition and assembly contract runner
 tests/python/               stdlib unittest (sys.path → scripts/)
 tests/fixtures/             synthetic NDJSON, protocol-edge-cases.json, endpoint-cases.json, lease-cases.json, renderer-cases.json; real-terminal-v082/ placeholder
@@ -38,7 +39,7 @@ global.json                 SDK 10.0.400, rollForward=disable
 NuGet.Config                empty package sources
 ```
 
-Present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web`, `bridge/herddesk-bridge`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge`. L2 named-pipe ACL is UNVERIFIED.
+Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels), `src/HerdDesk.Infrastructure`, `src/HerdDesk.Terminal.Web`, `bridge/herddesk-bridge`. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge`, `tests/Integration.Windows`. L2 named-pipe ACL is UNVERIFIED. HD-011 L2 visual/activation and L3 IME/DPI are UNVERIFIED.
 
 ---
 

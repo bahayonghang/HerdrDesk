@@ -199,7 +199,7 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. RpcSchemaCases.All];
+cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All];
 
 var failed = 0;
 foreach (var test in cases)

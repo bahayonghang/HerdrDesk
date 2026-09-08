@@ -1,6 +1,6 @@
 # Frontend Development Guidelines
 
-**Deferred WinUI/React templates.** `src/HerdDesk.App` exists as a BCL composition-root host stub. There is no WinUI product window, no React app, and no WebView2 renderer host. `App.xaml` / Shell / settings content belongs to HD-011.
+**Deferred WinUI/React templates.** `src/HerdDesk.App` is a BCL composition-root host plus HD-011 L1 ViewModels. There is no WinUI product window, no React app, and no WebView2 renderer host. `App.xaml` / visual Shell remain not admitted.
 
 The Markdown files in this folder are Trellis init templates (component / hook / React-style type safety). They are **not** live implementation contracts. Do not write React, Next.js, Vue, or generic CSS from those templates. Do not treat hook-guidelines or state-management as if a UI exists.
 
@@ -31,7 +31,7 @@ Do not implement features by “filling” those templates as if they described 
 
 ## Pre-Development Checklist
 
-- [ ] Confirm an approved task actually asks for UI. Do not fill `App.xaml` from this HD-007 stub. Do not add WinUI PackageReference until the package is admitted.
+- [ ] Confirm an approved task actually asks for UI. HD-011 shipped BCL ViewModels only. Do not fill `App.xaml`. Do not add WinUI PackageReference until the package is admitted.
 - [ ] Read [AGENTS.md](../../../AGENTS.md): no live WinUI writes in the G0 gate.
 - [ ] Use Contracts types (`PaneKey`, `ConnectionEpoch`, `TerminalAccess`, `ControlVerified`) when UI work starts. Do not invent a second identity model.
 
@@ -40,6 +40,7 @@ Do not implement features by “filling” those templates as if they described 
 ## Quality Check
 
 - [ ] No React/TypeScript UI was added from these templates during G0 harness or protocol tasks.
+- [ ] No WinUI XAML or admitted WASDK PackageReference was added by HD-011 L1 ViewModels.
 - [ ] No claim that frontend guidelines are complete because this index says deferred.
 - [ ] Bootstrap task `00-bootstrap-guidelines` remains `in_progress` until remaining frontend files are filled from a real UI, or a later owner changes that task.
 

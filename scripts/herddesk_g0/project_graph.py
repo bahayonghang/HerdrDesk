@@ -37,6 +37,9 @@ ALLOWED_PROJECTS: dict[str, tuple[str, ...]] = {
     'tests/Unit/HerdDesk.Infrastructure.Tests/HerdDesk.Infrastructure.Tests.csproj': (
         'src/HerdDesk.Infrastructure/HerdDesk.Infrastructure.csproj',
     ),
+    'tests/Unit/HerdDesk.App.Tests/HerdDesk.App.Tests.csproj': (
+        'src/HerdDesk.App/HerdDesk.App.csproj',
+    ),
     'tests/Contract/HerdDesk.ContractTests.csproj': (
         'src/HerdDesk.Contracts/HerdDesk.Contracts.csproj',
         'src/HerdDesk.Core/HerdDesk.Core.csproj',

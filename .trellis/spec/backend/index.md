@@ -17,7 +17,7 @@ Current backend surface:
 - `src/HerdDesk.Infrastructure` — `AppDataPaths`, atomic device-profile store, JSONL diagnostic sink, owned child process, RPC stdio, SchemaV1 decoder.
 - `bridge/herddesk-bridge` — stdio ↔ local-socket byte relay. L2 named-pipe ACL UNVERIFIED.
 - `src/HerdDesk.Terminal.Web` — WebView2/xterm capability stub; packages `UNVERIFIED`.
-- `src/HerdDesk.App` — unique composition root / console host stub. WinUI XAML is HD-011.
+- `src/HerdDesk.App` — unique composition root / console host stub plus HD-011 L1 ViewModels. WinUI XAML is not admitted.
 - `scripts/herddesk_g0` — Python strict JSON, frame/input checks, NDJSON, capture validator, endpoint matrix, lease matrix, renderer L1 matrix, ADR baseline, project graph.
 - `scripts/probe_herdr.py` — default-readonly probe; writes need a disposable target.
 - `tests/HerdDesk.Core.SmokeTests` — `dotnet run`, not `dotnet test`.

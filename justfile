@@ -75,6 +75,7 @@ format-check: build
 unit-tests: build
     {{dotnet}} run --project tests/Unit/HerdDesk.Core.Tests --configuration {{configuration}} --no-build
     {{dotnet}} run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration {{configuration}} --no-build
+    {{dotnet}} run --project tests/Unit/HerdDesk.App.Tests --configuration {{configuration}} --no-build
 
 [group('dotnet')]
 contract-tests: build

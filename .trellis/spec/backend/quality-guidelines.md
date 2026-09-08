@@ -50,7 +50,8 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 | C# smoke | `dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build` | Parser, `InputPolicy`, `EndpointResolver`, `TerminalLeaseProbe`, and renderer L1 specimens; not `dotnet test` |
 | Core unit | `dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build` | Fake-port Core checks including HD-009 mapper/Store and HD-010 DeviceSession L1 race; BCL runner |
 | Infrastructure unit | `dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build` | Config atomic write/backup/restore; diagnostic privacy |
-| Contract | `dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build` | Assembly graph, production composition, fake-bridge RPC, SchemaV1 decoder |
+| App unit | `dotnet run --project tests/Unit/HerdDesk.App.Tests --configuration Release --no-build` | HD-011 L1 shell/navigation/search/settings/diagnostics ViewModels; fake Store; no WinUI |
+| Contract | `dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build` | Assembly graph, production composition, fake-bridge RPC, SchemaV1 decoder, HD-011 residuals |
 | Rust bridge | `cargo fmt/clippy/test --manifest-path bridge/Cargo.toml --locked` | Byte relay, mapping, Unix half-close; L2 UNVERIFIED |
 
 `just ci` runs the full offline set. Counts in `implementation/status.json` may lag; use the current command output.

@@ -48,6 +48,8 @@ jobs:
         run: dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build
       - name: Run Infrastructure unit tests
         run: dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build
+      - name: Run App unit tests
+        run: dotnet run --project tests/Unit/HerdDesk.App.Tests --configuration Release --no-build
       - name: Run contract tests
         run: dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build
       - name: Install pinned Rust toolchain

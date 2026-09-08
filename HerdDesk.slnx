@@ -10,6 +10,7 @@
     <Project Path="tests/HerdDesk.Core.SmokeTests/HerdDesk.Core.SmokeTests.csproj" />
     <Project Path="tests/Unit/HerdDesk.Core.Tests/HerdDesk.Core.Tests.csproj" />
     <Project Path="tests/Unit/HerdDesk.Infrastructure.Tests/HerdDesk.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Unit/HerdDesk.App.Tests/HerdDesk.App.Tests.csproj" />
     <Project Path="tests/Contract/HerdDesk.ContractTests.csproj" />
   </Folder>
 </Solution>

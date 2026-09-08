@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd011_l2_status",
+  "l2_windows_visual_activation": "UNVERIFIED",
+  "l3_ime_screen_reader_dpi": "UNVERIFIED",
+  "winui_admitted": false,
+  "windows_desktop_restore": "not_admitted",
+  "l1_viewmodels": "required; does not close product AC19",
+  "ac19_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "note": "HD-011 ships BCL Shell/navigation/search/settings/diagnostics ViewModels on fake Store projections. Microsoft.WindowsAppSDK remains not admitted. This file is not AC pass evidence. L2 window activation/visual layout and L3 IME/screen-reader/DPI stay UNVERIFIED."
+}

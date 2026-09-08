@@ -19,7 +19,7 @@
 | 上游基线 | herdr v0.8.2 commit `9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c`，`api_protocol=20` |
 | 许可 | 项目级许可证未选定；见 `LICENSE-STATUS.md` |
 
-已通过的 CI 只证明对应 SHA。Hosted Windows runner 成功不等于交互桌面、IME 或真实 herdr 验收。
+已通过的 CI 只证明对应 SHA。Hosted Windows runner 成功不等于交互桌面、IME 或真实 herdr 验收。HD-011 L1 ViewModels 不是 AC19 或 WinUI 通过。
 
 ## 架构
 
@@ -86,7 +86,7 @@ flowchart TB
 | [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断、RPC stdio | 已生成 |
 | [bridge](bridge/CLAUDE.md) | herddesk-bridge L1 字节转发 | 已生成 |
 | [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | renderer capability stub | 已生成 |
-| [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub | 已生成 |
+| [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub + HD-011 L1 ViewModels | 已生成 |
 | [tests](tests/CLAUDE.md) | 检查导航 | 已生成 |
 | [tests/HerdDesk.Core.SmokeTests](tests/HerdDesk.Core.SmokeTests/CLAUDE.md) | C# G0 smoke runner | 已生成 |
 | [tests/Unit/HerdDesk.Core.Tests](tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) | Core unit runner | 已生成 |
@@ -146,6 +146,7 @@ dotnet format HerdDesk.slnx --verify-no-changes --no-restore
 dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
 dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build
 dotnet run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration Release --no-build
+dotnet run --project tests/Unit/HerdDesk.App.Tests --configuration Release --no-build
 dotnet run --project tests/Contract/HerdDesk.ContractTests.csproj --configuration Release --no-build
 ```
 

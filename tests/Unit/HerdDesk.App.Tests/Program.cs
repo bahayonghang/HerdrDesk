@@ -1,0 +1,29 @@
+var cases = new (string Name, Action Run)[] { };
+cases =
+[
+    .. ShellViewModelTests.All,
+    .. NavigationIdentityTests.All,
+    .. SearchPaletteTests.All,
+    .. LocalDeviceSettingsTests.All,
+    .. DiagnosticExportPreviewTests.All,
+    .. TerminalDisplaySettingsTests.All,
+    .. ActivationAndExitTests.All
+];
+
+var failed = 0;
+foreach (var test in cases)
+{
+    try
+    {
+        test.Run();
+        Console.WriteLine("PASS " + test.Name);
+    }
+    catch (Exception error)
+    {
+        failed++;
+        Console.Error.WriteLine("FAIL " + test.Name + ": " + error.GetType().Name + " " + error.Message);
+    }
+}
+
+Console.WriteLine($"{cases.Length - failed}/{cases.Length} app unit tests passed; no live Windows/WinUI/IME validation.");
+return failed == 0 ? 0 : 1;

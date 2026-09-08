@@ -33,5 +33,6 @@
 | `hd-008-packages.json` | HD-008 Rust 探针。`interprocess` 2.4.4（0BSD OR Apache-2.0），toolchain 1.98.0。不是 AC03/AC04 通过。 |
 | `hd-008-l2.json` | L2 Windows named-pipe ACL / live EP01–EP05 = `UNVERIFIED`。 |
 | `hd-010-l2.json` | L2 live `events.subscribe` interleave = `UNVERIFIED`。L1 fake race 不能关闭产品 AC12。`ac12_passed=false`，`phase_gate=not_passed`。 |
+| `hd-011-l2.json` | L2 Windows visual/activation 与 L3 IME/screen-reader/DPI = `UNVERIFIED`。WinUI 未准入。`ac19_passed=false`，`phase_gate=not_passed`。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。
