@@ -54,3 +54,4 @@ There is no HTTP API, no ORM, and no application host in `src/`.
 - [ ] Default `just setup` / `Invoke-HerdDeskDotnetSetup.ps1` does not call winget and does not write User environment.
 - [ ] Diagnostics omit terminal payload, credentials, and private paths.
 - [ ] Do not mark G0 or AC01–AC48 passed.
+- [ ] `herddesk_g0.licensing` keeps `ac02_passed` and `windows_verified` false. Pending or blocked is not approved. Public visibility is not a license grant.

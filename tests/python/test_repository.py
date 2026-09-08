@@ -14,6 +14,7 @@ class RepositoryPortabilityTests(unittest.TestCase):
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['windows_verified'])
+        self.assertFalse(result['ac02_passed'])
 
     def test_all_metadata_reads_use_explicit_utf8(self):
         original = Path.read_text

@@ -12,7 +12,8 @@
 | [adr/0001-g0-bootstrap.md](adr/0001-g0-bootstrap.md) | 已采纳。建仓/CI/诊断代码 ≠ 跨越 G0。Python 不替换 .NET Core/Rust bridge。CI Windows job 不是 IME/herdr 验收。 |
 | [implementation-g0.md](implementation-g0.md) | 建仓前第一笔实施的历史记录。其中“未推送”“C# 未编译”已被后续托管状态取代。 |
 | [publication.md](publication.md) | 2026-09-07 首次导入 GitHub。可复查 CI run `34138627135`，commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`。 |
-| [licensing-register.md](licensing-register.md) | HD-002 清点。无 herdrm 源码/图标。项目许可仍待维护者决定。AC02 未完成。 |
+| [licensing-register.md](licensing-register.md) | HD-002 名称与单元台账。无 herdrm 源码/图标。项目许可仍待维护者决定。AC02 未完成。 |
+| [licensing/](licensing/README.md) | 机器可读 `register.json` 与候选准入模板。`admission` 与 technical/security 分栏。模板不是 approved。 |
 | [source-verification.md](source-verification.md) | 本轮重读上游 blob：`client/mod.rs`、`ipc.rs`、`render_stream.rs`、schema header。限额是 HerdDesk 客户端策略。 |
 | [plan/](plan/CLAUDE.md) | 12 专题档案。 |
 

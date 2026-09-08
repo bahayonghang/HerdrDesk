@@ -6,7 +6,7 @@
 
 ## 职责
 
-回归 Python 协议、探针安全门、发布清单、仓库可移植性。不执行 herdr，不启动 GUI。
+回归 Python 协议、探针安全门、发布清单、仓库可移植性、许可台账。不执行 herdr，不启动 GUI。
 
 ## 入口
 
@@ -27,10 +27,11 @@ python -m unittest discover -s tests/python -v
 | `test_publish.py` | `PublisherTests` | 清单 hash、路径穿越、未列出的 `.env` 不入库、错误 GitHub 身份、create 为 public 且非 force、dry-run 输出 `kind=historical_bundle_audit`、漂移退出码 2、已有 checkout/已有仓库拒绝 |
 | `test_repository.py` | `RepositoryPortabilityTests` | `validate()` 通过；元数据 `read_text` 必须 `encoding='utf-8'`；`terminal-valid.ndjson` 无 CRLF，SHA-256 `d206d2ad30aac1814193b2f0423bbf30405d113e6d172adb2a9f5bed34f6f599` |
 | `test_evidence.py` | `EvidenceBaselineTests` | 驱动 `herddesk_g0.evidence` 与仓库内真实 evidence 文件；拒绝 hash 混同、无采集文件的 runtime 成功、source/synthetic/hosted CI 提升；Windows blocked 与 remote `not_run` 必须独立；结构校验 `windows_verified` 恒为 false |
+| `test_licensing.py` | `LicensingRegisterTests` | 驱动 `herddesk_g0.licensing` 与 `docs/licensing` 真实台账/模板；拒绝 pending/blocked 当 approved、herdrm 拷贝宣称、公开可见当授权；`ac02_passed` 与 `windows_verified` 恒为 false |
 
 ## 依赖
 
-- 代码：`scripts/herddesk_g0`（含 `evidence.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
+- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`。
 - 数据：[../fixtures](../fixtures/CLAUDE.md)。
 
 与 C# smoke、probe selftest 分开报告，不合并为覆盖率。hosted SHA `629bb01` 为 Python 73 / C# smoke 22 / probe 23。

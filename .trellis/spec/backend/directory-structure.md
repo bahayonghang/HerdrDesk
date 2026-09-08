@@ -18,7 +18,8 @@ src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
 tests/python/               stdlib unittest (sys.path → scripts/)
 tests/fixtures/             synthetic NDJSON and protocol-edge-cases.json
-scripts/herddesk_g0/        protocol.py, evidence.py
+docs/licensing/             register.json and candidate admission templates
+scripts/herddesk_g0/        protocol.py, evidence.py, licensing.py
 scripts/probe_herdr.py      herdr probe
 scripts/Invoke-HerdDeskDotnetSetup.ps1
 scripts/validate_repository.py
@@ -41,6 +42,8 @@ Planned and **not** present: `src/HerdDesk.App`, `src/HerdDesk.Infrastructure`, 
 | Frame parse and input grant | `src/HerdDesk.Core` |
 | Python wire checks | `scripts/herddesk_g0/protocol.py` |
 | Compatibility evidence rules | `scripts/herddesk_g0/evidence.py` |
+| Licensing register rules | `scripts/herddesk_g0/licensing.py` |
+| Licensing inventory and templates | `docs/licensing/` |
 | Shared synthetic records | `tests/fixtures/` (LF, UTF-8) |
 | C# assertions | `tests/HerdDesk.Core.SmokeTests/Program.cs` |
 | Python assertions | `tests/python/test_*.py` |
@@ -64,3 +67,4 @@ Do not place domain policy in a probe script. Do not place WinUI or SSH types in
 - Fail-closed parser: `src/HerdDesk.Core/TerminalFrameParser.cs`
 - Input grant: `src/HerdDesk.Core/InputPolicy.cs`
 - Python latching capture: `scripts/herddesk_g0/protocol.py` (`TerminalCaptureValidator`)
+- Licensing register rules: `scripts/herddesk_g0/licensing.py`
