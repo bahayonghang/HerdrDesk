@@ -66,7 +66,7 @@
     "src/HerdDesk.Core/TerminalFrameParser.cs",
     "src/HerdDesk.Core/InputPolicy.cs"
   ],
-  "notes": "Core v1. Planning herdr baseline is GitHub v0.9.0 / PROTOCOL_VERSION 22 / schema 22 (research/herdr-0.9.0.md). Q1-Q3=A/A/A: 1.0 path stays API socket + herdr terminal session; endpoint generation 1 and herdr machine remain parallel; no channel set; AC10 stays Claude/Codex/OpenCode. v0.8.2/protocol 20 is historical. IME/SSH L3 UNVERIFIED. G0/AC not passed. EP-01..07 remain conditional in extensions.md.",
+  "notes": "Core v1. Planning herdr baseline is GitHub v0.9.0 / PROTOCOL_VERSION 22 / schema 22 (research/herdr-0.9.0.md). Q1-Q3=A/A/A: 1.0 path stays API socket + herdr terminal session; endpoint generation 1 and herdr machine remain parallel; no channel set; AC10 stays Claude/Codex/OpenCode. v0.8.2/protocol 20 is historical. HD-001–036 archived. Candidate SHA 5d16cb7 is 27 commits ahead of origin/main 419b365. Hosted ci.yml on 419b365 failed; no run for 5d16cb7. Live herdr/SSH/WinUI/IME/soak/install/Publisher/push unauthorized. AC01–AC48 not_run. G0 not passed. Parent not archived. Complete 1.0 not claimed. EP-01..07 remain conditional in extensions.md.",
   "meta": {
     "baseline_commit": "1cce6e4",
     "source_task_count": 36,
