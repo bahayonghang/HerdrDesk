@@ -36,6 +36,14 @@ Source, prebuilt binary, and runtime download stay on separate records.
 
 Owner: HD-002. Final review: HD-035. Evidence date: 2026-09-08.
 
+HD-007 L2 admits `Microsoft.WindowsAppSDK.WinUI` 2.3.6 and its required
+nupkg transitives (`Base` 2.0.4, `Foundation` 2.3.9,
+`InteractiveExperiences` 2.1.3, `Microsoft.Web.WebView2` 1.0.3719.77) to
+the App windows TFM lock. The WASDK umbrella 2.4.0 package and
+`Microsoft.NET.Test.Sdk` stay **pending** and out of lock. The WebView2
+Evergreen runtime is a separate `runtime_download` record and is not a
+lock input. Project-wide license stays pending. This is not AC02 pass.
+
 HD-007 recorded NuGet metadata for `Microsoft.WindowsAppSDK` 2.4.0 and
 `Microsoft.NET.Test.Sdk` 18.9.0 as **pending** units. They are not approved,
 `lock_allowed` stays false, and they are not PackageReference inputs.
@@ -45,8 +53,11 @@ official herdr/herdrm release.” That sentence is a naming rule, not a license.
 
 ## Existing units (AC02-C1)
 
-Every unit below has `lock_allowed` and all `enters_*` flags **false**. None is
-`approved`. Final review task is HD-035. Evidence date is 2026-09-08.
+First-party, host, CI, blocked, and pending probe units below keep
+`lock_allowed` and all `enters_*` flags **false**. They are not `approved`.
+HD-007 L2 WinUI nupkg units at the end of this list are `approved` for the
+App windows lock only. Final review task is HD-035. Evidence date is
+2026-09-08 unless a later row says otherwise.
 
 ### herddesk-csharp — first_party_source / source
 
@@ -261,9 +272,32 @@ distribution permission.
 | technical / security / admission | not_evaluated / not_evaluated / **blocked** |
 | conflict | false |
 
-WinUI, WebView2, xterm, fonts, icons, `herddesk-bridge`, and
-`herddesk-filebridge` are not in the tree. Use the candidate templates. Do not
-treat planning mentions as admission.
+The App windows TFM lock admits WinUI 2.3.6 nupkgs listed in
+`docs/licensing/register.json`. xterm, fonts, icons, and a published
+`herddesk-filebridge` install stay out of lock. Use the candidate templates
+for remaining assets. Do not treat planning mentions as admission. The WASDK
+2.4.0 umbrella package stays pending.
+
+## HD-007 L2 admitted nupkgs (App windows lock only)
+
+These units have `admission=approved`, `lock_allowed=true`, and
+`enters_package_lock=true`. They do not enter MSIX or the release manifest.
+Project license stays pending. HD-035 remains the reverse-audit. AC02 stays
+`not_run`.
+
+| Unit | Version | artifact_kind | Notes |
+|---|---|---|---|
+| Microsoft.WindowsAppSDK.WinUI | 2.3.6 | prebuilt_binary | Direct App windows PackageReference |
+| Microsoft.WindowsAppSDK.Base | 2.0.4 | prebuilt_binary | Transitive |
+| Microsoft.WindowsAppSDK.Foundation | 2.3.9 | prebuilt_binary | Transitive |
+| Microsoft.WindowsAppSDK.InteractiveExperiences | 2.1.3 | prebuilt_binary | Transitive; depends on Base 2.0.4 |
+| Microsoft.Web.WebView2 | 1.0.3719.77 | prebuilt_binary | Transitive nupkg |
+| Microsoft.Windows.SDK.BuildTools | 10.0.26100.4654 | prebuilt_binary | Transitive; required by restore |
+| Microsoft.Windows.SDK.BuildTools.MSIX | 1.7.251221100 | prebuilt_binary | Transitive; restore mapping only, not product MSIX |
+| Microsoft.Web.WebView2 | Evergreen runtime | runtime_download | Separate record; pending; not a lock input |
+
+The `Microsoft.WindowsAppSDK` 2.4.0 umbrella stays pending and must not appear
+as a PackageReference.
 
 ## Candidate templates (AC02-C2)
 

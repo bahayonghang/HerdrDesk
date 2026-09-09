@@ -67,8 +67,7 @@ internal static class Hd026Cases
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
-        Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
+        AppXamlSurface.CheckBlankContainerOnly(root);
 
         using var catalogDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "multi-device-mvp", "catalog.json")));

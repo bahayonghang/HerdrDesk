@@ -37,8 +37,7 @@ internal static class Hd031Cases
         Check(reader.GetMethod("SetClipboardViewer") is null);
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
-        Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
+        AppXamlSurface.CheckBlankContainerOnly(root);
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.Core", "Clipboard", "PasteCoordinator.cs")));
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.Terminal.Web", "Input", "OscClipboardPolicy.cs")));
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.Infrastructure", "Clipboard", "AttachmentCache.cs")));

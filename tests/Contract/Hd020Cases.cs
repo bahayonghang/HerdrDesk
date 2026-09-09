@@ -32,10 +32,8 @@ internal static class Hd020Cases
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
         Check(!File.Exists(Path.Combine(root, "src", "HerdDesk.App", "Devices", "EditDevicePage.xaml")));
-        Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
+        AppXamlSurface.CheckBlankContainerOnly(root);
         var csproj = File.ReadAllText(Path.Combine(root, "src", "HerdDesk.App", "HerdDesk.App.csproj"));
-        Check(!csproj.Contains("PackageReference", StringComparison.OrdinalIgnoreCase));
         Check(!csproj.Contains("SSH.NET", StringComparison.OrdinalIgnoreCase));
     }
 

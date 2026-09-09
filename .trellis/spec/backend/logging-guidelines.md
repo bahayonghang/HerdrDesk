@@ -6,7 +6,7 @@ G0 has no logging framework (`ILogger`, Serilog, Python `logging` config). Diagn
 
 ## Overview
 
-Do not add a log package. C# still forbids `PackageReference`. Python stays in the standard library; the protocol module raises `ProtocolError` instead of logging payloads. `DiagnosticEvent` has no free-text message, exception, or payload field. `JsonlDiagnosticSink` writes UTF-8 JSONL without a BOM. Writer failures increment `DroppedCount` and must not crash the host.
+Do not add a log package. App windows TFM may PackageReference only the admitted WinUI lock; other C# projects stay without PackageReference. Python stays in the standard library; the protocol module raises `ProtocolError` instead of logging payloads. `DiagnosticEvent` has no free-text message, exception, or payload field. `JsonlDiagnosticSink` writes UTF-8 JSONL without a BOM. Writer failures increment `DroppedCount` and must not crash the host.
 
 ---
 

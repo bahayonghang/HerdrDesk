@@ -22,7 +22,7 @@
   "package_sha256": null,
   "msix_sha256": null,
   "signed_package_sha256": null,
-  "note": "Pointer at the HD-002 licensing register. Every listed unit stays pending or blocked as in docs/licensing/register.json. This inventory is not a final unpacked MSIX and does not select a project license.",
+  "note": "Pointer at the HD-002 licensing register. HD-007 L2 App windows lock units may be approved for lock only. AC02 stays not_run. This inventory is not a final unpacked MSIX and does not select a project license.",
   "units": [
     {"name": "herddesk-csharp", "artifact_kind": "source", "admission": "pending"},
     {"name": "herddesk-python-scripts", "artifact_kind": "source", "admission": "pending"},
@@ -41,6 +41,14 @@
     {"name": "actions-setup-dotnet", "artifact_kind": "ci", "admission": "pending"},
     {"name": "EasyWindowsTerminalControl", "artifact_kind": "source", "admission": "blocked"},
     {"name": "Microsoft.WindowsAppSDK", "artifact_kind": "prebuilt_binary", "admission": "pending"},
-    {"name": "Microsoft.NET.Test.Sdk", "artifact_kind": "prebuilt_binary", "admission": "pending"}
+    {"name": "Microsoft.NET.Test.Sdk", "artifact_kind": "prebuilt_binary", "admission": "pending"},
+    {"name": "Microsoft.WindowsAppSDK.WinUI", "artifact_kind": "prebuilt_binary", "admission": "approved"},
+    {"name": "Microsoft.WindowsAppSDK.Base", "artifact_kind": "prebuilt_binary", "admission": "approved"},
+    {"name": "Microsoft.WindowsAppSDK.Foundation", "artifact_kind": "prebuilt_binary", "admission": "approved"},
+    {"name": "Microsoft.WindowsAppSDK.InteractiveExperiences", "artifact_kind": "prebuilt_binary", "admission": "approved"},
+    {"name": "Microsoft.Web.WebView2", "artifact_kind": "prebuilt_binary", "admission": "approved"},
+    {"name": "Microsoft.Windows.SDK.BuildTools", "artifact_kind": "prebuilt_binary", "admission": "approved"},
+    {"name": "Microsoft.Windows.SDK.BuildTools.MSIX", "artifact_kind": "prebuilt_binary", "admission": "approved"},
+    {"name": "Microsoft.Web.WebView2", "artifact_kind": "runtime_download", "admission": "pending"}
   ]
 }

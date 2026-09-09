@@ -39,11 +39,11 @@ internal static class Hd011Cases
         }
 
         var root = FindRepoRoot();
-        Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
+        AppXamlSurface.CheckBlankContainerOnly(root);
         var csproj = File.ReadAllText(Path.Combine(root, "src", "HerdDesk.App", "HerdDesk.App.csproj"));
-        Check(!csproj.Contains("PackageReference", StringComparison.OrdinalIgnoreCase));
-        Check(!csproj.Contains("net10.0-windows", StringComparison.Ordinal));
+        Check(csproj.Contains("Microsoft.WindowsAppSDK.WinUI", StringComparison.Ordinal));
+        Check(!csproj.Contains("Include=\"Microsoft.WindowsAppSDK\"", StringComparison.Ordinal));
+        Check(!csproj.Contains("2.4.0", StringComparison.Ordinal));
     }
 
     static void MuseNotKnownKind()

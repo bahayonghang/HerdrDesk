@@ -41,7 +41,7 @@ sdk:
 
 [group('dotnet')]
 build:
-    {{dotnet}} build {{solution}} --configuration {{configuration}}
+    {{dotnet}} build {{solution}} --configuration {{configuration}} -f net10.0
 
 [group('dotnet')]
 smoke: build
@@ -117,8 +117,9 @@ filebridge-test:
     cargo test --manifest-path filebridge/Cargo.toml --workspace --locked
 
 # Offline gate used by GitHub Actions. G0 BCL/Python/Rust on every OS.
-# Windows desktop restore runs only the skip/admit helper; it is not live WinUI.
-# Cargo recipes belong to HD-008. npm/xterm and WebView2 stay not admitted.
+# Windows desktop restore runs locked App windows TFM restore/build when admitted.
+# Job success is not GitHub required-check proof and is not live WinUI.
+# Cargo recipes belong to HD-008. npm/xterm stay not admitted.
 [group('ci')]
 ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop bridge-fmt bridge-clippy bridge-test filebridge-fmt filebridge-clippy filebridge-test
 

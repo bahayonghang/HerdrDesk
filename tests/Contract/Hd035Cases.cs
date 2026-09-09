@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json;
 using HerdDesk.Core;
 using HerdDesk.Infrastructure.Clipboard;
@@ -195,11 +196,28 @@ internal static class Hd035Cases
         Check(inventory.GetProperty("project_license_selected").GetBoolean() is false);
         Check(inventory.GetProperty("herdrm_copied").GetBoolean() is false);
         Check(inventory.GetProperty("ac02_passed").GetBoolean() is false);
+        var allowedLock = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "Microsoft.WindowsAppSDK.WinUI",
+            "Microsoft.WindowsAppSDK.Base",
+            "Microsoft.WindowsAppSDK.Foundation",
+            "Microsoft.WindowsAppSDK.InteractiveExperiences",
+            "Microsoft.Web.WebView2",
+            "Microsoft.Windows.SDK.BuildTools",
+            "Microsoft.Windows.SDK.BuildTools.MSIX",
+        };
         foreach (var unit in inventory.GetProperty("units").EnumerateArray())
         {
             var admission = unit.GetProperty("admission").GetString();
-            Check(admission is "pending" or "blocked");
-            Check(admission != "approved");
+            var name = unit.GetProperty("name").GetString();
+            Check(admission is "pending" or "blocked" or "approved");
+            if (admission == "approved")
+            {
+                Check(!string.IsNullOrEmpty(name));
+                Check(name != "herdrm");
+                Check(unit.GetProperty("artifact_kind").GetString() == "prebuilt_binary");
+                Check(allowedLock.Contains(name!));
+            }
         }
 
         using var matrixDoc = JsonDocument.Parse(

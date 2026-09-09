@@ -1,10 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0;net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net10.0</TargetFrameworks>
+    <TargetFramework></TargetFramework>
+    <RestorePackagesWithLockFile Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <DefineConstants>$(DefineConstants);WINDOWS_DESKTOP;DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <StartupObject>HerdDesk.App.Program</StartupObject>
+    <DisableWinExeOutputInference>true</DisableWinExeOutputInference>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../HerdDesk.Core/HerdDesk.Core.csproj" />
     <ProjectReference Include="../HerdDesk.Infrastructure/HerdDesk.Infrastructure.csproj" />
     <ProjectReference Include="../HerdDesk.Terminal.Web/HerdDesk.Terminal.Web.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Remove="MainWindow.xaml" />
+    <Compile Remove="App.xaml.cs;MainWindow.xaml.cs" />
+    <None Include="App.xaml;App.xaml.cs;MainWindow.xaml;MainWindow.xaml.cs" />
   </ItemGroup>
 </Project>

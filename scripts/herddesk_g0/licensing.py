@@ -12,6 +12,8 @@ from pathlib import Path
 import re
 from typing import Any
 
+from herddesk_g0.project_graph import ProjectGraphError, check_lock_licensing_alignment
+
 
 class LicensingError(ValueError):
     """Stable licensing-rule code; the message is the code only."""
@@ -108,13 +110,18 @@ def validate_licensing(root: Path) -> dict[str, Any]:
         if not isinstance(loaded, dict):
             raise LicensingError('missing_record_field')
         candidates[rel] = loaded
-    return check_licensing(
+    result = check_licensing(
         register,
         candidates,
         license_status_text=status_path.read_text(encoding='utf-8'),
         register_markdown=markdown_path.read_text(encoding='utf-8'),
         herdrm_copy_paths=tuple(find_herdrm_copies(root)),
     )
+    try:
+        check_lock_licensing_alignment(root)
+    except ProjectGraphError as exc:
+        raise LicensingError(str(exc)) from exc
+    return result
 
 
 def check_licensing(

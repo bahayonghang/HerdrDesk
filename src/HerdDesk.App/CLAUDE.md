@@ -2,13 +2,13 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · App
 
-HD-007 composition root / host stub plus HD-011 L1 navigation ViewModels and HD-012 L1 NotificationCenter ViewModel. `App.xaml`、`MainWindow`、WinUI Shell 内容仍未准入。WinUI 包未准入 lock，因此本项目是 `net10.0` 控制台宿主，不是 Windows 桌面工程。 Windows toast 注册为 L2 UNVERIFIED。
+HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 Windows 上的 `net10.0-windows10.0.19041.0` TFM。该 TFM 准入 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 与空白 `App.xaml` / `MainWindow`。`WindowsPackageType=None`，`WindowsAppSDKSelfContained=true`，`RuntimeIdentifier=win-x64`。WinUI Shell / Settings / 搜索 / 导航内容仍由 HD-011 负责，未准入。CI 不启动 WinUI 窗口。Windows toast 注册为 L2 UNVERIFIED。
 
 ## 职责
 
 - 唯一组合根：`Composition/AppServices.CreateProduction`。
 - 注册配置、诊断、Core 可调用的 BCL 类型，以及 unavailable adapter（RPC/transport/renderer）。HD-008 的 `RpcStdioConnectionFactory` 需显式 bridge 路径；生产组合根仍不自动连接。
-- HD-011 L1：`ShellViewModel` 与 identity coordinators 消费 Store 投影和 HD-007 配置端口。不创建隐藏 terminal bridge，不编译 WinUI。
+- HD-011 L1：`ShellViewModel` 与 identity coordinators 消费 Store 投影和 HD-007 配置端口。不创建隐藏 terminal bridge。空白 WinUI 容器不含 Shell 内容。
 - HD-012 L1：`NotificationCenterViewModel` 消费 Core `AttentionReducer`；`WindowsNotificationSink.Available` 恒为 false。点击只定位完整 `PaneKey`，不携带 takeover/input/command。
 - HD-015 L1：`TerminalFocusCoordinator` 在 renderer Ready 后恢复焦点；`TerminalInputViewModel` 展示观察/申请控制/控制/输入暂停/连接过期。焦点不置位 `ControlVerified`。`RequestControl` 不授予 lease。
 - HD-016 L1：`TerminalControlViewModel` 调用 `ControlLeaseCoordinator`。无 WinUI ControlBar。无 always-takeover。选择变化使 takeover handle 失效。L2 live lease 为 UNVERIFIED。
@@ -36,4 +36,4 @@ dotnet run --project src/HerdDesk.App -- --compose-only <temp-root>
 
 ## 依赖
 
-Core、Infrastructure、Terminal.Web。无 PackageReference。
+Core、Infrastructure、Terminal.Web。`net10.0` 无 PackageReference。windows TFM 仅 PackageReference `Microsoft.WindowsAppSDK.WinUI` 2.3.6（CPM + `packages.lock.json`）。禁止 umbrella `Microsoft.WindowsAppSDK` 2.4.0。

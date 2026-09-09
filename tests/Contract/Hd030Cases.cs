@@ -37,8 +37,7 @@ internal static class Hd030Cases
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
-        Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
+        AppXamlSurface.CheckBlankContainerOnly(root);
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.Core", "Attachments", "AttachmentCoordinator.cs")));
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.App", "ViewModels", "AttachToAgentViewModel.cs")));
         var refs = typeof(AttachmentCoordinator).Assembly.GetReferencedAssemblies()

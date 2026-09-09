@@ -28,8 +28,7 @@ internal static class Hd022Cases
         Check(SshTransportCodes.StdoutProtocolPollution == "remote_stdout_protocol_pollution");
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
-        Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
+        AppXamlSurface.CheckBlankContainerOnly(root);
     }
 
     static void ResidualJson()

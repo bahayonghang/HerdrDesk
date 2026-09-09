@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup Condition="'$(TargetFrameworks)' != ''">
+    <TargetFramework></TargetFramework>
+  </PropertyGroup>
+</Project>

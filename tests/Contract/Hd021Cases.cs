@@ -32,8 +32,7 @@ internal static class Hd021Cases
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
         Check(!File.Exists(Path.Combine(root, "src", "HerdDesk.App", "Devices", "HelperInstallDialog.xaml")));
-        Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
+        AppXamlSurface.CheckBlankContainerOnly(root);
     }
 
     static void ResidualJson()

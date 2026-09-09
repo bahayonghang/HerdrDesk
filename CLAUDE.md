@@ -23,7 +23,7 @@
 
 ## 架构
 
-当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本、配置/诊断基础设施、组合根宿主 stub、Python 诊断探针，HD-008 L1 `bridge/herddesk-bridge` 字节转发，HD-027 L1 `filebridge/` 协议 codec，以及 HD-028 L1 `herddesk-filebridge serve` 与本地文件端口。WinUI 外壳内容与 Native renderer 尚未建仓。named-pipe ACL 与 filebridge L2 FS/SSH 仍为 UNVERIFIED。
+当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本、配置/诊断基础设施、组合根宿主 stub、Python 诊断探针，HD-008 L1 `bridge/herddesk-bridge` 字节转发，HD-027 L1 `filebridge/` 协议 codec，以及 HD-028 L1 `herddesk-filebridge serve` 与本地文件端口。HD-007 L2 准入 App windows TFM 的 WinUI 2.3.6 lock 与空白 `App.xaml`/`MainWindow`。WinUI Shell 内容与 Native renderer 尚未建仓。named-pipe ACL 与 filebridge L2 FS/SSH 仍为 UNVERIFIED。
 
 两条通信平面必须分离：JSON RPC 走 API socket 或自有 bridge；终端帧走 `herdr terminal session` 的 stdio。禁止把 JSON RPC 发到 herdr 二进制 client socket。远端使用 `ssh -T`；stdout banner 视为协议污染。文件面不解析 `ls` 文本。
 
@@ -36,7 +36,7 @@ flowchart TB
     Core["src/HerdDesk.Core"]
     Infra["src/HerdDesk.Infrastructure"]
     WebTerm["src/HerdDesk.Terminal.Web HD-014/015 L1"]
-    App["src/HerdDesk.App composition stub"]
+    App["src/HerdDesk.App net10.0 host + windows TFM blank WinUI"]
     Smoke["tests/HerdDesk.Core.SmokeTests"]
     Unit["tests/Unit + tests/Contract"]
     Proto["scripts/herddesk_g0"]
@@ -105,7 +105,7 @@ flowchart TB
 | [implementation](implementation/CLAUDE.md) | 已运行检查的 JSON | 已生成 |
 | [.github](.github/CLAUDE.md) | G0 CI | 已生成 |
 
-尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、WinUI `App.xaml`（HD-011）。`bridge/herddesk-bridge` 为 HD-008 L1；named-pipe ACL L2 仍 UNVERIFIED。`filebridge/` 为 HD-027 codec 加 HD-028 L1 serve；L2 FS/SSH/TOCTOU UNVERIFIED。HD-007 骨架已落地；AC39/AC40/AC47 与 `phase_gate` 仍未通过。
+尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、WinUI Shell 内容（HD-011）。HD-007 L2 已准入空白 `App.xaml`/`MainWindow` 与 WinUI 2.3.6 lock。`bridge/herddesk-bridge` 为 HD-008 L1；named-pipe ACL L2 仍 UNVERIFIED。`filebridge/` 为 HD-027 codec 加 HD-028 L1 serve；L2 FS/SSH/TOCTOU UNVERIFIED。AC39/AC40/AC47 与 `phase_gate` 仍未通过。
 
 `docs/plan/` 保存原规划正文。活动状态以根目录 `planning/` 与 `tasks/` 为准。`docs/implementation-g0.md` 是建仓前历史记录；其中“未推送”“C# 未编译”不代表当前托管状态。
 
@@ -133,7 +133,7 @@ pane ID、窗口标题、agent 类型不能单独当全局主键。终端 `seq` 
 
 ## 编译与限额
 
-细则在 [AGENTS.md](AGENTS.md) 与 [.trellis/spec/backend/](.trellis/spec/backend/index.md)。摘要：SDK 以 `global.json` 为准；G0 C# 无 `PackageReference`；Python 3.10+ 仅标准库；NDJSON 行 16MiB、解码帧 8MiB、输入 64KiB、JSON 深度 64；终端字节保持原始；错误码稳定、脱敏。
+细则在 [AGENTS.md](AGENTS.md) 与 [.trellis/spec/backend/](.trellis/spec/backend/index.md)。摘要：SDK 以 `global.json` 为准；除 App windows TFM 已准入的 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 外无 `PackageReference`；Python 3.10+ 仅标准库；NDJSON 行 16MiB、解码帧 8MiB、输入 64KiB、JSON 深度 64；终端字节保持原始；错误码稳定、脱敏。
 
 ## 常用命令
 
@@ -143,7 +143,7 @@ python -m unittest discover -s tests/python -v
 python scripts/probe_herdr.py selftest
 python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson
 python scripts/validate_repository.py
-dotnet build HerdDesk.slnx --configuration Release
+dotnet build HerdDesk.slnx --configuration Release -f net10.0
 dotnet format HerdDesk.slnx --verify-no-changes --no-restore
 dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
 dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build

@@ -44,7 +44,7 @@ class Hd030ResidualTests(unittest.TestCase):
         self.assertTrue(APP_VM.is_file())
         self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
         self.assertFalse((ROOT / 'tests' / 'Integration.Ssh').exists())
-        self.assertEqual(list((ROOT / 'src' / 'HerdDesk.App').rglob('*.xaml')), [])
+        self.assertEqual(repository.app_source_xaml(ROOT), ['App.xaml', 'MainWindow.xaml'])
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])

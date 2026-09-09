@@ -23,7 +23,7 @@ class RepositoryPortabilityTests(unittest.TestCase):
         self.assertFalse(result['g0_passed'])
         self.assertEqual(result['project_graph'], 'passed')
         self.assertEqual(result['github_required_check'], 'UNVERIFIED')
-        self.assertEqual(result['windows_desktop_restore'], 'not_admitted')
+        self.assertEqual(result['windows_desktop_restore'], 'admitted')
         self.assertEqual(result['endpoint_validation'], 'passed')
         self.assertEqual(result['lease_validation'], 'passed')
         self.assertEqual(result['renderer_validation'], 'passed')

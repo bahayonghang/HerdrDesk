@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import re
 import xml.etree.ElementTree as ET
 from typing import Any
 
@@ -51,6 +52,43 @@ ALLOWED_PROJECTS: dict[str, tuple[str, ...]] = {
     ),
 }
 
+APP_PROJECT = 'src/HerdDesk.App/HerdDesk.App.csproj'
+ADMITTED_APP_PACKAGE_REFS = frozenset({'Microsoft.WindowsAppSDK.WinUI'})
+ADMITTED_PACKAGE_VERSION_IDS = frozenset({
+    'Microsoft.WindowsAppSDK.WinUI',
+    'Microsoft.WindowsAppSDK.Base',
+    'Microsoft.WindowsAppSDK.Foundation',
+    'Microsoft.WindowsAppSDK.InteractiveExperiences',
+    'Microsoft.Web.WebView2',
+    'Microsoft.Windows.SDK.BuildTools',
+    'Microsoft.Windows.SDK.BuildTools.MSIX',
+})
+REQUIRED_PACKAGE_VERSION_IDS = frozenset({'Microsoft.WindowsAppSDK.WinUI'})
+PINNED_PACKAGE_VERSIONS = {
+    'Microsoft.WindowsAppSDK.WinUI': '2.3.6',
+    'Microsoft.WindowsAppSDK.Base': '2.0.4',
+    'Microsoft.WindowsAppSDK.Foundation': '2.3.9',
+    'Microsoft.WindowsAppSDK.InteractiveExperiences': '2.1.3',
+    'Microsoft.Web.WebView2': '1.0.3719.77',
+    'Microsoft.Windows.SDK.BuildTools': '10.0.26100.4654',
+    'Microsoft.Windows.SDK.BuildTools.MSIX': '1.7.251221100',
+}
+UMBRELLA_PACKAGE_ID = 'Microsoft.WindowsAppSDK'
+ADMITTED_LOCK_REL = 'src/HerdDesk.App/packages.lock.json'
+WINDOWS_APP_TFM = 'net10.0-windows10.0.19041.0'
+NUGET_SOURCE_URL = 'https://api.nuget.org/v3/index.json'
+REQUIRED_SOURCE_PATTERNS = frozenset({
+    'Microsoft.WindowsAppSDK.*',
+    'Microsoft.Web.WebView2',
+    'Microsoft.Windows.SDK.BuildTools',
+    'Microsoft.Windows.SDK.BuildTools.MSIX',
+})
+ALLOWED_SOURCE_PATTERNS = REQUIRED_SOURCE_PATTERNS
+UMBRELLA_INCLUDE_RE = re.compile(
+    r'Include\s*=\s*"Microsoft\.WindowsAppSDK"',
+    re.IGNORECASE,
+)
+
 FORBIDDEN_PACKAGE_MARKERS = (
     'microsoft.windowsappsdk',
     'microsoft.web.webview2',
@@ -71,7 +109,8 @@ SKIP_DIR_PARTS = frozenset({'.git', 'obj', 'bin', 'target', 'probe-results', '.t
 
 def validate_project_graph(root: Path) -> dict[str, Any]:
     root = Path(root)
-    check_product_lock_absence(root)
+    check_product_lock(root)
+    check_lock_licensing_alignment(root)
     rust = validate_rust_bridge_lock(root)
     validate_rust_filebridge_lock(root)
     projects = load_tree_projects(root)
@@ -79,10 +118,11 @@ def validate_project_graph(root: Path) -> dict[str, Any]:
     solution = load_solution_projects(root)
     if set(solution) != set(ALLOWED_PROJECTS):
         raise ProjectGraphError('unexpected_solution_projects')
+    package_count = sum(len(spec.get('package') or []) for spec in projects.values())
     return {
         'project_graph': 'passed',
         'projects': len(projects),
-        'package_references': 0,
+        'package_references': package_count,
         'interprocess_lock_version': rust['interprocess'],
         'l2_windows_named_pipe_acl': rust['l2_windows_named_pipe_acl'],
     }
@@ -192,12 +232,18 @@ def validate_rust_filebridge_lock(root: Path) -> dict[str, Any]:
 
 
 def check_product_lock_absence(root: Path) -> None:
+    """Backward-compatible name; HD-007 L2 admits the App windows lock only."""
+    check_product_lock(root)
+
+
+def check_product_lock(root: Path) -> None:
     root = Path(root)
-    if (root / 'Directory.Packages.props').is_file():
-        raise ProjectGraphError('directory_packages_props_present')
+    check_nuget_config(root)
+    check_directory_packages_props(root)
     props = root / 'Directory.Build.props'
     if props.is_file() and '2.4.0' in props.read_text(encoding='utf-8'):
         raise ProjectGraphError('unverified_package_pin')
+    lock_found = False
     for base_name in ('src', 'tests'):
         base = root / base_name
         if not base.is_dir():
@@ -205,16 +251,200 @@ def check_product_lock_absence(root: Path) -> None:
         for lock in base.rglob('packages.lock.json'):
             if any(part in SKIP_DIR_PARTS for part in lock.parts):
                 continue
-            raise ProjectGraphError('package_lock_present')
+            rel = lock.relative_to(root).as_posix()
+            if rel != ADMITTED_LOCK_REL:
+                raise ProjectGraphError('package_lock_present')
+            lock_found = True
+            check_admitted_lock_file(lock)
         for path in base.rglob('*.csproj'):
             if any(part in SKIP_DIR_PARTS for part in path.parts):
                 continue
+            rel = path.relative_to(root).as_posix()
             text = path.read_text(encoding='utf-8')
-            lower = text.lower()
-            if '2.4.0' in text:
-                raise ProjectGraphError('unverified_package_pin')
-            if any(marker in lower for marker in FORBIDDEN_CSPROJ_TEXT):
+            check_csproj_lock_text(rel, text)
+    if not lock_found:
+        raise ProjectGraphError('package_lock_missing')
+    if (root / 'packages.lock.json').is_file():
+        raise ProjectGraphError('package_lock_present')
+
+
+def check_nuget_config(root: Path) -> None:
+    path = Path(root) / 'NuGet.Config'
+    if not path.is_file():
+        raise ProjectGraphError('nuget_config_missing')
+    doc = ET.parse(path)
+    sources = doc.find('packageSources')
+    if sources is None:
+        raise ProjectGraphError('nuget_source_unmapped')
+    if sources.find('clear') is None:
+        raise ProjectGraphError('nuget_source_unmapped')
+    added = [
+        node.attrib.get('value', '')
+        for node in sources.findall('add')
+    ]
+    if added != [NUGET_SOURCE_URL]:
+        raise ProjectGraphError('nuget_source_unmapped')
+    if any(not item.startswith('https://') for item in added):
+        raise ProjectGraphError('nuget_source_unmapped')
+    mapping = doc.find('packageSourceMapping')
+    if mapping is None:
+        raise ProjectGraphError('nuget_source_unmapped')
+    mapped: set[str] = set()
+    for source in mapping.findall('packageSource'):
+        if source.attrib.get('key') != 'nuget.org':
+            raise ProjectGraphError('nuget_source_unmapped')
+        for package in source.findall('package'):
+            pattern = package.attrib.get('pattern') or ''
+            if pattern not in ALLOWED_SOURCE_PATTERNS:
+                raise ProjectGraphError('nuget_source_unmapped')
+            mapped.add(pattern)
+    if not REQUIRED_SOURCE_PATTERNS <= mapped:
+        raise ProjectGraphError('nuget_source_unmapped')
+
+
+def check_directory_packages_props(root: Path) -> None:
+    path = Path(root) / 'Directory.Packages.props'
+    if not path.is_file():
+        raise ProjectGraphError('directory_packages_props_missing')
+    text = path.read_text(encoding='utf-8')
+    if '2.4.0' in text:
+        raise ProjectGraphError('unverified_package_pin')
+    if UMBRELLA_INCLUDE_RE.search(text):
+        raise ProjectGraphError('forbidden_package_edge')
+    doc = ET.parse(path)
+    versions: dict[str, str] = {}
+    for node in doc.findall('.//PackageVersion'):
+        include = node.attrib.get('Include') or ''
+        version = node.attrib.get('Version') or ''
+        if include == UMBRELLA_PACKAGE_ID:
+            raise ProjectGraphError('forbidden_package_edge')
+        if include not in ADMITTED_PACKAGE_VERSION_IDS:
+            raise ProjectGraphError('package_reference_forbidden')
+        if include in PINNED_PACKAGE_VERSIONS and version != PINNED_PACKAGE_VERSIONS[include]:
+            raise ProjectGraphError('unverified_package_pin')
+        versions[include] = version
+    if not REQUIRED_PACKAGE_VERSION_IDS <= set(versions):
+        raise ProjectGraphError('admitted_package_missing')
+
+
+def check_admitted_lock_file(path: Path) -> None:
+    text = path.read_text(encoding='utf-8')
+    if not text.strip():
+        raise ProjectGraphError('package_lock_missing')
+    if '2.4.0' in text:
+        raise ProjectGraphError('unverified_package_pin')
+    if re.search(r'"Microsoft\.WindowsAppSDK"\s*:', text):
+        raise ProjectGraphError('forbidden_package_edge')
+    data = json.loads(text)
+    if not isinstance(data, dict):
+        raise ProjectGraphError('package_lock_missing')
+    dependencies = data.get('dependencies')
+    if not isinstance(dependencies, dict) or not dependencies:
+        raise ProjectGraphError('package_lock_missing')
+    found_winui = False
+    for tfm, deps in dependencies.items():
+        if not isinstance(deps, dict):
+            raise ProjectGraphError('package_lock_missing')
+        for name, spec in deps.items():
+            if not isinstance(name, str) or not isinstance(spec, dict):
+                raise ProjectGraphError('package_lock_missing')
+            if spec.get('type') == 'Project' or name.lower().startswith('herddesk.'):
+                continue
+            if name == UMBRELLA_PACKAGE_ID:
                 raise ProjectGraphError('forbidden_package_edge')
+            if name not in ADMITTED_PACKAGE_VERSION_IDS:
+                raise ProjectGraphError('package_reference_forbidden')
+            resolved = spec.get('resolved') or ''
+            if name in PINNED_PACKAGE_VERSIONS and resolved != PINNED_PACKAGE_VERSIONS[name]:
+                raise ProjectGraphError('unverified_package_pin')
+            if name == 'Microsoft.WindowsAppSDK.WinUI':
+                if spec.get('type') != 'Direct':
+                    raise ProjectGraphError('admitted_package_missing')
+                found_winui = True
+    if not found_winui:
+        raise ProjectGraphError('admitted_package_missing')
+
+
+def lock_nuget_packages(data: dict[str, Any]) -> dict[str, dict[str, str]]:
+    found: dict[str, dict[str, str]] = {}
+    dependencies = data.get('dependencies')
+    if not isinstance(dependencies, dict):
+        return found
+    for deps in dependencies.values():
+        if not isinstance(deps, dict):
+            continue
+        for name, spec in deps.items():
+            if not isinstance(name, str) or not isinstance(spec, dict):
+                continue
+            if spec.get('type') == 'Project' or name.lower().startswith('herddesk.'):
+                continue
+            resolved = spec.get('resolved') or ''
+            content = spec.get('contentHash') or ''
+            previous = found.get(name)
+            if previous is not None and (
+                previous['resolved'] != resolved or previous['contentHash'] != content
+            ):
+                raise ProjectGraphError('unverified_package_pin')
+            found[name] = {'resolved': resolved, 'contentHash': content}
+    return found
+
+
+def check_lock_licensing_alignment(root: Path) -> None:
+    root = Path(root)
+    register_path = root / 'docs' / 'licensing' / 'register.json'
+    lock_path = root / ADMITTED_LOCK_REL
+    if not register_path.is_file() or not lock_path.is_file():
+        raise ProjectGraphError('missing_record_field')
+    register = json.loads(register_path.read_text(encoding='utf-8'))
+    lock = json.loads(lock_path.read_text(encoding='utf-8'))
+    if not isinstance(register, dict) or not isinstance(lock, dict):
+        raise ProjectGraphError('missing_record_field')
+    lock_packages = lock_nuget_packages(lock)
+    register_units: dict[str, dict[str, Any]] = {}
+    for unit in register.get('units') or []:
+        if not isinstance(unit, dict):
+            raise ProjectGraphError('missing_record_field')
+        if unit.get('enters_package_lock') is not True:
+            continue
+        if unit.get('admission') != 'approved' or unit.get('lock_allowed') is not True:
+            raise ProjectGraphError('pending_treated_as_approved')
+        name = unit.get('name')
+        if not isinstance(name, str) or not name:
+            raise ProjectGraphError('missing_record_field')
+        if name in register_units:
+            raise ProjectGraphError('missing_record_field')
+        register_units[name] = unit
+    if set(lock_packages) != set(register_units):
+        raise ProjectGraphError('licensing_lock_mismatch')
+    for name, spec in lock_packages.items():
+        unit = register_units[name]
+        if unit.get('version') != spec['resolved']:
+            raise ProjectGraphError('licensing_lock_mismatch')
+        hash_obj = unit.get('hash') or {}
+        if not isinstance(hash_obj, dict):
+            raise ProjectGraphError('licensing_lock_mismatch')
+        if hash_obj.get('nuget_content_hash') != spec['contentHash']:
+            raise ProjectGraphError('licensing_lock_mismatch')
+        if name in PINNED_PACKAGE_VERSIONS and spec['resolved'] != PINNED_PACKAGE_VERSIONS[name]:
+            raise ProjectGraphError('unverified_package_pin')
+
+
+def check_csproj_lock_text(rel: str, text: str) -> None:
+    if '2.4.0' in text:
+        raise ProjectGraphError('unverified_package_pin')
+    lower = text.lower()
+    if rel == APP_PROJECT:
+        if UMBRELLA_INCLUDE_RE.search(text):
+            raise ProjectGraphError('forbidden_package_edge')
+        if 'ssh.net' in lower or 'renci.sshnet' in lower:
+            raise ProjectGraphError('forbidden_package_edge')
+        if WINDOWS_APP_TFM not in text:
+            raise ProjectGraphError('admitted_package_missing')
+        if 'Microsoft.WindowsAppSDK.WinUI' not in text:
+            raise ProjectGraphError('admitted_package_missing')
+        return
+    if any(marker in lower for marker in FORBIDDEN_CSPROJ_TEXT):
+        raise ProjectGraphError('forbidden_package_edge')
 
 
 def load_tree_projects(root: Path) -> dict[str, dict[str, list[str]]]:
@@ -260,10 +490,11 @@ def parse_csproj(path: Path, root: Path) -> dict[str, list[str]]:
 
 
 def allowed_graph() -> dict[str, dict[str, list[str]]]:
-    return {
-        rel: {'project': list(refs), 'package': []}
-        for rel, refs in ALLOWED_PROJECTS.items()
-    }
+    graph: dict[str, dict[str, list[str]]] = {}
+    for rel, refs in ALLOWED_PROJECTS.items():
+        packages = sorted(ADMITTED_APP_PACKAGE_REFS) if rel == APP_PROJECT else []
+        graph[rel] = {'project': list(refs), 'package': packages}
+    return graph
 
 
 def check_graph(projects: dict[str, dict[str, list[str]]]) -> None:
@@ -277,10 +508,18 @@ def check_project(rel: str, spec: dict[str, list[str]]) -> None:
     packages = list(spec.get('package') or [])
     actual = list(spec.get('project') or [])
     joined = ' '.join(packages).lower()
-    if any(marker in joined for marker in FORBIDDEN_PACKAGE_MARKERS):
-        raise ProjectGraphError('forbidden_package_edge')
-    if packages:
-        raise ProjectGraphError('package_reference_forbidden')
+    if rel == APP_PROJECT:
+        if any('ssh.net' in item.lower() or 'renci.sshnet' in item.lower() for item in packages):
+            raise ProjectGraphError('forbidden_package_edge')
+        if UMBRELLA_PACKAGE_ID in packages:
+            raise ProjectGraphError('forbidden_package_edge')
+        if frozenset(packages) != ADMITTED_APP_PACKAGE_REFS:
+            raise ProjectGraphError('package_reference_forbidden')
+    else:
+        if any(marker in joined for marker in FORBIDDEN_PACKAGE_MARKERS):
+            raise ProjectGraphError('forbidden_package_edge')
+        if packages:
+            raise ProjectGraphError('package_reference_forbidden')
     if rel.startswith('src/') and any(item.startswith('tests/') for item in actual):
         raise ProjectGraphError('production_references_tests')
     if rel == 'src/HerdDesk.Contracts/HerdDesk.Contracts.csproj' and (actual or packages):

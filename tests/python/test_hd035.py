@@ -264,9 +264,19 @@ class Hd035ResidualTests(unittest.TestCase):
             for item in register['units']
         ]
         self.assertEqual(listed, expected)
-        for _, _, admission in listed:
-            self.assertIn(admission, ('pending', 'blocked'))
-            self.assertNotEqual(admission, 'approved')
+        allowed_lock = {
+            (item['name'], item['artifact_kind'])
+            for item in register['units']
+            if item.get('admission') == 'approved' and item.get('lock_allowed') is True
+        }
+        for name, kind, admission in listed:
+            self.assertIn(admission, ('pending', 'blocked', 'approved'))
+            if admission == 'approved':
+                self.assertIn((name, kind), allowed_lock)
+                self.assertEqual(kind, 'prebuilt_binary')
+                self.assertNotEqual(name, 'herdrm')
+            else:
+                self.assertNotIn((name, kind), allowed_lock)
         herdrm = [item for item in inventory['units'] if item['name'] == 'herdrm']
         self.assertEqual(len(herdrm), 1)
         self.assertEqual(herdrm[0]['admission'], 'blocked')

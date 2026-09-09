@@ -39,9 +39,9 @@ internal static class Hd019Cases
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
         Check(!File.Exists(Path.Combine(root, "tests", "Integration.Windows",
             "HerdDesk.Integration.Windows.csproj")));
+        AppXamlSurface.CheckBlankContainerOnly(root);
         foreach (var rel in new[]
                  {
-                     Path.Combine("src", "HerdDesk.App", "HerdDesk.App.csproj"),
                      Path.Combine("src", "HerdDesk.Core", "HerdDesk.Core.csproj"),
                      Path.Combine("src", "HerdDesk.Terminal.Web", "HerdDesk.Terminal.Web.csproj")
                  })

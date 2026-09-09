@@ -62,7 +62,7 @@ class LicensingRegisterTests(unittest.TestCase):
         self.assertFalse(result['ac02_passed'])
         self.assertFalse(result['windows_verified'])
         self.assertFalse(result['herdrm_copy_present'])
-        self.assertEqual(result['approved_unit_count'], 0)
+        self.assertEqual(result['approved_unit_count'], 7)
         self.assertEqual(result['approved_candidate_count'], 0)
         repo = repository.validate()
         self.assertEqual(repo['structural_validation'], 'passed')
@@ -125,6 +125,50 @@ class LicensingRegisterTests(unittest.TestCase):
             self.assertIs(unit['lock_allowed'], False)
             self.assertIs(unit['enters_package_lock'], False)
             self.assertEqual(unit['owner'], 'HD-007')
+        runtime = _unit(register, 'Microsoft.Web.WebView2', 'runtime_download')
+        self.assertEqual(runtime['admission'], 'pending')
+        self.assertIs(runtime['lock_allowed'], False)
+        self.assertIs(runtime['enters_package_lock'], False)
+        _check()
+
+    def test_hd007_winui_lock_units_are_approved(self):
+        register = _load('docs/licensing/register.json')
+        names = (
+            'Microsoft.WindowsAppSDK.WinUI',
+            'Microsoft.WindowsAppSDK.Base',
+            'Microsoft.WindowsAppSDK.Foundation',
+            'Microsoft.WindowsAppSDK.InteractiveExperiences',
+            'Microsoft.Windows.SDK.BuildTools',
+            'Microsoft.Windows.SDK.BuildTools.MSIX',
+        )
+        for name in names:
+            unit = _unit(register, name)
+            self.assertEqual(unit['admission'], 'approved')
+            self.assertIs(unit['lock_allowed'], True)
+            self.assertIs(unit['enters_package_lock'], True)
+            self.assertIs(unit['enters_msix'], False)
+            self.assertEqual(unit['notice_status'], 'recorded')
+            self.assertEqual(unit['final_review_task'], 'HD-035')
+        webview = _unit(register, 'Microsoft.Web.WebView2', 'prebuilt_binary')
+        self.assertEqual(webview['admission'], 'approved')
+        self.assertIs(webview['lock_allowed'], True)
+        self.assertNotEqual(webview['artifact_kind'], 'runtime_download')
+        result = validate_licensing(ROOT)
+        self.assertEqual(result['approved_unit_count'], 7)
+        self.assertFalse(result['ac02_passed'])
+        lock = json.loads((ROOT / 'src' / 'HerdDesk.App' / 'packages.lock.json').read_text(encoding='utf-8'))
+        hashes = {}
+        for deps in lock['dependencies'].values():
+            for name, spec in deps.items():
+                if spec.get('type') == 'Project' or name.lower().startswith('herddesk.'):
+                    continue
+                hashes[name] = (spec['resolved'], spec['contentHash'])
+        self.assertEqual(len(hashes), 7)
+        for name, (version, content) in hashes.items():
+            unit = _unit(register, name, 'prebuilt_binary')
+            self.assertEqual(unit['admission'], 'approved')
+            self.assertEqual(unit['version'], version)
+            self.assertEqual(unit['hash']['nuget_content_hash'], content)
         _check()
 
     def test_pending_candidate_lock_flag_is_rejected(self):

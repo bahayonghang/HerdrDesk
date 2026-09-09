@@ -29,7 +29,7 @@
 | `synthetic-capture.json` | 3 帧、41 decoded bytes、capture SHA-256 与 fixture 一致、`saw_terminal_closed=true`、退出/IME/输入未验证 |
 | `structure-check.json` | 结构通过；当时 `csharp_compiled=false`（本地）。CI 之后的编译状态见 `status.json` |
 | `original-plan-validation.json` | 规划包校验：36 任务、48 AC、272 本地链接、76 清单 hash；未执行 herdr/Windows |
-| `hd-007-packages.json` | HD-007 NuGet 探针。WASDK 2.4.0 与 Test.Sdk 18.9.0 在临时目录 restore 过，未准入 lock。`github_required_check=UNVERIFIED`。不是 AC39/40/47 通过。 |
+| `hd-007-packages.json` | HD-007 NuGet 探针与 L2 App windows lock。WinUI 2.3.6 准入后 `windows_desktop_restore=admitted`。umbrella WASDK 2.4.0 与 Test.Sdk 仍未准入。`github_required_check=UNVERIFIED`。不是 AC39/40/47 通过。 |
 | `hd-008-packages.json` | HD-008 Rust 探针。`interprocess` 2.4.4（0BSD OR Apache-2.0），toolchain 1.98.0。不是 AC03/AC04 通过。 |
 | `hd-008-l2.json` | L2 Windows named-pipe ACL / live EP01–EP05 = `UNVERIFIED`。 |
 | `hd-010-l2.json` | L2 live `events.subscribe` interleave = `UNVERIFIED`。L1 fake race 不能关闭产品 AC12。`ac12_passed=false`，`phase_gate=not_passed`。 |

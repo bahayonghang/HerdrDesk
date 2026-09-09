@@ -32,11 +32,7 @@ internal static class Hd012Cases
     {
         var sink = new WindowsNotificationSink();
         Check(!sink.Available);
-        Check(!Directory.EnumerateFiles(Path.Combine(FindRepoRoot(), "src", "HerdDesk.App"), "*.xaml",
-            SearchOption.AllDirectories).Any());
-        var csproj = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "HerdDesk.App", "HerdDesk.App.csproj"));
-        Check(!csproj.Contains("PackageReference", StringComparison.OrdinalIgnoreCase));
-        Check(!csproj.Contains("net10.0-windows", StringComparison.Ordinal));
+        AppXamlSurface.CheckBlankContainerOnly(FindRepoRoot());
     }
 
     static void ResidualJson()

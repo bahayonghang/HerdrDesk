@@ -14,7 +14,8 @@ from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import validate_licensing
-from herddesk_g0.project_graph import validate_project_graph
+from herddesk_g0.project_graph import ADMITTED_LOCK_REL, validate_project_graph
+import run_windows_desktop_gate as desktop_gate
 from herddesk_g0.renderer import validate_renderer_matrix
 
 _HD026_PASS_KEYS = (
@@ -359,6 +360,21 @@ def _check_hd028(hd028: dict, packages: dict) -> None:
     assert cargo_lock_package_version(lock, 'sha2') == '0.10.8'
 
 
+_APP_XAML_SKIP = frozenset({'bin', 'obj'})
+_APP_BLANK_XAML = ('App.xaml', 'MainWindow.xaml')
+
+
+def app_source_xaml(root: Path | None = None) -> list[str]:
+    base = Path(root) if root is not None else ROOT
+    app = base / 'src' / 'HerdDesk.App'
+    found: list[str] = []
+    for path in app.rglob('*.xaml'):
+        if any(part in _APP_XAML_SKIP for part in path.parts):
+            continue
+        found.append(path.relative_to(app).as_posix())
+    return sorted(found)
+
+
 def _check_hd029(hd029: dict) -> None:
     assert hd029.get('document_kind') == 'hd029_l2_status'
     assert hd029.get('l2_live_ui') == 'UNVERIFIED'
@@ -380,7 +396,7 @@ def _check_hd029(hd029: dict) -> None:
     assert (files / 'TransferQueueViewModel.cs').is_file()
     assert (files / 'ConflictDialogViewModel.cs').is_file()
     assert list(files.glob('*.xaml')) == []
-    assert not list((ROOT / 'src' / 'HerdDesk.App').rglob('*.xaml'))
+    assert tuple(app_source_xaml(ROOT)) == _APP_BLANK_XAML
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
 
@@ -407,7 +423,7 @@ def _check_hd030(hd030: dict) -> None:
     assert (core / 'AttachmentCapabilityCatalog.cs').is_file()
     assert (ROOT / 'src' / 'HerdDesk.App' / 'ViewModels' / 'AttachToAgentViewModel.cs').is_file()
     assert (ROOT / 'src' / 'HerdDesk.Contracts' / 'AttachmentPorts.cs').is_file()
-    assert list((ROOT / 'src' / 'HerdDesk.App').rglob('*.xaml')) == []
+    assert tuple(app_source_xaml(ROOT)) == _APP_BLANK_XAML
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
 
@@ -440,7 +456,7 @@ def _check_hd031(hd031: dict) -> None:
     assert osc.is_file()
     assert (ROOT / 'src' / 'HerdDesk.App' / 'ViewModels' / 'PastePreviewViewModel.cs').is_file()
     assert (ROOT / 'src' / 'HerdDesk.Contracts' / 'ClipboardPorts.cs').is_file()
-    assert list((ROOT / 'src' / 'HerdDesk.App').rglob('*.xaml')) == []
+    assert tuple(app_source_xaml(ROOT)) == _APP_BLANK_XAML
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
     _check_hd031_sources(core, infra, osc)
@@ -1715,8 +1731,8 @@ def _reject_hd035_pass_claims(doc) -> None:
                 raise AssertionError(f'{key} must stay true')
             if key == 'l1_status' and _hd035_token(value) in _HD035_SUCCESS:
                 raise AssertionError('l1_status must not be a pass token')
-            if key == 'admission' and _hd035_token(value) == 'approved':
-                raise AssertionError('inventory units cannot become approved')
+            if key == 'admission' and _hd035_token(value) == 'approved' and doc.get('name') == 'herdrm':
+                raise AssertionError('herdrm cannot become approved')
             if doc.get('herdrm_copied') is True:
                 raise AssertionError('herdrm copy is rejected')
             if doc.get('public_visibility_is_not_license_grant') is False:
@@ -1765,9 +1781,17 @@ def _check_hd035_inventory(inventory: dict) -> None:
         (item['name'], item['artifact_kind'], item['admission']) for item in inventory['units']
     ]
     assert listed == register_units
+    allowed_lock = {
+        (item['name'], item['artifact_kind'])
+        for item in register['units']
+        if item.get('admission') == 'approved' and item.get('lock_allowed') is True
+    }
     for name, kind, admission in listed:
-        assert admission in {'pending', 'blocked'}, (name, kind, admission)
-        assert admission != 'approved'
+        assert admission in {'pending', 'blocked', 'approved'}, (name, kind, admission)
+        if admission == 'approved':
+            assert (name, kind) in allowed_lock
+        else:
+            assert (name, kind) not in allowed_lock
     herdrm = [item for item in inventory['units'] if item['name'] == 'herdrm']
     assert len(herdrm) == 1
     assert herdrm[0]['admission'] == 'blocked'
@@ -2222,9 +2246,13 @@ def _reject_hd036_pass_claims(doc) -> None:
             if key == 'github_required_check' and _is_hd036_success(value):
                 raise AssertionError('github_required_check must stay UNVERIFIED')
             if key == 'windows_desktop_restore' and _hd036_token(value) in {
-                'passed', 'admitted', 'ok', 'success', 'verified',
+                'passed', 'ok', 'success', 'verified',
             }:
                 raise AssertionError('windows_desktop_restore must stay not_admitted')
+            if key == 'windows_desktop_restore' and _hd036_token(value) == 'admitted':
+                raise AssertionError(
+                    'windows_desktop_restore=admitted is allowed only in implementation/hd-007-packages.json'
+                )
             if doc.get('published') is True:
                 raise AssertionError('unpublished candidate cannot be published')
             if doc.get('complete_1_0_claimed') is True:
@@ -2539,6 +2567,27 @@ def _check_hd036_closeout(hd036: dict, catalog: dict, matrix: dict, index: dict)
         assert (ROOT / rel).is_file(), rel
 
 
+def _check_hd007_package_admission(packages: dict) -> None:
+    restore = packages.get('windows_desktop_restore')
+    assert packages.get('github_required_check') == 'UNVERIFIED'
+    assert packages.get('ac39_passed') is not True
+    assert packages.get('ac40_passed') is not True
+    assert packages.get('ac47_passed') is not True
+    assert packages.get('phase_gate') != 'passed'
+    assert packages.get('g0_passed') is not True
+    if restore == 'admitted':
+        assert (ROOT / 'Directory.Packages.props').is_file()
+        assert (ROOT / ADMITTED_LOCK_REL).is_file()
+        assert packages.get('directory_packages_props') is True
+        plan = desktop_gate.plan_desktop_gate(ROOT)
+        assert plan.action == 'run'
+        assert plan.commands
+        gate_src = (ROOT / 'scripts' / 'run_windows_desktop_gate.py').read_text(encoding='utf-8')
+        assert 'Admitted desktop restore is not implemented' not in gate_src
+        return
+    assert restore == 'not_admitted'
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -2592,10 +2641,8 @@ def validate() -> dict:
     release_catalog=json.loads((ROOT/'evidence/releases/catalog.json').read_text(encoding='utf-8'))
     release_matrix=json.loads((ROOT/'evidence/releases/support-matrix.json').read_text(encoding='utf-8'))
     release_index=json.loads((ROOT/'evidence/releases/ac-index.json').read_text(encoding='utf-8'))
-    assert not (ROOT/'Directory.Packages.props').is_file()
-    assert packages.get('directory_packages_props') is False
+    _check_hd007_package_admission(packages)
     assert packages['github_required_check']=='UNVERIFIED'
-    assert packages['windows_desktop_restore']=='not_admitted'
     assert packages.get('ac39_passed') is not True
     assert packages.get('ac40_passed') is not True
     assert packages.get('ac47_passed') is not True
