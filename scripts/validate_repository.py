@@ -312,6 +312,7 @@ def _check_hd027(hd027: dict, packages: dict) -> None:
 
 
 _HD028_PASS_KEYS = ('ac30_passed', 'ac31_passed', 'ac32_passed', 'g0_passed')
+_HD029_PASS_KEYS = ('ac31_passed', 'ac33_passed', 'g0_passed')
 
 
 def _check_hd028(hd028: dict, packages: dict) -> None:
@@ -348,6 +349,32 @@ def _check_hd028(hd028: dict, packages: dict) -> None:
     assert cargo_lock_package_version(lock, 'sha2') == '0.10.8'
 
 
+def _check_hd029(hd029: dict) -> None:
+    assert hd029.get('document_kind') == 'hd029_l2_status'
+    assert hd029.get('l2_live_ui') == 'UNVERIFIED'
+    assert hd029.get('l2_live_ssh') == 'UNVERIFIED'
+    for key in _HD029_PASS_KEYS:
+        assert hd029.get(key) is False, key
+    assert hd029.get('phase_gate') != 'passed'
+    for key in ('live_ssh', 'live_ui', 'winui_admitted', 'integration_windows',
+                'integration_windows_project'):
+        assert hd029.get(key) is False, key
+    missing = hd029.get('missing') or {}
+    assert missing.get('winui_xaml') is True
+    assert missing.get('live_ssh') is True
+    assert missing.get('live_ui') is True
+    assert missing.get('integration_windows') is True
+    files = ROOT / 'src' / 'HerdDesk.App' / 'Files'
+    assert (files / 'FileWorkspaceViewModel.cs').is_file()
+    assert (files / 'FilePaneViewModel.cs').is_file()
+    assert (files / 'TransferQueueViewModel.cs').is_file()
+    assert (files / 'ConflictDialogViewModel.cs').is_file()
+    assert list(files.glob('*.xaml')) == []
+    assert not list((ROOT / 'src' / 'HerdDesk.App').rglob('*.xaml'))
+    assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -378,6 +405,7 @@ def validate() -> dict:
     hd027pkg=json.loads((ROOT/'implementation/hd-027-packages.json').read_text(encoding='utf-8'))
     hd028=json.loads((ROOT/'implementation/hd-028-l2.json').read_text(encoding='utf-8'))
     hd028pkg=json.loads((ROOT/'implementation/hd-028-packages.json').read_text(encoding='utf-8'))
+    hd029=json.loads((ROOT/'implementation/hd-029-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -526,6 +554,7 @@ def validate() -> dict:
     _check_hd026_closeout(hd026, mvp, matrix)
     _check_hd027(hd027, hd027pkg)
     _check_hd028(hd028, hd028pkg)
+    _check_hd029(hd029)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

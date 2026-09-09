@@ -19,7 +19,12 @@ cases =
     .. HelperInstallViewModelTests.All,
     .. PartialStateTests.All,
     .. SharedResolverTests.All,
-    .. PaneVisibilityBudgetTests.All
+    .. PaneVisibilityBudgetTests.All,
+    .. FilePaneGenerationTests.All,
+    .. TransferTargetLeaseTests.All,
+    .. TransferQueueProjectionTests.All,
+    .. ConflictDialogTests.All,
+    .. UntrustedNameTests.All
 ];
 
 var failed = 0;

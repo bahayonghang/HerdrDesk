@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd029_l2_status",
+  "l2_live_ui": "UNVERIFIED",
+  "l2_live_ssh": "UNVERIFIED",
+  "live_ssh": false,
+  "live_ui": false,
+  "winui_admitted": false,
+  "integration_windows": false,
+  "integration_windows_project": false,
+  "ac31_passed": false,
+  "ac33_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l1": "dual-pane file workspace ViewModels, immutable TransferDraft, target lease, queue/progress, conflict intents, untrusted-name display",
+  "missing": {
+    "winui_xaml": true,
+    "live_ssh": true,
+    "live_ui": true,
+    "integration_windows": true
+  },
+  "note": "HD-029 ships L1 dual-pane file workspace ViewModels. This file is not AC31/AC33 pass evidence. L2 live UI/SSH stay UNVERIFIED. WinUI is not admitted. tests/Integration.Windows is not created. G0 stays not_passed."
+}
