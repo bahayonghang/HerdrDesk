@@ -313,6 +313,7 @@ def _check_hd027(hd027: dict, packages: dict) -> None:
 
 _HD028_PASS_KEYS = ('ac30_passed', 'ac31_passed', 'ac32_passed', 'g0_passed')
 _HD029_PASS_KEYS = ('ac31_passed', 'ac33_passed', 'g0_passed')
+_HD030_PASS_KEYS = ('ac35_passed', 'ac31_passed', 'ac32_passed', 'ac36_passed', 'g0_passed')
 
 
 def _check_hd028(hd028: dict, packages: dict) -> None:
@@ -375,6 +376,33 @@ def _check_hd029(hd029: dict) -> None:
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
 
 
+def _check_hd030(hd030: dict) -> None:
+    assert hd030.get('document_kind') == 'hd030_l2_status'
+    assert hd030.get('l2_live_agent') == 'UNVERIFIED'
+    assert hd030.get('l2_live_ime') == 'UNVERIFIED'
+    assert hd030.get('l2_live_ssh') == 'UNVERIFIED'
+    for key in _HD030_PASS_KEYS:
+        assert hd030.get(key) is False, key
+    assert hd030.get('phase_gate') != 'passed'
+    for key in ('live_ssh', 'live_agent', 'live_ime', 'winui_admitted', 'integration_windows',
+                'integration_windows_project', 'auto_submit'):
+        assert hd030.get(key) is False, key
+    missing = hd030.get('missing') or {}
+    assert missing.get('winui_xaml') is True
+    assert missing.get('live_agent') is True
+    assert missing.get('live_ime') is True
+    assert missing.get('live_ssh') is True
+    assert missing.get('integration_windows') is True
+    core = ROOT / 'src' / 'HerdDesk.Core' / 'Attachments'
+    assert (core / 'AttachmentCoordinator.cs').is_file()
+    assert (core / 'AttachmentCapabilityCatalog.cs').is_file()
+    assert (ROOT / 'src' / 'HerdDesk.App' / 'ViewModels' / 'AttachToAgentViewModel.cs').is_file()
+    assert (ROOT / 'src' / 'HerdDesk.Contracts' / 'AttachmentPorts.cs').is_file()
+    assert list((ROOT / 'src' / 'HerdDesk.App').rglob('*.xaml')) == []
+    assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -406,6 +434,7 @@ def validate() -> dict:
     hd028=json.loads((ROOT/'implementation/hd-028-l2.json').read_text(encoding='utf-8'))
     hd028pkg=json.loads((ROOT/'implementation/hd-028-packages.json').read_text(encoding='utf-8'))
     hd029=json.loads((ROOT/'implementation/hd-029-l2.json').read_text(encoding='utf-8'))
+    hd030=json.loads((ROOT/'implementation/hd-030-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -555,6 +584,7 @@ def validate() -> dict:
     _check_hd027(hd027, hd027pkg)
     _check_hd028(hd028, hd028pkg)
     _check_hd029(hd029)
+    _check_hd030(hd030)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

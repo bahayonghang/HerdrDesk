@@ -9,10 +9,10 @@
 | 项目 | 索引 |
 |---|---|
 | [HerdDesk.Contracts](HerdDesk.Contracts/CLAUDE.md) | 身份、信封、配置/诊断/adapter 端口 |
-| [HerdDesk.Core](HerdDesk.Core/CLAUDE.md) | 帧解析 + 输入策略 + endpoint 映射 + lease 映射 + renderer L1 标本 + HD-009 投影 Store + HD-010 DeviceSession actor + HD-012 Attention reducer + HD-016 ControlLeaseCoordinator + HD-017 ResourceCommandCoordinator + HD-018 RecoveryPolicy + HD-023 L1 多设备聚合 + HD-025 L1 连接准入与队列预算 |
+| [HerdDesk.Core](HerdDesk.Core/CLAUDE.md) | 帧解析 + 输入策略 + endpoint 映射 + lease 映射 + renderer L1 标本 + HD-009 投影 Store + HD-010 DeviceSession actor + HD-012 Attention reducer + HD-016 ControlLeaseCoordinator + HD-017 ResourceCommandCoordinator + HD-018 RecoveryPolicy + HD-023 L1 多设备聚合 + HD-025 L1 连接准入与队列预算 + HD-028 L1 TransferCoordinator + HD-030 L1 AttachmentCoordinator |
 | [HerdDesk.Infrastructure](HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断 sink、owned process、RPC stdio、SchemaV1 decoder、HD-013 TerminalCliTransport、HD-020 L1 SSH preview/test、HD-021 L1 helper publish |
 | [HerdDesk.Terminal.Web](HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter + HD-015 L1 input coordinators（无 WebView2） |
-| [HerdDesk.App](HerdDesk.App/CLAUDE.md) | 组合根 / 控制台宿主 stub + HD-011 L1 ViewModels + HD-012 L1 NotificationCenter + HD-015 L1 focus/input + HD-016 L1 control ViewModel + HD-017 L1 resource command + HD-018 L1 RecoveryBindings + HD-020 L1 SSH EditDevice ViewModel + HD-021 L1 HelperInstall ViewModel + HD-023 L1 multi-device navigation/search ViewModels + HD-029 L1 双栏文件工作区 ViewModels（无 WinUI）。HD-019 L1 catalog/composition 在测试与 `evidence/local-mvp/` |
+| [HerdDesk.App](HerdDesk.App/CLAUDE.md) | 组合根 / 控制台宿主 stub + HD-011 L1 ViewModels + HD-012 L1 NotificationCenter + HD-015 L1 focus/input + HD-016 L1 control ViewModel + HD-017 L1 resource command + HD-018 L1 RecoveryBindings + HD-020 L1 SSH EditDevice ViewModel + HD-021 L1 HelperInstall ViewModel + HD-023 L1 multi-device navigation/search ViewModels + HD-029 L1 双栏文件工作区 ViewModels + HD-030 L1 AttachToAgentViewModel（无 WinUI）。HD-019 L1 catalog/composition 在测试与 `evidence/local-mvp/` |
 
 测试项目在 [../tests](../tests/CLAUDE.md)。
 

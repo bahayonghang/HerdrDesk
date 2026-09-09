@@ -10,6 +10,7 @@ artifacts/
 probe-results/
 *.user
 *.suo
+*.sarif
 .env
 .env.*
 !.env.example

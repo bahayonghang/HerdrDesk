@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd030_l2_status",
+  "l2_live_agent": "UNVERIFIED",
+  "l2_live_ime": "UNVERIFIED",
+  "l2_live_ssh": "UNVERIFIED",
+  "live_ssh": false,
+  "live_agent": false,
+  "live_ime": false,
+  "winui_admitted": false,
+  "integration_windows": false,
+  "integration_windows_project": false,
+  "auto_submit": false,
+  "ac35_passed": false,
+  "ac31_passed": false,
+  "ac32_passed": false,
+  "ac36_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l1": "attach-to-agent intents, evidence-backed capability catalog, immutable AttachmentDraft and target lease, HD-028 upload then InputPolicy path insert with zero extra Enter, PathInsertedUnconfirmed never AgentAccepted",
+  "missing": {
+    "winui_xaml": true,
+    "live_agent": true,
+    "live_ime": true,
+    "live_ssh": true,
+    "integration_windows": true
+  },
+  "note": "HD-030 ships L1 attach-to-agent coordinators and ViewModels. This file is not AC35/AC31/AC32/AC36 pass evidence. L2 live agent/IME/SSH stay UNVERIFIED. WinUI is not admitted. tests/Integration.Windows is not created. Path insert is not agent receipt. Auto-submit stays false. G0 stays not_passed."
+}

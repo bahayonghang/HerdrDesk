@@ -134,4 +134,26 @@ public static class ShellStrings
     public const string FileFailed = "失败";
     public const string FileSpeedUnknown = "速度未知";
     public const string FileTotalUnknown = "总量未知";
+    public const string AttachPasteText = "粘贴文字";
+    public const string AttachInsertPath = "输入文件路径";
+    public const string AttachImage = "发送图像附件";
+    public const string AttachVerified = "已验证";
+    public const string AttachUnsupported = "未支持";
+    public const string AttachUnknown = "未知";
+    public const string AttachSupportsAttachment = "支持附件";
+    public const string AttachNoEvidence = "缺证据";
+    public const string AttachCopyPath = "复制路径";
+    public const string AttachInsertPathAction = "输入路径";
+    public const string AttachManual = "手动确认";
+    public const string AttachDirectClipboard = "直接剪贴板";
+    public const string AttachUpload = "上传";
+    public const string AttachCancel = "取消投入";
+    public const string AttachClose = "关闭";
+    public const string AttachChooseSource = "选择文件";
+    public const string AttachDropZone = "拖放区，也可从键盘选择文件";
+    public const string AttachPathReady = "可输入路径";
+    public const string AttachPathInsertedUnconfirmed = "路径已输入，尚未确认 agent 接收";
+    public const string AttachNotAutoSubmitted = "未自动提交";
+    public const string AttachCapabilityLoading = "正在加载能力证据";
+    public const string AttachDisabled = "投入已禁用";
 }

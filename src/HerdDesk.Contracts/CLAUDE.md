@@ -111,6 +111,10 @@
 
 `Terminal/ITerminalRenderer.cs`：`BindAsync` / `ApplyAsync` / `ReadInputsAsync` / `SetReadOnlyAsync` / `FocusAsync`。`ApplyAsync` 完成只表示 parser consumed。`Terminal/IRenderFlowController.cs`：有界 enqueue、token ack、cancel、reset。`ITerminalRendererFactory.CreateAsync` 默认返回 null。不覆盖规划草案整文件。L2 WebView process 与 L3 DPI 为 UNVERIFIED。
 
+## HD-030 增补
+
+`AttachmentPorts.cs`：`AttachmentIntent`、`CapabilityEvidence`、`AttachmentDraft`、`AttachmentTargetLease`、`DeliveryState`、`IAttachmentInputSink`。缺证据为 Unknown。无 `AgentAccepted` 状态。L2 live agent/IME/SSH UNVERIFIED。
+
 ## HD-009 增补
 
 `State/`：`ConnectionPhase`、`CapabilityProfile`（`VerifiedOperations`，缺能力不写成已测 false）、投影与 decoded snapshot/event、`IRpcStateDecoder`。身份仍为 `DeviceId` / `SessionKey` / `PaneKey` / `ConnectionEpoch`。Muse/Qwen 为未知 agent。运行时 schema hash 默认 `UNVERIFIED`。不覆盖规划草案整文件。

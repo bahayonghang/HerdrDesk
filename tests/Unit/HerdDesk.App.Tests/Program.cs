@@ -24,7 +24,8 @@ cases =
     .. TransferTargetLeaseTests.All,
     .. TransferQueueProjectionTests.All,
     .. ConflictDialogTests.All,
-    .. UntrustedNameTests.All
+    .. UntrustedNameTests.All,
+    .. AttachToAgentViewModelTests.All
 ];
 
 var failed = 0;

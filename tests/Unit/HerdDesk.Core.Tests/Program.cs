@@ -106,7 +106,11 @@ cases =
     .. ConnectionAdmissionPolicyTests.All,
     .. TerminalQueueBudgetTests.All,
     .. DirtySetBudgetTests.All,
-    .. TransferCoordinatorTests.All
+    .. TransferCoordinatorTests.All,
+    .. CapabilitySelectionTests.All,
+    .. DeliveryStateMachineTests.All,
+    .. TargetLeaseRaceTests.All,
+    .. NoAutoSubmitTests.All
 ];
 
 var failed = 0;
