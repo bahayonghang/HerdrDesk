@@ -82,6 +82,8 @@ REQUIRED_SOURCE_PATTERNS = frozenset({
     'Microsoft.Web.WebView2',
     'Microsoft.Windows.SDK.BuildTools',
     'Microsoft.Windows.SDK.BuildTools.MSIX',
+    'Microsoft.Windows.SDK.NET.Ref',
+    'Microsoft.Windows.SDK.NET.Ref.Windows',
 })
 ALLOWED_SOURCE_PATTERNS = REQUIRED_SOURCE_PATTERNS
 UMBRELLA_INCLUDE_RE = re.compile(

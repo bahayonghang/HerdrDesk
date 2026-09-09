@@ -296,6 +296,10 @@ Project license stays pending. HD-035 remains the reverse-audit. AC02 stays
 | Microsoft.Windows.SDK.BuildTools.MSIX | 1.7.251221100 | prebuilt_binary | Transitive; restore mapping only, not product MSIX |
 | Microsoft.Web.WebView2 | Evergreen runtime | runtime_download | Separate record; pending; not a lock input |
 
+`Microsoft.Windows.SDK.NET.Ref` 10.0.19041.57 is mapped on nuget.org so a
+clean Windows restore can resolve the windows TFM targeting pack. It is not
+in `packages.lock.json`, not Shell UI, and not AC02 pass.
+
 The `Microsoft.WindowsAppSDK` 2.4.0 umbrella stays pending and must not appear
 as a PackageReference.
 

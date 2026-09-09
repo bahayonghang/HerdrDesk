@@ -6,6 +6,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
+from herddesk_g0.project_graph import REQUIRED_SOURCE_PATTERNS, check_nuget_config
 import run_windows_desktop_gate as desktop_gate
 import validate_repository as repository
 
@@ -52,6 +53,8 @@ class WindowsDesktopGateTests(unittest.TestCase):
         self.assertFalse(record['ac40_passed'])
         self.assertFalse(record['ac47_passed'])
         self.assertNotEqual(record['phase_gate'], 'passed')
+        check_nuget_config(ROOT)
+        self.assertIn('Microsoft.Windows.SDK.NET.Ref', REQUIRED_SOURCE_PATTERNS)
         plan = desktop_gate.plan_desktop_gate(ROOT)
         self.assertEqual(plan.action, 'run')
         self.assertEqual(len(plan.commands), 2)

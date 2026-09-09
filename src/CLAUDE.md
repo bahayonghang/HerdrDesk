@@ -2,7 +2,7 @@
 
 [根索引](../CLAUDE.md) · C# 源码
 
-生成日期：2026-09-08。solution：`HerdDesk.slnx`。属性：根 `Directory.Build.props`（默认 `net10.0`、nullable、警告为错误、确定性、NET analyzers）。`NuGet.Config` 将 nuget.org 映射到 `Microsoft.WindowsAppSDK.*`、`Microsoft.Web.WebView2`、`Microsoft.Windows.SDK.BuildTools` 与 `Microsoft.Windows.SDK.BuildTools.MSIX`。HD-007 L2 准入 App windows TFM 的 WinUI 2.3.6 lock；Contracts/Core/Infrastructure/Terminal.Web 仍无 PackageReference。
+生成日期：2026-09-08。solution：`HerdDesk.slnx`。属性：根 `Directory.Build.props`（默认 `net10.0`、nullable、警告为错误、确定性、NET analyzers）。`NuGet.Config` 将 nuget.org 映射到 `Microsoft.WindowsAppSDK.*`、`Microsoft.Web.WebView2`、`Microsoft.Windows.SDK.BuildTools`、`Microsoft.Windows.SDK.BuildTools.MSIX`、`Microsoft.Windows.SDK.NET.Ref` 与 `Microsoft.Windows.SDK.NET.Ref.Windows`。HD-007 L2 准入 App windows TFM 的 WinUI 2.3.6 lock；Contracts/Core/Infrastructure/Terminal.Web 仍无 PackageReference。
 
 ## 当前项目
 

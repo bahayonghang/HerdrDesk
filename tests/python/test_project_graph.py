@@ -11,6 +11,7 @@ from herddesk_g0.project_graph import (
     ADMITTED_LOCK_REL,
     APP_PROJECT,
     ALLOWED_PROJECTS,
+    REQUIRED_SOURCE_PATTERNS,
     ProjectGraphError,
     allowed_graph,
     cargo_lock_package_version,
@@ -30,12 +31,7 @@ import run_windows_desktop_gate as desktop_gate
 
 
 def _write_nuget_config(root: Path, *, extra_pattern=None, extra_source=None):
-    patterns = [
-        'Microsoft.WindowsAppSDK.*',
-        'Microsoft.Web.WebView2',
-        'Microsoft.Windows.SDK.BuildTools',
-        'Microsoft.Windows.SDK.BuildTools.MSIX',
-    ]
+    patterns = sorted(REQUIRED_SOURCE_PATTERNS)
     if extra_pattern:
         patterns.append(extra_pattern)
     sources = ['    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />']
@@ -109,6 +105,8 @@ class ProjectGraphTests(unittest.TestCase):
         self.assertTrue((ROOT / ADMITTED_LOCK_REL).is_file())
         check_product_lock_absence(ROOT)
         check_product_lock(ROOT)
+        check_nuget_config(ROOT)
+        self.assertIn('Microsoft.Windows.SDK.NET.Ref', REQUIRED_SOURCE_PATTERNS)
         rust = validate_rust_bridge_lock(ROOT)
         self.assertEqual(rust['l2_windows_named_pipe_acl'], 'UNVERIFIED')
         self.assertEqual(result['l2_windows_named_pipe_acl'], 'UNVERIFIED')
