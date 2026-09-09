@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-031",
+  "name": "windows-hd-031",
+  "title": "HD-031 剪贴板与缓存策略",
+  "description": "文字/图片识别、OSC限制、多行提示、TTL和容量",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 clipboard snapshot, OSC52 deny, and attachment cache landed. No watcher. L2 live clipboard/IME UNVERIFIED. AC36/G0 not passed.",
+  "meta": {
+    "source_task": "HD-031",
+    "phase": "P4"
+  }
+}

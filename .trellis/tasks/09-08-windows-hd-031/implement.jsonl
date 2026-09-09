@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Windows clipboard、Core intent、cache、attachment 与 terminal input 的跨层流"}
+{"file":"docs/plan/docs/06_终端与输入法.md","reason":"paste 来源、OSC52、选择和输入安全"}
+{"file":"docs/plan/docs/07_多设备SSH与文件.md","reason":"文字、文件、图像意图与 cache lease 边界"}
+{"file":"docs/plan/docs/08_安全与威胁模型.md","reason":"clipboard 正文隐私和不可信终端输出边界"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"clipboard Core/Infrastructure unit 与 Windows integration 布局"}

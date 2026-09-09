@@ -1,0 +1,4 @@
+{"file":"planning/acceptance.json","reason":"复核 AC36 最终验收和 AC14、AC32、AC34、AC35 贡献边界"}
+{"file":"tasks/HD-031.md","reason":"核对剪贴板与缓存任务范围、依赖、风险和回滚"}
+{"file":"docs/plan/docs/10_测试与验收.md","reason":"故障、交互桌面和证据归档要求"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
