@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 ViewModels remain. 2026-09-09 reopen for L2 WinUI Shell on admitted HD-007 WinUI 2.3.6 lock (HEAD 605bb85, hosted run 34363263768 windows-desktop green). No Shell/Settings XAML yet. L3 IME/DPI UNVERIFIED. AC19/G0 not passed. Do not install herdr on LAN.",
+  "notes": "L2 product 3577a9d four-zone WinUI Shell on admitted WinUI 2.3.6. CI does not launch a window. l2_windows_visual_activation and L3 IME/DPI UNVERIFIED. AC19/G0 not passed. Do not install herdr on LAN.",
   "meta": {
     "source_task": "HD-011",
     "phase": "P1"
