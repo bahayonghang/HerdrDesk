@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"附件能力、文件 job、target lease 与 terminal input 的跨层状态机"}
+{"file":"docs/plan/docs/07_多设备SSH与文件.md","reason":"三种投入意图、capability、路径输入与目标身份契约"}
+{"file":"docs/plan/docs/08_安全与威胁模型.md","reason":"不可信文件、错目标输入、缓存与权限边界"}
+{"file":"docs/plan/docs/06_终端与输入法.md","reason":"ExplicitPaste、焦点和输入来源策略"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"附件 Core unit 与 Windows component/integration 入口"}

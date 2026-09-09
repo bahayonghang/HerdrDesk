@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-030",
+  "name": "windows-hd-030",
+  "title": "HD-030 文件与图片投入agent",
+  "description": "能力表、上传缓存、目标租约、路径输入且不自动回车",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 attach-to-agent coordinator and ViewModel landed. No auto-submit. WinUI not admitted. L2 live agent/IME/SSH UNVERIFIED. AC35/G0 not passed.",
+  "meta": {
+    "source_task": "HD-030",
+    "phase": "P4"
+  }
+}
