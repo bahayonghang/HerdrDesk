@@ -120,9 +120,8 @@ fn shutdown_write_after_stdin_eof(_send: &Stream) {
     #[cfg(unix)]
     {
         use std::net::Shutdown;
-        if let Stream::UdSocket(inner) = _send {
-            let _ = inner.inner().shutdown(Shutdown::Write);
-        }
+        let Stream::UdSocket(inner) = _send;
+        let _ = inner.inner().shutdown(Shutdown::Write);
     }
     #[cfg(windows)]
     {
