@@ -4,7 +4,7 @@
   "capture_id": "hd026-live-ssh-2026-09-09-not-run",
   "kind": "live_ssh_matrix",
   "captured_at_utc": "2026-09-09T12:00:00Z",
-  "operator_scope": "no_authorized_isolated_windows_openssh_or_linux_herdr",
+  "operator_scope": "authorized_openssh_echo_only_herdr_absent_on_remote",
   "host_fingerprint_redacted": null,
   "command_redacted": null,
   "exit_code": null,
@@ -15,9 +15,10 @@
   "herdr_executed": false,
   "live_ssh": false,
   "limitations": [
-    "Independent live SSH was not authorized in this dispatch.",
+    "2026-09-09: authorized Windows OpenSSH BatchMode echo to a LAN Linux x86_64 Ubuntu 24.04 host. herdr was absent. No terminal session, helper install, or remote file write.",
+    "Echo success is not the AC22-AC26 live SSH matrix.",
     "This record does not reuse Windows runtime hashes as Linux proof.",
     "herdr was not executed on a remote host.",
-    "Argv and logs in a later capture must omit credentials."
+    "Host, user, and path stay omitted. Argv and logs must omit credentials."
   ]
 }

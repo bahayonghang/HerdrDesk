@@ -11,8 +11,9 @@
 | 字段 | 当前值 |
 |---|---|
 | 顶层 `evidence_level` | `source_inspection_only` |
-| herdr tag / commit | v0.8.2 / `9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c` |
-| `api_protocol` / `schema_version` | 20 / 1 |
+| 规划钉 | GitHub **v0.9.0** / protocol 22 / `b99002a`（父任务 `research/herdr-0.9.0.md`） |
+| 源码对照行 herdr tag / commit | v0.8.2 / `9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c`（`compatibility-baseline.json` 源码检查行，测试钉死） |
+| `api_protocol` / `schema_version` | 源码检查行 20 / 1；运行时 preview 22；规划钉 22 |
 | `src/client/mod.rs` blob | 见文件 `herdr.source_blobs`（git blob SHA-1） |
 | `src/ipc.rs` blob | 见文件 `herdr.source_blobs` |
 | `src/server/render_stream.rs` blob | 见文件 `herdr.source_blobs` |

@@ -4,7 +4,7 @@
   "capture_id": "hd034-live-clean-install-2026-09-09-not-run",
   "kind": "live_clean_install",
   "captured_at_utc": "2026-09-09T12:00:00Z",
-  "operator_scope": "no_authorized_clean_machine_install",
+  "operator_scope": "authorized_but_no_publisher_cert_or_msix",
   "host_fingerprint_redacted": null,
   "command_redacted": null,
   "exit_code": null,
@@ -29,7 +29,7 @@
   "invented_publisher_identity": false,
   "fake_publisher_cannot_pass_ac41": true,
   "limitations": [
-    "Clean-machine MSIX install was not authorized and was not executed in this dispatch.",
+    "2026-09-09: packaging was authorized. No Publisher identity, certificate, wapproj, or MSIX exists in tree. Clean-machine install was not executed.",
     "A template or L1 catalog is not AC41.",
     "Do not invent package hashes or Publisher identity."
   ]

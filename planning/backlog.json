@@ -19,7 +19,7 @@
       "risk": "错误版本导致所有后续fixture失效",
       "rollback": "停用自动兼容判断，恢复只读诊断",
       "status": "in_progress",
-      "implementation_note": "源码 v0.8.2/protocol 20 已复核。隔离 Windows 记录 preview protocol 22，不兼容；ACL 未采集；远端 not_run。AC01 未通过。",
+      "implementation_note": "规划钉 GitHub v0.9.0/protocol 22。源码对照行仍为 v0.8.2/protocol 20。隔离 Windows 记录 preview protocol 22，不得写入 compatible_by_default；ACL 未采集；远端 herdr 未安装。AC01 未通过。",
       "progress_evidence": "evidence/compatibility-baseline.json"
     },
     {
