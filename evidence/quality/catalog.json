@@ -1,0 +1,323 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd033_performance_a11y_soak_catalog",
+  "simulation": true,
+  "fixture_origin": "synthetic",
+  "template": false,
+  "l1_closeout": "required; does not close product AC27, AC28, AC29, AC37, AC38, or AC46",
+  "ac27_passed": false,
+  "ac28_passed": false,
+  "ac29_passed": false,
+  "ac37_passed": false,
+  "ac38_passed": false,
+  "ac46_passed": false,
+  "phase_gate": "not_passed",
+  "g0_passed": false,
+  "l3_ime": "UNVERIFIED",
+  "l3_narrator": "UNVERIFIED",
+  "l3_dpi": "UNVERIFIED",
+  "l4_soak": "UNVERIFIED",
+  "live_ime": false,
+  "live_narrator": false,
+  "live_dpi": false,
+  "live_soak": false,
+  "live_input_pixel": false,
+  "live_working_set": false,
+  "eight_hour_soak_executed": false,
+  "invented_timings": false,
+  "parser_consumed_is_not_presentation": true,
+  "parser_callback_cannot_pass_input_to_pixel": true,
+  "derive_process_memory_from_q_p": false,
+  "mib_bytes": 1048576,
+  "hosted_ci_is_interactive_desktop": false,
+  "winui_admitted": false,
+  "integration_ssh_project": false,
+  "integration_windows_project": false,
+  "herdr_executed": false,
+  "copy_windows_fields_onto_linux": false,
+  "extrapolate_macos_arm64": false,
+  "redaction": {
+    "host": "omitted",
+    "user": "omitted",
+    "path": "omitted",
+    "credential": "omitted",
+    "terminal_body": "omitted"
+  },
+  "missing": {
+    "interactive_desktop": true,
+    "visible_pixel_probe": true,
+    "working_set_lab": true,
+    "narrator_desktop": true,
+    "dpi_theme_matrix": true,
+    "eight_hour_soak": true,
+    "winui_shell": true,
+    "integration_windows": true,
+    "live_search_p95": true
+  },
+  "support_matrix": "evidence/quality/support-matrix.json",
+  "l2_status": "implementation/hd-033-l2.json",
+  "templates": [
+    "evidence/quality/live-cold-start.template.json",
+    "evidence/quality/live-input-pixel.template.json",
+    "evidence/quality/live-search-p95.template.json",
+    "evidence/quality/live-working-set.template.json",
+    "evidence/quality/live-handle-reclaim.template.json",
+    "evidence/quality/live-narrator.template.json",
+    "evidence/quality/live-dpi.template.json",
+    "evidence/quality/live-soak.template.json"
+  ],
+  "not_run_captures": [
+    "evidence/quality/live-cold-start.not-run.json",
+    "evidence/quality/live-input-pixel.not-run.json",
+    "evidence/quality/live-search-p95.not-run.json",
+    "evidence/quality/live-working-set.not-run.json",
+    "evidence/quality/live-handle-reclaim.not-run.json",
+    "evidence/quality/live-narrator.not-run.json",
+    "evidence/quality/live-dpi.not-run.json",
+    "evidence/quality/live-soak.not-run.json"
+  ],
+  "execution_cards": [
+    {
+      "id": "cold-start",
+      "title": "cold start",
+      "ac_ids": ["AC28"],
+      "owner_children": ["HD-011"],
+      "l1_artifacts": [
+        "src/HerdDesk.App/Program.cs",
+        "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
+        "tests/Unit/HerdDesk.App.Tests/ShellViewModelTests.cs",
+        "implementation/hd-011-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L3",
+      "live_capture": "evidence/quality/live-cold-start.not-run.json",
+      "missing_grant": "no_authorized_interactive_desktop_cold_start"
+    },
+    {
+      "id": "input-to-visible-pixel",
+      "title": "input to visible pixel",
+      "ac_ids": ["AC28"],
+      "owner_children": ["HD-014", "HD-015"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/RenderFlowController.cs",
+        "src/HerdDesk.Terminal.Web/Input/TerminalInputController.cs",
+        "src/HerdDesk.Terminal.Web/WebTerminalRenderer.cs",
+        "implementation/hd-014-l2.json",
+        "implementation/hd-015-l3.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L3",
+      "live_capture": "evidence/quality/live-input-pixel.not-run.json",
+      "missing_grant": "no_authorized_visible_pixel_latency_probe"
+    },
+    {
+      "id": "search-p95",
+      "title": "search p95",
+      "ac_ids": ["AC28"],
+      "owner_children": ["HD-011", "HD-023"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Aggregation/GlobalSearchIndex.cs",
+        "src/HerdDesk.Core/Aggregation/GlobalProjectionStore.cs",
+        "src/HerdDesk.App/ViewModels/GlobalSearchViewModel.cs",
+        "tests/Unit/HerdDesk.Core.Tests/Aggregation/GlobalSearchPerformanceTests.cs",
+        "tests/Unit/HerdDesk.App.Tests/SearchPaletteTests.cs",
+        "implementation/hd-023-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L3",
+      "live_capture": "evidence/quality/live-search-p95.not-run.json",
+      "missing_grant": "no_authorized_live_search_p95"
+    },
+    {
+      "id": "working-set-1-4-pane",
+      "title": "working set 1 and 4 pane",
+      "ac_ids": ["AC27", "AC28"],
+      "owner_children": ["HD-025"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Terminal/TerminalQueueBudget.cs",
+        "src/HerdDesk.Core/Projection/DirtySetBudget.cs",
+        "src/HerdDesk.Core/Connections/ConnectionAdmissionPolicy.cs",
+        "tests/Unit/HerdDesk.Core.Tests/Terminal/TerminalQueueBudgetTests.cs",
+        "implementation/hd-025-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/quality/live-working-set.not-run.json",
+      "missing_grant": "no_authorized_working_set_process_sample"
+    },
+    {
+      "id": "hide-show-100",
+      "title": "100 hide/show handle reclaim",
+      "ac_ids": ["AC29"],
+      "owner_children": ["HD-025", "HD-011"],
+      "l1_artifacts": [
+        "src/HerdDesk.App/Services/PaneVisibilityCoordinator.cs",
+        "tests/Unit/HerdDesk.App.Tests/Services/PaneVisibilityBudgetTests.cs",
+        "implementation/hd-025-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/quality/live-handle-reclaim.not-run.json",
+      "missing_grant": "no_authorized_pane_hide_show_handle_lab"
+    },
+    {
+      "id": "narrator",
+      "title": "Narrator",
+      "ac_ids": ["AC37"],
+      "owner_children": ["HD-011"],
+      "l1_artifacts": [
+        "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
+        "src/HerdDesk.App/ViewModels/SearchPaletteViewModel.cs",
+        "src/HerdDesk.App/ViewModels/TerminalControlViewModel.cs",
+        "tests/Unit/HerdDesk.App.Tests/SearchPaletteTests.cs",
+        "tests/Unit/HerdDesk.App.Tests/TerminalControlTests.cs",
+        "implementation/hd-011-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L3",
+      "live_capture": "evidence/quality/live-narrator.not-run.json",
+      "missing_grant": "no_authorized_narrator_desktop"
+    },
+    {
+      "id": "dpi-100-150-200",
+      "title": "DPI 100/150/200",
+      "ac_ids": ["AC38"],
+      "owner_children": ["HD-011", "HD-014"],
+      "l1_artifacts": [
+        "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
+        "src/HerdDesk.App/ViewModels/TerminalDisplayCoordinator.cs",
+        "tests/Unit/HerdDesk.App.Tests/TerminalDisplaySettingsTests.cs",
+        "implementation/hd-011-l2.json",
+        "implementation/hd-014-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L3",
+      "live_capture": "evidence/quality/live-dpi.not-run.json",
+      "missing_grant": "no_authorized_dpi_theme_monitor_matrix"
+    },
+    {
+      "id": "eight-hour-soak",
+      "title": "8h soak",
+      "ac_ids": ["AC46"],
+      "owner_children": ["HD-025", "HD-018"],
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Terminal/TerminalQueueBudget.cs",
+        "src/HerdDesk.Core/Recovery/RecoveryPolicy.cs",
+        "src/HerdDesk.App/Services/PaneVisibilityCoordinator.cs",
+        "implementation/hd-025-l2.json",
+        "implementation/hd-018-l2.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L4",
+      "live_capture": "evidence/quality/live-soak.not-run.json",
+      "missing_grant": "no_authorized_eight_hour_soak"
+    }
+  ],
+  "live_rows": [
+    {
+      "id": "live-cold-start",
+      "kind": "live_cold_start",
+      "owner_children": ["HD-011", "HD-033"],
+      "required_evidence": "L3",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-cold-start.not-run.json",
+      "missing_grant": "no_authorized_interactive_desktop_cold_start"
+    },
+    {
+      "id": "live-input-pixel",
+      "kind": "live_input_to_visible_pixel",
+      "owner_children": ["HD-014", "HD-015", "HD-033"],
+      "required_evidence": "L3",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-input-pixel.not-run.json",
+      "missing_grant": "no_authorized_visible_pixel_latency_probe"
+    },
+    {
+      "id": "live-search-p95",
+      "kind": "live_search_p95",
+      "owner_children": ["HD-011", "HD-023", "HD-033"],
+      "required_evidence": "L3",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-search-p95.not-run.json",
+      "missing_grant": "no_authorized_live_search_p95"
+    },
+    {
+      "id": "live-working-set",
+      "kind": "live_working_set",
+      "owner_children": ["HD-025", "HD-033"],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-working-set.not-run.json",
+      "missing_grant": "no_authorized_working_set_process_sample"
+    },
+    {
+      "id": "live-handle-reclaim",
+      "kind": "live_hide_show_handle_reclaim",
+      "owner_children": ["HD-025", "HD-011", "HD-033"],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-handle-reclaim.not-run.json",
+      "missing_grant": "no_authorized_pane_hide_show_handle_lab"
+    },
+    {
+      "id": "live-narrator",
+      "kind": "live_narrator",
+      "owner_children": ["HD-011", "HD-033"],
+      "required_evidence": "L3",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-narrator.not-run.json",
+      "missing_grant": "no_authorized_narrator_desktop"
+    },
+    {
+      "id": "live-dpi",
+      "kind": "live_dpi_theme",
+      "owner_children": ["HD-011", "HD-014", "HD-033"],
+      "required_evidence": "L3",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-dpi.not-run.json",
+      "missing_grant": "no_authorized_dpi_theme_monitor_matrix"
+    },
+    {
+      "id": "live-soak",
+      "kind": "live_eight_hour_soak",
+      "owner_children": ["HD-025", "HD-018", "HD-033"],
+      "required_evidence": "L4",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/quality/live-soak.not-run.json",
+      "missing_grant": "no_authorized_eight_hour_soak"
+    }
+  ],
+  "note": "HD-033 L1 closeout catalog. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator, and working-set stay not_run. This file is not product AC pass evidence."
+}

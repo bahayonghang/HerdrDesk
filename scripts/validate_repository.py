@@ -783,6 +783,361 @@ def _check_hd032_closeout(hd032: dict, catalog: dict, matrix: dict) -> None:
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
 
 
+_HD033_PASS_KEYS = (
+    'ac27_passed', 'ac28_passed', 'ac29_passed', 'ac37_passed',
+    'ac38_passed', 'ac46_passed', 'g0_passed',
+)
+_HD033_REQUIRED_ACS = frozenset({
+    'AC27', 'AC28', 'AC29', 'AC37', 'AC38', 'AC46',
+})
+_HD033_CARD_IDS = (
+    'cold-start', 'input-to-visible-pixel', 'search-p95',
+    'working-set-1-4-pane', 'hide-show-100', 'narrator',
+    'dpi-100-150-200', 'eight-hour-soak',
+)
+_HD033_CARD_ACS = {
+    'cold-start': ('AC28',),
+    'input-to-visible-pixel': ('AC28',),
+    'search-p95': ('AC28',),
+    'working-set-1-4-pane': ('AC27', 'AC28'),
+    'hide-show-100': ('AC29',),
+    'narrator': ('AC37',),
+    'dpi-100-150-200': ('AC38',),
+    'eight-hour-soak': ('AC46',),
+}
+_HD033_CARD_OWNERS = {
+    'cold-start': ['HD-011'],
+    'input-to-visible-pixel': ['HD-014', 'HD-015'],
+    'search-p95': ['HD-011', 'HD-023'],
+    'working-set-1-4-pane': ['HD-025'],
+    'hide-show-100': ['HD-025', 'HD-011'],
+    'narrator': ['HD-011'],
+    'dpi-100-150-200': ['HD-011', 'HD-014'],
+    'eight-hour-soak': ['HD-025', 'HD-018'],
+}
+_HD033_CARD_GRANTS = {
+    'cold-start': 'no_authorized_interactive_desktop_cold_start',
+    'input-to-visible-pixel': 'no_authorized_visible_pixel_latency_probe',
+    'search-p95': 'no_authorized_live_search_p95',
+    'working-set-1-4-pane': 'no_authorized_working_set_process_sample',
+    'hide-show-100': 'no_authorized_pane_hide_show_handle_lab',
+    'narrator': 'no_authorized_narrator_desktop',
+    'dpi-100-150-200': 'no_authorized_dpi_theme_monitor_matrix',
+    'eight-hour-soak': 'no_authorized_eight_hour_soak',
+}
+_HD033_LIVE_IDS = (
+    'live-cold-start', 'live-input-pixel', 'live-search-p95',
+    'live-working-set', 'live-handle-reclaim', 'live-narrator',
+    'live-dpi', 'live-soak',
+)
+_HD033_LIVE_GRANTS = {
+    'live-cold-start': 'no_authorized_interactive_desktop_cold_start',
+    'live-input-pixel': 'no_authorized_visible_pixel_latency_probe',
+    'live-search-p95': 'no_authorized_live_search_p95',
+    'live-working-set': 'no_authorized_working_set_process_sample',
+    'live-handle-reclaim': 'no_authorized_pane_hide_show_handle_lab',
+    'live-narrator': 'no_authorized_narrator_desktop',
+    'live-dpi': 'no_authorized_dpi_theme_monitor_matrix',
+    'live-soak': 'no_authorized_eight_hour_soak',
+}
+_HD033_L3_L4_KEYS = (
+    'l3_ime', 'l3_narrator', 'l3_dpi', 'l4_soak',
+)
+_HD033_FALSE_KEYS = (
+    'live_ime', 'live_narrator', 'live_dpi', 'live_soak',
+    'live_input_pixel', 'live_working_set', 'eight_hour_soak_executed',
+    'invented_timings', 'derive_process_memory_from_q_p',
+    'hosted_ci_is_interactive_desktop', 'winui_admitted', 'herdr_executed',
+    'copy_windows_fields_onto_linux', 'extrapolate_macos_arm64',
+    'integration_ssh_project', 'integration_windows_project',
+)
+_HD033_TRUE_KEYS = (
+    'parser_consumed_is_not_presentation',
+    'parser_callback_cannot_pass_input_to_pixel',
+)
+_HD033_TIMING_KEYS = (
+    'p95_ms', 'visible_pixel_ms', 'parser_consumed_ms', 'soak_hours',
+    'working_set_bytes', 'private_bytes', 'handle_count', 'process_count',
+    'q_p_bytes', 'sample_count', 'cycle_count', 'disconnect_switch_count',
+    'resize_rate',
+)
+_HD033_SUCCESS = frozenset({'passed', 'verified', 'compatible', 'success', 'ok', 'pass'})
+_HD033_SUPPORT_PASS = frozenset({'supported', 'stable', 'passed', 'compatible', 'success'})
+_HD033_TEMPLATES = (
+    'evidence/quality/live-cold-start.template.json',
+    'evidence/quality/live-input-pixel.template.json',
+    'evidence/quality/live-search-p95.template.json',
+    'evidence/quality/live-working-set.template.json',
+    'evidence/quality/live-handle-reclaim.template.json',
+    'evidence/quality/live-narrator.template.json',
+    'evidence/quality/live-dpi.template.json',
+    'evidence/quality/live-soak.template.json',
+)
+_HD033_NOT_RUN = (
+    'evidence/quality/live-cold-start.not-run.json',
+    'evidence/quality/live-input-pixel.not-run.json',
+    'evidence/quality/live-search-p95.not-run.json',
+    'evidence/quality/live-working-set.not-run.json',
+    'evidence/quality/live-handle-reclaim.not-run.json',
+    'evidence/quality/live-narrator.not-run.json',
+    'evidence/quality/live-dpi.not-run.json',
+    'evidence/quality/live-soak.not-run.json',
+)
+_HD033_SCENARIOS = (
+    'cold_start', 'input_to_visible_pixel', 'search_p95', 'working_set',
+    'hide_show_100', 'narrator', 'dpi_theme', 'eight_hour_soak',
+)
+
+
+def _hd033_token(value):
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+def _is_hd033_success(value) -> bool:
+    if value is True:
+        return True
+    return _hd033_token(value) in _HD033_SUCCESS
+
+
+def _reject_hd033_invented_timings(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key in _HD033_TIMING_KEYS and value is not None:
+                raise AssertionError(f'{key} must stay null; do not invent timings')
+            _reject_hd033_invented_timings(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd033_invented_timings(item)
+
+
+def _reject_hd033_pass_claims(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key.endswith('_passed') and value is not False:
+                raise AssertionError(f'{key} must stay false')
+            if key == 'phase_gate' and _hd033_token(value) in {'passed', 'pass', 'ok'}:
+                raise AssertionError('phase_gate must stay not_passed')
+            if key in _HD033_L3_L4_KEYS and value != 'UNVERIFIED':
+                raise AssertionError(f'{key} must stay UNVERIFIED')
+            if key in {'live_result', 'result', 'live_status', 'status'} and _is_hd033_success(value):
+                raise AssertionError(f'{key} must stay not_run or UNVERIFIED')
+            if key == 'support' and _hd033_token(value) in _HD033_SUPPORT_PASS:
+                raise AssertionError('support must not be a pass token')
+            if key == 'compatible' and value is True:
+                raise AssertionError('compatible must stay false')
+            if key in _HD033_FALSE_KEYS and value is True:
+                raise AssertionError(f'{key} must stay false')
+            if key in _HD033_TRUE_KEYS and value is not True:
+                raise AssertionError(f'{key} must stay true')
+            if key == 'l1_status' and _hd033_token(value) in _HD033_SUCCESS:
+                raise AssertionError('l1_status must not be a pass token')
+            if key == 'mib_bytes' and value not in (None, 1048576):
+                raise AssertionError('mib_bytes must be 1048576')
+            kind = _hd033_token(doc.get('kind'))
+            if kind in {'live_eight_hour_soak', 'eight_hour_soak'} and _is_hd033_success(doc.get('result')):
+                raise AssertionError('fake soak success is rejected')
+            _reject_hd033_pass_claims(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd033_pass_claims(item)
+
+
+def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
+    assert hd033.get('document_kind') == 'hd033_l2_status'
+    assert catalog.get('document_kind') == 'hd033_performance_a11y_soak_catalog'
+    assert matrix.get('document_kind') == 'hd033_support_matrix'
+    for key in _HD033_L3_L4_KEYS:
+        assert hd033.get(key) == 'UNVERIFIED', key
+        if key in catalog:
+            assert catalog.get(key) == 'UNVERIFIED', key
+        if key in matrix:
+            assert matrix.get(key) == 'UNVERIFIED', key
+    for doc in (hd033, catalog, matrix):
+        _reject_hd033_pass_claims(doc)
+        _reject_hd033_invented_timings(doc)
+        for key in _HD033_PASS_KEYS:
+            assert doc.get(key) is False, key
+        assert doc.get('phase_gate') != 'passed'
+        if 'winui_admitted' in doc:
+            assert doc.get('winui_admitted') is False
+        if 'herdr_executed' in doc:
+            assert doc.get('herdr_executed') is False
+        if 'eight_hour_soak_executed' in doc:
+            assert doc.get('eight_hour_soak_executed') is False
+        if 'parser_consumed_is_not_presentation' in doc:
+            assert doc.get('parser_consumed_is_not_presentation') is True
+        if 'derive_process_memory_from_q_p' in doc:
+            assert doc.get('derive_process_memory_from_q_p') is False
+        if 'mib_bytes' in doc:
+            assert doc.get('mib_bytes') == 1048576
+        if 'hosted_ci_is_interactive_desktop' in doc:
+            assert doc.get('hosted_ci_is_interactive_desktop') is False
+    for key in _HD033_FALSE_KEYS:
+        assert hd033.get(key) is False, key
+        if key in catalog:
+            assert catalog.get(key) is False, key
+    for key in _HD033_TRUE_KEYS:
+        assert hd033.get(key) is True, key
+        assert catalog.get(key) is True, key
+        assert matrix.get(key) is True, key
+    assert hd033.get('mib_bytes') == 1048576
+    assert catalog.get('mib_bytes') == 1048576
+    assert matrix.get('mib_bytes') == 1048576
+    assert tuple(catalog.get('templates') or ()) == _HD033_TEMPLATES
+    assert tuple(catalog.get('not_run_captures') or ()) == _HD033_NOT_RUN
+    missing = hd033.get('missing') or {}
+    for key in (
+        'interactive_desktop', 'visible_pixel_probe', 'working_set_lab',
+        'narrator_desktop', 'dpi_theme_matrix', 'eight_hour_soak',
+        'winui_shell', 'integration_windows', 'live_search_p95',
+    ):
+        assert missing.get(key) is True, key
+    assert hd033.get('catalog') == 'evidence/quality/catalog.json'
+    assert hd033.get('support_matrix') == 'evidence/quality/support-matrix.json'
+    assert catalog.get('support_matrix') == 'evidence/quality/support-matrix.json'
+    assert catalog.get('l2_status') == 'implementation/hd-033-l2.json'
+    assert hd033.get('herdr_executed') is False
+    assert catalog.get('herdr_executed') is False
+    redaction = catalog.get('redaction') or {}
+    for key in ('host', 'user', 'path', 'credential', 'terminal_body'):
+        assert redaction.get(key) == 'omitted', key
+    cards = {item['id']: item for item in catalog['execution_cards']}
+    assert tuple(cards) == _HD033_CARD_IDS
+    seen_acs = set()
+    for card in catalog['execution_cards']:
+        card_id = card['id']
+        assert card['live_status'] == 'UNVERIFIED'
+        assert card['live_result'] == 'not_run'
+        assert card['l1_status'] == 'shipped'
+        assert card['l1_status'] != 'passed'
+        assert card['required_evidence'] in {'L2', 'L3', 'L4'}
+        assert card['required_evidence'] != 'L1'
+        assert card['missing_grant'] == _HD033_CARD_GRANTS[card_id]
+        assert card['owner_children'] == _HD033_CARD_OWNERS[card_id]
+        assert tuple(card['ac_ids']) == _HD033_CARD_ACS[card_id]
+        seen_acs.update(card['ac_ids'])
+        assert card['l1_artifacts']
+        for rel in card['l1_artifacts']:
+            assert (ROOT / rel).is_file(), rel
+        capture = ROOT / card['live_capture']
+        assert capture.is_file()
+        loaded = json.loads(capture.read_text(encoding='utf-8'))
+        _reject_hd033_pass_claims(loaded)
+        _reject_hd033_invented_timings(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        assert not _is_hd033_success(loaded.get('result'))
+        assert loaded.get('eight_hour_soak_executed') is not True
+    assert _HD033_REQUIRED_ACS <= seen_acs
+    assert cards['input-to-visible-pixel']['missing_grant'] != 'parser_consumed'
+    rows = {item['id']: item for item in catalog['live_rows']}
+    assert tuple(rows) == _HD033_LIVE_IDS
+    for row in catalog['live_rows']:
+        assert row['status'] == 'UNVERIFIED'
+        assert row['result'] == 'not_run'
+        assert row.get('template') is False
+        assert row.get('owner_children')
+        assert row['missing_grant'] == _HD033_LIVE_GRANTS[row['id']]
+        evidence = ROOT / row['evidence_path']
+        assert evidence.is_file()
+        loaded = json.loads(evidence.read_text(encoding='utf-8'))
+        _reject_hd033_pass_claims(loaded)
+        _reject_hd033_invented_timings(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        if row['id'] == 'live-soak':
+            assert loaded.get('eight_hour_soak_executed') is False
+            assert loaded.get('soak_hours') is None
+            assert not _is_hd033_success(loaded.get('result'))
+        if row['id'] == 'live-input-pixel':
+            assert loaded.get('parser_consumed_is_not_presentation') is True
+            assert loaded.get('parser_callback_cannot_pass_input_to_pixel') is True
+        if row['id'] == 'live-working-set':
+            assert loaded.get('derive_process_memory_from_q_p') is False
+            assert loaded.get('mib_bytes') == 1048576
+    for rel in _HD033_TEMPLATES:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd033_pass_claims(doc)
+        _reject_hd033_invented_timings(doc)
+        assert doc.get('template') is True
+        assert doc.get('document_kind') == 'template'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('captured_at_utc') is None
+        assert not _is_hd033_success(doc.get('result'))
+        assert doc.get('herdr_executed') is False
+        assert 'stdout' not in doc and 'stderr' not in doc
+        if 'soak' in rel:
+            assert doc.get('eight_hour_soak_executed') is False
+            assert doc.get('soak_hours') is None
+    for rel in _HD033_NOT_RUN:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd033_pass_claims(doc)
+        _reject_hd033_invented_timings(doc)
+        assert doc.get('template') is False
+        assert doc.get('result') == 'not_run'
+        assert doc.get('herdr_executed') is False
+        assert doc.get('evidence_level') == 'not_run'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('host_fingerprint_redacted') is None
+        assert doc.get('command_redacted') is None
+        assert 'stdout' not in doc and 'stderr' not in doc
+        blob = json.dumps(doc).lower()
+        assert 'password' not in blob
+        assert 'private_key' not in blob
+    promised = {item['id'] for item in matrix['promised_range']}
+    assert promised == {'windows-11-x64-client', 'linux-x64-remote'}
+    by_platform = {item['id']: item for item in matrix['platforms']}
+    for key in ('windows-11-x64-client', 'linux-x64-remote'):
+        row = by_platform[key]
+        assert row['promise'] == 'promised'
+        assert row['live_status'] == 'not_run'
+        assert row['live_result'] == 'not_run'
+        assert row['compatible'] is False
+        assert row['support'] == 'promised_not_run'
+    macos = by_platform['macos-x64']
+    assert macos['support'] == 'unsupported'
+    assert macos['live_status'] == 'not_run'
+    assert macos['compatible'] is False
+    for key in ('macos-arm64', 'linux-arm64', 'windows-arm64'):
+        row = by_platform[key]
+        assert row['support'] in ('unsupported', 'experimental')
+        assert row['support'] not in ('supported', 'stable', 'promised')
+        assert row['live_status'] == 'not_run'
+        assert row['compatible'] is False
+    assert by_platform['windows-11-x64-client']['missing_grant'] != \
+        by_platform['linux-x64-remote']['missing_grant']
+    scenario_ids = [item['id'] for item in matrix['scenarios']]
+    assert tuple(scenario_ids) == _HD033_SCENARIOS
+    for scenario in matrix['scenarios']:
+        assert scenario['live_status'] == 'not_run'
+        assert scenario['live_result'] == 'not_run'
+        assert scenario['support'] == 'l1_only'
+    cell_keys = {(item['platform'], item['scenario']) for item in matrix['cells']}
+    for platform in ('windows-11-x64-client', 'linux-x64-remote'):
+        for scenario in scenario_ids:
+            assert (platform, scenario) in cell_keys
+    for cell in matrix['cells']:
+        assert cell['live_status'] == 'not_run'
+        assert cell['live_result'] == 'not_run'
+        assert cell['compatible'] is False
+        assert not _is_hd033_success(cell['live_result'])
+    assert matrix.get('copy_windows_fields_onto_linux') is False
+    assert matrix.get('extrapolate_macos_arm64') is False
+    assert matrix.get('compatible_by_default') == []
+    assert matrix.get('eight_hour_soak_executed') is False
+    assert catalog.get('eight_hour_soak_executed') is False
+    assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -817,11 +1172,14 @@ def validate() -> dict:
     hd030=json.loads((ROOT/'implementation/hd-030-l2.json').read_text(encoding='utf-8'))
     hd031=json.loads((ROOT/'implementation/hd-031-l2.json').read_text(encoding='utf-8'))
     hd032=json.loads((ROOT/'implementation/hd-032-l2.json').read_text(encoding='utf-8'))
+    hd033=json.loads((ROOT/'implementation/hd-033-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
     files_catalog=json.loads((ROOT/'evidence/files/catalog.json').read_text(encoding='utf-8'))
     files_matrix=json.loads((ROOT/'evidence/files/support-matrix.json').read_text(encoding='utf-8'))
+    quality_catalog=json.loads((ROOT/'evidence/quality/catalog.json').read_text(encoding='utf-8'))
+    quality_matrix=json.loads((ROOT/'evidence/quality/support-matrix.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -971,6 +1329,7 @@ def validate() -> dict:
     _check_hd030(hd030)
     _check_hd031(hd031)
     _check_hd032_closeout(hd032, files_catalog, files_matrix)
+    _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

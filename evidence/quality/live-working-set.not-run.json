@@ -1,0 +1,31 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "hd033-live-working-set-2026-09-09-not-run",
+  "kind": "live_working_set",
+  "captured_at_utc": "2026-09-09T12:00:00Z",
+  "operator_scope": "no_authorized_working_set_process_sample",
+  "host_fingerprint_redacted": null,
+  "command_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": "not_run",
+  "herdr_executed": false,
+  "live_working_set": false,
+  "working_set_bytes": null,
+  "private_bytes": null,
+  "handle_count": null,
+  "process_count": null,
+  "q_p_bytes": null,
+  "derive_process_memory_from_q_p": false,
+  "mib_bytes": 1048576,
+  "invented_timings": false,
+  "limitations": [
+    "Working-set process sampling was not authorized in this dispatch.",
+    "HD-025 TerminalQueueBudget is a Core queue ceiling, not App plus WebView2 working set.",
+    "Do not derive process memory from Q_p.",
+    "MiB is 1,048,576 bytes."
+  ]
+}

@@ -58,5 +58,6 @@
 | `hd-030-l2.json` | L2 live agent/IME/SSH = `UNVERIFIED`。无 Integration.Windows。WinUI 未准入。auto-submit false。AC35/AC31/AC32/AC36/G0 false。 |
 | `hd-031-l2.json` | L2 live clipboard/IME = `UNVERIFIED`。无 Integration.Windows。WinUI 未准入。无 watcher。OSC 52 默认 deny。AC36/G0 false。 |
 | `hd-032-l2.json` | L2 live FS/SSH/TOCTOU/attack = `UNVERIFIED`。L1 P4 收口目录不能关闭产品 AC31/32/33/34/35。`phase_gate=not_passed`。 |
+| `hd-033-l2.json` | L3 IME/Narrator/DPI 与 L4 soak = `UNVERIFIED`。L1 P5 收口目录不能关闭产品 AC27/28/29/37/38/46。parser consumed 不是呈现。`phase_gate=not_passed`。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。

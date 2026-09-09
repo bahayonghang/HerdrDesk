@@ -1,0 +1,26 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd033-live-cold-start-template",
+  "kind": "live_cold_start",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_interactive_desktop_cold_start_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "packaged app process start to shell first-interactive marker, 30 independent samples"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "p95_ms": null,
+  "sample_count": null,
+  "invented_timings": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "Hosted CI is not an interactive desktop cold-start measurement.",
+    "Do not invent p95_ms. Do not store host, user, path, or credential."
+  ]
+}

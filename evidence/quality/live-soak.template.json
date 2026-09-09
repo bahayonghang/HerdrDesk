@@ -1,0 +1,30 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd033-live-soak-template",
+  "kind": "live_eight_hour_soak",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_eight_hour_soak_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "8 hour representative load with 100 disconnect/switch cycles and fault injection"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "live_soak": false,
+  "eight_hour_soak_executed": false,
+  "soak_hours": null,
+  "disconnect_switch_count": null,
+  "sample_count": null,
+  "invented_timings": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, hashes, and soak_hours are not a successful 8h soak.",
+    "Do not invent soak_hours, sample series, or a passed result.",
+    "Do not stop a user daemon or agent as rollback.",
+    "Hosted CI is not an 8h soak."
+  ]
+}

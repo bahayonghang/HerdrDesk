@@ -1,0 +1,27 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd033-live-dpi-template",
+  "kind": "live_dpi_theme",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_dpi_theme_monitor_matrix_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "100/150/200 percent DPI times light/dark/high-contrast on supported monitors"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "live_dpi": false,
+  "winui_admitted": false,
+  "resize_rate": null,
+  "invented_timings": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "HD-014 L3 DPI/theme/focus stays UNVERIFIED. WinUI is not admitted.",
+    "Do not invent resize_rate. Hosted CI is not an interactive desktop."
+  ]
+}

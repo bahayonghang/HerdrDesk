@@ -1,0 +1,29 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd033-live-handle-reclaim-template",
+  "kind": "live_hide_show_handle_reclaim",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_pane_hide_show_handle_lab_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "connect and close pane view 100 times, then compare process/handle/private bytes/working set to baseline"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "handle_count": null,
+  "process_count": null,
+  "working_set_bytes": null,
+  "private_bytes": null,
+  "cycle_count": null,
+  "invented_timings": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "PaneVisibilityCoordinator unit hide/show is not live handle reclaim.",
+    "Do not invent handle_count or cycle_count."
+  ]
+}

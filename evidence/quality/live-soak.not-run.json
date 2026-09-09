@@ -1,0 +1,28 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "hd033-live-soak-2026-09-09-not-run",
+  "kind": "live_eight_hour_soak",
+  "captured_at_utc": "2026-09-09T12:00:00Z",
+  "operator_scope": "no_authorized_eight_hour_soak",
+  "host_fingerprint_redacted": null,
+  "command_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": "not_run",
+  "herdr_executed": false,
+  "live_soak": false,
+  "eight_hour_soak_executed": false,
+  "soak_hours": null,
+  "disconnect_switch_count": null,
+  "sample_count": null,
+  "invented_timings": false,
+  "limitations": [
+    "8h soak was not authorized and was not executed in this dispatch.",
+    "A template or L1 catalog is not soak success.",
+    "Do not invent soak_hours or a passed result.",
+    "Do not stop a user daemon or agent."
+  ]
+}
