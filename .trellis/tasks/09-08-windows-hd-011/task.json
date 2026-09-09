@@ -3,7 +3,7 @@
   "name": "windows-hd-011",
   "title": "HD-011 本地导航与搜索",
   "description": "设备/session/workspace/pane树、过滤、最近访问、键盘导航",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-08",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 BCL ViewModels for navigation/search/settings/diagnostics landed. WinUI/WASDK not admitted. L2 visual/activation and L3 IME/DPI UNVERIFIED. AC19/G0 not passed.",
+  "notes": "L1 ViewModels remain. 2026-09-09 reopen for L2 WinUI Shell on admitted HD-007 WinUI 2.3.6 lock (HEAD 605bb85, hosted run 34363263768 windows-desktop green). No Shell/Settings XAML yet. L3 IME/DPI UNVERIFIED. AC19/G0 not passed. Do not install herdr on LAN.",
   "meta": {
     "source_task": "HD-011",
     "phase": "P1"
