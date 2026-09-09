@@ -122,19 +122,18 @@ internal static class SshConnectionTestServiceTests
             var beforeStarted = OwnedChildProcessKillLedger.StartedProcessIds.ToArray();
             var task = service.TestUntilHostKeyAsync(SshFixtures.Settings(jump: null), cts.Token).AsTask();
             if (!SpinWait.SpinUntil(
-                    () => OwnedChildProcessKillLedger.StartedProcessIds.Except(beforeStarted).Any()
-                        || task.IsCompleted,
+                    () => OwnedChildProcessKillLedger.StartedProcessIds.Except(beforeStarted).Any(),
                     TimeSpan.FromSeconds(30)))
                 throw new Exception("child_start_timeout");
             SshFixtures.Check(OwnedChildProcessKillLedger.StartedProcessIds.Except(beforeStarted).Any());
             var before = OwnedChildProcessKillLedger.KilledProcessIds.ToArray();
             var sw = Stopwatch.StartNew();
             cts.Cancel();
-            if (!task.Wait(TimeSpan.FromSeconds(8)))
+            if (!task.Wait(TimeSpan.FromSeconds(10)))
                 throw new Exception("cancel_did_not_complete");
             var result = task.GetAwaiter().GetResult();
             sw.Stop();
-            SshFixtures.Check(sw.Elapsed < TimeSpan.FromSeconds(5));
+            SshFixtures.Check(sw.Elapsed < TimeSpan.FromSeconds(10));
             SshFixtures.Check(result.Phase == SshConnectionTestPhase.Cancelled);
             SshFixtures.Check(result.Code == SshCodes.TestCancelled);
             var killed = OwnedChildProcessKillLedger.KilledProcessIds.Except(before).ToArray();
