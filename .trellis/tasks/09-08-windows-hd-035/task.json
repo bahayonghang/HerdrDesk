@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-035",
+  "name": "windows-hd-035",
+  "title": "HD-035 最终安全与许可审查",
+  "description": "锁依赖扫描、license清单、渗透用例、凭据导出检查",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 P5 security/license catalog landed. Live scans, renderer process, canary export, signed-package unpack UNVERIFIED. AC02/43/44/G0 not passed. Public visibility is not a license grant.",
+  "meta": {
+    "source_task": "HD-035",
+    "phase": "P5"
+  }
+}
