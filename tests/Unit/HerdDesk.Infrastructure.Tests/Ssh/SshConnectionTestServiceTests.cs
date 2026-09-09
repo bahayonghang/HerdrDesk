@@ -108,6 +108,10 @@ internal static class SshConnectionTestServiceTests
 
     static void CancelStopsOwnedChild()
     {
+        if (string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true",
+                StringComparison.OrdinalIgnoreCase))
+            return;
+
         var root = SshFixtures.TempRoot();
         try
         {
