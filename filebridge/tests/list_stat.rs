@@ -73,8 +73,8 @@ fn list_does_not_parse_ls_text() {
 #[cfg(unix)]
 #[test]
 fn intermediate_symlink_is_not_followed() {
-    let root = tmp();
-    let outside = tmp();
+    let root = fs::canonicalize(tmp()).unwrap();
+    let outside = fs::canonicalize(tmp()).unwrap();
     fs::create_dir(outside.join("nested")).unwrap();
     std::os::unix::fs::symlink(&outside, root.join("link")).unwrap();
     let fs = LocalRoot::new(root.clone()).unwrap();

@@ -73,7 +73,8 @@ impl LocalRoot {
             }
             let last = i + 1 == components.len();
             let meta = fs::symlink_metadata(&current).map_err(map_io)?;
-            if meta.file_type().is_symlink() {
+            let is_link = meta.file_type().is_symlink() || unix_is_symlink(&meta);
+            if is_link {
                 if last {
                     break;
                 }
@@ -567,6 +568,21 @@ fn renameatx_np_excl(from: &Path, to: &Path) -> Result<(), FsError> {
         Ok(())
     } else {
         Err(map_rename_errno(io::Error::last_os_error()))
+    }
+}
+
+fn unix_is_symlink(meta: &fs::Metadata) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        const S_IFMT: u32 = 0o170000;
+        const S_IFLNK: u32 = 0o120000;
+        (meta.mode() & S_IFMT) == S_IFLNK
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = meta;
+        false
     }
 }
 

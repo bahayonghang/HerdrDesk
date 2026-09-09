@@ -62,7 +62,7 @@ internal static class ResourceCommandViewModelTests
         AppTestHost.Check(env.Vm.ConfirmEnabled);
         AppTestHost.Check(env.Vm.ConfirmCloseAutomationName == ShellStrings.ConfirmClose);
         env.Vm.ConfirmCloseFromKeyboard();
-        env.Wait(op => op.MutationSent || op.State is ResourceOperationState.Observing);
+        env.Wait(op => op.MutationSent);
         AppTestHost.Check(env.Transport.Intents.Count == 1);
         AppTestHost.Check(!((CloseResourceIntent)env.Transport.Intents[0]).CloseGroup);
         AppTestHost.Check(env.Vm.CreateWorkspaceAutomationName == ShellStrings.CreateWorkspace);
