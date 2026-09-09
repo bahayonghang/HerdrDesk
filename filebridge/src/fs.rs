@@ -1,11 +1,13 @@
 //! Local filesystem adapter for the helper. Unix openat lives behind cfg(unix).
 
 use crate::error::helper;
+#[cfg(windows)]
+use crate::identity::portable_identity;
 #[cfg(unix)]
 use crate::identity::unix_identity;
 #[cfg(windows)]
 use crate::identity::windows_identity;
-use crate::identity::{observation, portable_identity, EntryKind};
+use crate::identity::{observation, EntryKind};
 use crate::path;
 use crate::sha256::{digest_hex, Sha256};
 use std::fs::{self, File, OpenOptions};
