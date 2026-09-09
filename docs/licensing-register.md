@@ -273,10 +273,13 @@ distribution permission.
 | conflict | false |
 
 The App windows TFM lock admits WinUI 2.3.6 nupkgs listed in
-`docs/licensing/register.json`. xterm, fonts, icons, and a published
-`herddesk-filebridge` install stay out of lock. Use the candidate templates
+`docs/licensing/register.json`. HD-014 L2 admits `@xterm/xterm` 6.0.0 MIT
+into `web/terminal/package-lock.json` and the offline `web/terminal/dist`
+bundle. Unscoped `xterm@5.3.0` is not admitted. Fonts, icons, and a published
+`herddesk-filebridge` install stay out of the NuGet lock. Use the candidate templates
 for remaining assets. Do not treat planning mentions as admission. The WASDK
-2.4.0 umbrella package stays pending.
+2.4.0 umbrella package stays pending. AC02 stays not passed. HD-035 remains
+the reverse-audit.
 
 ## HD-007 L2 admitted nupkgs (App windows lock only)
 
@@ -295,6 +298,8 @@ Project license stays pending. HD-035 remains the reverse-audit. AC02 stays
 | Microsoft.Windows.SDK.BuildTools | 10.0.26100.4654 | prebuilt_binary | Transitive; required by restore |
 | Microsoft.Windows.SDK.BuildTools.MSIX | 1.7.251221100 | prebuilt_binary | Transitive; restore mapping only, not product MSIX |
 | Microsoft.Web.WebView2 | Evergreen runtime | runtime_download | Separate record; pending; not a lock input |
+| @xterm/xterm | 6.0.0 | source (npm) | HD-014 L2 local npm lock + WebView bundle; MIT |
+| herddesk-terminal-bundle | 6.0.0 | renderer_asset | Offline dist copy; pending; not NuGet lock; HD-035 reverse-audit |
 
 `Microsoft.Windows.SDK.NET.Ref` 10.0.19041.57 is mapped on nuget.org so a
 clean Windows restore can resolve the windows TFM targeting pack. It is not

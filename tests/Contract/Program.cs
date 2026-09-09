@@ -84,7 +84,7 @@ var cases = new (string Name, Action Run)[]
         Check(!refs.Contains("HerdDesk.Core"));
         Check(!refs.Contains("HerdDesk.App"));
         Check(!refs.Contains("HerdDesk.Infrastructure"));
-        Check(WebRendererHost.PackageStatus == "UNVERIFIED");
+        Check(WebRendererHost.PackageStatus == "admitted");
     }),
     ("production composition does not register fake-success adapters", () =>
     {
@@ -101,7 +101,7 @@ var cases = new (string Name, Action Run)[]
                 Check(!services.TerminalRenderers.Available);
                 Check(!services.RpcConnections.IsFakeSuccess);
                 Check(services.Unavailable.Count >= 3);
-                Check(WebRendererHost.PackageStatus == "UNVERIFIED");
+                Check(WebRendererHost.PackageStatus == "admitted");
                 Check(services.Unavailable.Any(item => item.Name == "terminal-renderer-web"));
             }
             finally

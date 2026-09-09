@@ -365,6 +365,7 @@ _APP_SHELL_XAML = (
     'App.xaml',
     'Controls/DeviceSessionRail.xaml',
     'Controls/SearchPalette.xaml',
+    'Controls/TerminalHost.xaml',
     'Controls/WorkspacePaneTree.xaml',
     'MainWindow.xaml',
     'Views/AboutPage.xaml',
@@ -2112,7 +2113,7 @@ def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: d
     assert acs['AC43']['status'] == 'not_run'
     assert acs['AC44']['status'] == 'not_run'
     check_integration_windows_layout(ROOT)
-    assert not (ROOT / 'web' / 'terminal' / 'package-lock.json').exists()
+    assert (ROOT / 'web' / 'terminal' / 'package-lock.json').is_file()
     assert not (ROOT / 'packages.lock.json').exists()
     assert (ROOT / 'bridge' / 'Cargo.lock').is_file()
     assert (ROOT / 'filebridge' / 'Cargo.lock').is_file()
@@ -2631,7 +2632,7 @@ def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
     for path in files:
-        if any(part in {'.git','obj','bin','target','probe-results','.test-results'} for part in path.parts):continue
+        if any(part in {'.git','obj','bin','target','probe-results','.test-results','node_modules'} for part in path.parts):continue
         json.loads(path.read_text(encoding='utf-8'));count+=1
     graph=validate_project_graph(ROOT)
     projects=list((ROOT/'src').rglob('*.csproj'))+list((ROOT/'tests').rglob('*.csproj'))
@@ -2708,9 +2709,13 @@ def validate() -> dict:
     assert hd014.get('ac08_passed') is not True
     assert hd014.get('ac27_passed') is not True
     assert hd014.get('g0_passed') is not True
-    assert hd014.get('webview2_admitted') is not True
-    assert hd014.get('npm_xterm_admitted') is not True
+    assert hd014.get('webview2_admitted') is True
+    assert hd014.get('npm_xterm_admitted') is True
+    assert hd014.get('github_required_check')=='UNVERIFIED'
     assert hd014.get('phase_gate')!='passed'
+    assert (ROOT/'web'/'terminal'/'package-lock.json').is_file()
+    assert (ROOT/'web'/'terminal'/'dist'/'xterm.mjs').is_file()
+    assert 'WebView2' in (ROOT/'src'/'HerdDesk.App'/'Controls'/'TerminalHost.xaml').read_text(encoding='utf-8')
     assert hd015.get('l3_ime_desktop')=='UNVERIFIED'
     assert hd015.get('l2_webview_ime')=='UNVERIFIED'
     assert hd015.get('ac09_passed') is not True

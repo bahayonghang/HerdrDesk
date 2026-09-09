@@ -37,11 +37,15 @@ internal static class Hd014Cases
             "HerdDesk.Terminal.Web.csproj"));
         Check(!csproj.Contains("PackageReference", StringComparison.OrdinalIgnoreCase));
         Check(!csproj.Contains("WebView2", StringComparison.OrdinalIgnoreCase));
-        Check(!Directory.Exists(Path.Combine(FindRepoRoot(), "web", "terminal")));
-        Check(!File.Exists(Path.Combine(FindRepoRoot(), "web", "terminal", "package-lock.json")));
-        Check(WebRendererHost.PackageStatus == "UNVERIFIED");
+        Check(Directory.Exists(Path.Combine(FindRepoRoot(), "web", "terminal")));
+        Check(File.Exists(Path.Combine(FindRepoRoot(), "web", "terminal", "package-lock.json")));
+        Check(File.Exists(Path.Combine(FindRepoRoot(), "web", "terminal", "dist", "xterm.mjs")));
+        Check(WebRendererHost.PackageStatus == "admitted");
         Check(WebRendererHost.L2WebViewProcess == "UNVERIFIED");
         Check(WebRendererHost.L3DpiThemeFocus == "UNVERIFIED");
+        var host = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "HerdDesk.App", "Controls",
+            "TerminalHost.xaml"));
+        Check(host.Contains("<WebView2", StringComparison.Ordinal));
     }
 
     static void ProductionUnavailable()
@@ -75,13 +79,15 @@ internal static class Hd014Cases
         var root = document.RootElement;
         Check(root.GetProperty("l2_webview_process").GetString() == "UNVERIFIED");
         Check(root.GetProperty("l3_dpi_theme_focus").GetString() == "UNVERIFIED");
-        Check(root.GetProperty("webview2_admitted").GetBoolean() is false);
-        Check(root.GetProperty("npm_xterm_admitted").GetBoolean() is false);
+        Check(root.GetProperty("webview2_admitted").GetBoolean());
+        Check(root.GetProperty("npm_xterm_admitted").GetBoolean());
         Check(root.GetProperty("ac08_passed").GetBoolean() is false);
         Check(root.GetProperty("ac27_passed").GetBoolean() is false);
         Check(root.GetProperty("g0_passed").GetBoolean() is false);
         Check(root.GetProperty("phase_gate").GetString() != "passed");
-        Check(root.GetProperty("windows_desktop_restore").GetString() == "not_admitted");
+        Check(root.GetProperty("github_required_check").GetString() == "UNVERIFIED");
+        Check(root.GetProperty("windows_desktop_restore").GetString() == "admitted");
+        Check(root.GetProperty("l2_webview_process").GetString() == "UNVERIFIED");
     }
 
     static string FindRepoRoot()

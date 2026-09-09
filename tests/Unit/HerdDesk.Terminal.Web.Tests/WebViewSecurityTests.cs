@@ -26,7 +26,11 @@ internal static class WebViewSecurityTests
             .Code == "devtools_denied");
         WebTestHost.Check(WebViewSecurityPolicy.RuntimeStatus == "UNVERIFIED");
         WebTestHost.Check(WebRendererHost.L2WebViewProcess == "UNVERIFIED");
-        WebTestHost.Check(WebRendererHost.PackageStatus == "UNVERIFIED");
+        WebTestHost.Check(WebRendererHost.PackageStatus == "admitted");
+        WebTestHost.Check(WebViewSecurityPolicy.Classify(
+            WebViewHostAction.NavigationStarting, WebViewSecurityPolicy.LocalOrigin + "/index.html").Allowed);
+        WebTestHost.Check(WebViewSecurityPolicy.Classify(
+            WebViewHostAction.NavigationStarting, "about:blank").Allowed);
     }
 
     static void LinkPolicy()

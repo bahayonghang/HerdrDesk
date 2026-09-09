@@ -28,9 +28,10 @@ public static class WebViewSecurityPolicy
     {
         if (action == WebViewHostAction.LinkRequest)
             return ClassifyLink(uri, userGesture);
+        if (action == WebViewHostAction.NavigationStarting)
+            return ClassifyNavigation(uri);
         return action switch
         {
-            WebViewHostAction.NavigationStarting => Deny("navigation_denied", uri),
             WebViewHostAction.NewWindowRequested => Deny("new_window_denied", uri),
             WebViewHostAction.DownloadStarting => Deny("download_denied", uri),
             WebViewHostAction.PermissionRequested => Deny("permission_denied", uri),
@@ -40,6 +41,26 @@ public static class WebViewSecurityPolicy
             _ => Deny("navigation_denied", uri),
         };
     }
+
+    public static bool IsLocalOriginUri(string? uri)
+    {
+        if (string.IsNullOrEmpty(uri))
+            return false;
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsed))
+            return false;
+        return parsed.Scheme == Uri.UriSchemeHttps &&
+               parsed.Host.Equals("herddesk.terminal.local", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static WebViewSecurityDecision ClassifyNavigation(string? uri)
+    {
+        if (IsLocalOriginUri(uri) || IsBootstrapUri(uri))
+            return new WebViewSecurityDecision(true, "allowed", uri);
+        return Deny("navigation_denied", uri);
+    }
+
+    private static bool IsBootstrapUri(string? uri) =>
+        uri is "about:blank" or "about:blank/";
 
     public static WebViewSecurityDecision ClassifyLink(string? uri, bool userGesture)
     {

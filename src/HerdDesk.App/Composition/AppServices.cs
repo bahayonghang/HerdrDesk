@@ -73,7 +73,7 @@ public sealed class AppServices : IAsyncDisposable
         var store = new AtomicConfigurationStore(paths);
         var rpc = new UnavailableAdapter("rpc-connection", "rpc_bridge_unavailable");
         var transports = new UnavailableAdapter("terminal-transport", "terminal_transport_unavailable");
-        var renderers = new UnavailableAdapter("terminal-renderer", "renderer_packages_unverified");
+        var renderers = new UnavailableAdapter("terminal-renderer", "renderer_host_windows_only");
         UnavailableCapability[] unavailable =
         [
             rpc.Capability,

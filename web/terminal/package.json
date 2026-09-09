@@ -1,0 +1,17 @@
+{
+  "name": "herddesk-terminal",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "node scripts/typecheck.mjs",
+    "test": "node --experimental-strip-types --test tests/utf8-chunks.test.ts tests/security-boundary.test.ts",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@xterm/xterm": "6.0.0"
+  }
+}

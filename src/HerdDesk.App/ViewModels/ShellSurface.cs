@@ -10,6 +10,7 @@ public static class ShellSurface
         "App.xaml",
         "Controls/DeviceSessionRail.xaml",
         "Controls/SearchPalette.xaml",
+        "Controls/TerminalHost.xaml",
         "Controls/WorkspacePaneTree.xaml",
         "MainWindow.xaml",
         "Views/AboutPage.xaml",

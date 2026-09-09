@@ -14,7 +14,7 @@ The offline gate is `just ci`. That gate is not G0 product acceptance.
 
 ## Forbidden Patterns
 
-- `PackageReference` outside the admitted App windows TFM lock. `NuGet.Config` maps nuget.org to `Microsoft.WindowsAppSDK.*`, `Microsoft.Web.WebView2`, `Microsoft.Windows.SDK.BuildTools`, and `Microsoft.Windows.SDK.BuildTools.MSIX` only. Do not PackageReference the WASDK 2.4.0 umbrella. Do not invent Windows App SDK versions.
+- `PackageReference` outside the admitted App windows TFM lock. `NuGet.Config` maps nuget.org to `Microsoft.WindowsAppSDK.*`, `Microsoft.Web.WebView2`, `Microsoft.Windows.SDK.BuildTools`, and `Microsoft.Windows.SDK.BuildTools.MSIX` only. Do not PackageReference the WASDK 2.4.0 umbrella. Do not invent Windows App SDK versions. npm lock is only `web/terminal/package-lock.json` with `@xterm/xterm` 6.0.0. Do not admit unscoped `xterm` or CDN URLs. `web/terminal/dist/*.js` host scripts must be browser JavaScript (Node `stripTypeScriptTypes`); TypeScript syntax in those files is forbidden.
 - Core referencing WinUI, WebView2, SSH, OS credentials, or process control.
 - Overwriting `src/HerdDesk.Contracts` with `docs/plan/contracts/HerdDesk.Contracts.cs`.
 - Per-frame `Encoding.UTF8.GetString` on terminal payload bytes.

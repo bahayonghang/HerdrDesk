@@ -49,6 +49,8 @@
     {"name": "Microsoft.Web.WebView2", "artifact_kind": "prebuilt_binary", "admission": "approved"},
     {"name": "Microsoft.Windows.SDK.BuildTools", "artifact_kind": "prebuilt_binary", "admission": "approved"},
     {"name": "Microsoft.Windows.SDK.BuildTools.MSIX", "artifact_kind": "prebuilt_binary", "admission": "approved"},
-    {"name": "Microsoft.Web.WebView2", "artifact_kind": "runtime_download", "admission": "pending"}
+    {"name": "Microsoft.Web.WebView2", "artifact_kind": "runtime_download", "admission": "pending"},
+    {"name": "@xterm/xterm", "artifact_kind": "source", "admission": "approved"},
+    {"name": "herddesk-terminal-bundle", "artifact_kind": "source", "admission": "pending"}
   ]
 }

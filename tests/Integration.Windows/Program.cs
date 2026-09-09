@@ -68,6 +68,8 @@ static void XamlSurface()
     Check(joined.Contains("x:Class=\"HerdDesk.App." + ShellSurface.WindowTypeName + "\"", StringComparison.Ordinal));
     var shell = XDocument.Load(Path.Combine(app, "Views", "ShellPage.xaml"));
     Check(shell.Root is not null);
+    var host = File.ReadAllText(Path.Combine(app, "Controls", "TerminalHost.xaml"));
+    Check(host.Contains("<WebView2", StringComparison.Ordinal));
     Check(!File.Exists(Path.Combine(app, "Devices", "EditDevicePage.xaml")));
 }
 

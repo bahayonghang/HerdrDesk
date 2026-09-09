@@ -109,13 +109,55 @@ FORBIDDEN_CSPROJ_TEXT = (
     'renci.sshnet',
 )
 
-SKIP_DIR_PARTS = frozenset({'.git', 'obj', 'bin', 'target', 'probe-results', '.test-results', '__pycache__'})
+SKIP_DIR_PARTS = frozenset({
+    '.git', 'obj', 'bin', 'target', 'probe-results', '.test-results',
+    '__pycache__', 'node_modules',
+})
+ADMITTED_NPM_LOCK_REL = 'web/terminal/package-lock.json'
+ADMITTED_NPM_PACKAGE_JSON_REL = 'web/terminal/package.json'
+ADMITTED_NPM_ID = '@xterm/xterm'
+ADMITTED_NPM_VERSION = '6.0.0'
+ADMITTED_NPM_BUNDLE_REL = (
+    'web/terminal/dist/index.html',
+    'web/terminal/dist/terminal.js',
+    'web/terminal/dist/protocol.js',
+    'web/terminal/dist/utf8.js',
+    'web/terminal/dist/styles.css',
+    'web/terminal/dist/xterm.mjs',
+    'web/terminal/dist/xterm.css',
+)
+DIST_JS_RELS = (
+    'web/terminal/dist/terminal.js',
+    'web/terminal/dist/protocol.js',
+    'web/terminal/dist/utf8.js',
+)
+DIST_TS_REMNANTS = (
+    ' as {',
+    ': void',
+    'interface ',
+    'private leftover',
+    ': unknown',
+    ': number',
+    ': string',
+    'Record<string',
+)
+FORBIDDEN_UNSCOPED_NPM = frozenset({'xterm'})
+CDN_MARKERS = (
+    'cdn.jsdelivr.net',
+    'unpkg.com',
+    'cdnjs.cloudflare.com',
+    'jsdelivr.net',
+)
+TERMINAL_HOST_XAML_REL = 'src/HerdDesk.App/Controls/TerminalHost.xaml'
+TERMINAL_HOST_CODE_REL = 'src/HerdDesk.App/Controls/TerminalHost.xaml.cs'
 
 
 def validate_project_graph(root: Path) -> dict[str, Any]:
     root = Path(root)
     check_product_lock(root)
     check_lock_licensing_alignment(root)
+    check_npm_lock(root)
+    check_terminal_webview_host(root)
     rust = validate_rust_bridge_lock(root)
     validate_rust_filebridge_lock(root)
     projects = load_tree_projects(root)
@@ -392,6 +434,167 @@ def lock_nuget_packages(data: dict[str, Any]) -> dict[str, dict[str, str]]:
                 raise ProjectGraphError('unverified_package_pin')
             found[name] = {'resolved': resolved, 'contentHash': content}
     return found
+
+
+def check_npm_lock(root: Path) -> None:
+    root = Path(root)
+    locks: list[str] = []
+    for path in root.rglob('package-lock.json'):
+        if any(part in SKIP_DIR_PARTS for part in path.parts):
+            continue
+        locks.append(path.relative_to(root).as_posix())
+    locks.sort()
+    if ADMITTED_NPM_LOCK_REL not in locks:
+        raise ProjectGraphError('npm_lock_missing')
+    if locks != [ADMITTED_NPM_LOCK_REL]:
+        raise ProjectGraphError('npm_lock_present')
+    package_path = root / ADMITTED_NPM_PACKAGE_JSON_REL
+    lock_path = root / ADMITTED_NPM_LOCK_REL
+    if not package_path.is_file():
+        raise ProjectGraphError('npm_lock_missing')
+    package = json.loads(package_path.read_text(encoding='utf-8'))
+    lock = json.loads(lock_path.read_text(encoding='utf-8'))
+    if not isinstance(package, dict) or not isinstance(lock, dict):
+        raise ProjectGraphError('npm_lock_missing')
+    dependencies = package.get('dependencies') or {}
+    if not isinstance(dependencies, dict):
+        raise ProjectGraphError('forbidden_npm_package')
+    if set(dependencies) != {ADMITTED_NPM_ID}:
+        raise ProjectGraphError('forbidden_npm_package')
+    if dependencies.get(ADMITTED_NPM_ID) != ADMITTED_NPM_VERSION:
+        raise ProjectGraphError('unverified_package_pin')
+    if package.get('devDependencies'):
+        raise ProjectGraphError('forbidden_npm_package')
+    if FORBIDDEN_UNSCOPED_NPM.intersection(dependencies) or 'xterm' in dependencies:
+        raise ProjectGraphError('forbidden_npm_package')
+    packages = lock.get('packages')
+    if not isinstance(packages, dict):
+        raise ProjectGraphError('npm_lock_missing')
+    admitted = packages.get('node_modules/' + ADMITTED_NPM_ID)
+    if not isinstance(admitted, dict):
+        raise ProjectGraphError('npm_lock_missing')
+    if admitted.get('version') != ADMITTED_NPM_VERSION:
+        raise ProjectGraphError('unverified_package_pin')
+    if not str(admitted.get('resolved') or '').startswith('https://registry.npmjs.org/@xterm/xterm/'):
+        raise ProjectGraphError('cdn_source_forbidden')
+    extra = [
+        name for name, spec in packages.items()
+        if name and name != 'node_modules/' + ADMITTED_NPM_ID
+        and isinstance(spec, dict) and spec.get('version')
+    ]
+    if extra:
+        raise ProjectGraphError('forbidden_npm_package')
+    for rel in ADMITTED_NPM_BUNDLE_REL:
+        if not (root / rel).is_file():
+            raise ProjectGraphError('npm_bundle_missing')
+    check_dist_javascript(root)
+    scan_npm_sources(root)
+    check_npm_licensing_alignment(root)
+
+
+def check_dist_javascript(root: Path) -> None:
+    root = Path(root)
+    for rel in DIST_JS_RELS:
+        path = root / rel
+        if not path.is_file():
+            raise ProjectGraphError('npm_bundle_missing')
+        text = path.read_text(encoding='utf-8')
+        if any(marker in text for marker in DIST_TS_REMNANTS):
+            raise ProjectGraphError('dist_typescript_forbidden')
+
+
+def scan_npm_sources(root: Path) -> None:
+    root = Path(root)
+    web = root / 'web' / 'terminal'
+    if not web.is_dir():
+        raise ProjectGraphError('npm_lock_missing')
+    for path in web.rglob('*'):
+        if any(part in SKIP_DIR_PARTS for part in path.parts):
+            continue
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        if rel.endswith('xterm.mjs') or rel.endswith('xterm.js') or rel.endswith('LICENSE-xterm.txt'):
+            continue
+        if rel.endswith('typecheck.mjs') or rel.endswith('security.ts') or '/tests/' in rel:
+            continue
+        if path.suffix.lower() not in {'.ts', '.js', '.mjs', '.html', '.css', '.json'}:
+            continue
+        text = path.read_text(encoding='utf-8')
+        lowered = text.lower()
+        if any(marker in lowered for marker in CDN_MARKERS):
+            raise ProjectGraphError('cdn_source_forbidden')
+        if rel.startswith('web/terminal/src/') and ('innerhtml' in lowered or 'document.write' in lowered):
+            raise ProjectGraphError('cdn_source_forbidden')
+
+
+def check_npm_licensing_alignment(root: Path) -> None:
+    root = Path(root)
+    register = json.loads((root / 'docs' / 'licensing' / 'register.json').read_text(encoding='utf-8'))
+    lock = json.loads((root / ADMITTED_NPM_LOCK_REL).read_text(encoding='utf-8'))
+    admitted = (lock.get('packages') or {}).get('node_modules/' + ADMITTED_NPM_ID) or {}
+    integrity = admitted.get('integrity')
+    units = register.get('units') or []
+    npm = next(
+        (
+            item for item in units
+            if isinstance(item, dict) and item.get('name') == ADMITTED_NPM_ID
+            and item.get('category') == 'npm_package'
+        ),
+        None,
+    )
+    bundle = next(
+        (
+            item for item in units
+            if isinstance(item, dict) and item.get('category') == 'renderer_asset'
+            and item.get('name') == 'herddesk-terminal-bundle'
+        ),
+        None,
+    )
+    if not isinstance(npm, dict) or not isinstance(bundle, dict):
+        raise ProjectGraphError('licensing_lock_mismatch')
+    if npm.get('admission') != 'approved' or npm.get('version') != ADMITTED_NPM_VERSION:
+        raise ProjectGraphError('licensing_lock_mismatch')
+    hash_obj = npm.get('hash') or {}
+    if not isinstance(hash_obj, dict) or hash_obj.get('npm_integrity') != integrity:
+        raise ProjectGraphError('licensing_lock_mismatch')
+    if npm.get('enters_webview_bundle') is not True or npm.get('enters_package_lock') is not False:
+        raise ProjectGraphError('licensing_lock_mismatch')
+    if bundle.get('lock_allowed') is True or bundle.get('enters_package_lock') is True:
+        raise ProjectGraphError('licensing_lock_mismatch')
+    if bundle.get('admission') == 'approved' and bundle.get('enters_webview_bundle') is not True:
+        raise ProjectGraphError('licensing_lock_mismatch')
+
+
+def check_terminal_webview_host(root: Path) -> None:
+    root = Path(root)
+    xaml = root / TERMINAL_HOST_XAML_REL
+    code = root / TERMINAL_HOST_CODE_REL
+    if not xaml.is_file() or not code.is_file():
+        raise ProjectGraphError('admitted_package_missing')
+    xaml_text = xaml.read_text(encoding='utf-8')
+    code_text = code.read_text(encoding='utf-8')
+    if '<WebView2' not in xaml_text or 'WebView2' not in code_text:
+        raise ProjectGraphError('admitted_package_missing')
+    if 'SetVirtualHostNameToFolderMapping' not in code_text:
+        raise ProjectGraphError('admitted_package_missing')
+    if 'AreHostObjectsAllowed = false' not in code_text:
+        raise ProjectGraphError('admitted_package_missing')
+    if 'AreDevToolsEnabled = false' not in code_text:
+        raise ProjectGraphError('admitted_package_missing')
+    if UMBRELLA_INCLUDE_RE.search(code_text):
+        raise ProjectGraphError('forbidden_package_edge')
+    l2 = json.loads((root / 'implementation' / 'hd-014-l2.json').read_text(encoding='utf-8'))
+    if l2.get('webview2_admitted') is not True or l2.get('npm_xterm_admitted') is not True:
+        raise ProjectGraphError('admitted_package_missing')
+    if l2.get('l2_webview_process') != 'UNVERIFIED' or l2.get('l3_dpi_theme_focus') != 'UNVERIFIED':
+        raise ProjectGraphError('l2_claimed_verified')
+    if l2.get('ac08_passed') is True or l2.get('ac27_passed') is True or l2.get('g0_passed') is True:
+        raise ProjectGraphError('ac03_claimed_passed')
+    if l2.get('phase_gate') == 'passed':
+        raise ProjectGraphError('phase_gate_claimed_passed')
+    if l2.get('github_required_check') != 'UNVERIFIED':
+        raise ProjectGraphError('l2_claimed_verified')
 
 
 def check_lock_licensing_alignment(root: Path) -> None:

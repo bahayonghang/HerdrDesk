@@ -1,0 +1,30 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: #ddd;
+  overflow: hidden;
+}
+
+#terminal {
+  height: 100%;
+  width: 100%;
+  font-family: var(--terminal-font-family, Consolas, "Cascadia Mono", monospace);
+  font-size: var(--terminal-font-size, 14px);
+}
+
+.xterm {
+  height: 100%;
+  padding: 4px;
+}
+
+.xterm-viewport {
+  overflow: hidden !important;
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] #terminal {
+  background: #f7f7f7;
+  color: #111;
+}

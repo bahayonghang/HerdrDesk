@@ -38,7 +38,6 @@ internal static class Hd015Cases
         }
 
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "web", "terminal")));
         AppXamlSurface.CheckIntegrationWindowsProject(root);
         var csproj = File.ReadAllText(Path.Combine(root, "src", "HerdDesk.Terminal.Web",
             "HerdDesk.Terminal.Web.csproj"));

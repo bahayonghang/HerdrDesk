@@ -1,3 +1,4 @@
+using HerdDesk.Contracts;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -111,7 +112,8 @@ public sealed partial class ShellPage : UserControl
         if (Shell is null)
             return;
         WelcomePanel.Visibility = Visibility.Collapsed;
-        TerminalPlaceholder.Visibility = Visibility.Collapsed;
+        if (Shell.Route != ShellRoute.Pane)
+            TerminalSurface.SetVisible(false);
         SettingsHost.Visibility = Visibility.Collapsed;
         DiagnosticsHost.Visibility = Visibility.Collapsed;
         AboutHost.Visibility = Visibility.Collapsed;
@@ -129,12 +131,21 @@ public sealed partial class ShellPage : UserControl
                 AboutHost.Visibility = Visibility.Visible;
                 break;
             case ShellRoute.Pane:
-                TerminalPlaceholder.Visibility = Visibility.Visible;
+                TerminalSurface.SetVisible(true);
+                BindTerminal();
                 break;
             default:
                 WelcomePanel.Visibility = Visibility.Visible;
                 break;
         }
+    }
+
+    private void BindTerminal()
+    {
+        if (Shell is null || Shell.Selection.Pane is not { } pane)
+            return;
+        var readOnly = Shell.Access != TerminalAccess.Controlling || !Shell.ControlVerified;
+        TerminalSurface.Bind(pane, Shell.Selection.Epoch, readOnly, Shell.Display.Preview);
     }
 
     private static string WelcomeMessage(ShellViewModel shell) =>

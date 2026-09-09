@@ -83,12 +83,8 @@
                         Click="OnOpenDiagnostics"
                         Content="诊断" />
                 </StackPanel>
-                <TextBlock
-                    x:Name="TerminalPlaceholder"
-                    Padding="24"
-                    AutomationProperties.Name="终端"
-                    Text="终端尚未接入。选择窗格后观察，不获得控制。"
-                    TextWrapping="Wrap"
+                <controls:TerminalHost
+                    x:Name="TerminalSurface"
                     Visibility="Collapsed" />
                 <views:SettingsPage x:Name="SettingsHost" Visibility="Collapsed" />
                 <views:DiagnosticsPage x:Name="DiagnosticsHost" Visibility="Collapsed" />

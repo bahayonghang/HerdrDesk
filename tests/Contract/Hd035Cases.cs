@@ -101,7 +101,7 @@ internal static class Hd035Cases
 
         var root = FindRepoRoot();
         AppXamlSurface.CheckIntegrationWindowsProject(root);
-        Check(!File.Exists(Path.Combine(root, "web", "terminal", "package-lock.json")));
+        Check(File.Exists(Path.Combine(root, "web", "terminal", "package-lock.json")));
         Check(!File.Exists(Path.Combine(root, "packages.lock.json")));
         Check(File.Exists(Path.Combine(root, "bridge", "Cargo.lock")));
         Check(File.Exists(Path.Combine(root, "filebridge", "Cargo.lock")));
@@ -205,6 +205,7 @@ internal static class Hd035Cases
             "Microsoft.Web.WebView2",
             "Microsoft.Windows.SDK.BuildTools",
             "Microsoft.Windows.SDK.BuildTools.MSIX",
+            "@xterm/xterm",
         };
         foreach (var unit in inventory.GetProperty("units").EnumerateArray())
         {
@@ -215,7 +216,11 @@ internal static class Hd035Cases
             {
                 Check(!string.IsNullOrEmpty(name));
                 Check(name != "herdrm");
-                Check(unit.GetProperty("artifact_kind").GetString() == "prebuilt_binary");
+                var kind = unit.GetProperty("artifact_kind").GetString();
+                if (name == "@xterm/xterm")
+                    Check(kind == "source");
+                else
+                    Check(kind == "prebuilt_binary");
                 Check(allowedLock.Contains(name!));
             }
         }

@@ -87,7 +87,7 @@ flowchart TB
 | [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断、RPC stdio | 已生成 |
 | [bridge](bridge/CLAUDE.md) | herddesk-bridge L1 字节转发 | 已生成 |
 | [filebridge](filebridge/CLAUDE.md) | HD-027 codec + HD-028 L1 `herddesk-filebridge serve` | 已生成 |
-| [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter + HD-015 L1 input coordinators | 已生成 |
+| [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter + HD-015 L1 input coordinators；L2 npm/WebView2 在 `web/terminal/` 与 App windows TFM | 已生成 |
 | [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub + HD-011 L2 四区 WinUI Shell + L1 ViewModels + HD-015 L1 focus/input + HD-029 L1 文件工作区 ViewModels + HD-030 L1 AttachToAgentViewModel + HD-031 L1 PastePreviewViewModel | 已生成 |
 | [tests](tests/CLAUDE.md) | 检查导航 | 已生成 |
 | [tests/HerdDesk.Core.SmokeTests](tests/HerdDesk.Core.SmokeTests/CLAUDE.md) | C# G0 smoke runner | 已生成 |

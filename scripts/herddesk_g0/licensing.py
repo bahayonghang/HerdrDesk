@@ -68,6 +68,7 @@ APPROVAL_FLAGS = (
 SKIP_DIR_PARTS = frozenset({
     '.git', 'obj', 'bin', 'probe-results', '.test-results', '__pycache__',
     '.agents', '.codex', '.grok', '.kimi-code', '.omp', '.claude',
+    'node_modules',
 })
 VENDORED_SUFFIXES = frozenset({
     '.swift', '.m', '.mm', '.h', '.c', '.cpp', '.hpp', '.rs',

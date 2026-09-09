@@ -62,7 +62,7 @@ class LicensingRegisterTests(unittest.TestCase):
         self.assertFalse(result['ac02_passed'])
         self.assertFalse(result['windows_verified'])
         self.assertFalse(result['herdrm_copy_present'])
-        self.assertEqual(result['approved_unit_count'], 7)
+        self.assertEqual(result['approved_unit_count'], 8)
         self.assertEqual(result['approved_candidate_count'], 0)
         repo = repository.validate()
         self.assertEqual(repo['structural_validation'], 'passed')
@@ -154,7 +154,7 @@ class LicensingRegisterTests(unittest.TestCase):
         self.assertIs(webview['lock_allowed'], True)
         self.assertNotEqual(webview['artifact_kind'], 'runtime_download')
         result = validate_licensing(ROOT)
-        self.assertEqual(result['approved_unit_count'], 7)
+        self.assertEqual(result['approved_unit_count'], 8)
         self.assertFalse(result['ac02_passed'])
         lock = json.loads((ROOT / 'src' / 'HerdDesk.App' / 'packages.lock.json').read_text(encoding='utf-8'))
         hashes = {}
@@ -164,6 +164,15 @@ class LicensingRegisterTests(unittest.TestCase):
                     continue
                 hashes[name] = (spec['resolved'], spec['contentHash'])
         self.assertEqual(len(hashes), 7)
+        xterm = _unit(register, '@xterm/xterm')
+        self.assertEqual(xterm['admission'], 'approved')
+        self.assertEqual(xterm['version'], '6.0.0')
+        self.assertEqual(xterm['license'], 'MIT')
+        self.assertIs(xterm['enters_webview_bundle'], True)
+        self.assertIs(xterm['enters_package_lock'], False)
+        bundle = _unit(register, 'herddesk-terminal-bundle')
+        self.assertEqual(bundle['admission'], 'pending')
+        self.assertIs(bundle['enters_webview_bundle'], False)
         for name, (version, content) in hashes.items():
             unit = _unit(register, name, 'prebuilt_binary')
             self.assertEqual(unit['admission'], 'approved')

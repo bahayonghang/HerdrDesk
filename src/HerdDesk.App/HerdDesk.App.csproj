@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+    <Content Include="..\..\web\terminal\dist\**\*" Link="web\terminal\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <ApplicationDefinition Remove="**/*.xaml" />

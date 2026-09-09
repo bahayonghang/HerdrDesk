@@ -12,11 +12,12 @@
 
 1. checkout（pin 到 2026-09-07 解析的 v6 SHA），`persist-credentials: false`
 2. setup-python 3.12（pin v6）
-3. `python -m unittest discover -s tests/python -v`
-4. `python scripts/probe_herdr.py selftest`
-5. `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson`
-6. `python scripts/validate_repository.py`
-7. setup-dotnet，读取根 `global.json`（pin v5）
+3. setup-node 22 LTS（pin v7）；`npm --prefix web/terminal ci` / typecheck / build / test
+4. `python -m unittest discover -s tests/python -v`
+5. `python scripts/probe_herdr.py selftest`
+6. `python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson`
+7. `python scripts/validate_repository.py`
+8. setup-dotnet，读取根 `global.json`（pin v5）
 8. `dotnet build HerdDesk.slnx --configuration Release`
 9. `dotnet format` on HD-007/HD-008 paths (`src/HerdDesk.Contracts/Rpc`、`tests/HerdDesk.TestSupport` 已纳入；full-solution format 仍被既有 SmokeTests 空白挡住)
 10. C# smoke + Core/Infrastructure unit + contract（均为 `dotnet run`）

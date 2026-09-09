@@ -27,7 +27,8 @@ cases =
     .. ConflictDialogTests.All,
     .. UntrustedNameTests.All,
     .. AttachToAgentViewModelTests.All,
-    .. PastePreviewViewModelTests.All
+    .. PastePreviewViewModelTests.All,
+    .. TerminalHostSessionTests.All
 ];
 
 var failed = 0;

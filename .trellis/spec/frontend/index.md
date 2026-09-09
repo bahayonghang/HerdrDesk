@@ -1,6 +1,6 @@
 # Frontend Development Guidelines
 
-**Deferred React templates.** `src/HerdDesk.App` is a net10.0 composition-root host plus HD-011 L1 ViewModels and an HD-007/HD-011 L2 windows TFM `App.xaml` / four-zone `MainWindow` on `Microsoft.WindowsAppSDK.WinUI` 2.3.6. There is no React app and no WebView2 renderer host. L2 visual/activation and L3 IME/DPI stay UNVERIFIED. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`.
+**Deferred React templates.** `src/HerdDesk.App` is a net10.0 composition-root host plus HD-011 L1 ViewModels and an HD-007/HD-011 L2 windows TFM `App.xaml` / four-zone `MainWindow` on `Microsoft.WindowsAppSDK.WinUI` 2.3.6. HD-014 L2 adds `Controls/TerminalHost.xaml` (WinUI WebView2) and `web/terminal/` (`@xterm/xterm` 6.0.0 MIT, real npm lock, offline dist). Do not fill React templates. L2 WebView process and L3 IME/DPI stay UNVERIFIED. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`.
 
 The Markdown files in this folder are Trellis init templates (component / hook / React-style type safety). They are **not** live implementation contracts. Do not write React, Next.js, Vue, or generic CSS from those templates. Do not treat hook-guidelines or state-management as if a UI exists.
 
@@ -10,7 +10,7 @@ Shared facts: [AGENTS.md](../../../AGENTS.md). Planned UI names (workspace / ses
 
 ## Overview
 
-Product UI is planned as WinUI on Windows. That work is not started. Renderer choice is recorded in `docs/spikes/renderer-decision.md`: WebView2/xterm remains the delivery baseline; native is `UNVERIFIED` and not promoted. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`. Remaining frontend guideline files stay placeholders until a UI task is approved.
+Product UI on Windows is WinUI Shell plus the HD-014 L2 local WebView2/xterm host. React/Next/Vue templates in this folder stay unused. Renderer choice is recorded in `docs/spikes/renderer-decision.md`: WebView2/xterm remains the delivery baseline; native is `UNVERIFIED` and not promoted. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`. Remaining frontend guideline files stay placeholders.
 
 ---
 

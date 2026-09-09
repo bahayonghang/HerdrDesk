@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kinds": [
+    "initialize",
+    "frame",
+    "focus",
+    "dispose",
+    "display",
+    "ready",
+    "parsed",
+    "input",
+    "resize",
+    "linkRequest",
+    "fault"
+  ],
+  "origins": [
+    "user_key",
+    "committed_text",
+    "explicit_paste",
+    "emulator_reply"
+  ],
+  "local_origin": "https://herddesk.terminal.local",
+  "npm_package": "@xterm/xterm",
+  "npm_version": "6.0.0"
+}

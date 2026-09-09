@@ -38,3 +38,6 @@ Thumbs.db
 bridge/target/
 filebridge/target/
 target/
+
+# npm restore. Keep web/terminal/package-lock.json and dist/ tracked.
+web/terminal/node_modules/

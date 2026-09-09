@@ -121,8 +121,15 @@ filebridge-test:
 # Offline gate used by GitHub Actions. G0 BCL/Python/Rust on every OS.
 # Windows desktop restore runs locked App windows TFM restore/build when admitted.
 # Job success is not GitHub required-check proof and is not live WinUI.
-# Cargo recipes belong to HD-008. npm/xterm stay not admitted.
+[group('web')]
+terminal-web:
+    npm --prefix web/terminal ci
+    npm --prefix web/terminal run typecheck
+    npm --prefix web/terminal run build
+    npm --prefix web/terminal test
+
+# Cargo recipes belong to HD-008. Node 22 LTS in CI; @xterm/xterm 6.0.0 is admitted.
 [group('ci')]
-ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop bridge-fmt bridge-clippy bridge-test filebridge-fmt filebridge-clippy filebridge-test
+ci: terminal-web test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop bridge-fmt bridge-clippy bridge-test filebridge-fmt filebridge-clippy filebridge-test
 
 alias check := ci

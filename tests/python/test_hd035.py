@@ -137,7 +137,7 @@ class Hd035ResidualTests(unittest.TestCase):
         self.assertTrue(missing['webview_process_observation'])
         self.assertTrue(missing['signed_package_unpack'])
         repository.check_integration_windows_layout(ROOT)
-        self.assertFalse((ROOT / 'web' / 'terminal' / 'package-lock.json').exists())
+        self.assertTrue((ROOT / 'web' / 'terminal' / 'package-lock.json').is_file())
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])
@@ -273,7 +273,10 @@ class Hd035ResidualTests(unittest.TestCase):
             self.assertIn(admission, ('pending', 'blocked', 'approved'))
             if admission == 'approved':
                 self.assertIn((name, kind), allowed_lock)
-                self.assertEqual(kind, 'prebuilt_binary')
+                if name == '@xterm/xterm':
+                    self.assertEqual(kind, 'source')
+                else:
+                    self.assertEqual(kind, 'prebuilt_binary')
                 self.assertNotEqual(name, 'herdrm')
             else:
                 self.assertNotIn((name, kind), allowed_lock)

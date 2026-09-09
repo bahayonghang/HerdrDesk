@@ -1,3 +1,4 @@
+using System.Text.Json;
 using HerdDesk.Contracts;
 using HerdDesk.Core;
 using HerdDesk.Terminal.Web;
@@ -13,7 +14,9 @@ internal static class WebMessageContractTests
         ("unknown field is rejected", UnknownField),
         ("duplicate json key is rejected", DuplicateKey),
         ("unstable fault code is rejected", UnstableFaultCode),
-        ("observe resize schema passes and policy denies", ObserveResizePolicy)
+        ("observe resize schema passes and policy denies", ObserveResizePolicy),
+        ("codec frames roundtrip the shipped validator", CodecRoundtrip),
+        ("shared protocol fixture matches compiled kinds", ProtocolFixture)
     ];
 
     static void AllowlistedKinds()
@@ -115,5 +118,50 @@ internal static class WebMessageContractTests
         WebTestHost.Check(WebMessagePolicy.Evaluate(message, WebTestHost.Observe()).Code ==
                           "control_not_verified");
         WebTestHost.Check(WebMessagePolicy.Evaluate(message, WebTestHost.Control()).Allowed);
+    }
+
+    static void CodecRoundtrip()
+    {
+        var epoch = WebTestHost.Epoch();
+        var frame = WebMessageValidator.Evaluate(
+            WebMessageCodec.Frame(epoch, 1, true, [0x61]), epoch);
+        WebTestHost.Check(frame.Accepted);
+        WebTestHost.Check(frame.Bytes.Span[0] == 0x61);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.Initialize(epoch, "dark", true), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.Focus(epoch, "t1"), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.Dispose(epoch), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.Display(epoch, "Cascadia Mono", 12, 100), epoch).Accepted);
+    }
+
+    static void ProtocolFixture()
+    {
+        var path = Path.Combine(FindRepoRoot(), "tests", "fixtures", "web-message-protocol.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var root = document.RootElement;
+        WebTestHost.Check(root.GetProperty("schema_version").GetInt32() == WebMessageLimits.SchemaVersion);
+        WebTestHost.Check(root.GetProperty("local_origin").GetString() == WebViewSecurityPolicy.LocalOrigin);
+        WebTestHost.Check(root.GetProperty("npm_package").GetString() == "@xterm/xterm");
+        WebTestHost.Check(root.GetProperty("npm_version").GetString() == "6.0.0");
+        var kinds = root.GetProperty("kinds").EnumerateArray().Select(item => item.GetString()).ToArray();
+        WebTestHost.Check(kinds.Contains(WebMessageKinds.Initialize));
+        WebTestHost.Check(kinds.Contains(WebMessageKinds.Frame));
+        WebTestHost.Check(kinds.Contains(WebMessageKinds.LinkRequest));
+    }
+
+    static string FindRepoRoot()
+    {
+        var directory = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(directory))
+        {
+            if (File.Exists(Path.Combine(directory, "HerdDesk.slnx")))
+                return directory;
+            directory = Directory.GetParent(directory)?.FullName ?? "";
+        }
+
+        throw new Exception("repo_root_missing");
     }
 }

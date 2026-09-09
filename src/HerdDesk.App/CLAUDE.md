@@ -2,13 +2,14 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · App
 
-HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 Windows 上的 `net10.0-windows10.0.19041.0` TFM。该 TFM 准入 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 与四区 `App.xaml` / `MainWindow` / Shell 页。`WindowsPackageType=None`，`WindowsAppSDKSelfContained=true`，`RuntimeIdentifier=win-x64`。BCL CI 传 `-p:HerdDeskBclOnly=true`，此时 TargetFrameworks 仅为 `net10.0`，且不编译 XAML code-behind。桌面 gate 不传该开关。`--shell-smoke` 只解析窗口类型，不泵 message loop。`--ui <temp-root>` 才启动 WinUI。CI 不启动 WinUI 窗口。L3 IME/Narrator/DPI 为 UNVERIFIED。Windows toast 注册为 L2 UNVERIFIED。
+HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 Windows 上的 `net10.0-windows10.0.19041.0` TFM。该 TFM 准入 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 与四区 `App.xaml` / `MainWindow` / Shell 页。HD-014 L2 用 WinUI `WebView2` 承载 `web/terminal/dist`（`@xterm/xterm` 6.0.0）。`WindowsPackageType=None`，`WindowsAppSDKSelfContained=true`，`RuntimeIdentifier=win-x64`。BCL CI 传 `-p:HerdDeskBclOnly=true`，此时 TargetFrameworks 仅为 `net10.0`，且不编译 XAML code-behind。桌面 gate 不传该开关。`--shell-smoke` 只解析窗口类型，不泵 message loop。`--ui <temp-root>` 才启动 WinUI。CI 不启动 WinUI 窗口。L2 WebView process 与 L3 IME/Narrator/DPI 为 UNVERIFIED。Windows toast 注册为 L2 UNVERIFIED。
 
 ## 职责
 
 - 唯一组合根：`Composition/AppServices.CreateProduction`。
 - 注册配置、诊断、Core 可调用的 BCL 类型，以及 unavailable adapter（RPC/transport/renderer）。HD-008 的 `RpcStdioConnectionFactory` 需显式 bridge 路径；生产组合根仍不自动连接。
 - HD-011 L1/L2：`ShellViewModel` 与 identity coordinators 消费 Store 投影和 HD-007 配置端口。WinUI 四区绑定这些 ViewModel。选择不授予控制，不发送输入。不创建隐藏 terminal bridge。L2 视觉/激活与 L3 IME 仍为 UNVERIFIED。产品 AC19 未通过。
+- HD-014 L2：`Controls/TerminalHost.xaml` 在 windows TFM 承载 WebView2 + 本地 origin xterm。`TerminalHostSession` 在 net10.0 上绑定 `PaneKey`/`ConnectionEpoch` 并走 `WebMessageValidator`。组合根 renderer factory 仍不可用。L2 process 与 AC08/AC27 仍未通过。
 - HD-012 L1：`NotificationCenterViewModel` 消费 Core `AttentionReducer`；`WindowsNotificationSink.Available` 恒为 false。点击只定位完整 `PaneKey`，不携带 takeover/input/command。
 - HD-015 L1：`TerminalFocusCoordinator` 在 renderer Ready 后恢复焦点；`TerminalInputViewModel` 展示观察/申请控制/控制/输入暂停/连接过期。焦点不置位 `ControlVerified`。`RequestControl` 不授予 lease。
 - HD-016 L1：`TerminalControlViewModel` 调用 `ControlLeaseCoordinator`。无 WinUI ControlBar。无 always-takeover。选择变化使 takeover handle 失效。L2 live lease 为 UNVERIFIED。

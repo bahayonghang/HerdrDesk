@@ -52,6 +52,14 @@ def plan_desktop_gate(root: Path) -> DesktopGatePlan:
             reason='admitted restore is missing Directory.Packages.props or App packages.lock.json.',
             commands=(),
         )
+    bundle = root / 'web' / 'terminal' / 'dist' / 'index.html'
+    host = root / 'src' / 'HerdDesk.App' / 'Controls' / 'TerminalHost.xaml'
+    if not bundle.is_file() or not host.is_file() or 'WebView2' not in host.read_text(encoding='utf-8'):
+        return DesktopGatePlan(
+            action='fail',
+            reason='admitted terminal bundle or WebView2 host is missing.',
+            commands=(),
+        )
     app = str(root / APP_PROJECT)
     return DesktopGatePlan(
         action='run',
