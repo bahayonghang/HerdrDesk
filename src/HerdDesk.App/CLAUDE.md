@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · App
 
-HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 Windows 上的 `net10.0-windows10.0.19041.0` TFM。该 TFM 准入 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 与空白 `App.xaml` / `MainWindow`。`WindowsPackageType=None`，`WindowsAppSDKSelfContained=true`，`RuntimeIdentifier=win-x64`。WinUI Shell / Settings / 搜索 / 导航内容仍由 HD-011 负责，未准入。CI 不启动 WinUI 窗口。Windows toast 注册为 L2 UNVERIFIED。
+HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 Windows 上的 `net10.0-windows10.0.19041.0` TFM。该 TFM 准入 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 与空白 `App.xaml` / `MainWindow`。`WindowsPackageType=None`，`WindowsAppSDKSelfContained=true`，`RuntimeIdentifier=win-x64`。BCL CI 传 `-p:HerdDeskBclOnly=true`，此时 TargetFrameworks 仅为 `net10.0`。桌面 gate 不传该开关。WinUI Shell / Settings / 搜索 / 导航内容仍由 HD-011 负责，未准入。CI 不启动 WinUI 窗口。Windows toast 注册为 L2 UNVERIFIED。
 
 ## 职责
 

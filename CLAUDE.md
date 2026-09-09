@@ -143,7 +143,8 @@ python -m unittest discover -s tests/python -v
 python scripts/probe_herdr.py selftest
 python scripts/check_capture.py tests/fixtures/terminal-valid.ndjson
 python scripts/validate_repository.py
-dotnet build HerdDesk.slnx --configuration Release -f net10.0
+dotnet restore HerdDesk.slnx
+dotnet build HerdDesk.slnx --configuration Release -p:HerdDeskBclOnly=true --no-restore
 dotnet format HerdDesk.slnx --verify-no-changes --no-restore
 dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
 dotnet run --project tests/Unit/HerdDesk.Core.Tests --configuration Release --no-build

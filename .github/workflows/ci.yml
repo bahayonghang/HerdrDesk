@@ -38,8 +38,10 @@ jobs:
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5; resolved 2026-09-07
         with:
           global-json-file: global.json
+      - name: Restore
+        run: dotnet restore HerdDesk.slnx
       - name: Build BCL projects
-        run: dotnet build HerdDesk.slnx --configuration Release -f net10.0
+        run: dotnet build HerdDesk.slnx --configuration Release -p:HerdDeskBclOnly=true --no-restore
       - name: Verify formatting
         run: dotnet format HerdDesk.slnx --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/SshConnectionContracts.cs --include src/HerdDesk.Contracts/HelperDeploymentContracts.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/RendererModels.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Contracts/Terminal --include src/HerdDesk.Core/Store --include src/HerdDesk.Core/DeviceSessions --include src/HerdDesk.Core/Attention --include src/HerdDesk.Core/Aggregation --include src/HerdDesk.Core/Commands --include src/HerdDesk.Core/Recovery --include src/HerdDesk.Core/RenderFlowController.cs --include src/HerdDesk.Core/WebMessagePolicy.cs --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
       - name: Run C# G0 smoke tests

@@ -57,7 +57,7 @@ def plan_desktop_gate(root: Path) -> DesktopGatePlan:
         action='run',
         reason='admitted App windows TFM locked restore and build.',
         commands=(
-            ('dotnet', 'restore', app, '--locked-mode'),
+            ('dotnet', 'restore', app, '--locked-mode', '--force-evaluate'),
             (
                 'dotnet', 'build', app,
                 '--configuration', 'Release',

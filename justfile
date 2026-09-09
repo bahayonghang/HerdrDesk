@@ -41,7 +41,8 @@ sdk:
 
 [group('dotnet')]
 build:
-    {{dotnet}} build {{solution}} --configuration {{configuration}} -f net10.0
+    {{dotnet}} restore {{solution}}
+    {{dotnet}} build {{solution}} --configuration {{configuration}} -p:HerdDeskBclOnly=true --no-restore
 
 [group('dotnet')]
 smoke: build
