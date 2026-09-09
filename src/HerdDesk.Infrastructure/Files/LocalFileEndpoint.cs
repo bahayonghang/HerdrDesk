@@ -541,7 +541,9 @@ public sealed class LocalFileEndpoint : IFileEndpoint
             ? 0
             : (ulong)(write - DateTime.UnixEpoch).TotalSeconds;
         precision = 1;
-        identity = FileObservationCodec.PortableIdentity(full, size, mtime);
+        identity = OperatingSystem.IsLinux() && UnixNativeIo.TryStatNoFollow(full, out var dev, out var ino)
+            ? FileObservationCodec.UnixIdentity(dev, ino)
+            : FileObservationCodec.PortableIdentity(full, size, mtime);
         return true;
     }
 
@@ -575,7 +577,9 @@ public sealed class LocalFileEndpoint : IFileEndpoint
             mtime = write.Ticks < DateTime.UnixEpoch.Ticks
                 ? 0
                 : (ulong)(write - DateTime.UnixEpoch).TotalSeconds;
-            identity = FileObservationCodec.PortableIdentity(path, size, mtime);
+            identity = UnixNativeIo.TryStatFd(stream.SafeFileHandle, out var dev, out var ino)
+                ? FileObservationCodec.UnixIdentity(dev, ino)
+                : FileObservationCodec.PortableIdentity(path, size, mtime);
             return true;
         }
         catch (IOException)
@@ -621,7 +625,19 @@ public sealed class LocalFileEndpoint : IFileEndpoint
     {
         if (OperatingSystem.IsWindows())
             return WindowsNativeIo.MoveNoReplace(from, to);
-        return false;
+        try
+        {
+            File.Move(from, to, overwrite: false);
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     static bool IsReparse(string path)
