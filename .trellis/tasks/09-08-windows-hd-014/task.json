@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 ports remain. 2026-09-10 reopen for L2 local @xterm/xterm 6.0.0 MIT bundle plus WinUI WebView2 host. Deprecated npm id xterm@5.3.0 is not admitted. AC08/AC27/G0 not passed. Do not install herdr on LAN.",
+  "notes": "L2 product b70e195 admits @xterm/xterm 6.0.0 MIT and WinUI WebView2 host. L2 process crash and L3 DPI/IME UNVERIFIED. AC08/AC27/G0 not passed. Do not install herdr on LAN.",
   "meta": {
     "source_task": "HD-014",
     "phase": "P2"
