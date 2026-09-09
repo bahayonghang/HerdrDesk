@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd028_l2_status",
+  "l2_filesystem": "UNVERIFIED",
+  "l2_ssh": "UNVERIFIED",
+  "l2_toctou": "UNVERIFIED",
+  "live_file_ops": false,
+  "live_ssh": false,
+  "helper_install": false,
+  "integration_ssh_project": false,
+  "integration_windows_project": false,
+  "winui_admitted": false,
+  "ac30_passed": false,
+  "ac31_passed": false,
+  "ac32_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l1": "local disposable-root list/stat/write, herddesk-filebridge serve, FileBridgeClient, TransferCoordinator, HD-025 file lease",
+  "replace_capability": "windows local observation-checked replace; helper replace unsupported; L2 TOCTOU UNVERIFIED",
+  "missing": {
+    "live_fs_matrix": true,
+    "live_ssh": true,
+    "toctou_lab": true,
+    "published_binary": true
+  },
+  "note": "HD-028 ships L1 file enumeration and transfer on disposable local roots. This file is not AC30/AC31/AC32 pass evidence. L2 live FS/SSH/TOCTOU stay UNVERIFIED. G0 stays not_passed."
+}

@@ -283,27 +283,23 @@ def _check_hd027(hd027: dict, packages: dict) -> None:
         assert packages.get(key) is not True, key
     assert hd027.get('phase_gate') != 'passed'
     assert packages.get('phase_gate') != 'passed'
-    for key in ('live_file_ops', 'live_ssh', 'binary_implemented', 'binary_entrypoint',
-                'main_rs', 'helper_install', 'integration_ssh_project',
+    for key in ('live_file_ops', 'live_ssh', 'helper_install', 'integration_ssh_project',
                 'integration_windows_project', 'winui_admitted'):
         assert hd027.get(key) is False, key
-    assert hd027.get('adr_status') == 'proposed'
-    assert hd027.get('command_not_implemented') == (
-        'herddesk-filebridge serve --stdio --protocol 1.0'
-    )
+    assert hd027.get('adr_status') == 'accepted'
     missing = hd027.get('missing') or {}
-    for key in ('filesystem_backend', 'live_ssh', 'toctou_lab', 'hd028_owner_review',
-                'published_binary'):
-        assert missing.get(key) is True, key
+    assert missing.get('live_ssh') is True
+    assert missing.get('toctou_lab') is True
+    assert missing.get('published_binary') is True
+    assert missing.get('hd028_owner_review') is False
     assert packages.get('crates') == []
     assert (ROOT / 'filebridge' / 'src' / 'lib.rs').is_file()
-    assert not (ROOT / 'filebridge' / 'src' / 'main.rs').exists()
+    assert (ROOT / 'filebridge' / 'src' / 'main.rs').is_file()
     cargo = (ROOT / 'filebridge' / 'Cargo.toml').read_text(encoding='utf-8')
-    assert '[[bin]]' not in cargo
+    assert '[[bin]]' in cargo
     adr = (ROOT / 'docs' / 'adr' / '0008-filebridge-protocol-v1.md').read_text(encoding='utf-8')
-    assert 'proposed' in adr.lower()
-    assert 'status: accepted' not in adr.lower()
-    assert '**proposed**' in adr
+    assert '**accepted**' in adr
+    assert 'wire only' in adr.lower()
     vectors = ROOT / 'filebridge' / 'spec' / 'test-vectors'
     manifest = json.loads((vectors / 'manifest.json').read_text(encoding='utf-8'))
     names = {item['file'] for item in manifest['vectors']}
@@ -313,9 +309,43 @@ def _check_hd027(hd027: dict, packages: dict) -> None:
     assert (ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Files' / 'FileBridgeProtocolCodec.cs').is_file()
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
-    rust = (ROOT / 'filebridge' / 'src' / 'lib.rs').read_text(encoding='utf-8').lower()
-    assert 'not implemented' in rust
-    assert 'no filesystem' in rust
+
+
+_HD028_PASS_KEYS = ('ac30_passed', 'ac31_passed', 'ac32_passed', 'g0_passed')
+
+
+def _check_hd028(hd028: dict, packages: dict) -> None:
+    assert hd028.get('document_kind') == 'hd028_l2_status'
+    assert packages.get('document_kind') == 'hd028_package_probe'
+    for key in ('l2_filesystem', 'l2_ssh', 'l2_toctou'):
+        assert hd028.get(key) == 'UNVERIFIED'
+        assert packages.get(key) in (None, 'UNVERIFIED')
+    for key in _HD028_PASS_KEYS:
+        assert hd028.get(key) is False, key
+        assert packages.get(key) is not True, key
+    assert hd028.get('phase_gate') != 'passed'
+    assert packages.get('phase_gate') != 'passed'
+    for key in ('live_file_ops', 'live_ssh', 'helper_install', 'integration_ssh_project',
+                'integration_windows_project', 'winui_admitted'):
+        assert hd028.get(key) is False, key
+    crates = packages.get('crates') or []
+    sha2 = next((item for item in crates if item.get('id') == 'sha2'), None)
+    assert sha2 is not None
+    assert sha2.get('requested') == '0.10.8'
+    assert sha2.get('lock_version') == '0.10.8'
+    assert packages.get('rust', {}).get('channel') == '1.98.0'
+    assert (ROOT / 'filebridge' / 'src' / 'main.rs').is_file()
+    cargo = (ROOT / 'filebridge' / 'Cargo.toml').read_text(encoding='utf-8')
+    assert '[[bin]]' in cargo
+    assert 'herddesk-filebridge' in cargo
+    assert (ROOT / 'src' / 'HerdDesk.Core' / 'Files' / 'TransferCoordinator.cs').is_file()
+    assert (ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Files' / 'LocalFileEndpoint.cs').is_file()
+    assert (ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Files' / 'FileBridgeClient.cs').is_file()
+    assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    lock = (ROOT / 'filebridge' / 'Cargo.lock').read_text(encoding='utf-8')
+    from herddesk_g0.project_graph import cargo_lock_package_version
+    assert cargo_lock_package_version(lock, 'sha2') == '0.10.8'
 
 
 def validate() -> dict:
@@ -346,6 +376,8 @@ def validate() -> dict:
     hd026=json.loads((ROOT/'implementation/hd-026-l2.json').read_text(encoding='utf-8'))
     hd027=json.loads((ROOT/'implementation/hd-027-l2.json').read_text(encoding='utf-8'))
     hd027pkg=json.loads((ROOT/'implementation/hd-027-packages.json').read_text(encoding='utf-8'))
+    hd028=json.loads((ROOT/'implementation/hd-028-l2.json').read_text(encoding='utf-8'))
+    hd028pkg=json.loads((ROOT/'implementation/hd-028-packages.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -493,6 +525,7 @@ def validate() -> dict:
     assert hd025.get('phase_gate')!='passed'
     _check_hd026_closeout(hd026, mvp, matrix)
     _check_hd027(hd027, hd027pkg)
+    _check_hd028(hd028, hd028pkg)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

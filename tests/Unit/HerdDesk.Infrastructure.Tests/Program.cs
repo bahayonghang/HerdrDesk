@@ -11,6 +11,8 @@ if (args.Length > 0 && args[0] == "--fake-ssh")
     return FakeSshHost.Run(args.Skip(1).ToArray());
 if (args.Length > 0 && args[0] == "--fake-ssh-channel")
     return FakeSshChannelHost.Run(args.Skip(1).ToArray());
+if (args.Length > 0 && args[0] == "--fake-filebridge")
+    return FakeFileBridgeHost.Run(args.Skip(1).ToArray());
 
 
 static void Check(bool condition)
@@ -440,7 +442,8 @@ cases =
     .. SshFailureClassifierTests.All,
     .. SshRecoveryBlockStoreTests.All,
     .. WindowsLocalNameMappingTests.All,
-    .. FileBridgeCodecLimitTests.All
+    .. FileBridgeCodecLimitTests.All,
+    .. LocalFileEndpointTests.All
 ];
 
 var failed = 0;

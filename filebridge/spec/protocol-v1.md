@@ -5,9 +5,10 @@ codecs implement this text independently. They consume the golden vectors under
 `spec/test-vectors/`. Neither codec may generate the other codec's expected
 results.
 
-`herddesk-filebridge serve --stdio --protocol 1.0` is **not implemented**. This
-crate is a library codec only. There is no `main.rs`, no published binary, no
-TCP/pipe listener, no filesystem backend, and no helper install.
+`herddesk-filebridge serve --stdio --protocol 1.0` is implemented as an L1
+stdio helper. The process working directory is the sandbox root. There is no
+TCP/pipe listener, no published install, and no live SSH. L2 filesystem,
+SSH, and TOCTOU remain UNVERIFIED.
 
 ## Process contract
 
@@ -249,8 +250,10 @@ builds it itself.
 
 ## Command
 
-Documented, not implemented:
-
 ```text
 herddesk-filebridge serve --stdio --protocol 1.0
 ```
+
+One job per process. stdout is protocol bytes only. stderr is bounded
+diagnostics. Non-HDFB stdout is `protocol_pollution`. The sandbox root is the
+process working directory. Paths are not accepted on argv.

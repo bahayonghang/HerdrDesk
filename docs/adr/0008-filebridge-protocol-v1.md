@@ -1,11 +1,15 @@
 # ADR-0008 · filebridge protocol v1.0
 
-Status: **proposed**.
+Status: **accepted** (wire only).
 
-This ADR records the HD-027 L1 wire. It is not accepted. HD-028 must still
-confirm in writing that `commit`, observation, and identity fields are enough
-to implement no-follow exclusive temp create and atomic rename on the target
-OS. Until that review, v1 is not locked.
+HD-028 owner review: v1 `commit`, observation, and identity fields are enough
+to implement no-follow exclusive same-directory temp create and atomic
+no-replace rename on a disposable local filesystem. KeepBoth remains exclusive
+create of a caller-chosen candidate name. Replace stays capability-gated:
+without `expected_target_observation` the codec rejects the request; a stale
+target observation is conflict; the helper does not expose Replace when the OS
+cannot prove a safe primitive. L2 live FS, live SSH, and TOCTOU remain
+UNVERIFIED.
 
 ## Decision
 
@@ -19,14 +23,20 @@ OS. Until that review, v1 is not locked.
   auth. Replace requires the target observation. KeepBoth remains exclusive
   create.
 - Cancel before commit linearization yields `cancelled` and deletes only that
-  job's exclusive temp (codec state). Cancel after commit yields Complete.
+  job's exclusive temp. Cancel after commit yields Complete.
   Disconnect before receipt is `outcome_unknown`; the client re-stats and must
   not auto-replay replace/rename.
 - Rust codec and C# host codec each read the same golden vectors. Neither
-  generates the other's expected results. Zero extra Cargo crates.
+  generates the other's expected results. The serve binary pins `sha2` 0.10.8
+  for SHA-256; C# uses BCL `SHA256`.
+- Observation bytes are SHA-256 over helper-canonical `HD028OBS1` fields:
+  path components, existence, type, identity, size, mtime, precision.
+  Identity is volume+index on Windows local, dev+ino on Unix, portable
+  fallback otherwise.
 
-`herddesk-filebridge serve --stdio --protocol 1.0` is documented and **not
-implemented**. This task ships no `main.rs` and no filesystem backend.
+`herddesk-filebridge serve --stdio --protocol 1.0` is implemented as an L1
+stdio helper whose working directory is the sandbox root. It is not a
+published install and not live SSH.
 
 ## Rejected
 
@@ -38,6 +48,7 @@ implemented**. This task ships no `main.rs` and no filesystem backend.
 - SFTP as the 1.0 product claim.
 - Windows WirePath or remote Windows on this version.
 - Compatibility negotiation inside v1.0.
+- Unconditional overwrite when no-replace or exchange primitives are missing.
 
 ## Compatibility
 
@@ -47,14 +58,14 @@ layer.
 
 ## Rollback
 
-While status is proposed, the wire may be rewritten. If HD-028 cannot implement
-commit/identity semantics, withdraw this proposal and keep the file surface
-disabled. Do not add generic operations, parse `ls`, or put paths on argv to
-bypass the gap. After a future accept, changes require a new approved version.
+Wire changes require a new approved version. If a later OS review finds the
+identity fields insufficient for a live TOCTOU gate, disable the write
+capability and keep the file surface read-only or off. Do not add generic
+operations, parse `ls`, or put paths on argv to bypass the gap.
 
 ## Residuals
 
 - L2 filesystem, live SSH, and TOCTOU remain `UNVERIFIED`.
-- Product AC30 and AC34 are not passed.
-- No published binary, no helper install, no live file operations.
-- HD-028 owner written review of commit and identity fields is outstanding.
+- Product AC30, AC31, AC32, and AC34 are not passed.
+- No published helper install. No live remote file operations.
+- Helper Replace remains unsupported on L1.

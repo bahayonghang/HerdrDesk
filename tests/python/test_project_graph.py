@@ -258,6 +258,16 @@ class ProjectGraphTests(unittest.TestCase):
                 }),
                 encoding='utf-8',
             )
+            (root / 'implementation' / 'hd-028-packages.json').write_text(
+                json.dumps({
+                    'crates': [{'id': 'sha2', 'requested': '0.10.8', 'lock_version': '0.10.8'}],
+                    'ac30_passed': False,
+                    'ac31_passed': False,
+                    'ac32_passed': False,
+                    'phase_gate': 'not_passed',
+                }),
+                encoding='utf-8',
+            )
             with self.assertRaises(ProjectGraphError) as ctx:
                 validate_rust_filebridge_lock(root)
             self.assertEqual(str(ctx.exception), 'filebridge_unexpected_crate')

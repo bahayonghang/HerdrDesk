@@ -28,6 +28,81 @@ impl Json {
             _ => None,
         }
     }
+
+    pub fn encode(&self) -> Vec<u8> {
+        let mut out = Vec::new();
+        write_json(&mut out, self);
+        out
+    }
+
+    pub fn object(fields: Vec<(&str, Json)>) -> Json {
+        Json::Object(
+            fields
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v))
+                .collect(),
+        )
+    }
+}
+
+fn write_json(out: &mut Vec<u8>, value: &Json) {
+    match value {
+        Json::Null => out.extend_from_slice(b"null"),
+        Json::Bool(true) => out.extend_from_slice(b"true"),
+        Json::Bool(false) => out.extend_from_slice(b"false"),
+        Json::Int(n) => out.extend_from_slice(n.to_string().as_bytes()),
+        Json::String(s) => write_string(out, s),
+        Json::Array(items) => {
+            out.push(b'[');
+            for (i, item) in items.iter().enumerate() {
+                if i > 0 {
+                    out.push(b',');
+                }
+                write_json(out, item);
+            }
+            out.push(b']');
+        }
+        Json::Object(fields) => {
+            out.push(b'{');
+            for (i, (k, v)) in fields.iter().enumerate() {
+                if i > 0 {
+                    out.push(b',');
+                }
+                write_string(out, k);
+                out.push(b':');
+                write_json(out, v);
+            }
+            out.push(b'}');
+        }
+    }
+}
+
+fn write_string(out: &mut Vec<u8>, s: &str) {
+    out.push(b'"');
+    for ch in s.chars() {
+        match ch {
+            '"' => out.extend_from_slice(br#"\""#),
+            '\\' => out.extend_from_slice(br#"\\"#),
+            '\u{0008}' => out.extend_from_slice(br#"\b"#),
+            '\u{000c}' => out.extend_from_slice(br#"\f"#),
+            '\n' => out.extend_from_slice(br#"\n"#),
+            '\r' => out.extend_from_slice(br#"\r"#),
+            '\t' => out.extend_from_slice(br#"\t"#),
+            c if (c as u32) < 0x20 => {
+                let n = c as u32;
+                out.extend_from_slice(b"\\u00");
+                const HEX: &[u8; 16] = b"0123456789abcdef";
+                out.push(HEX[((n >> 4) & 0xf) as usize]);
+                out.push(HEX[(n & 0xf) as usize]);
+            }
+            c => {
+                let mut buf = [0u8; 4];
+                let encoded = c.encode_utf8(&mut buf);
+                out.extend_from_slice(encoded.as_bytes());
+            }
+        }
+    }
+    out.push(b'"');
 }
 
 struct Parser<'a> {

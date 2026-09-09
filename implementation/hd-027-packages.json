@@ -11,7 +11,7 @@
   "ac30_passed": false,
   "ac34_passed": false,
   "phase_gate": "not_passed",
-  "l1": "offline protocol codec and golden vectors; no filesystem",
+  "l1": "offline protocol codec and golden vectors; HD-028 added serve",
   "l2_filesystem": "UNVERIFIED",
   "l2_ssh": "UNVERIFIED",
   "l2_toctou": "UNVERIFIED",

@@ -34,23 +34,22 @@ class Hd027ResidualTests(unittest.TestCase):
         self.assertFalse(doc['g0_passed'])
         self.assertNotEqual(doc['phase_gate'], 'passed')
         self.assertFalse(doc['live_file_ops'])
-        self.assertFalse(doc['binary_implemented'])
-        self.assertFalse(doc['main_rs'])
-        self.assertEqual(doc['adr_status'], 'proposed')
+        self.assertTrue(doc['binary_implemented'])
+        self.assertTrue(doc['main_rs'])
+        self.assertEqual(doc['adr_status'], 'accepted')
         self.assertFalse((ROOT / 'tests' / 'Integration.Ssh').exists())
         self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])
 
-    def test_no_binary_and_adr_stays_proposed(self):
-        self.assertFalse((ROOT / 'filebridge' / 'src' / 'main.rs').exists())
+    def test_wire_accepted_and_zero_crates(self):
+        self.assertTrue((ROOT / 'filebridge' / 'src' / 'main.rs').is_file())
         cargo = (ROOT / 'filebridge' / 'Cargo.toml').read_text(encoding='utf-8')
-        self.assertNotIn('[[bin]]', cargo)
+        self.assertIn('[[bin]]', cargo)
         adr = ADR.read_text(encoding='utf-8')
-        self.assertIn('proposed', adr.lower())
-        self.assertNotIn('status: accepted', adr.lower())
-        self.assertIn('**proposed**', adr)
+        self.assertIn('**accepted**', adr)
+        self.assertIn('wire only', adr.lower())
         packages = json.loads(PACKAGES.read_text(encoding='utf-8'))
         self.assertEqual(packages['crates'], [])
         self.assertEqual(packages['rust']['channel'], '1.98.0')
@@ -109,7 +108,7 @@ class Hd027ResidualTests(unittest.TestCase):
             repository._check_hd027(bad, packages)
 
         bad = deepcopy(hd027)
-        bad['binary_implemented'] = True
+        bad['live_ssh'] = True
         with self.assertRaises(AssertionError):
             repository._check_hd027(bad, packages)
 

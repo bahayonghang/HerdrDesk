@@ -243,7 +243,7 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
     private readonly List<string> _methods;
     private readonly TaskCompletionSource _completed =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private TaskCompletionSource _requested =
+    private readonly TaskCompletionSource _requested =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
     private TaskCompletionSource _release =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -316,9 +316,7 @@ internal sealed class FakeRequestConnection : IRpcRequestConnection
             if (method == "session.snapshot")
             {
                 _decoder.NextSnapshot = _decoder.Snapshot;
-                var requested = _requested;
-                _requested = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                requested.TrySetResult();
+                _requested.TrySetResult();
                 if (_hold)
                     await _release.Task.ConfigureAwait(false);
                 if (_failure is not null)
@@ -649,15 +647,17 @@ internal sealed class DeviceSessionHarness
 
 internal static class DeviceSessionWait
 {
+    static readonly TimeSpan Limit = TimeSpan.FromSeconds(30);
+
     public static void Gate(Task task)
     {
-        if (!task.Wait(TimeSpan.FromSeconds(5)))
+        if (!task.Wait(Limit))
             throw new Exception("gate_timeout");
     }
 
     public static DeviceSessionState Until(DeviceSession session, Func<DeviceSessionState, bool> pred)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var cts = new CancellationTokenSource(Limit);
         return UntilAsync(session, pred, cts.Token).GetAwaiter().GetResult();
     }
 

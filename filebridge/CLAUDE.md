@@ -1,16 +1,16 @@
 # herddesk-filebridge
 
-[根索引](../CLAUDE.md) · Rust sidecar codec
+[根索引](../CLAUDE.md) · Rust sidecar codec and L1 serve
 
-HD-027 L1：filebridge protocol v1.0 的独立 codec。无文件系统、无 `main.rs`、无已发布二进制。`herddesk-filebridge serve --stdio --protocol 1.0` **未实现**。
+HD-027 L1 protocol codec plus HD-028 L1 `herddesk-filebridge serve --stdio --protocol 1.0`. One job per process. stdout is protocol only. Working directory is the sandbox root. Direct crate pin: `sha2` 0.10.8. Toolchain `filebridge/rust-toolchain.toml` (1.98.0).
 
 ## 职责
 
 - 16-byte `HDFB` header、kind、双向 sequence、单 job 状态机。
 - 严格 JSON（UTF-8、深度 32、拒重复键与 JSON 浮点）。
 - Unix WirePath：`/` + 最短合法 padded canonical Base64 组件。
+- L1 local FS：exclusive same-directory temp、no-replace rename、SHA-256/length。Replace 在 helper 上 unsupported。
 - 与 C# `HerdDesk.Infrastructure.Files.FileBridgeProtocolCodec` 各自读取 `spec/test-vectors/`。
-- 零额外 Cargo crate。工具链 `filebridge/rust-toolchain.toml`（1.98.0）。
 
 ## 入口
 
@@ -20,4 +20,4 @@ cargo clippy --manifest-path filebridge/Cargo.toml --workspace --all-targets --l
 cargo test --manifest-path filebridge/Cargo.toml --workspace --locked
 ```
 
-`just ci` 含上述步骤。L2 文件系统 / SSH / TOCTOU 为 `UNVERIFIED`。AC30/AC34/G0 未通过。ADR-0008 状态为 proposed。
+L2 文件系统 / SSH / TOCTOU 为 `UNVERIFIED`。AC30/AC31/AC32/AC34/G0 未通过。ADR-0008 状态为 accepted（wire only）。

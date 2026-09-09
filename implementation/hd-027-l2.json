@@ -6,9 +6,9 @@
   "l2_toctou": "UNVERIFIED",
   "live_file_ops": false,
   "live_ssh": false,
-  "binary_implemented": false,
-  "binary_entrypoint": false,
-  "main_rs": false,
+  "binary_implemented": true,
+  "binary_entrypoint": true,
+  "main_rs": true,
   "helper_install": false,
   "integration_ssh_project": false,
   "integration_windows_project": false,
@@ -17,14 +17,14 @@
   "ac34_passed": false,
   "g0_passed": false,
   "phase_gate": "not_passed",
-  "adr_status": "proposed",
-  "command_not_implemented": "herddesk-filebridge serve --stdio --protocol 1.0",
+  "adr_status": "accepted",
+  "command": "herddesk-filebridge serve --stdio --protocol 1.0",
   "missing": {
-    "filesystem_backend": true,
+    "filesystem_backend": false,
     "live_ssh": true,
     "toctou_lab": true,
-    "hd028_owner_review": true,
+    "hd028_owner_review": false,
     "published_binary": true
   },
-  "note": "HD-027 ships an L1 protocol codec, golden vectors, and a proposed ADR. It does not implement herddesk-filebridge serve, filesystem operations, or live SSH. This file is not AC30/AC34 pass evidence. G0 stays not_passed."
+  "note": "HD-027 shipped the L1 protocol codec and golden vectors. HD-028 added herddesk-filebridge serve and confirmed the wire is enough for exclusive same-directory temp and atomic no-replace rename on local temp FS. ADR-0008 is accepted for the wire only. L2 live FS/SSH/TOCTOU stay UNVERIFIED. This file is not AC30/AC34 pass evidence. G0 stays not_passed."
 }

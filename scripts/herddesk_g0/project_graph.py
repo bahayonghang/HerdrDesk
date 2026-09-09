@@ -145,16 +145,33 @@ def validate_rust_filebridge_lock(root: Path) -> dict[str, Any]:
         raise ProjectGraphError('missing_filebridge_package')
     probe_path = root / 'implementation' / 'hd-027-packages.json'
     l2_path = root / 'implementation' / 'hd-027-l2.json'
+    hd028_path = root / 'implementation' / 'hd-028-packages.json'
     if not probe_path.is_file() or not l2_path.is_file():
         raise ProjectGraphError('missing_hd027_probe')
     probe = json.loads(probe_path.read_text(encoding='utf-8'))
     l2 = json.loads(l2_path.read_text(encoding='utf-8'))
-    crates = list(probe.get('crates') or [])
-    if crates:
-        raise ProjectGraphError('filebridge_unexpected_crate')
+    admitted = {'herddesk-filebridge'}
+    sha2_pin = None
+    if hd028_path.is_file():
+        hd028 = json.loads(hd028_path.read_text(encoding='utf-8'))
+        for item in hd028.get('crates') or []:
+            crate_id = item.get('id')
+            if crate_id:
+                admitted.add(crate_id)
+            if crate_id == 'sha2':
+                sha2_pin = item.get('lock_version') or item.get('requested')
+        if hd028.get('ac30_passed') is True or hd028.get('ac31_passed') is True or hd028.get('ac32_passed') is True:
+            raise ProjectGraphError('ac30_claimed_passed')
+        if hd028.get('phase_gate') == 'passed' or hd028.get('g0_passed') is True:
+            raise ProjectGraphError('phase_gate_claimed_passed')
+    lock_sha2 = cargo_lock_package_version(lock_text, 'sha2')
+    if sha2_pin and lock_sha2 is not None and lock_sha2 != sha2_pin:
+        raise ProjectGraphError('filebridge_sha2_pin_mismatch')
     for line in lock_text.splitlines():
-        if line.startswith('source = '):
-            raise ProjectGraphError('filebridge_unexpected_crate')
+        if line.startswith('name = '):
+            name = line.split('=', 1)[1].strip().strip('"')
+            if name not in admitted and name != 'herddesk-filebridge':
+                raise ProjectGraphError('filebridge_unexpected_crate')
     for doc in (probe, l2):
         if doc.get('ac30_passed') is True or doc.get('ac34_passed') is True:
             raise ProjectGraphError('ac30_claimed_passed')

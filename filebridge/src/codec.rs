@@ -130,6 +130,26 @@ impl Session {
         self.auto_replay_forbidden
     }
 
+    pub fn job(&self) -> Option<&str> {
+        self.job.as_deref()
+    }
+
+    pub fn op(&self) -> Option<Op> {
+        self.op
+    }
+
+    pub fn declared_length(&self) -> u64 {
+        self.declared_length
+    }
+
+    pub fn cancel_requested(&self) -> bool {
+        self.cancel_requested
+    }
+
+    pub fn commit_linearized(&self) -> bool {
+        self.commit_linearized
+    }
+
     pub fn mark_commit_linearized(&mut self) {
         self.commit_linearized = true;
     }

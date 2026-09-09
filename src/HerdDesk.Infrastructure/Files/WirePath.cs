@@ -43,6 +43,25 @@ public static class WirePath
         return components;
     }
 
+    public static string Encode(IReadOnlyList<byte[]> components)
+    {
+        ArgumentNullException.ThrowIfNull(components);
+        foreach (var raw in components)
+            CheckComponent(raw);
+        if (components.Count == 0)
+            return "/";
+        var parts = new string[components.Count];
+        for (var i = 0; i < components.Count; i++)
+            parts[i] = Convert.ToBase64String(components[i]);
+        return "/" + string.Join("/", parts);
+    }
+
+    public static string EncodeComponent(ReadOnlySpan<byte> raw)
+    {
+        CheckComponent(raw);
+        return Convert.ToBase64String(raw);
+    }
+
     public static byte[] DecodeComponent(string value)
     {
         var raw = FileBridgeText.CanonicalBase64(value, FileBridgeCodes.InvalidComponent);

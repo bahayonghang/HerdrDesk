@@ -17,7 +17,7 @@ src/HerdDesk.Contracts/     BCL types (TerminalModels, EndpointModels, LeaseMode
 src/HerdDesk.Core/          TerminalFrameParser.cs, InputPolicy.cs, EndpointResolver.cs, TerminalLeaseProbe.cs, renderer L1 specimens, Store projection mapper, DeviceSessions actor, Attention reducer, HD-016 ControlLeaseCoordinator, HD-017 ResourceCommandCoordinator, HD-018 RecoveryPolicy, HD-023 Aggregation, HD-025 Connections/Terminal/Projection budgets
 src/HerdDesk.Infrastructure/  AppDataPaths, AtomicConfigurationStore, JsonlDiagnosticSink, UnavailableAdapter, OwnedChildProcess, RPC stdio, SchemaV1 decoder, TerminalCliTransport, HD-020 L1 Ssh/, HD-021 L1 HelperDeployment/, HD-022 L1 SshTransports/, HD-027 L1 Files/
 bridge/herddesk-bridge/     Rust stdio ↔ local-socket byte relay (HD-008 L1)
-filebridge/                 HD-027 L1 protocol codec + spec/test-vectors (no main.rs, no FS)
+filebridge/                 HD-027 protocol codec + HD-028 L1 herddesk-filebridge serve
 src/HerdDesk.Terminal.Web/  HD-014 L1 validator + BCL renderer adapter + HD-015 L1 input coordinators (no WebView2 packages)
 src/HerdDesk.App/           composition root / console host stub + HD-011 L1 ViewModels + HD-012 L1 NotificationCenter + HD-015 L1 focus/input ViewModels + HD-018 L1 RecoveryBindings + HD-020 L1 EditDevice ViewModel + HD-021 L1 HelperInstall ViewModel (no WinUI)
 tests/HerdDesk.Core.SmokeTests/  console smoke runner (dotnet run)
@@ -41,7 +41,7 @@ global.json                 SDK 10.0.400, rollForward=disable
 NuGet.Config                empty package sources
 ```
 
-Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels + HD-015 focus/input ViewModels + HD-016 control ViewModel + HD-017 resource command ViewModel + HD-018 RecoveryBindings + HD-023 L1 multi-device navigation/search ViewModels), `src/HerdDesk.Infrastructure` (including HD-027 L1 `Files/` codec), `src/HerdDesk.Terminal.Web` (HD-014 L1 adapter + HD-015 L1 coordinators), `bridge/herddesk-bridge`, `filebridge/` L1 codec (no binary). Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `herddesk-filebridge` serve binary, `tests/Integration.Windows`. L2 named-pipe ACL is UNVERIFIED. HD-011 L2 visual/activation and L3 IME/DPI are UNVERIFIED. HD-014 L2 WebView process and L3 DPI are UNVERIFIED. HD-015 L3 real IME desktop is UNVERIFIED. HD-016 L2 live lease is UNVERIFIED. HD-017 L2 live mutation is UNVERIFIED. HD-018 L2 live disconnect is UNVERIFIED. HD-023 L2 live 3-device p95 is UNVERIFIED.
+Present: `src/HerdDesk.App` (BCL host + HD-011 ViewModels + HD-015 focus/input ViewModels + HD-016 control ViewModel + HD-017 resource command ViewModel + HD-018 RecoveryBindings + HD-023 L1 multi-device navigation/search ViewModels), `src/HerdDesk.Infrastructure` (including HD-027 L1 codec and HD-028 L1 local file endpoint / FileBridgeClient), `src/HerdDesk.Terminal.Web` (HD-014 L1 adapter + HD-015 L1 coordinators), `bridge/herddesk-bridge`, `filebridge/` L1 codec + serve. Planned and **not** present: `src/HerdDesk.Terminal.Native`, WinUI XAML shell, `tests/Integration.Windows`. L2 named-pipe ACL is UNVERIFIED. HD-011 L2 visual/activation and L3 IME/DPI are UNVERIFIED. HD-014 L2 WebView process and L3 DPI are UNVERIFIED. HD-015 L3 real IME desktop is UNVERIFIED. HD-016 L2 live lease is UNVERIFIED. HD-017 L2 live mutation is UNVERIFIED. HD-018 L2 live disconnect is UNVERIFIED. HD-023 L2 live 3-device p95 is UNVERIFIED.
 
 ---
 

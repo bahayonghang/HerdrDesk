@@ -10,5 +10,6 @@
     <Compile Include="../HerdDesk.TestSupport/FakeTerminalHost.cs" Link="FakeTerminalHost.cs" />
     <Compile Include="../HerdDesk.TestSupport/FakeSshHost.cs" Link="FakeSshHost.cs" />
     <Compile Include="../HerdDesk.TestSupport/FakeSshChannelHost.cs" Link="FakeSshChannelHost.cs" />
+    <Compile Include="../HerdDesk.TestSupport/FakeFileBridgeHost.cs" Link="FakeFileBridgeHost.cs" />
   </ItemGroup>
 </Project>

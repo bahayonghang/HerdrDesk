@@ -81,7 +81,7 @@
 | `TerminalEvent` 层次 | 草案 `TerminalFrame` 含 `Epoch`。HD-013 使用独立 `TerminalTransportEvent` / `TerminalOwnedFrame`，不覆盖草案整文件 |
 | `IRpcConnection` | 请求与订阅分离；mutation 不盲目重试。HD-008 已用 request/subscription 端口 |
 | `IControlPolicy` | 对应 Core 的 `InputPolicy.Evaluate`，签名不同 |
-| `IRemoteFileService` | P4 文件面 |
+| `IRemoteFileService` | HD-028 L1 已编译 `Files/IFileEndpoint.cs`；L2 live SSH UNVERIFIED |
 
 扩展本项目时按任务增量加入类型。禁止用草案整文件覆盖 `TerminalModels.cs`。
 

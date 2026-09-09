@@ -1,14 +1,17 @@
-//! HD-027 L1 filebridge protocol codec.
+//! HD-027 protocol codec and HD-028 L1 `herddesk-filebridge serve`.
 //!
-//! No filesystem operations. No `main.rs`. The command
-//! `herddesk-filebridge serve --stdio --protocol 1.0` is not implemented.
+//! L2 live filesystem, SSH, and TOCTOU remain unverified.
 
 pub mod codec;
 pub mod encoding;
 pub mod error;
+pub mod fs;
+pub mod identity;
 pub mod json;
 pub mod path;
 pub mod protocol;
+pub mod server;
+pub mod sha256;
 
 pub use codec::Session;
 pub use error::{codes, Error};

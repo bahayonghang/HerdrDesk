@@ -6,7 +6,7 @@ internal static class Hd027Cases
     public static (string Name, Action Run)[] All =>
     [
         ("hd-027 l2 filesystem ssh toctou stay unverified", ResidualJson),
-        ("hd-027 has no binary entrypoint", NoBinary)
+        ("hd-027 golden codec still present after serve binary", CodecAndBinary)
     ];
 
     static readonly string[] PassKeys =
@@ -34,27 +34,23 @@ internal static class Hd027Cases
         Check(obj.GetProperty("l2_ssh").GetString() == "UNVERIFIED");
         Check(obj.GetProperty("l2_toctou").GetString() == "UNVERIFIED");
         Check(obj.GetProperty("live_file_ops").GetBoolean() is false);
-        Check(obj.GetProperty("binary_implemented").GetBoolean() is false);
-        Check(obj.GetProperty("main_rs").GetBoolean() is false);
         foreach (var key in PassKeys)
             Check(obj.GetProperty(key).GetBoolean() is false);
         Check(obj.GetProperty("phase_gate").GetString() != "passed");
-        Check(obj.GetProperty("adr_status").GetString() == "proposed");
-        Check(obj.GetProperty("command_not_implemented").GetString() ==
-              "herddesk-filebridge serve --stdio --protocol 1.0");
+        Check(obj.GetProperty("adr_status").GetString() == "accepted");
     }
 
-    static void NoBinary()
+    static void CodecAndBinary()
     {
         var root = FindRepoRoot();
-        Check(!File.Exists(Path.Combine(root, "filebridge", "src", "main.rs")));
+        Check(File.Exists(Path.Combine(root, "filebridge", "src", "main.rs")));
         var cargo = File.ReadAllText(Path.Combine(root, "filebridge", "Cargo.toml"));
-        Check(!cargo.Contains("[[bin]]"));
+        Check(cargo.Contains("[[bin]]"));
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
         var adr = File.ReadAllText(Path.Combine(root, "docs", "adr", "0008-filebridge-protocol-v1.md"));
-        Check(adr.Contains("proposed"));
-        Check(!adr.Contains("status: accepted"));
+        Check(adr.Contains("**accepted**"));
+        Check(adr.Contains("wire only"));
     }
 
     static string FindRepoRoot()

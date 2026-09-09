@@ -71,3 +71,20 @@ pub mod codes {
     pub const INVALID_REASON: &str = "invalid_reason";
     pub const INVALID_COMMIT: &str = "invalid_commit";
 }
+
+pub mod helper {
+    pub const CANCELLED: &str = "cancelled";
+    pub const CONFLICT: &str = "conflict";
+    pub const STALE_TARGET: &str = "stale_target";
+    pub const NOT_FOUND: &str = "not_found";
+    pub const PERMISSION_DENIED: &str = "permission_denied";
+    pub const NAME_EXISTS: &str = "name_exists";
+    pub const PARENT_MISSING: &str = "parent_missing";
+    pub const IS_DIRECTORY: &str = "is_directory";
+    pub const NOT_DIRECTORY: &str = "not_directory";
+    pub const HASH_MISMATCH: &str = "hash_mismatch";
+    pub const LENGTH_MISMATCH: &str = "length_mismatch";
+    pub const UNSUPPORTED: &str = "unsupported";
+    pub const OUTCOME_UNKNOWN: &str = "outcome_unknown";
+    pub const MAPPING_REQUIRED: &str = "mapping_required";
+}

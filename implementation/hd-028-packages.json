@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd028_package_probe",
+  "rust": {
+    "toolchain_file": "filebridge/rust-toolchain.toml",
+    "channel": "1.98.0",
+    "note": "Pinned to the stable toolchain that builds here. Not copied from herdr 1.96.1."
+  },
+  "crates": [
+    {
+      "id": "sha2",
+      "requested": "0.10.8",
+      "lock_version": "0.10.8",
+      "license": "MIT OR Apache-2.0",
+      "crates_io": "https://crates.io/crates/sha2/0.10.8",
+      "admitted": true,
+      "role": "direct"
+    },
+    {
+      "id": "digest",
+      "lock_version": "0.10.7",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "block-buffer",
+      "lock_version": "0.10.4",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "crypto-common",
+      "lock_version": "0.1.7",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "generic-array",
+      "lock_version": "0.14.7",
+      "license": "MIT",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "typenum",
+      "lock_version": "1.20.1",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "version_check",
+      "lock_version": "0.9.5",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "cfg-if",
+      "lock_version": "1.0.4",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "cpufeatures",
+      "lock_version": "0.2.17",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    },
+    {
+      "id": "libc",
+      "lock_version": "0.2.189",
+      "license": "MIT OR Apache-2.0",
+      "admitted": true,
+      "role": "transitive"
+    }
+  ],
+  "csharp_product_lock": "no third-party PackageReference",
+  "ac30_passed": false,
+  "ac31_passed": false,
+  "ac32_passed": false,
+  "phase_gate": "not_passed",
+  "l1": "serve binary plus local FS adapter; sha2 0.10.8 pinned for SHA-256",
+  "l2_filesystem": "UNVERIFIED",
+  "l2_ssh": "UNVERIFIED",
+  "l2_toctou": "UNVERIFIED",
+  "note": "Direct crate is sha2 0.10.8. Transitive versions must match filebridge/Cargo.lock."
+}

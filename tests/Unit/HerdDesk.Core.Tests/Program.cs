@@ -105,7 +105,8 @@ cases =
     .. OldEpochConcurrencyTests.All,
     .. ConnectionAdmissionPolicyTests.All,
     .. TerminalQueueBudgetTests.All,
-    .. DirtySetBudgetTests.All
+    .. DirtySetBudgetTests.All,
+    .. TransferCoordinatorTests.All
 ];
 
 var failed = 0;
