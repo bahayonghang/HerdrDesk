@@ -23,6 +23,10 @@
 | [testing/performance-soak.md](testing/performance-soak.md) | HD-033 L1 收口说明。AC27/28/29/37/38/46 为 `not_run`。不是 live soak / 输入到像素 / DPI / Narrator 通过。 |
 | [testing/packaging-manual.md](testing/packaging-manual.md) | HD-034 L1 收口说明。AC41/AC42 为 `not_run`。不是 live 安装/签名/更新/回滚 通过。 |
 | [testing/security-release.md](testing/security-release.md) | HD-035 L1 收口说明。AC02/AC43/AC44 为 `not_run`。不是 live 扫描/renderer 进程/canary/已签名包反向审计 通过。 |
+| [testing/release-checklist.md](testing/release-checklist.md) | HD-036 后续独立用户步骤。本 L1 目录不是 AC45。 |
+| [release/notes.md](release/notes.md) | HD-036 候选说明。未发布。不是完整 1.0。 |
+| [release/support-matrix.md](release/support-matrix.md) | HD-036 支持矩阵投影。承诺组合保持 `not_run`。 |
+| [user-guide/](user-guide/index.md) | HD-036 L1 用户说明。WinUI 外壳未准入。不是独立用户走查。 |
 | [spikes/](spikes/CLAUDE.md) | HD-005 renderer 决策。WebView2/xterm 基线；native 不晋级。不是 AC08/AC09 通过。 |
 
 ## 约束

@@ -1,0 +1,441 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd036_release_docs_catalog",
+  "simulation": true,
+  "fixture_origin": "synthetic",
+  "template": false,
+  "l1_closeout": "required; does not close product AC39, AC40, AC45, AC47, or AC48",
+  "ac39_passed": false,
+  "ac40_passed": false,
+  "ac45_passed": false,
+  "ac47_passed": false,
+  "ac48_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l2_independent_user_walkthrough": "UNVERIFIED",
+  "l2_live_platform_matrix": "UNVERIFIED",
+  "l2_final_candidate_sha_evidence_bind": "UNVERIFIED",
+  "l2_clean_machine_locked_restore": "UNVERIFIED",
+  "l2_github_required_check_on_head": "UNVERIFIED",
+  "l2_final_sha_module_graph_rerun": "UNVERIFIED",
+  "l2_external_publish": "UNVERIFIED",
+  "l3_signed_msix_hash": "UNVERIFIED",
+  "l4_complete_1_0_release": "UNVERIFIED",
+  "github_required_check": "UNVERIFIED",
+  "windows_desktop_restore": "not_admitted",
+  "published": false,
+  "complete_1_0_claimed": false,
+  "independent_user_walkthrough_executed": false,
+  "winui_admitted": false,
+  "integration_windows_project": false,
+  "integration_ssh_project": false,
+  "herdr_executed": false,
+  "invented_package_hashes": false,
+  "invented_screenshots": false,
+  "invented_winui_button_names": false,
+  "invented_signed_package_hashes": false,
+  "invented_sbom": false,
+  "invented_github_required_check": false,
+  "screenshot_as_evidence": false,
+  "copy_windows_fields_onto_linux": false,
+  "extrapolate_macos_arm64": false,
+  "linux_msix_client": false,
+  "impersonates_1_x_extensions": false,
+  "signed_msix_built": false,
+  "publisher_identity_confirmed": false,
+  "not_run_flipped_to_passed": false,
+  "markdown_link_is_not_test_evidence": true,
+  "structural_validation_is_not_product_acceptance": true,
+  "hosted_actions_on_older_sha_is_not_head_proof": true,
+  "local_just_ci_is_not_hosted_bar": true,
+  "trace_index_is_not_ac_pass_evidence": true,
+  "linux_x64_is_not_windows_client_substitute": true,
+  "core_1_0_does_not_impersonate_1_x_extensions": true,
+  "unpublished_candidate_is_not_published": true,
+  "package_sha256": null,
+  "msix_sha256": null,
+  "signed_package_sha256": null,
+  "sbom_sha256": null,
+  "screenshot_sha256": null,
+  "screenshot_path": null,
+  "publisher": null,
+  "certificate_subject": null,
+  "certificate_thumbprint": null,
+  "candidate_sha": null,
+  "hosted_check_run_id": null,
+  "independent_reviewer": null,
+  "redaction": {
+    "host": "omitted",
+    "user": "omitted",
+    "path": "omitted",
+    "credential": "omitted",
+    "screenshot": "omitted",
+    "publish_token": "omitted"
+  },
+  "missing": {
+    "independent_user_walkthrough": true,
+    "live_platform_matrix": true,
+    "final_candidate_sha_evidence_bind": true,
+    "clean_machine_locked_restore": true,
+    "github_required_check_on_head": true,
+    "final_sha_module_graph_rerun": true,
+    "external_publish": true,
+    "signed_msix_hash": true,
+    "winui_shell": true,
+    "integration_windows": true
+  },
+  "ac_index": "evidence/releases/ac-index.json",
+  "support_matrix": "evidence/releases/support-matrix.json",
+  "l2_status": "implementation/hd-036-l2.json",
+  "templates": [
+    "evidence/releases/live-user-guide.template.json",
+    "evidence/releases/live-support-matrix.template.json",
+    "evidence/releases/live-ac48-trace.template.json",
+    "evidence/releases/live-ac39-clean-restore.template.json",
+    "evidence/releases/live-ac40-hosted-required-check.template.json",
+    "evidence/releases/live-ac47-dep-graph.template.json",
+    "evidence/releases/live-unpublished-candidate.template.json",
+    "evidence/releases/live-signed-hash-sbom.template.json"
+  ],
+  "not_run_captures": [
+    "evidence/releases/live-user-guide.not-run.json",
+    "evidence/releases/live-support-matrix.not-run.json",
+    "evidence/releases/live-ac48-trace.not-run.json",
+    "evidence/releases/live-ac39-clean-restore.not-run.json",
+    "evidence/releases/live-ac40-hosted-required-check.not-run.json",
+    "evidence/releases/live-ac47-dep-graph.not-run.json",
+    "evidence/releases/live-unpublished-candidate.not-run.json",
+    "evidence/releases/live-signed-hash-sbom.not-run.json"
+  ],
+  "execution_cards": [
+    {
+      "id": "user-guide",
+      "title": "user guide",
+      "ac_ids": [
+        "AC45"
+      ],
+      "owner_children": [
+        "HD-011",
+        "HD-016",
+        "HD-030",
+        "HD-031"
+      ],
+      "l1_artifacts": [
+        "docs/user-guide/index.md",
+        "docs/user-guide/shell-not-admitted.md",
+        "docs/user-guide/observe-control.md",
+        "docs/user-guide/files-and-paste.md",
+        "docs/user-guide/diagnostics.md",
+        "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
+        "src/HerdDesk.App/ViewModels/TerminalControlViewModel.cs",
+        "src/HerdDesk.Core/TerminalLease/ControlLeaseCoordinator.cs",
+        "src/HerdDesk.Core/Attachments/AttachmentCoordinator.cs",
+        "src/HerdDesk.Core/Clipboard/PasteCoordinator.cs",
+        "src/HerdDesk.Terminal.Web/Input/OscClipboardPolicy.cs"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/releases/live-user-guide.not-run.json",
+      "missing_grant": "no_authorized_independent_user_walkthrough"
+    },
+    {
+      "id": "support-matrix",
+      "title": "support matrix",
+      "ac_ids": [
+        "AC45"
+      ],
+      "owner_children": [
+        "HD-001",
+        "HD-026",
+        "HD-033",
+        "HD-034"
+      ],
+      "l1_artifacts": [
+        "docs/release/support-matrix.md",
+        "evidence/releases/support-matrix.json",
+        "evidence/version-support-matrix.json",
+        "evidence/multi-device-mvp/support-matrix.json",
+        "evidence/quality/support-matrix.json",
+        "evidence/packaging/support-matrix.json",
+        "evidence/security-release/support-matrix.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/releases/live-support-matrix.not-run.json",
+      "missing_grant": "no_authorized_live_platform_matrix"
+    },
+    {
+      "id": "ac48-trace",
+      "title": "AC48 trace",
+      "ac_ids": [
+        "AC48"
+      ],
+      "owner_children": [
+        "HD-026",
+        "HD-032",
+        "HD-033",
+        "HD-034",
+        "HD-035"
+      ],
+      "l1_artifacts": [
+        "planning/acceptance.json",
+        "planning/backlog.json",
+        "evidence/releases/ac-index.json",
+        "evidence/local-mvp/catalog.json",
+        "evidence/multi-device-mvp/catalog.json",
+        "evidence/files/catalog.json",
+        "evidence/quality/catalog.json",
+        "evidence/packaging/catalog.json",
+        "evidence/security-release/catalog.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/releases/live-ac48-trace.not-run.json",
+      "missing_grant": "no_authorized_final_candidate_sha_evidence_bind"
+    },
+    {
+      "id": "ac39-clean-restore",
+      "title": "AC39 clean restore",
+      "ac_ids": [
+        "AC39"
+      ],
+      "owner_children": [
+        "HD-007"
+      ],
+      "l1_artifacts": [
+        "implementation/hd-007-packages.json",
+        "global.json",
+        "NuGet.Config",
+        "Directory.Build.props"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/releases/live-ac39-clean-restore.not-run.json",
+      "missing_grant": "no_authorized_clean_machine_locked_restore"
+    },
+    {
+      "id": "ac40-hosted-required-check",
+      "title": "AC40 hosted required check",
+      "ac_ids": [
+        "AC40"
+      ],
+      "owner_children": [
+        "HD-007"
+      ],
+      "l1_artifacts": [
+        ".github/workflows/ci.yml",
+        "implementation/hd-007-packages.json",
+        "implementation/status.json"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/releases/live-ac40-hosted-required-check.not-run.json",
+      "missing_grant": "no_authorized_github_required_check_on_head"
+    },
+    {
+      "id": "ac47-dep-graph",
+      "title": "AC47 dependency graph",
+      "ac_ids": [
+        "AC47"
+      ],
+      "owner_children": [
+        "HD-007"
+      ],
+      "l1_artifacts": [
+        "scripts/herddesk_g0/project_graph.py",
+        "tests/python/test_project_graph.py",
+        "implementation/hd-007-packages.json",
+        "src/HerdDesk.Core/HerdDesk.Core.csproj",
+        "src/HerdDesk.Contracts/HerdDesk.Contracts.csproj"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/releases/live-ac47-dep-graph.not-run.json",
+      "missing_grant": "no_authorized_final_sha_module_graph_rerun"
+    },
+    {
+      "id": "unpublished-candidate",
+      "title": "unpublished candidate",
+      "ac_ids": [
+        "AC48"
+      ],
+      "owner_children": [
+        "HD-007"
+      ],
+      "l1_artifacts": [
+        "docs/release/notes.md",
+        "README.md",
+        "PUBLICATION_MANIFEST.json",
+        "scripts/publish_github.py"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L2",
+      "live_capture": "evidence/releases/live-unpublished-candidate.not-run.json",
+      "missing_grant": "no_authorized_external_publish"
+    },
+    {
+      "id": "signed-hash-sbom",
+      "title": "signed hash SBOM",
+      "ac_ids": [
+        "AC45"
+      ],
+      "owner_children": [
+        "HD-034",
+        "HD-035"
+      ],
+      "l1_artifacts": [
+        "evidence/packaging/catalog.json",
+        "evidence/security-release/catalog.json",
+        "implementation/hd-034-l2.json",
+        "implementation/hd-035-l2.json",
+        "LICENSE-STATUS.md"
+      ],
+      "l1_status": "shipped",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "required_evidence": "L3",
+      "live_capture": "evidence/releases/live-signed-hash-sbom.not-run.json",
+      "missing_grant": "no_authorized_signed_msix_hash"
+    }
+  ],
+  "live_rows": [
+    {
+      "id": "live-user-guide",
+      "kind": "live_user_guide",
+      "owner_children": [
+        "HD-011",
+        "HD-016",
+        "HD-030",
+        "HD-031",
+        "HD-036"
+      ],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-user-guide.not-run.json",
+      "missing_grant": "no_authorized_independent_user_walkthrough"
+    },
+    {
+      "id": "live-support-matrix",
+      "kind": "live_support_matrix",
+      "owner_children": [
+        "HD-001",
+        "HD-026",
+        "HD-033",
+        "HD-034",
+        "HD-036"
+      ],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-support-matrix.not-run.json",
+      "missing_grant": "no_authorized_live_platform_matrix"
+    },
+    {
+      "id": "live-ac48-trace",
+      "kind": "live_ac48_trace",
+      "owner_children": [
+        "HD-026",
+        "HD-032",
+        "HD-033",
+        "HD-034",
+        "HD-035",
+        "HD-036"
+      ],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-ac48-trace.not-run.json",
+      "missing_grant": "no_authorized_final_candidate_sha_evidence_bind"
+    },
+    {
+      "id": "live-ac39-clean-restore",
+      "kind": "live_ac39_clean_restore",
+      "owner_children": [
+        "HD-007",
+        "HD-036"
+      ],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-ac39-clean-restore.not-run.json",
+      "missing_grant": "no_authorized_clean_machine_locked_restore"
+    },
+    {
+      "id": "live-ac40-hosted-required-check",
+      "kind": "live_ac40_hosted_required_check",
+      "owner_children": [
+        "HD-007",
+        "HD-036"
+      ],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-ac40-hosted-required-check.not-run.json",
+      "missing_grant": "no_authorized_github_required_check_on_head"
+    },
+    {
+      "id": "live-ac47-dep-graph",
+      "kind": "live_ac47_dep_graph",
+      "owner_children": [
+        "HD-007",
+        "HD-036"
+      ],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-ac47-dep-graph.not-run.json",
+      "missing_grant": "no_authorized_final_sha_module_graph_rerun"
+    },
+    {
+      "id": "live-unpublished-candidate",
+      "kind": "live_unpublished_candidate",
+      "owner_children": [
+        "HD-007",
+        "HD-036"
+      ],
+      "required_evidence": "L2",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-unpublished-candidate.not-run.json",
+      "missing_grant": "no_authorized_external_publish"
+    },
+    {
+      "id": "live-signed-hash-sbom",
+      "kind": "live_signed_hash_sbom",
+      "owner_children": [
+        "HD-034",
+        "HD-035",
+        "HD-036"
+      ],
+      "required_evidence": "L3",
+      "status": "UNVERIFIED",
+      "result": "not_run",
+      "template": false,
+      "evidence_path": "evidence/releases/live-signed-hash-sbom.not-run.json",
+      "missing_grant": "no_authorized_signed_msix_hash"
+    }
+  ],
+  "note": "HD-036 L1 closeout catalog. Indexes existing HD-001–035 L1 artifacts. Live user-guide walkthrough, platform matrix, final SHA bind, clean restore, GitHub required-check on HEAD, final module-graph rerun, external publish, and signed MSIX hash stay not_run. This file is not product AC pass evidence. Not a complete 1.0. Unpublished."
+}

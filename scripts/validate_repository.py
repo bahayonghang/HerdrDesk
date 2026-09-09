@@ -2057,6 +2057,488 @@ def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: d
     assert (ROOT / 'filebridge' / 'Cargo.lock').is_file()
 
 
+_HD036_PASS_KEYS = (
+    'ac39_passed', 'ac40_passed', 'ac45_passed', 'ac47_passed', 'ac48_passed',
+    'g0_passed',
+)
+_HD036_REQUIRED_ACS = frozenset({'AC39', 'AC40', 'AC45', 'AC47', 'AC48'})
+_HD036_CARD_IDS = (
+    'user-guide', 'support-matrix', 'ac48-trace', 'ac39-clean-restore',
+    'ac40-hosted-required-check', 'ac47-dep-graph', 'unpublished-candidate',
+    'signed-hash-sbom',
+)
+_HD036_CARD_ACS = {
+    'user-guide': ('AC45',),
+    'support-matrix': ('AC45',),
+    'ac48-trace': ('AC48',),
+    'ac39-clean-restore': ('AC39',),
+    'ac40-hosted-required-check': ('AC40',),
+    'ac47-dep-graph': ('AC47',),
+    'unpublished-candidate': ('AC48',),
+    'signed-hash-sbom': ('AC45',),
+}
+_HD036_CARD_OWNERS = {
+    'user-guide': ['HD-011', 'HD-016', 'HD-030', 'HD-031'],
+    'support-matrix': ['HD-001', 'HD-026', 'HD-033', 'HD-034'],
+    'ac48-trace': ['HD-026', 'HD-032', 'HD-033', 'HD-034', 'HD-035'],
+    'ac39-clean-restore': ['HD-007'],
+    'ac40-hosted-required-check': ['HD-007'],
+    'ac47-dep-graph': ['HD-007'],
+    'unpublished-candidate': ['HD-007'],
+    'signed-hash-sbom': ['HD-034', 'HD-035'],
+}
+_HD036_CARD_GRANTS = {
+    'user-guide': 'no_authorized_independent_user_walkthrough',
+    'support-matrix': 'no_authorized_live_platform_matrix',
+    'ac48-trace': 'no_authorized_final_candidate_sha_evidence_bind',
+    'ac39-clean-restore': 'no_authorized_clean_machine_locked_restore',
+    'ac40-hosted-required-check': 'no_authorized_github_required_check_on_head',
+    'ac47-dep-graph': 'no_authorized_final_sha_module_graph_rerun',
+    'unpublished-candidate': 'no_authorized_external_publish',
+    'signed-hash-sbom': 'no_authorized_signed_msix_hash',
+}
+_HD036_LIVE_IDS = (
+    'live-user-guide', 'live-support-matrix', 'live-ac48-trace',
+    'live-ac39-clean-restore', 'live-ac40-hosted-required-check',
+    'live-ac47-dep-graph', 'live-unpublished-candidate',
+    'live-signed-hash-sbom',
+)
+_HD036_LIVE_GRANTS = {
+    'live-user-guide': 'no_authorized_independent_user_walkthrough',
+    'live-support-matrix': 'no_authorized_live_platform_matrix',
+    'live-ac48-trace': 'no_authorized_final_candidate_sha_evidence_bind',
+    'live-ac39-clean-restore': 'no_authorized_clean_machine_locked_restore',
+    'live-ac40-hosted-required-check': 'no_authorized_github_required_check_on_head',
+    'live-ac47-dep-graph': 'no_authorized_final_sha_module_graph_rerun',
+    'live-unpublished-candidate': 'no_authorized_external_publish',
+    'live-signed-hash-sbom': 'no_authorized_signed_msix_hash',
+}
+_HD036_L2_L3_L4_KEYS = (
+    'l2_independent_user_walkthrough', 'l2_live_platform_matrix',
+    'l2_final_candidate_sha_evidence_bind', 'l2_clean_machine_locked_restore',
+    'l2_github_required_check_on_head', 'l2_final_sha_module_graph_rerun',
+    'l2_external_publish', 'l3_signed_msix_hash', 'l4_complete_1_0_release',
+)
+_HD036_FALSE_KEYS = (
+    'published', 'complete_1_0_claimed', 'independent_user_walkthrough_executed',
+    'winui_admitted', 'integration_windows_project', 'integration_ssh_project',
+    'herdr_executed', 'invented_package_hashes', 'invented_screenshots',
+    'invented_winui_button_names', 'invented_signed_package_hashes',
+    'invented_sbom', 'invented_github_required_check', 'screenshot_as_evidence',
+    'copy_windows_fields_onto_linux', 'extrapolate_macos_arm64',
+    'linux_msix_client', 'impersonates_1_x_extensions', 'signed_msix_built',
+    'publisher_identity_confirmed', 'not_run_flipped_to_passed',
+)
+_HD036_TRUE_KEYS = (
+    'markdown_link_is_not_test_evidence',
+    'structural_validation_is_not_product_acceptance',
+    'hosted_actions_on_older_sha_is_not_head_proof',
+    'local_just_ci_is_not_hosted_bar',
+    'trace_index_is_not_ac_pass_evidence',
+    'linux_x64_is_not_windows_client_substitute',
+    'core_1_0_does_not_impersonate_1_x_extensions',
+    'unpublished_candidate_is_not_published',
+)
+_HD036_NULL_KEYS = (
+    'package_sha256', 'msix_sha256', 'signed_package_sha256', 'sbom_sha256',
+    'screenshot_sha256', 'screenshot_path', 'publisher', 'certificate_subject',
+    'certificate_thumbprint', 'candidate_sha', 'hosted_check_run_id',
+    'independent_reviewer',
+)
+_HD036_SUCCESS = frozenset({'passed', 'verified', 'compatible', 'success', 'ok', 'pass'})
+_HD036_SUPPORT_PASS = frozenset({'supported', 'stable', 'passed', 'compatible', 'success'})
+_HD036_TEMPLATES = (
+    'evidence/releases/live-user-guide.template.json',
+    'evidence/releases/live-support-matrix.template.json',
+    'evidence/releases/live-ac48-trace.template.json',
+    'evidence/releases/live-ac39-clean-restore.template.json',
+    'evidence/releases/live-ac40-hosted-required-check.template.json',
+    'evidence/releases/live-ac47-dep-graph.template.json',
+    'evidence/releases/live-unpublished-candidate.template.json',
+    'evidence/releases/live-signed-hash-sbom.template.json',
+)
+_HD036_NOT_RUN = (
+    'evidence/releases/live-user-guide.not-run.json',
+    'evidence/releases/live-support-matrix.not-run.json',
+    'evidence/releases/live-ac48-trace.not-run.json',
+    'evidence/releases/live-ac39-clean-restore.not-run.json',
+    'evidence/releases/live-ac40-hosted-required-check.not-run.json',
+    'evidence/releases/live-ac47-dep-graph.not-run.json',
+    'evidence/releases/live-unpublished-candidate.not-run.json',
+    'evidence/releases/live-signed-hash-sbom.not-run.json',
+)
+_HD036_SCENARIOS = (
+    'user_guide', 'support_matrix', 'ac48_trace', 'ac39_clean_restore',
+    'ac40_hosted_required_check', 'ac47_dep_graph', 'unpublished_candidate',
+    'signed_hash_sbom',
+)
+_HD036_AC_IDS = tuple(f'AC{i:02d}' for i in range(1, 49))
+
+
+def _hd036_token(value):
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+def _is_hd036_success(value) -> bool:
+    if value is True:
+        return True
+    return _hd036_token(value) in _HD036_SUCCESS
+
+
+def _reject_hd036_invented_identity(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key in _HD036_NULL_KEYS and value is not None:
+                raise AssertionError(
+                    f'{key} must stay null; do not invent hashes, screenshots, Publisher, or candidate SHA'
+                )
+            _reject_hd036_invented_identity(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd036_invented_identity(item)
+
+
+def _reject_hd036_pass_claims(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key.endswith('_passed') and value is not False:
+                raise AssertionError(f'{key} must stay false')
+            if key == 'phase_gate' and _hd036_token(value) in {'passed', 'pass', 'ok'}:
+                raise AssertionError('phase_gate must stay not_passed')
+            if key in _HD036_L2_L3_L4_KEYS and value != 'UNVERIFIED':
+                raise AssertionError(f'{key} must stay UNVERIFIED')
+            if key in {'live_result', 'result', 'live_status', 'status'} and _is_hd036_success(value):
+                raise AssertionError(f'{key} must stay not_run or UNVERIFIED')
+            if key == 'support' and _hd036_token(value) in _HD036_SUPPORT_PASS:
+                raise AssertionError('support must not be a pass token')
+            if key == 'compatible' and value is True:
+                raise AssertionError('compatible must stay false')
+            if key in _HD036_FALSE_KEYS and value is True:
+                raise AssertionError(f'{key} must stay false')
+            if key in _HD036_TRUE_KEYS and value is not True:
+                raise AssertionError(f'{key} must stay true')
+            if key == 'l1_status' and _hd036_token(value) in _HD036_SUCCESS:
+                raise AssertionError('l1_status must not be a pass token')
+            if key == 'github_required_check' and _is_hd036_success(value):
+                raise AssertionError('github_required_check must stay UNVERIFIED')
+            if key == 'windows_desktop_restore' and _hd036_token(value) in {
+                'passed', 'admitted', 'ok', 'success', 'verified',
+            }:
+                raise AssertionError('windows_desktop_restore must stay not_admitted')
+            if doc.get('published') is True:
+                raise AssertionError('unpublished candidate cannot be published')
+            if doc.get('complete_1_0_claimed') is True:
+                raise AssertionError('complete 1.0 cannot be claimed')
+            if doc.get('screenshot_as_evidence') is True:
+                raise AssertionError('screenshot is not evidence')
+            if doc.get('invented_github_required_check') is True:
+                raise AssertionError('invented hosted required-check cannot pass as success')
+            if doc.get('integration_windows_project') is True:
+                raise AssertionError('tests/Integration.Windows is not admitted')
+            if doc.get('impersonates_1_x_extensions') is True:
+                raise AssertionError('core 1.0 must not impersonate EP-01..EP-07')
+            _reject_hd036_pass_claims(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd036_pass_claims(item)
+
+
+def _check_hd036_ac_index(index: dict) -> None:
+    assert index.get('document_kind') == 'hd036_ac_index'
+    assert index.get('simulation') is True
+    assert index.get('fixture_origin') == 'synthetic'
+    assert index.get('template') is False
+    assert index.get('planning_status_source') == 'planning/acceptance.json'
+    assert index.get('published') is False
+    assert index.get('complete_1_0_claimed') is False
+    assert index.get('trace_index_is_not_ac_pass_evidence') is True
+    for key in _HD036_PASS_KEYS:
+        assert index.get(key) is False, key
+    assert index.get('phase_gate') != 'passed'
+    _reject_hd036_pass_claims(index)
+    _reject_hd036_invented_identity(index)
+    planning = json.loads((ROOT / 'planning' / 'acceptance.json').read_text(encoding='utf-8'))
+    planning_acs = {item['id']: item for item in planning['criteria']}
+    entries = index.get('entries') or []
+    ids = tuple(item['id'] for item in entries)
+    assert ids == _HD036_AC_IDS
+    assert len(entries) == 48
+    for entry in entries:
+        ac_id = entry['id']
+        assert entry['status'] == planning_acs[ac_id]['status']
+        assert entry['status'] == 'not_run'
+        assert entry['status'] != 'passed'
+        assert entry['live_status'] == 'UNVERIFIED'
+        assert entry['live_result'] == 'not_run'
+        assert not _is_hd036_success(entry['live_result'])
+        assert entry.get('owner_children')
+        assert entry.get('evidence_class')
+        assert entry.get('live_residual')
+        assert entry.get('candidate_sha') is None
+        assert entry.get('product_hash') is None
+        assert entry.get('independent_reviewer') is None
+        assert entry.get('l1_artifacts')
+        for rel in entry['l1_artifacts']:
+            assert (ROOT / rel).is_file(), rel
+        if entry.get('catalog'):
+            assert (ROOT / entry['catalog']).is_file(), entry['catalog']
+        if entry.get('l2_status_file'):
+            assert (ROOT / entry['l2_status_file']).is_file(), entry['l2_status_file']
+        for owner in entry['owner_children']:
+            assert (ROOT / 'tasks' / f'{owner}.md').is_file(), owner
+
+
+def _check_hd036_closeout(hd036: dict, catalog: dict, matrix: dict, index: dict) -> None:
+    assert hd036.get('document_kind') == 'hd036_l2_status'
+    assert catalog.get('document_kind') == 'hd036_release_docs_catalog'
+    assert matrix.get('document_kind') == 'hd036_support_matrix'
+    assert catalog.get('simulation') is True
+    assert catalog.get('fixture_origin') == 'synthetic'
+    assert catalog.get('template') is False
+    for key in _HD036_L2_L3_L4_KEYS:
+        assert hd036.get(key) == 'UNVERIFIED', key
+        if key in catalog:
+            assert catalog.get(key) == 'UNVERIFIED', key
+        if key in matrix:
+            assert matrix.get(key) == 'UNVERIFIED', key
+    for doc in (hd036, catalog, matrix):
+        _reject_hd036_pass_claims(doc)
+        _reject_hd036_invented_identity(doc)
+        for key in _HD036_PASS_KEYS:
+            assert doc.get(key) is False, key
+        assert doc.get('phase_gate') != 'passed'
+        assert doc.get('published') is False
+        assert doc.get('complete_1_0_claimed') is False
+        if 'winui_admitted' in doc:
+            assert doc.get('winui_admitted') is False
+        if 'herdr_executed' in doc:
+            assert doc.get('herdr_executed') is False
+        if 'independent_user_walkthrough_executed' in doc:
+            assert doc.get('independent_user_walkthrough_executed') is False
+        if 'screenshot_as_evidence' in doc:
+            assert doc.get('screenshot_as_evidence') is False
+        if 'github_required_check' in doc:
+            assert doc.get('github_required_check') == 'UNVERIFIED'
+        if 'windows_desktop_restore' in doc:
+            assert doc.get('windows_desktop_restore') == 'not_admitted'
+    for key in _HD036_FALSE_KEYS:
+        if key in hd036:
+            assert hd036.get(key) is False, key
+        if key in catalog:
+            assert catalog.get(key) is False, key
+    for key in _HD036_TRUE_KEYS:
+        assert hd036.get(key) is True, key
+        assert catalog.get(key) is True, key
+        assert matrix.get(key) is True, key
+    assert tuple(catalog.get('templates') or ()) == _HD036_TEMPLATES
+    assert tuple(catalog.get('not_run_captures') or ()) == _HD036_NOT_RUN
+    missing = hd036.get('missing') or {}
+    for key in (
+        'independent_user_walkthrough', 'live_platform_matrix',
+        'final_candidate_sha_evidence_bind', 'clean_machine_locked_restore',
+        'github_required_check_on_head', 'final_sha_module_graph_rerun',
+        'external_publish', 'signed_msix_hash', 'winui_shell',
+        'integration_windows',
+    ):
+        assert missing.get(key) is True, key
+    grants = hd036.get('missing_grants') or []
+    assert tuple(grants) == tuple(_HD036_CARD_GRANTS[card_id] for card_id in _HD036_CARD_IDS)
+    assert hd036.get('catalog') == 'evidence/releases/catalog.json'
+    assert hd036.get('support_matrix') == 'evidence/releases/support-matrix.json'
+    assert hd036.get('ac_index') == 'evidence/releases/ac-index.json'
+    assert catalog.get('support_matrix') == 'evidence/releases/support-matrix.json'
+    assert catalog.get('ac_index') == 'evidence/releases/ac-index.json'
+    assert catalog.get('l2_status') == 'implementation/hd-036-l2.json'
+    assert hd036.get('herdr_executed') is False
+    assert catalog.get('herdr_executed') is False
+    redaction = catalog.get('redaction') or {}
+    for key in ('host', 'user', 'path', 'credential', 'screenshot', 'publish_token'):
+        assert redaction.get(key) == 'omitted', key
+    cards = {item['id']: item for item in catalog['execution_cards']}
+    assert tuple(cards) == _HD036_CARD_IDS
+    seen_acs = set()
+    seen_grants = []
+    for card in catalog['execution_cards']:
+        card_id = card['id']
+        assert card['live_status'] == 'UNVERIFIED'
+        assert card['live_result'] == 'not_run'
+        assert card['l1_status'] == 'shipped'
+        assert card['l1_status'] != 'passed'
+        assert card['required_evidence'] in {'L2', 'L3', 'L4'}
+        assert card['required_evidence'] != 'L1'
+        assert card['missing_grant'] == _HD036_CARD_GRANTS[card_id]
+        assert card['owner_children'] == _HD036_CARD_OWNERS[card_id]
+        assert tuple(card['ac_ids']) == _HD036_CARD_ACS[card_id]
+        seen_acs.update(card['ac_ids'])
+        seen_grants.append(card['missing_grant'])
+        assert card['l1_artifacts']
+        for rel in card['l1_artifacts']:
+            assert (ROOT / rel).is_file(), rel
+        capture = ROOT / card['live_capture']
+        assert capture.is_file()
+        loaded = json.loads(capture.read_text(encoding='utf-8'))
+        _reject_hd036_pass_claims(loaded)
+        _reject_hd036_invented_identity(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        assert not _is_hd036_success(loaded.get('result'))
+        assert loaded.get('published') is not True
+        assert loaded.get('complete_1_0_claimed') is not True
+        assert loaded.get('screenshot_as_evidence') is not True
+        assert loaded.get('github_required_check') == 'UNVERIFIED'
+    assert _HD036_REQUIRED_ACS <= seen_acs
+    assert len(seen_grants) == len(set(seen_grants))
+    rows = {item['id']: item for item in catalog['live_rows']}
+    assert tuple(rows) == _HD036_LIVE_IDS
+    for row in catalog['live_rows']:
+        assert row['status'] == 'UNVERIFIED'
+        assert row['result'] == 'not_run'
+        assert row.get('template') is False
+        assert row.get('owner_children')
+        assert row['missing_grant'] == _HD036_LIVE_GRANTS[row['id']]
+        evidence = ROOT / row['evidence_path']
+        assert evidence.is_file()
+        loaded = json.loads(evidence.read_text(encoding='utf-8'))
+        _reject_hd036_pass_claims(loaded)
+        _reject_hd036_invented_identity(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        if row['id'] == 'live-user-guide':
+            assert loaded.get('independent_user_walkthrough_executed') is False
+            assert loaded.get('screenshot_as_evidence') is False
+        if row['id'] == 'live-ac40-hosted-required-check':
+            assert loaded.get('github_required_check') == 'UNVERIFIED'
+            assert loaded.get('invented_github_required_check') is False
+        if row['id'] == 'live-ac39-clean-restore':
+            assert loaded.get('windows_desktop_restore') == 'not_admitted'
+        if row['id'] == 'live-unpublished-candidate':
+            assert loaded.get('published') is False
+        if row['id'] == 'live-signed-hash-sbom':
+            assert loaded.get('signed_msix_built') is False
+            assert loaded.get('publisher_identity_confirmed') is False
+        if row['id'] == 'live-ac47-dep-graph':
+            assert loaded.get('l1_graph_check_exists') is True
+            assert loaded.get('final_sha_module_graph_rerun') is False
+    for rel in _HD036_TEMPLATES:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd036_pass_claims(doc)
+        _reject_hd036_invented_identity(doc)
+        assert doc.get('template') is True
+        assert doc.get('document_kind') == 'template'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('captured_at_utc') is None
+        assert not _is_hd036_success(doc.get('result'))
+        assert doc.get('herdr_executed') is False
+        assert doc.get('published') is False
+        assert 'stdout' not in doc and 'stderr' not in doc
+        if 'user-guide' in rel:
+            assert doc.get('independent_user_walkthrough_executed') is False
+            assert doc.get('screenshot_as_evidence') is False
+        if 'ac40-hosted-required-check' in rel:
+            assert doc.get('github_required_check') == 'UNVERIFIED'
+        if 'unpublished-candidate' in rel:
+            assert doc.get('published') is False
+        if 'signed-hash-sbom' in rel:
+            assert doc.get('signed_msix_built') is False
+        if 'ac47-dep-graph' in rel:
+            assert doc.get('l1_graph_check_exists') is True
+            assert doc.get('final_sha_module_graph_rerun') is False
+    for rel in _HD036_NOT_RUN:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd036_pass_claims(doc)
+        _reject_hd036_invented_identity(doc)
+        assert doc.get('template') is False
+        assert doc.get('result') == 'not_run'
+        assert doc.get('herdr_executed') is False
+        assert doc.get('evidence_level') == 'not_run'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('host_fingerprint_redacted') is None
+        assert doc.get('command_redacted') is None
+        assert 'stdout' not in doc and 'stderr' not in doc
+        blob = json.dumps(doc).lower()
+        assert 'password' not in blob
+        assert 'private_key' not in blob
+        assert '.pfx' not in blob
+    promised = {item['id'] for item in matrix['promised_range']}
+    assert promised == {'windows-11-x64-client', 'linux-x64-remote'}
+    by_platform = {item['id']: item for item in matrix['platforms']}
+    for key in ('windows-11-x64-client', 'linux-x64-remote'):
+        row = by_platform[key]
+        assert row['promise'] == 'promised'
+        assert row['live_status'] == 'not_run'
+        assert row['live_result'] == 'not_run'
+        assert row['compatible'] is False
+        assert row['support'] == 'promised_not_run'
+    linux = by_platform['linux-x64-remote']
+    windows = by_platform['windows-11-x64-client']
+    assert linux['role'] == 'remote'
+    assert linux.get('linux_msix') is False
+    macos = by_platform['macos-x64']
+    assert macos['support'] == 'unsupported'
+    assert macos['live_status'] == 'not_run'
+    assert macos['compatible'] is False
+    for key in ('macos-arm64', 'linux-arm64', 'windows-arm64'):
+        row = by_platform[key]
+        assert row['support'] in ('unsupported', 'experimental')
+        assert row['support'] not in ('supported', 'stable', 'promised')
+        assert row['live_status'] == 'not_run'
+        assert row['compatible'] is False
+    assert windows['missing_grant'] != linux['missing_grant']
+    scenario_ids = [item['id'] for item in matrix['scenarios']]
+    assert tuple(scenario_ids) == _HD036_SCENARIOS
+    for scenario in matrix['scenarios']:
+        assert scenario['live_status'] == 'not_run'
+        assert scenario['live_result'] == 'not_run'
+        assert scenario['support'] == 'l1_only'
+    cell_keys = {(item['platform'], item['scenario']) for item in matrix['cells']}
+    for platform in ('windows-11-x64-client', 'linux-x64-remote'):
+        for scenario in scenario_ids:
+            assert (platform, scenario) in cell_keys
+    for cell in matrix['cells']:
+        assert cell['live_status'] == 'not_run'
+        assert cell['live_result'] == 'not_run'
+        assert cell['compatible'] is False
+        assert not _is_hd036_success(cell['live_result'])
+    assert matrix.get('copy_windows_fields_onto_linux') is False
+    assert matrix.get('extrapolate_macos_arm64') is False
+    assert matrix.get('linux_msix_client') is False
+    assert matrix.get('linux_x64_is_not_windows_client_substitute') is True
+    assert matrix.get('core_1_0_does_not_impersonate_1_x_extensions') is True
+    assert matrix.get('compatible_by_default') == []
+    assert tuple(matrix.get('extensions_out_of_core_1_0') or ()) == (
+        'EP-01', 'EP-02', 'EP-03', 'EP-04', 'EP-05', 'EP-06', 'EP-07',
+    )
+    assert catalog.get('linux_msix_client') is False
+    _check_hd036_ac_index(index)
+    criteria = json.loads((ROOT / 'planning' / 'acceptance.json').read_text(encoding='utf-8'))['criteria']
+    acs = {item['id']: item for item in criteria}
+    for ac_id in ('AC39', 'AC40', 'AC45', 'AC47', 'AC48'):
+        assert acs[ac_id]['status'] != 'passed'
+        assert acs[ac_id]['status'] == 'not_run'
+    assert acs['AC39']['status'] == 'not_run'
+    assert acs['AC40']['status'] == 'not_run'
+    assert acs['AC45']['status'] == 'not_run'
+    assert acs['AC47']['status'] == 'not_run'
+    assert acs['AC48']['status'] == 'not_run'
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    for rel in (
+        'docs/user-guide/index.md',
+        'docs/user-guide/shell-not-admitted.md',
+        'docs/release/notes.md',
+        'docs/release/support-matrix.md',
+        'docs/testing/release-checklist.md',
+    ):
+        assert (ROOT / rel).is_file(), rel
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -2094,6 +2576,7 @@ def validate() -> dict:
     hd033=json.loads((ROOT/'implementation/hd-033-l2.json').read_text(encoding='utf-8'))
     hd034=json.loads((ROOT/'implementation/hd-034-l2.json').read_text(encoding='utf-8'))
     hd035=json.loads((ROOT/'implementation/hd-035-l2.json').read_text(encoding='utf-8'))
+    hd036=json.loads((ROOT/'implementation/hd-036-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -2106,6 +2589,9 @@ def validate() -> dict:
     security_catalog=json.loads((ROOT/'evidence/security-release/catalog.json').read_text(encoding='utf-8'))
     security_matrix=json.loads((ROOT/'evidence/security-release/support-matrix.json').read_text(encoding='utf-8'))
     security_inventory=json.loads((ROOT/'evidence/security-release/inventory.json').read_text(encoding='utf-8'))
+    release_catalog=json.loads((ROOT/'evidence/releases/catalog.json').read_text(encoding='utf-8'))
+    release_matrix=json.loads((ROOT/'evidence/releases/support-matrix.json').read_text(encoding='utf-8'))
+    release_index=json.loads((ROOT/'evidence/releases/ac-index.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -2258,6 +2744,7 @@ def validate() -> dict:
     _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)
+    _check_hd036_closeout(hd036, release_catalog, release_matrix, release_index)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

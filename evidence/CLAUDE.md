@@ -72,6 +72,10 @@ HD-034 L1 P5 签名/安装/更新回滚收口目录。`catalog.json` 列出 clea
 
 HD-035 L1 P5 安全与许可收口目录。`catalog.json` 列出 license inventory / herdrm-not-copied / nuget-scan / cargo-scan / npm-scan / renderer-boundary / diagnostic-canary / signed-package-reverse-audit 执行卡，指向已有 HD-002 许可台账、HD-006 ADR 基线、HD-014 renderer allowlist、HD-020/024 SSH fail-closed、HD-031 clipboard/OSC52/cache、HD-032 文件故障目录、HD-034 包装目录。`inventory.json` 指向 `docs/licensing/register.json`；所列单元保持 pending/blocked。缺扫描不是零漏洞。公开可见不是许可授予。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端，行为 `not_run`。Linux x64 是远端 OS，不能替代 Windows renderer/进程观察。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/扫描日期/工具版本，不是成功运行。产品 AC02/AC43/AC44 仍未通过。
 
+## `releases/`
+
+HD-036 L1 P5 发布文档与追踪归档收口目录。`catalog.json` 列出 user-guide / support-matrix / ac48-trace / ac39-clean-restore / ac40-hosted-required-check / ac47-dep-graph / unpublished-candidate / signed-hash-sbom 执行卡，指向已有 HD-001–035 L1 产物与 `docs/user-guide/`、`docs/release/`。`ac-index.json` 追溯 AC01–AC48，状态保持 `not_run`。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。core 1.0 不冒充 EP-01..EP-07。模板 `template=true`，空 hash，不是成功运行。未发布。不是完整 1.0。产品 AC39/AC40/AC45/AC47/AC48 仍未通过。
+
 ## `local-mvp/`
 
 HD-019 场景目录。`catalog.json` 列出 observe/control/IME/input/resize/scroll/release/GUI close/recovery/agent TUI。每个 live 行 `required_evidence` 为 L2 或 L3，`status` 为 `UNVERIFIED`。L1 composition 不是本地 E2E pass。缺 disposable pane、WebView2、IME desktop、agent TUI versions。产品 AC06/AC07/AC10/AC15 仍未通过。

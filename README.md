@@ -77,4 +77,4 @@ Python 3.10+，仅标准库；C# 使用 SDK 10.0.400。smoke runner 是 console 
 
 默认观察；可写探针必须明确指定 disposable target，输入另需 `--allow-input`。不自动 takeover、停止/升级 daemon、重放输入或绕过审批。真实终端内容、凭据和私人路径不得提交到公开仓库。
 
-当前没有 WinUI 产品窗口、生产 RPC/SSH/file bridge 或安装包；48 项产品 AC 没有被提前标记为完成。详见 [安全说明](SECURITY.md) 和 [许可登记](docs/licensing-register.md)。项目许可证由维护者决定；公开可见不自动等于 MIT/Apache 授权。
+当前没有 WinUI 产品窗口、生产 RPC/SSH/file bridge 或安装包；48 项产品 AC 没有被提前标记为完成。候选说明与限制见 [docs/release/notes.md](docs/release/notes.md)。该文不是完整 1.0，也不是已发布。详见 [安全说明](SECURITY.md) 和 [许可登记](docs/licensing-register.md)。项目许可证由维护者决定；公开可见不自动等于 MIT/Apache 授权。

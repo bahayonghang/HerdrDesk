@@ -1,0 +1,1114 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd036_ac_index",
+  "simulation": true,
+  "fixture_origin": "synthetic",
+  "template": false,
+  "planning_status_source": "planning/acceptance.json",
+  "ac39_passed": false,
+  "ac40_passed": false,
+  "ac45_passed": false,
+  "ac47_passed": false,
+  "ac48_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l2_independent_user_walkthrough": "UNVERIFIED",
+  "l2_live_platform_matrix": "UNVERIFIED",
+  "l2_final_candidate_sha_evidence_bind": "UNVERIFIED",
+  "l2_clean_machine_locked_restore": "UNVERIFIED",
+  "l2_github_required_check_on_head": "UNVERIFIED",
+  "l2_final_sha_module_graph_rerun": "UNVERIFIED",
+  "l2_external_publish": "UNVERIFIED",
+  "l3_signed_msix_hash": "UNVERIFIED",
+  "l4_complete_1_0_release": "UNVERIFIED",
+  "github_required_check": "UNVERIFIED",
+  "windows_desktop_restore": "not_admitted",
+  "published": false,
+  "complete_1_0_claimed": false,
+  "independent_user_walkthrough_executed": false,
+  "winui_admitted": false,
+  "integration_windows_project": false,
+  "integration_ssh_project": false,
+  "herdr_executed": false,
+  "invented_package_hashes": false,
+  "invented_screenshots": false,
+  "invented_winui_button_names": false,
+  "invented_signed_package_hashes": false,
+  "invented_sbom": false,
+  "invented_github_required_check": false,
+  "screenshot_as_evidence": false,
+  "copy_windows_fields_onto_linux": false,
+  "extrapolate_macos_arm64": false,
+  "linux_msix_client": false,
+  "impersonates_1_x_extensions": false,
+  "signed_msix_built": false,
+  "publisher_identity_confirmed": false,
+  "not_run_flipped_to_passed": false,
+  "markdown_link_is_not_test_evidence": true,
+  "structural_validation_is_not_product_acceptance": true,
+  "hosted_actions_on_older_sha_is_not_head_proof": true,
+  "local_just_ci_is_not_hosted_bar": true,
+  "trace_index_is_not_ac_pass_evidence": true,
+  "linux_x64_is_not_windows_client_substitute": true,
+  "core_1_0_does_not_impersonate_1_x_extensions": true,
+  "unpublished_candidate_is_not_published": true,
+  "package_sha256": null,
+  "msix_sha256": null,
+  "signed_package_sha256": null,
+  "sbom_sha256": null,
+  "screenshot_sha256": null,
+  "screenshot_path": null,
+  "publisher": null,
+  "certificate_subject": null,
+  "certificate_thumbprint": null,
+  "candidate_sha": null,
+  "hosted_check_run_id": null,
+  "independent_reviewer": null,
+  "note": "Trace index of AC01–AC48 onto existing L1 catalogs and UNVERIFIED L2 files. Every product AC stays not_run. This file is not AC pass evidence. Not a complete 1.0. Unpublished.",
+  "entries": [
+    {
+      "id": "AC01",
+      "status": "not_run",
+      "owner_children": [
+        "HD-001"
+      ],
+      "evidence_class": "source_inspection",
+      "l1_artifacts": [
+        "evidence/compatibility-baseline.json",
+        "evidence/version-support-matrix.json",
+        "evidence/runtime/windows-runtime.capture.json",
+        "evidence/runtime/remote-runtime.not-run.json"
+      ],
+      "catalog": null,
+      "l2_status_file": null,
+      "live_residual": "runtime protocol 22 vs source 20; remote Linux not_run; named-pipe ACL blocked",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC02",
+      "status": "not_run",
+      "owner_children": [
+        "HD-002",
+        "HD-035"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "docs/licensing/register.json",
+        "docs/licensing-register.md",
+        "LICENSE-STATUS.md",
+        "evidence/security-release/catalog.json",
+        "implementation/hd-035-l2.json"
+      ],
+      "catalog": "evidence/security-release/catalog.json",
+      "l2_status_file": "implementation/hd-035-l2.json",
+      "live_residual": "project license not selected; herdrm blocked; public visibility is not a grant",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC03",
+      "status": "not_run",
+      "owner_children": [
+        "HD-003",
+        "HD-008"
+      ],
+      "evidence_class": "synthetic_fixture",
+      "l1_artifacts": [
+        "tests/fixtures/endpoint-cases.json",
+        "implementation/hd-008-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-008-l2.json",
+      "live_residual": "named-pipe ACL UNVERIFIED; synthetic endpoint fixture is not Windows runtime",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC04",
+      "status": "not_run",
+      "owner_children": [
+        "HD-008",
+        "HD-009"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "implementation/hd-008-l2.json",
+        "src/HerdDesk.Infrastructure/Rpc/SchemaV1/RpcStateDecoder.cs",
+        "src/HerdDesk.Core/Store/ProjectionMapper.cs"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-008-l2.json",
+      "live_residual": "live RPC/schema on herdr UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC05",
+      "status": "not_run",
+      "owner_children": [
+        "HD-004",
+        "HD-013"
+      ],
+      "evidence_class": "synthetic_fixture",
+      "l1_artifacts": [
+        "tests/fixtures/lease-cases.json",
+        "evidence/runtime/windows-terminal-lease.capture.json",
+        "implementation/hd-013-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-013-l2.json",
+      "live_residual": "control_verified stays false; isolated capture is not AC05",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC06",
+      "status": "not_run",
+      "owner_children": [
+        "HD-013",
+        "HD-019"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/local-mvp/catalog.json",
+        "implementation/hd-019-l2.json",
+        "implementation/hd-013-l2.json"
+      ],
+      "catalog": "evidence/local-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-019-l2.json",
+      "live_residual": "live local MVP UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC07",
+      "status": "not_run",
+      "owner_children": [
+        "HD-016",
+        "HD-019"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/TerminalLease/ControlLeaseCoordinator.cs",
+        "implementation/hd-016-l2.json",
+        "evidence/local-mvp/catalog.json"
+      ],
+      "catalog": "evidence/local-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-016-l2.json",
+      "live_residual": "live lease UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC08",
+      "status": "not_run",
+      "owner_children": [
+        "HD-005",
+        "HD-014"
+      ],
+      "evidence_class": "synthetic_fixture",
+      "l1_artifacts": [
+        "tests/fixtures/renderer-cases.json",
+        "implementation/hd-014-l2.json",
+        "docs/spikes/renderer-decision.md"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-014-l2.json",
+      "live_residual": "WebView2 process UNVERIFIED; parse-consumed is not presentation",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC09",
+      "status": "not_run",
+      "owner_children": [
+        "HD-005",
+        "HD-015"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "implementation/hd-015-l3.json",
+        "evidence/runtime/windows-renderer-ime.blocked.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-015-l3.json",
+      "live_residual": "IME desktop UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC10",
+      "status": "not_run",
+      "owner_children": [
+        "HD-015",
+        "HD-019"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/local-mvp/catalog.json",
+        "implementation/hd-019-l3.json"
+      ],
+      "catalog": "evidence/local-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-019-l3.json",
+      "live_residual": "agent TUI versions UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC11",
+      "status": "not_run",
+      "owner_children": [
+        "HD-009"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Store/CapabilityGate.cs",
+        "src/HerdDesk.Core/Store/ProjectionMapper.cs"
+      ],
+      "catalog": null,
+      "l2_status_file": null,
+      "live_residual": "unknown enum/field live herdr UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC12",
+      "status": "not_run",
+      "owner_children": [
+        "HD-010"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/DeviceSessions/DeviceSession.cs",
+        "implementation/hd-010-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-010-l2.json",
+      "live_residual": "live events.subscribe interleave UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC13",
+      "status": "not_run",
+      "owner_children": [
+        "HD-018",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Recovery/RecoveryPolicy.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-018-l2.json",
+        "implementation/hd-026-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-026-l2.json",
+      "live_residual": "live disconnect UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC14",
+      "status": "not_run",
+      "owner_children": [
+        "HD-016",
+        "HD-018",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/TerminalLease/ControlLeaseCoordinator.cs",
+        "src/HerdDesk.Core/Recovery/RecoveryPolicy.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-016-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-016-l2.json",
+      "live_residual": "live no-replay on disconnect UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC15",
+      "status": "not_run",
+      "owner_children": [
+        "HD-013",
+        "HD-018",
+        "HD-019",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.App/Lifetime/AppExitCoordinator.cs",
+        "evidence/local-mvp/catalog.json",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-018-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-018-l2.json",
+      "live_residual": "live GUI close ownership UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC16",
+      "status": "not_run",
+      "owner_children": [
+        "HD-016"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/TerminalLease/ControlLeaseCoordinator.cs",
+        "src/HerdDesk.App/ViewModels/TerminalControlViewModel.cs",
+        "implementation/hd-016-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-016-l2.json",
+      "live_residual": "live explicit grant UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC17",
+      "status": "not_run",
+      "owner_children": [
+        "HD-012"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Attention/AttentionReducer.cs",
+        "implementation/hd-012-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-012-l2.json",
+      "live_residual": "Windows toast L2 UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC18",
+      "status": "not_run",
+      "owner_children": [
+        "HD-012"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.App/ViewModels/NotificationCenterViewModel.cs",
+        "implementation/hd-012-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-012-l2.json",
+      "live_residual": "toast activation L2 UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC19",
+      "status": "not_run",
+      "owner_children": [
+        "HD-011",
+        "HD-023",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.App/ViewModels/GlobalSearchViewModel.cs",
+        "src/HerdDesk.Core/Aggregation/GlobalSearchIndex.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "evidence/quality/catalog.json",
+        "implementation/hd-023-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-023-l2.json",
+      "live_residual": "live 3-device search p95 UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC20",
+      "status": "not_run",
+      "owner_children": [
+        "HD-017"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Commands/ResourceCommandCoordinator.cs",
+        "implementation/hd-017-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-017-l2.json",
+      "live_residual": "live mutation UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC21",
+      "status": "not_run",
+      "owner_children": [
+        "HD-023",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Aggregation/WriteIntentGuard.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-023-l2.json",
+        "implementation/hd-026-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-026-l2.json",
+      "live_residual": "live 3-device isolation UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC22",
+      "status": "not_run",
+      "owner_children": [
+        "HD-020",
+        "HD-024",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Infrastructure/Ssh/HostKeyTrustStore.cs",
+        "src/HerdDesk.Infrastructure/Ssh/SshFailureClassifier.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-020-l2.json",
+        "implementation/hd-024-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-024-l2.json",
+      "live_residual": "live SSH host identity UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC23",
+      "status": "not_run",
+      "owner_children": [
+        "HD-020",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Infrastructure/Ssh/OpenSshConfigResolver.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-020-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-020-l2.json",
+      "live_residual": "live OpenSSH config UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC24",
+      "status": "not_run",
+      "owner_children": [
+        "HD-022",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Infrastructure/SshTransports/RemoteSessionTransportSet.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-022-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-022-l2.json",
+      "live_residual": "live ssh -T UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC25",
+      "status": "not_run",
+      "owner_children": [
+        "HD-021"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.App/Devices/HelperInstallViewModel.cs",
+        "src/HerdDesk.Infrastructure/Ssh/HelperDeployment/TrustedHelperManifestProvider.cs",
+        "implementation/hd-021-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-021-l2.json",
+      "live_residual": "live helper deploy UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC26",
+      "status": "not_run",
+      "owner_children": [
+        "HD-022",
+        "HD-024",
+        "HD-026"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/DeviceSessions/DeviceSession.cs",
+        "evidence/multi-device-mvp/catalog.json",
+        "implementation/hd-024-l2.json",
+        "implementation/hd-026-l2.json"
+      ],
+      "catalog": "evidence/multi-device-mvp/catalog.json",
+      "l2_status_file": "implementation/hd-026-l2.json",
+      "live_residual": "live multi-device recovery UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC27",
+      "status": "not_run",
+      "owner_children": [
+        "HD-014",
+        "HD-025",
+        "HD-033"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Connections/ConnectionAdmissionPolicy.cs",
+        "src/HerdDesk.Core/Terminal/TerminalQueueBudget.cs",
+        "evidence/quality/catalog.json",
+        "implementation/hd-025-l2.json",
+        "implementation/hd-033-l2.json"
+      ],
+      "catalog": "evidence/quality/catalog.json",
+      "l2_status_file": "implementation/hd-033-l2.json",
+      "live_residual": "b_ssh unmeasured; live backpressure UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC28",
+      "status": "not_run",
+      "owner_children": [
+        "HD-033"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/quality/catalog.json",
+        "implementation/hd-033-l2.json"
+      ],
+      "catalog": "evidence/quality/catalog.json",
+      "l2_status_file": "implementation/hd-033-l2.json",
+      "live_residual": "live cold start / input-to-pixel / working set UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC29",
+      "status": "not_run",
+      "owner_children": [
+        "HD-033"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/quality/catalog.json",
+        "implementation/hd-033-l2.json"
+      ],
+      "catalog": "evidence/quality/catalog.json",
+      "l2_status_file": "implementation/hd-033-l2.json",
+      "live_residual": "live handle reclaim UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC30",
+      "status": "not_run",
+      "owner_children": [
+        "HD-027",
+        "HD-028"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Infrastructure/Files/FileBridgeProtocolCodec.cs",
+        "implementation/hd-027-l2.json",
+        "implementation/hd-028-l2.json"
+      ],
+      "catalog": "evidence/files/catalog.json",
+      "l2_status_file": "implementation/hd-027-l2.json",
+      "live_residual": "live FS list/stat UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC31",
+      "status": "not_run",
+      "owner_children": [
+        "HD-028",
+        "HD-029",
+        "HD-032"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Files/TransferCoordinator.cs",
+        "evidence/files/catalog.json",
+        "implementation/hd-028-l2.json",
+        "implementation/hd-032-l2.json"
+      ],
+      "catalog": "evidence/files/catalog.json",
+      "l2_status_file": "implementation/hd-032-l2.json",
+      "live_residual": "live transfer integrity UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC32",
+      "status": "not_run",
+      "owner_children": [
+        "HD-028",
+        "HD-032"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Files/TransferCoordinator.cs",
+        "evidence/files/catalog.json",
+        "implementation/hd-032-l2.json"
+      ],
+      "catalog": "evidence/files/catalog.json",
+      "l2_status_file": "implementation/hd-032-l2.json",
+      "live_residual": "live cancel/cleanup UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC33",
+      "status": "not_run",
+      "owner_children": [
+        "HD-029",
+        "HD-032"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.App/Files/FileWorkspaceViewModel.cs",
+        "evidence/files/catalog.json",
+        "implementation/hd-029-l2.json",
+        "implementation/hd-032-l2.json"
+      ],
+      "catalog": "evidence/files/catalog.json",
+      "l2_status_file": "implementation/hd-032-l2.json",
+      "live_residual": "live conflict UI UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC34",
+      "status": "not_run",
+      "owner_children": [
+        "HD-027",
+        "HD-032"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/files/catalog.json",
+        "implementation/hd-027-l2.json",
+        "implementation/hd-032-l2.json"
+      ],
+      "catalog": "evidence/files/catalog.json",
+      "l2_status_file": "implementation/hd-032-l2.json",
+      "live_residual": "live TOCTOU/path attack UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC35",
+      "status": "not_run",
+      "owner_children": [
+        "HD-030",
+        "HD-032"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Attachments/AttachmentCoordinator.cs",
+        "src/HerdDesk.App/ViewModels/AttachToAgentViewModel.cs",
+        "evidence/files/catalog.json",
+        "implementation/hd-030-l2.json"
+      ],
+      "catalog": "evidence/files/catalog.json",
+      "l2_status_file": "implementation/hd-030-l2.json",
+      "live_residual": "live attach-to-agent UNVERIFIED; no auto-submit in L1",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC36",
+      "status": "not_run",
+      "owner_children": [
+        "HD-031"
+      ],
+      "evidence_class": "l1_coordinator",
+      "l1_artifacts": [
+        "src/HerdDesk.Core/Clipboard/ClipboardIntentResolver.cs",
+        "src/HerdDesk.Core/Clipboard/PasteCoordinator.cs",
+        "src/HerdDesk.Terminal.Web/Input/OscClipboardPolicy.cs",
+        "implementation/hd-031-l2.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-031-l2.json",
+      "live_residual": "live clipboard/IME UNVERIFIED; OSC 52 deny is L1 policy",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC37",
+      "status": "not_run",
+      "owner_children": [
+        "HD-033"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/quality/catalog.json",
+        "implementation/hd-033-l2.json"
+      ],
+      "catalog": "evidence/quality/catalog.json",
+      "l2_status_file": "implementation/hd-033-l2.json",
+      "live_residual": "Narrator UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC38",
+      "status": "not_run",
+      "owner_children": [
+        "HD-033"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/quality/catalog.json",
+        "implementation/hd-033-l2.json"
+      ],
+      "catalog": "evidence/quality/catalog.json",
+      "l2_status_file": "implementation/hd-033-l2.json",
+      "live_residual": "DPI/theme UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC39",
+      "status": "not_run",
+      "owner_children": [
+        "HD-007"
+      ],
+      "evidence_class": "l1_graph",
+      "l1_artifacts": [
+        "implementation/hd-007-packages.json",
+        "global.json",
+        "NuGet.Config"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-007-packages.json",
+      "live_residual": "clean-machine locked restore UNVERIFIED; windows_desktop_restore=not_admitted",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC40",
+      "status": "not_run",
+      "owner_children": [
+        "HD-007"
+      ],
+      "evidence_class": "l1_graph",
+      "l1_artifacts": [
+        ".github/workflows/ci.yml",
+        "implementation/hd-007-packages.json",
+        "implementation/status.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-007-packages.json",
+      "live_residual": "github_required_check UNVERIFIED on HEAD; older hosted SHA is not proof",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC41",
+      "status": "not_run",
+      "owner_children": [
+        "HD-034"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/packaging/catalog.json",
+        "implementation/hd-034-l2.json"
+      ],
+      "catalog": "evidence/packaging/catalog.json",
+      "l2_status_file": "implementation/hd-034-l2.json",
+      "live_residual": "live install UNVERIFIED; no Publisher",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC42",
+      "status": "not_run",
+      "owner_children": [
+        "HD-034"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/packaging/catalog.json",
+        "implementation/hd-034-l2.json"
+      ],
+      "catalog": "evidence/packaging/catalog.json",
+      "l2_status_file": "implementation/hd-034-l2.json",
+      "live_residual": "live update/rollback UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC43",
+      "status": "not_run",
+      "owner_children": [
+        "HD-035"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/security-release/catalog.json",
+        "implementation/hd-035-l2.json"
+      ],
+      "catalog": "evidence/security-release/catalog.json",
+      "l2_status_file": "implementation/hd-035-l2.json",
+      "live_residual": "live dependency scans UNVERIFIED; missing scan is not zero vuln",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC44",
+      "status": "not_run",
+      "owner_children": [
+        "HD-006",
+        "HD-035"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "docs/adr/approved-baseline.json",
+        "evidence/security-release/catalog.json",
+        "implementation/hd-035-l2.json"
+      ],
+      "catalog": "evidence/security-release/catalog.json",
+      "l2_status_file": "implementation/hd-035-l2.json",
+      "live_residual": "live renderer process and canary UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC45",
+      "status": "not_run",
+      "owner_children": [
+        "HD-036"
+      ],
+      "evidence_class": "l1_docs",
+      "l1_artifacts": [
+        "docs/user-guide/index.md",
+        "docs/release/support-matrix.md",
+        "docs/testing/release-checklist.md"
+      ],
+      "catalog": "evidence/releases/catalog.json",
+      "l2_status_file": "implementation/hd-036-l2.json",
+      "live_residual": "independent-user walkthrough and live platform matrix not_run",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC46",
+      "status": "not_run",
+      "owner_children": [
+        "HD-033"
+      ],
+      "evidence_class": "l1_catalog",
+      "l1_artifacts": [
+        "evidence/quality/catalog.json",
+        "implementation/hd-033-l2.json"
+      ],
+      "catalog": "evidence/quality/catalog.json",
+      "l2_status_file": "implementation/hd-033-l2.json",
+      "live_residual": "8h soak UNVERIFIED",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC47",
+      "status": "not_run",
+      "owner_children": [
+        "HD-007"
+      ],
+      "evidence_class": "l1_graph",
+      "l1_artifacts": [
+        "scripts/herddesk_g0/project_graph.py",
+        "tests/python/test_project_graph.py",
+        "implementation/hd-007-packages.json"
+      ],
+      "catalog": null,
+      "l2_status_file": "implementation/hd-007-packages.json",
+      "live_residual": "L1 graph check exists; final SHA full-module fake-port discovery not rerun",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    },
+    {
+      "id": "AC48",
+      "status": "not_run",
+      "owner_children": [
+        "HD-036"
+      ],
+      "evidence_class": "l1_docs",
+      "l1_artifacts": [
+        "docs/release/notes.md",
+        "planning/acceptance.json",
+        "planning/backlog.json"
+      ],
+      "catalog": "evidence/releases/catalog.json",
+      "l2_status_file": "implementation/hd-036-l2.json",
+      "live_residual": "final candidate SHA evidence bind UNVERIFIED; unpublished",
+      "live_status": "UNVERIFIED",
+      "live_result": "not_run",
+      "independent_reviewer": null,
+      "candidate_sha": null,
+      "product_hash": null
+    }
+  ]
+}
