@@ -19,7 +19,7 @@
 | 上游基线 | herdr v0.8.2 commit `9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c`，`api_protocol=20` |
 | 许可 | 项目级许可证未选定；见 `LICENSE-STATUS.md` |
 
-已通过的 CI 只证明对应 SHA。Hosted Windows runner 成功不等于交互桌面、IME 或真实 herdr 验收。HD-011 L1 ViewModels 不是 AC19 或 WinUI 通过。HD-014 L1 renderer ports 不是 AC08 或 WebView2 通过。HD-015 L1 IME/keyboard coordinators 不是 AC09/AC10 或真机 IME 通过。HD-016 L1 ControlLeaseCoordinator 不是 AC07/AC14/AC16 或 live lease 通过。HD-019 L1 catalog/composition 不是 AC06/AC07/AC10/AC15 或本地 MVP 通过。HD-021 L1 helper publish 状态机不是 AC25 或 live deploy 通过。HD-026 L1 收口目录不是 AC13/14/15/19/21/22/23/24/26 或 live SSH 通过。HD-032 L1 收口目录不是 AC31/32/33/34/35 或 live FS/SSH/TOCTOU 通过。HD-033 L1 收口目录不是 AC27/28/29/37/38/46 或 live soak / 输入到像素 / DPI / Narrator 通过。HD-034 L1 收口目录不是 AC41/AC42 或 live 安装/签名/更新/回滚 通过。
+已通过的 CI 只证明对应 SHA。Hosted Windows runner 成功不等于交互桌面、IME 或真实 herdr 验收。HD-011 L1 ViewModels 不是 AC19 或 WinUI 通过。HD-014 L1 renderer ports 不是 AC08 或 WebView2 通过。HD-015 L1 IME/keyboard coordinators 不是 AC09/AC10 或真机 IME 通过。HD-016 L1 ControlLeaseCoordinator 不是 AC07/AC14/AC16 或 live lease 通过。HD-019 L1 catalog/composition 不是 AC06/AC07/AC10/AC15 或本地 MVP 通过。HD-021 L1 helper publish 状态机不是 AC25 或 live deploy 通过。HD-026 L1 收口目录不是 AC13/14/15/19/21/22/23/24/26 或 live SSH 通过。HD-032 L1 收口目录不是 AC31/32/33/34/35 或 live FS/SSH/TOCTOU 通过。HD-033 L1 收口目录不是 AC27/28/29/37/38/46 或 live soak / 输入到像素 / DPI / Narrator 通过。HD-034 L1 收口目录不是 AC41/AC42 或 live 安装/签名/更新/回滚 通过。HD-035 L1 收口目录不是 AC02/AC43/AC44 或 live 扫描/renderer 进程/canary/已签名包反向审计 通过。
 
 ## 架构
 

@@ -291,3 +291,7 @@ an independent substitute or drop the feature. Do not copy herdrm files.
 
 AC02-C1 and AC02-C2 are inventory/template contributions in this register.
 AC02 final remains `not_run`. Owner: HD-035.
+
+HD-035 ships an L1 security/license closeout catalog under
+`evidence/security-release/`. That catalog does not close AC02. Project license
+remains unselected. Public visibility is not a license grant.

@@ -1553,6 +1553,510 @@ def _check_hd034_closeout(hd034: dict, catalog: dict, matrix: dict) -> None:
     assert not (ROOT / 'packaging' / 'Package.appxmanifest').exists()
 
 
+_HD035_PASS_KEYS = (
+    'ac02_passed', 'ac43_passed', 'ac44_passed', 'g0_passed',
+)
+_HD035_REQUIRED_ACS = frozenset({'AC02', 'AC43', 'AC44'})
+_HD035_CARD_IDS = (
+    'license-inventory', 'herdrm-not-copied', 'nuget-scan', 'cargo-scan',
+    'npm-scan', 'renderer-boundary', 'diagnostic-canary',
+    'signed-package-reverse-audit',
+)
+_HD035_CARD_ACS = {
+    'license-inventory': ('AC02',),
+    'herdrm-not-copied': ('AC02',),
+    'nuget-scan': ('AC43',),
+    'cargo-scan': ('AC43',),
+    'npm-scan': ('AC43',),
+    'renderer-boundary': ('AC44',),
+    'diagnostic-canary': ('AC44',),
+    'signed-package-reverse-audit': ('AC43',),
+}
+_HD035_CARD_OWNERS = {
+    'license-inventory': ['HD-002'],
+    'herdrm-not-copied': ['HD-002', 'HD-006'],
+    'nuget-scan': ['HD-007'],
+    'cargo-scan': ['HD-008', 'HD-027'],
+    'npm-scan': ['HD-014'],
+    'renderer-boundary': ['HD-014', 'HD-020', 'HD-024'],
+    'diagnostic-canary': ['HD-031'],
+    'signed-package-reverse-audit': ['HD-032', 'HD-034'],
+}
+_HD035_CARD_GRANTS = {
+    'license-inventory': 'no_authorized_maintainer_license_decision',
+    'herdrm-not-copied': 'no_authorized_herdrm_reverse_audit_of_release_inputs',
+    'nuget-scan': 'no_authorized_nuget_advisory_scan',
+    'cargo-scan': 'no_authorized_cargo_advisory_scan',
+    'npm-scan': 'no_authorized_npm_audit',
+    'renderer-boundary': 'no_authorized_webview_process_observation',
+    'diagnostic-canary': 'no_authorized_canary_diagnostic_export',
+    'signed-package-reverse-audit': 'no_authorized_signed_package_unpack',
+}
+_HD035_LIVE_IDS = (
+    'live-license-inventory', 'live-herdrm-not-copied', 'live-nuget-scan',
+    'live-cargo-scan', 'live-npm-scan', 'live-renderer-boundary',
+    'live-diagnostic-canary', 'live-signed-package-reverse-audit',
+)
+_HD035_LIVE_GRANTS = {
+    'live-license-inventory': 'no_authorized_maintainer_license_decision',
+    'live-herdrm-not-copied': 'no_authorized_herdrm_reverse_audit_of_release_inputs',
+    'live-nuget-scan': 'no_authorized_nuget_advisory_scan',
+    'live-cargo-scan': 'no_authorized_cargo_advisory_scan',
+    'live-npm-scan': 'no_authorized_npm_audit',
+    'live-renderer-boundary': 'no_authorized_webview_process_observation',
+    'live-diagnostic-canary': 'no_authorized_canary_diagnostic_export',
+    'live-signed-package-reverse-audit': 'no_authorized_signed_package_unpack',
+}
+_HD035_L2_L3_KEYS = (
+    'l2_nuget_scan', 'l2_cargo_advisory', 'l2_npm_audit',
+    'l2_live_renderer_process', 'l2_canary_export', 'l2_signed_package_unpack',
+    'l3_signed_package_reverse_audit',
+)
+_HD035_FALSE_KEYS = (
+    'nuget_scan_executed', 'cargo_advisory_executed', 'npm_audit_executed',
+    'live_renderer_process_observed', 'canary_export_executed',
+    'signed_package_unpacked', 'project_license_selected', 'herdrm_copied',
+    'invented_scan_dates', 'invented_zero_vuln', 'invented_package_hashes',
+    'invented_publisher_identity', 'scan_failure_overwritten',
+    'final_unpacked_msix', 'nuget_lock_present', 'npm_lock_present',
+    'linux_msix_client', 'signed_msix_built', 'publisher_identity_confirmed',
+    'winui_admitted', 'herdr_executed', 'copy_windows_fields_onto_linux',
+    'extrapolate_macos_arm64', 'integration_ssh_project',
+    'integration_windows_project', 'user_config_uploaded_to_scan_service',
+    'invented_approved_admissions',
+)
+_HD035_TRUE_KEYS = (
+    'public_visibility_is_not_license_grant',
+    'missing_scan_is_not_zero_vuln',
+    'confirmed_exploitable_critical_high_must_not_be_hidden_by_exception',
+    'inventory_is_not_final_unpacked_msix',
+    'cargo_lock_present',
+    'linux_x64_is_not_windows_renderer_substitute',
+)
+_HD035_NULL_KEYS = (
+    'scan_tool_version', 'advisory_database_date', 'nuget_scan_date',
+    'cargo_advisory_date', 'npm_audit_date',
+    'confirmed_exploitable_critical_high', 'package_sha256', 'msix_sha256',
+    'signed_package_sha256', 'publisher', 'certificate_subject',
+    'certificate_thumbprint', 'canary_export_sha256',
+)
+_HD035_SUCCESS = frozenset({'passed', 'verified', 'compatible', 'success', 'ok', 'pass'})
+_HD035_SUPPORT_PASS = frozenset({'supported', 'stable', 'passed', 'compatible', 'success'})
+_HD035_TEMPLATES = (
+    'evidence/security-release/live-license-inventory.template.json',
+    'evidence/security-release/live-herdrm-not-copied.template.json',
+    'evidence/security-release/live-nuget-scan.template.json',
+    'evidence/security-release/live-cargo-scan.template.json',
+    'evidence/security-release/live-npm-scan.template.json',
+    'evidence/security-release/live-renderer-boundary.template.json',
+    'evidence/security-release/live-diagnostic-canary.template.json',
+    'evidence/security-release/live-signed-package-reverse-audit.template.json',
+)
+_HD035_NOT_RUN = (
+    'evidence/security-release/live-license-inventory.not-run.json',
+    'evidence/security-release/live-herdrm-not-copied.not-run.json',
+    'evidence/security-release/live-nuget-scan.not-run.json',
+    'evidence/security-release/live-cargo-scan.not-run.json',
+    'evidence/security-release/live-npm-scan.not-run.json',
+    'evidence/security-release/live-renderer-boundary.not-run.json',
+    'evidence/security-release/live-diagnostic-canary.not-run.json',
+    'evidence/security-release/live-signed-package-reverse-audit.not-run.json',
+)
+_HD035_SCENARIOS = (
+    'license_inventory', 'herdrm_not_copied', 'nuget_scan', 'cargo_scan',
+    'npm_scan', 'renderer_boundary', 'diagnostic_canary',
+    'signed_package_reverse_audit',
+)
+
+
+def _hd035_token(value):
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+def _is_hd035_success(value) -> bool:
+    if value is True:
+        return True
+    return _hd035_token(value) in _HD035_SUCCESS
+
+
+def _reject_hd035_invented_identity(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key in _HD035_NULL_KEYS and value is not None:
+                raise AssertionError(
+                    f'{key} must stay null; do not invent scan dates, tool versions, hashes, or zero-vuln counts'
+                )
+            if key == 'confirmed_exploitable_critical_high' and value == 0:
+                raise AssertionError('missing scan is not zero vulnerabilities')
+            _reject_hd035_invented_identity(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd035_invented_identity(item)
+
+
+def _reject_hd035_pass_claims(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key.endswith('_passed') and value is not False:
+                raise AssertionError(f'{key} must stay false')
+            if key == 'phase_gate' and _hd035_token(value) in {'passed', 'pass', 'ok'}:
+                raise AssertionError('phase_gate must stay not_passed')
+            if key in _HD035_L2_L3_KEYS and value != 'UNVERIFIED':
+                raise AssertionError(f'{key} must stay UNVERIFIED')
+            if key in {'live_result', 'result', 'live_status', 'status'} and _is_hd035_success(value):
+                raise AssertionError(f'{key} must stay not_run or UNVERIFIED')
+            if key == 'support' and _hd035_token(value) in _HD035_SUPPORT_PASS:
+                raise AssertionError('support must not be a pass token')
+            if key == 'compatible' and value is True:
+                raise AssertionError('compatible must stay false')
+            if key in _HD035_FALSE_KEYS and value is True:
+                raise AssertionError(f'{key} must stay false')
+            if key in _HD035_TRUE_KEYS and value is not True:
+                raise AssertionError(f'{key} must stay true')
+            if key == 'l1_status' and _hd035_token(value) in _HD035_SUCCESS:
+                raise AssertionError('l1_status must not be a pass token')
+            if key == 'admission' and _hd035_token(value) == 'approved':
+                raise AssertionError('inventory units cannot become approved')
+            if doc.get('herdrm_copied') is True:
+                raise AssertionError('herdrm copy is rejected')
+            if doc.get('public_visibility_is_not_license_grant') is False:
+                raise AssertionError('public visibility is not a license grant')
+            if doc.get('missing_scan_is_not_zero_vuln') is False:
+                raise AssertionError('missing scan is not zero vulnerabilities')
+            if doc.get('nuget_scan_executed') is True or doc.get('cargo_advisory_executed') is True \
+                    or doc.get('npm_audit_executed') is True:
+                raise AssertionError('live scan was not executed')
+            if doc.get('invented_zero_vuln') is True:
+                raise AssertionError('fake zero-vuln scan is rejected')
+            if doc.get('invented_scan_dates') is True:
+                raise AssertionError('invented scan dates cannot pass as success')
+            if doc.get('integration_windows_project') is True:
+                raise AssertionError('tests/Integration.Windows is not admitted')
+            _reject_hd035_pass_claims(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd035_pass_claims(item)
+
+
+def _check_hd035_inventory(inventory: dict) -> None:
+    assert inventory.get('document_kind') == 'hd035_security_release_inventory'
+    assert inventory.get('simulation') is True
+    assert inventory.get('fixture_origin') == 'synthetic'
+    assert inventory.get('template') is False
+    assert inventory.get('source_register') == 'docs/licensing/register.json'
+    assert inventory.get('source_markdown') == 'docs/licensing-register.md'
+    assert inventory.get('final_unpacked_msix') is False
+    assert inventory.get('signed_package_unpacked') is False
+    assert inventory.get('inventory_is_not_final_unpacked_msix') is True
+    assert inventory.get('project_license_selected') is False
+    assert inventory.get('herdrm_copied') is False
+    assert inventory.get('invented_approved_admissions') is False
+    assert inventory.get('public_visibility_is_not_license_grant') is True
+    for key in _HD035_PASS_KEYS:
+        assert inventory.get(key) is False, key
+    assert inventory.get('phase_gate') != 'passed'
+    _reject_hd035_pass_claims(inventory)
+    _reject_hd035_invented_identity(inventory)
+    register = json.loads((ROOT / 'docs/licensing/register.json').read_text(encoding='utf-8'))
+    register_units = [
+        (item['name'], item['artifact_kind'], item['admission']) for item in register['units']
+    ]
+    listed = [
+        (item['name'], item['artifact_kind'], item['admission']) for item in inventory['units']
+    ]
+    assert listed == register_units
+    for name, kind, admission in listed:
+        assert admission in {'pending', 'blocked'}, (name, kind, admission)
+        assert admission != 'approved'
+    herdrm = [item for item in inventory['units'] if item['name'] == 'herdrm']
+    assert len(herdrm) == 1
+    assert herdrm[0]['admission'] == 'blocked'
+    assert (ROOT / 'docs/licensing/register.json').is_file()
+    assert (ROOT / 'docs/licensing-register.md').is_file()
+    assert (ROOT / 'LICENSE-STATUS.md').is_file()
+
+
+def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: dict) -> None:
+    assert hd035.get('document_kind') == 'hd035_l2_status'
+    assert catalog.get('document_kind') == 'hd035_security_release_catalog'
+    assert matrix.get('document_kind') == 'hd035_support_matrix'
+    assert catalog.get('simulation') is True
+    assert catalog.get('fixture_origin') == 'synthetic'
+    assert catalog.get('template') is False
+    for key in _HD035_L2_L3_KEYS:
+        assert hd035.get(key) == 'UNVERIFIED', key
+        if key in catalog:
+            assert catalog.get(key) == 'UNVERIFIED', key
+        if key in matrix:
+            assert matrix.get(key) == 'UNVERIFIED', key
+    for doc in (hd035, catalog, matrix):
+        _reject_hd035_pass_claims(doc)
+        _reject_hd035_invented_identity(doc)
+        for key in _HD035_PASS_KEYS:
+            assert doc.get(key) is False, key
+        assert doc.get('phase_gate') != 'passed'
+        if 'winui_admitted' in doc:
+            assert doc.get('winui_admitted') is False
+        if 'herdr_executed' in doc:
+            assert doc.get('herdr_executed') is False
+        if 'herdrm_copied' in doc:
+            assert doc.get('herdrm_copied') is False
+        if 'project_license_selected' in doc:
+            assert doc.get('project_license_selected') is False
+        if 'nuget_scan_executed' in doc:
+            assert doc.get('nuget_scan_executed') is False
+        if 'cargo_advisory_executed' in doc:
+            assert doc.get('cargo_advisory_executed') is False
+        if 'npm_audit_executed' in doc:
+            assert doc.get('npm_audit_executed') is False
+        if 'live_renderer_process_observed' in doc:
+            assert doc.get('live_renderer_process_observed') is False
+        if 'canary_export_executed' in doc:
+            assert doc.get('canary_export_executed') is False
+        if 'signed_package_unpacked' in doc:
+            assert doc.get('signed_package_unpacked') is False
+        if 'public_visibility_is_not_license_grant' in doc:
+            assert doc.get('public_visibility_is_not_license_grant') is True
+        if 'missing_scan_is_not_zero_vuln' in doc:
+            assert doc.get('missing_scan_is_not_zero_vuln') is True
+        if 'confirmed_exploitable_critical_high_must_not_be_hidden_by_exception' in doc:
+            assert doc.get('confirmed_exploitable_critical_high_must_not_be_hidden_by_exception') is True
+    for key in _HD035_FALSE_KEYS:
+        if key in hd035:
+            assert hd035.get(key) is False, key
+        if key in catalog:
+            assert catalog.get(key) is False, key
+    for key in _HD035_TRUE_KEYS:
+        assert hd035.get(key) is True, key
+        assert catalog.get(key) is True, key
+        assert matrix.get(key) is True, key
+    assert tuple(catalog.get('templates') or ()) == _HD035_TEMPLATES
+    assert tuple(catalog.get('not_run_captures') or ()) == _HD035_NOT_RUN
+    missing = hd035.get('missing') or {}
+    for key in (
+        'maintainer_license_decision', 'herdrm_reverse_audit_of_release_inputs',
+        'nuget_advisory_scan', 'cargo_advisory_scan', 'npm_audit',
+        'webview_process_observation', 'canary_diagnostic_export',
+        'signed_package_unpack', 'winui_shell', 'integration_windows',
+    ):
+        assert missing.get(key) is True, key
+    grants = hd035.get('missing_grants') or []
+    assert tuple(grants) == tuple(_HD035_CARD_GRANTS[card_id] for card_id in _HD035_CARD_IDS)
+    assert hd035.get('catalog') == 'evidence/security-release/catalog.json'
+    assert hd035.get('support_matrix') == 'evidence/security-release/support-matrix.json'
+    assert hd035.get('inventory') == 'evidence/security-release/inventory.json'
+    assert catalog.get('support_matrix') == 'evidence/security-release/support-matrix.json'
+    assert catalog.get('inventory') == 'evidence/security-release/inventory.json'
+    assert catalog.get('l2_status') == 'implementation/hd-035-l2.json'
+    assert hd035.get('herdr_executed') is False
+    assert catalog.get('herdr_executed') is False
+    redaction = catalog.get('redaction') or {}
+    for key in ('host', 'user', 'path', 'credential', 'scan_body', 'canary'):
+        assert redaction.get(key) == 'omitted', key
+    cards = {item['id']: item for item in catalog['execution_cards']}
+    assert tuple(cards) == _HD035_CARD_IDS
+    seen_acs = set()
+    seen_grants = []
+    for card in catalog['execution_cards']:
+        card_id = card['id']
+        assert card['live_status'] == 'UNVERIFIED'
+        assert card['live_result'] == 'not_run'
+        assert card['l1_status'] == 'shipped'
+        assert card['l1_status'] != 'passed'
+        assert card['required_evidence'] in {'L2', 'L3', 'L4'}
+        assert card['required_evidence'] != 'L1'
+        assert card['missing_grant'] == _HD035_CARD_GRANTS[card_id]
+        assert card['owner_children'] == _HD035_CARD_OWNERS[card_id]
+        assert tuple(card['ac_ids']) == _HD035_CARD_ACS[card_id]
+        seen_acs.update(card['ac_ids'])
+        seen_grants.append(card['missing_grant'])
+        assert card['l1_artifacts']
+        for rel in card['l1_artifacts']:
+            assert (ROOT / rel).is_file(), rel
+        capture = ROOT / card['live_capture']
+        assert capture.is_file()
+        loaded = json.loads(capture.read_text(encoding='utf-8'))
+        _reject_hd035_pass_claims(loaded)
+        _reject_hd035_invented_identity(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        assert not _is_hd035_success(loaded.get('result'))
+        assert loaded.get('herdrm_copied') is not True
+        assert loaded.get('nuget_scan_executed') is not True
+        assert loaded.get('signed_package_unpacked') is not True
+        assert loaded.get('live_renderer_process_observed') is not True
+        assert loaded.get('canary_export_executed') is not True
+        assert loaded.get('project_license_selected') is not True
+    assert _HD035_REQUIRED_ACS <= seen_acs
+    assert len(seen_grants) == len(set(seen_grants))
+    rows = {item['id']: item for item in catalog['live_rows']}
+    assert tuple(rows) == _HD035_LIVE_IDS
+    for row in catalog['live_rows']:
+        assert row['status'] == 'UNVERIFIED'
+        assert row['result'] == 'not_run'
+        assert row.get('template') is False
+        assert row.get('owner_children')
+        assert row['missing_grant'] == _HD035_LIVE_GRANTS[row['id']]
+        evidence = ROOT / row['evidence_path']
+        assert evidence.is_file()
+        loaded = json.loads(evidence.read_text(encoding='utf-8'))
+        _reject_hd035_pass_claims(loaded)
+        _reject_hd035_invented_identity(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        if row['id'] == 'live-nuget-scan':
+            assert loaded.get('nuget_scan_executed') is False
+            assert loaded.get('nuget_lock_present') is False
+            assert loaded.get('missing_scan_is_not_zero_vuln') is True
+        if row['id'] == 'live-cargo-scan':
+            assert loaded.get('cargo_advisory_executed') is False
+            assert loaded.get('cargo_lock_present') is True
+            assert loaded.get('missing_scan_is_not_zero_vuln') is True
+        if row['id'] == 'live-npm-scan':
+            assert loaded.get('npm_audit_executed') is False
+            assert loaded.get('npm_lock_present') is False
+        if row['id'] == 'live-renderer-boundary':
+            assert loaded.get('live_renderer_process_observed') is False
+        if row['id'] == 'live-diagnostic-canary':
+            assert loaded.get('canary_export_executed') is False
+            assert loaded.get('canary_present_in_export') is None
+        if row['id'] == 'live-signed-package-reverse-audit':
+            assert loaded.get('signed_package_unpacked') is False
+            assert loaded.get('signed_msix_built') is False
+            assert loaded.get('final_unpacked_msix') is False
+        if row['id'] == 'live-license-inventory':
+            assert loaded.get('project_license_selected') is False
+            assert loaded.get('public_visibility_is_not_license_grant') is True
+        if row['id'] == 'live-herdrm-not-copied':
+            assert loaded.get('herdrm_copied') is False
+    for rel in _HD035_TEMPLATES:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd035_pass_claims(doc)
+        _reject_hd035_invented_identity(doc)
+        assert doc.get('template') is True
+        assert doc.get('document_kind') == 'template'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('captured_at_utc') is None
+        assert doc.get('scan_tool_version') is None
+        assert doc.get('advisory_database_date') is None
+        assert not _is_hd035_success(doc.get('result'))
+        assert doc.get('herdr_executed') is False
+        assert 'stdout' not in doc and 'stderr' not in doc
+        if 'nuget-scan' in rel:
+            assert doc.get('nuget_scan_executed') is False
+            assert doc.get('missing_scan_is_not_zero_vuln') is True
+        if 'cargo-scan' in rel:
+            assert doc.get('cargo_advisory_executed') is False
+            assert doc.get('cargo_lock_present') is True
+        if 'npm-scan' in rel:
+            assert doc.get('npm_audit_executed') is False
+            assert doc.get('npm_lock_present') is False
+        if 'renderer-boundary' in rel:
+            assert doc.get('live_renderer_process_observed') is False
+        if 'diagnostic-canary' in rel:
+            assert doc.get('canary_export_executed') is False
+            assert doc.get('canary_present_in_export') is None
+        if 'signed-package-reverse-audit' in rel:
+            assert doc.get('signed_package_unpacked') is False
+            assert doc.get('signed_msix_built') is False
+        if 'license-inventory' in rel:
+            assert doc.get('project_license_selected') is False
+            assert doc.get('public_visibility_is_not_license_grant') is True
+        if 'herdrm-not-copied' in rel:
+            assert doc.get('herdrm_copied') is False
+    for rel in _HD035_NOT_RUN:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd035_pass_claims(doc)
+        _reject_hd035_invented_identity(doc)
+        assert doc.get('template') is False
+        assert doc.get('result') == 'not_run'
+        assert doc.get('herdr_executed') is False
+        assert doc.get('evidence_level') == 'not_run'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('host_fingerprint_redacted') is None
+        assert doc.get('command_redacted') is None
+        assert 'stdout' not in doc and 'stderr' not in doc
+        blob = json.dumps(doc).lower()
+        assert 'password' not in blob
+        assert 'private_key' not in blob
+        assert '.pfx' not in blob
+    promised = {item['id'] for item in matrix['promised_range']}
+    assert promised == {'windows-11-x64-client'}
+    by_platform = {item['id']: item for item in matrix['platforms']}
+    windows = by_platform['windows-11-x64-client']
+    assert windows['promise'] == 'promised'
+    assert windows['live_status'] == 'not_run'
+    assert windows['live_result'] == 'not_run'
+    assert windows['compatible'] is False
+    assert windows['support'] == 'promised_not_run'
+    linux = by_platform['linux-x64-remote']
+    assert linux['promise'] == 'none'
+    assert linux['support'] == 'unsupported'
+    assert linux['support'] not in ('supported', 'stable', 'promised', 'promised_not_run', 'passed')
+    assert linux['live_status'] == 'not_run'
+    assert linux['compatible'] is False
+    assert linux.get('linux_msix') is False
+    assert linux.get('linux_renderer_observation') is False
+    assert linux['role'] == 'remote'
+    macos = by_platform['macos-x64']
+    assert macos['support'] == 'unsupported'
+    assert macos['live_status'] == 'not_run'
+    assert macos['compatible'] is False
+    for key in ('macos-arm64', 'linux-arm64', 'windows-arm64'):
+        row = by_platform[key]
+        assert row['support'] in ('unsupported', 'experimental')
+        assert row['support'] not in ('supported', 'stable', 'promised')
+        assert row['live_status'] == 'not_run'
+        assert row['compatible'] is False
+    assert windows['missing_grant'] != linux['missing_grant']
+    scenario_ids = [item['id'] for item in matrix['scenarios']]
+    assert tuple(scenario_ids) == _HD035_SCENARIOS
+    for scenario in matrix['scenarios']:
+        assert scenario['live_status'] == 'not_run'
+        assert scenario['live_result'] == 'not_run'
+        assert scenario['support'] == 'l1_only'
+    cell_keys = {(item['platform'], item['scenario']) for item in matrix['cells']}
+    for scenario in scenario_ids:
+        assert ('windows-11-x64-client', scenario) in cell_keys
+    for cell in matrix['cells']:
+        assert cell['platform'] == 'windows-11-x64-client'
+        assert cell['live_status'] == 'not_run'
+        assert cell['live_result'] == 'not_run'
+        assert cell['compatible'] is False
+        assert not _is_hd035_success(cell['live_result'])
+    assert matrix.get('copy_windows_fields_onto_linux') is False
+    assert matrix.get('extrapolate_macos_arm64') is False
+    assert matrix.get('linux_msix_client') is False
+    assert matrix.get('linux_x64_is_not_windows_renderer_substitute') is True
+    assert matrix.get('compatible_by_default') == []
+    assert catalog.get('linux_msix_client') is False
+    assert catalog.get('cargo_lock_present') is True
+    assert catalog.get('nuget_lock_present') is False
+    assert catalog.get('npm_lock_present') is False
+    _check_hd035_inventory(inventory)
+    criteria = json.loads((ROOT / 'planning' / 'acceptance.json').read_text(encoding='utf-8'))['criteria']
+    acs = {item['id']: item for item in criteria}
+    assert acs['AC02']['status'] != 'passed'
+    assert acs['AC43']['status'] != 'passed'
+    assert acs['AC44']['status'] != 'passed'
+    assert acs['AC02']['status'] == 'not_run'
+    assert acs['AC43']['status'] == 'not_run'
+    assert acs['AC44']['status'] == 'not_run'
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    assert not (ROOT / 'web' / 'terminal' / 'package-lock.json').exists()
+    assert not (ROOT / 'packages.lock.json').exists()
+    assert (ROOT / 'bridge' / 'Cargo.lock').is_file()
+    assert (ROOT / 'filebridge' / 'Cargo.lock').is_file()
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -1589,6 +2093,7 @@ def validate() -> dict:
     hd032=json.loads((ROOT/'implementation/hd-032-l2.json').read_text(encoding='utf-8'))
     hd033=json.loads((ROOT/'implementation/hd-033-l2.json').read_text(encoding='utf-8'))
     hd034=json.loads((ROOT/'implementation/hd-034-l2.json').read_text(encoding='utf-8'))
+    hd035=json.loads((ROOT/'implementation/hd-035-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -1598,6 +2103,9 @@ def validate() -> dict:
     quality_matrix=json.loads((ROOT/'evidence/quality/support-matrix.json').read_text(encoding='utf-8'))
     packaging_catalog=json.loads((ROOT/'evidence/packaging/catalog.json').read_text(encoding='utf-8'))
     packaging_matrix=json.loads((ROOT/'evidence/packaging/support-matrix.json').read_text(encoding='utf-8'))
+    security_catalog=json.loads((ROOT/'evidence/security-release/catalog.json').read_text(encoding='utf-8'))
+    security_matrix=json.loads((ROOT/'evidence/security-release/support-matrix.json').read_text(encoding='utf-8'))
+    security_inventory=json.loads((ROOT/'evidence/security-release/inventory.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -1749,6 +2257,7 @@ def validate() -> dict:
     _check_hd032_closeout(hd032, files_catalog, files_matrix)
     _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
+    _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
@@ -1797,7 +2306,8 @@ def validate() -> dict:
     return {'structural_validation':'passed','json_files':count,'projects':len(projects),
             'tasks':len(tasks),'csharp_compiled':False,'windows_verified':False,
             'ac02_passed':False,'ac03_passed':False,'ac05_passed':False,
-            'ac08_passed':False,'ac09_passed':False,'ac44_passed':False,
+            'ac08_passed':False,'ac09_passed':False,'ac43_passed':False,
+            'ac44_passed':False,
             'g0_passed':False,
             'project_graph':graph['project_graph'],
             'github_required_check':packages['github_required_check'],

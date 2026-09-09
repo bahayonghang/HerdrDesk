@@ -1,0 +1,41 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd035-live-signed-package-reverse-audit-template",
+  "kind": "live_signed_package_reverse_audit",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_signed_package_unpack_required",
+  "command_redacted": [
+    "unpack a signed candidate package and reverse-audit contents against the inventory"
+  ],
+  "host_fingerprint_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "herdr_executed": false,
+  "invented_scan_dates": false,
+  "invented_package_hashes": false,
+  "scan_tool_version": null,
+  "advisory_database_date": null,
+  "nuget_scan_date": null,
+  "cargo_advisory_date": null,
+  "npm_audit_date": null,
+  "confirmed_exploitable_critical_high": null,
+  "package_sha256": null,
+  "msix_sha256": null,
+  "signed_package_sha256": null,
+  "publisher": null,
+  "certificate_subject": null,
+  "certificate_thumbprint": null,
+  "canary_export_sha256": null,
+  "result": null,
+  "signed_package_unpacked": false,
+  "signed_msix_built": false,
+  "final_unpacked_msix": false,
+  "inventory_is_not_final_unpacked_msix": true,
+  "limitations": [
+    "This file is a capture template. HD-034 has no signed MSIX. Null package hashes are not an unpacked signed package.",
+    "Do not invent Publisher, certificates, or signed-package hashes. This L1 catalog is not AC02/AC43/AC44."
+  ]
+}

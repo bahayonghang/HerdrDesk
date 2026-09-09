@@ -1,0 +1,38 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd035-live-renderer-boundary-template",
+  "kind": "live_renderer_boundary",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_webview_process_observation_required",
+  "command_redacted": [
+    "observe live WebView/host processes under origin, epoch, and capability attacks"
+  ],
+  "host_fingerprint_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "herdr_executed": false,
+  "invented_scan_dates": false,
+  "invented_package_hashes": false,
+  "scan_tool_version": null,
+  "advisory_database_date": null,
+  "nuget_scan_date": null,
+  "cargo_advisory_date": null,
+  "npm_audit_date": null,
+  "confirmed_exploitable_critical_high": null,
+  "package_sha256": null,
+  "msix_sha256": null,
+  "signed_package_sha256": null,
+  "publisher": null,
+  "certificate_subject": null,
+  "certificate_thumbprint": null,
+  "canary_export_sha256": null,
+  "result": null,
+  "live_renderer_process_observed": false,
+  "limitations": [
+    "This file is a capture template. HD-014 L1 allowlist is not live process observation.",
+    "Linux x64 remote is not a substitute for Windows renderer process observation. This L1 catalog is not AC44."
+  ]
+}

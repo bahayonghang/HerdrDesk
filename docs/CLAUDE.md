@@ -22,6 +22,7 @@
 | [testing/file-fault-security.md](testing/file-fault-security.md) | HD-032 L1 收口说明。AC31–AC35 为 `not_run`。不是 live FS/SSH/TOCTOU/attack/UI 通过。 |
 | [testing/performance-soak.md](testing/performance-soak.md) | HD-033 L1 收口说明。AC27/28/29/37/38/46 为 `not_run`。不是 live soak / 输入到像素 / DPI / Narrator 通过。 |
 | [testing/packaging-manual.md](testing/packaging-manual.md) | HD-034 L1 收口说明。AC41/AC42 为 `not_run`。不是 live 安装/签名/更新/回滚 通过。 |
+| [testing/security-release.md](testing/security-release.md) | HD-035 L1 收口说明。AC02/AC43/AC44 为 `not_run`。不是 live 扫描/renderer 进程/canary/已签名包反向审计 通过。 |
 | [spikes/](spikes/CLAUDE.md) | HD-005 renderer 决策。WebView2/xterm 基线；native 不晋级。不是 AC08/AC09 通过。 |
 
 ## 约束
