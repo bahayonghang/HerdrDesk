@@ -3,7 +3,7 @@
   "name": "windows-hd-007",
   "title": "HD-007 仓库骨架与CI",
   "description": "创建模块边界、锁定依赖、配置分析器和测试流水线",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-08",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "HD-007 skeleton landed in-tree: App/Infrastructure/Terminal.Web BCL stubs, Unit+Contract console runners, project_graph gate, just ci/Actions split. Microsoft.WindowsAppSDK 2.4.0 and Microsoft.NET.Test.Sdk 18.9.0 metadata+temp restore observed; not admitted to lock (license pending, no WASDK workload, Linux must not compile WinUI). App.xaml deferred to HD-011. github_required_check=UNVERIFIED. AC39/AC40/AC47/G0/phase_gate not passed. IME/ACL/SSH L3 UNVERIFIED. Status stays in_progress.",
+  "notes": "L1 skeleton remains in-tree. 2026-09-09 reopen for L2 package admission only: license of WinUI 2.3.6 reviewed (Microsoft Software License Terms); do not admit umbrella WASDK 2.4.0 (AI/ML/Search/Widgets). App.xaml Shell stays HD-011. github_required_check=UNVERIFIED. AC39/AC40/AC47/G0/phase_gate not passed. Do not install workloads or write User env.",
   "meta": {
     "source_task": "HD-007",
     "phase": "P1"
