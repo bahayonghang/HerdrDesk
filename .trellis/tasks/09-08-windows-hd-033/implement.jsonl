@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"端到端 latency、queue、renderer、UI 和 transport correlation 的跨层测量"}
+{"file":"docs/plan/docs/06_终端与输入法.md","reason":"renderer 背压、input-to-render、IME、DPI 与可访问性目标"}
+{"file":"docs/plan/docs/10_测试与验收.md","reason":"统一硬件、负载、指标、L3/L4 和证据归档基线"}
+{"file":"docs/plan/docs/11_工程化发布运维.md","reason":"版本、诊断、支持矩阵与发布证据边界"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"性能、soak、accessibility 统一 Windows integration 入口"}

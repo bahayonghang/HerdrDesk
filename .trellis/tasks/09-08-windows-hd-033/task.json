@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-033",
+  "name": "windows-hd-033",
+  "title": "HD-033 性能、可访问性与soak",
+  "description": "按统一负载测性能/资源/8h稳定性，修复关键问题",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 P5 perf/a11y/soak catalog landed. Live 8h soak, IME, Narrator, DPI, input-to-pixel, working-set UNVERIFIED. AC27-29/37/38/46/G0 not passed. Parser-consumed is not presentation.",
+  "meta": {
+    "source_task": "HD-033",
+    "phase": "P5"
+  }
+}
