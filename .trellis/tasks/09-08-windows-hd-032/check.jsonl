@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check true failure outcomes, exact cleanup, and no blind retry."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Check evidence redaction on success, failure, and residue paths."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Check L1 cannot substitute for real L2 and L3 evidence."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Check every AC clause reaches a real oracle and owning layer."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Check no planned capability is promoted to current proof."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

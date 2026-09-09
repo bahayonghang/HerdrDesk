@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/index.md","reason":"G0 authorization, process ownership, and dependency boundary."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Fail-closed errors, cancellation, and no false recovery."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Evidence and diagnostics must omit file, path, and credential data."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Real versus synthetic evidence and full gate requirements."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Trace fault outcomes through helper, Core, UI, and acceptance."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Current missing implementation and unverified Windows boundary."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
