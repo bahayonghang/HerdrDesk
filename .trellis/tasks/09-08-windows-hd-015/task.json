@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 coordinators remain. 2026-09-10 reopen to bind IME/keyboard/selection to HD-014 TerminalHost. Real IME desktop still UNVERIFIED until recorded. AC09/AC10/G0 not passed. Do not install herdr on LAN.",
+  "notes": "L2 product 4d12cc7 binds IME to TerminalHost. l3_ime_desktop UNVERIFIED. AC09/AC10/G0 not passed. Do not install herdr on LAN.",
   "meta": {
     "source_task": "HD-015",
     "phase": "P2"
