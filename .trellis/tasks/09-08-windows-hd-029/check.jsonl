@@ -1,0 +1,4 @@
+{"file":"planning/acceptance.json","reason":"复核 AC31、AC33 最终归 HD-032 及 AC30、AC32、AC37、AC38 贡献边界"}
+{"file":"tasks/HD-029.md","reason":"核对双栏文件 UI 范围、依赖、风险和回滚"}
+{"file":"docs/plan/docs/10_测试与验收.md","reason":"文件矩阵、L2/L3 与性能真实性要求"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

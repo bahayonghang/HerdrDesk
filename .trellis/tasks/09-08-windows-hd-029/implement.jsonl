@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"file provider、ViewModel、target lease、progress 与 conflict 的跨层流"}
+{"file":"docs/plan/docs/07_多设备SSH与文件.md","reason":"双栏、结构化列举、传输、冲突、取消和离线语义"}
+{"file":"docs/plan/docs/08_安全与威胁模型.md","reason":"不可信文件名、路径、TOCTOU 和目标设备边界"}
+{"file":"docs/plan/docs/02_产品定义与名称.md","reason":"1.0 文件功能和明确目标的产品范围"}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"文件 ViewModel/component/Windows 测试归一入口"}

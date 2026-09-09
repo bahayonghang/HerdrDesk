@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-029",
+  "name": "windows-hd-029",
+  "title": "HD-029 双栏文件界面",
+  "description": "目录导航、目标选择、队列、进度、冲突确认",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 dual-pane file ViewModels landed. WinUI not admitted. L2 live UI/SSH UNVERIFIED. AC31/AC33/G0 not passed.",
+  "meta": {
+    "source_task": "HD-029",
+    "phase": "P4"
+  }
+}
