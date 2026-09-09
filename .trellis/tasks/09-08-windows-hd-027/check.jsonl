@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check allocation-before-validation, latching, and extensible errors."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Check no file bytes, remote names, paths, or credentials leak."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Check exact dependencies, limits, tests, and no evidence promotion."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Check a single normative codec contract across consumers."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Check proposed command and modules are not reported as current."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}

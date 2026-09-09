@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-027",
+  "name": "windows-hd-027",
+  "title": "HD-027 文件helper协议与安全设计",
+  "description": "独立filebridge狭窄API、二进制/JSON界限、认证复用、威胁模型",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 filebridge protocol codec and golden vectors landed. ADR proposed. L2 FS/SSH/TOCTOU UNVERIFIED. AC30/AC34/G0 not passed. No serve binary.",
+  "meta": {
+    "source_task": "HD-027",
+    "phase": "P4"
+  }
+}
