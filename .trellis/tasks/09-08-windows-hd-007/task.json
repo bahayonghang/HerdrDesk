@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 skeleton remains in-tree. 2026-09-09 reopen for L2 package admission only: license of WinUI 2.3.6 reviewed (Microsoft Software License Terms); do not admit umbrella WASDK 2.4.0 (AI/ML/Search/Widgets). App.xaml Shell stays HD-011. github_required_check=UNVERIFIED. AC39/AC40/AC47/G0/phase_gate not passed. Do not install workloads or write User env.",
+  "notes": "L2 product commit 76be4f0 admits App windows TFM Microsoft.WindowsAppSDK.WinUI 2.3.6 (not umbrella 2.4.0). Blank App.xaml/MainWindow only. windows_desktop_restore=admitted on this machine. github_required_check=UNVERIFIED. AC39/AC40/AC47/G0/phase_gate not passed. Shell remains HD-011. Do not install workloads or write User env.",
   "meta": {
     "source_task": "HD-007",
     "phase": "P1"
