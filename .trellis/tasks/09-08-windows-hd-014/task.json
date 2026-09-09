@@ -3,7 +3,7 @@
   "name": "windows-hd-014",
   "title": "HD-014 可交付WebView2终端adapter",
   "description": "打包本地xterm、字节写入、在途窗口、origin校验",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-08",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 renderer ports, message allowlist, and flow controller landed. WebView2/npm xterm not admitted. L2/L3 UNVERIFIED. AC08/AC27/G0 not passed.",
+  "notes": "L1 ports remain. 2026-09-10 reopen for L2 local @xterm/xterm 6.0.0 MIT bundle plus WinUI WebView2 host. Deprecated npm id xterm@5.3.0 is not admitted. AC08/AC27/G0 not passed. Do not install herdr on LAN.",
   "meta": {
     "source_task": "HD-014",
     "phase": "P2"
