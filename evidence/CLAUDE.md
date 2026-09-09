@@ -64,6 +64,10 @@ HD-032 L1 P4 文件故障与安全收口目录。`catalog.json` 列出 payload /
 
 HD-033 L1 P5 性能/可访问性/soak 收口目录。`catalog.json` 列出 cold start / input-to-visible-pixel / search p95 / working set 1/4 pane / 100 hide-show / Narrator / DPI 100-150-200 / 8h soak 执行卡，指向已有 HD-023 搜索单元、HD-025 队列/准入、HD-011 ViewModel 产物。parser consumed 不是 GPU 或可见像素呈现。不得从 `Q_p` 推导进程工作集。MiB = 1,048,576 bytes。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码，不是成功运行。不得发明 timings。hosted CI 不是交互桌面。产品 AC27/AC28/AC29/AC37/AC38/AC46 仍未通过。
 
+## `packaging/`
+
+HD-034 L1 P5 签名/安装/更新回滚收口目录。`catalog.json` 列出 clean install / runtime missing / signed update / bad publisher-or-tamper / signed rollback / config backup-restore / file-job defer / unsigned local build 执行卡，指向已有 HD-007 配置/宿主、HD-011 设置 ViewModel、HD-021 helper 信任清单、HD-028 `TransferCoordinator` 产物。假 Publisher 不能让 AC41 通过。未签名本地构建不能当发行安装。复制旧 EXE 不能当回滚。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端，行为 `not_run`。Linux x64 是远端 OS，不是 MSIX 客户端。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码/Publisher，不是成功运行。产品 AC41/AC42 仍未通过。
+
 ## `local-mvp/`
 
 HD-019 场景目录。`catalog.json` 列出 observe/control/IME/input/resize/scroll/release/GUI close/recovery/agent TUI。每个 live 行 `required_evidence` 为 L2 或 L3，`status` 为 `UNVERIFIED`。L1 composition 不是本地 E2E pass。缺 disposable pane、WebView2、IME desktop、agent TUI versions。产品 AC06/AC07/AC10/AC15 仍未通过。

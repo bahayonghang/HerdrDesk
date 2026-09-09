@@ -1138,6 +1138,421 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
 
 
+_HD034_PASS_KEYS = (
+    'ac41_passed', 'ac42_passed', 'g0_passed',
+)
+_HD034_REQUIRED_ACS = frozenset({'AC41', 'AC42'})
+_HD034_CARD_IDS = (
+    'clean-install', 'runtime-missing', 'signed-update',
+    'bad-publisher-or-tamper', 'signed-rollback', 'config-backup-restore',
+    'file-job-defer', 'unsigned-local-build',
+)
+_HD034_CARD_ACS = {
+    'clean-install': ('AC41',),
+    'runtime-missing': ('AC41',),
+    'signed-update': ('AC42',),
+    'bad-publisher-or-tamper': ('AC42',),
+    'signed-rollback': ('AC42',),
+    'config-backup-restore': ('AC42',),
+    'file-job-defer': ('AC42',),
+    'unsigned-local-build': ('AC41',),
+}
+_HD034_CARD_OWNERS = {
+    'clean-install': ['HD-007', 'HD-011'],
+    'runtime-missing': ['HD-007'],
+    'signed-update': ['HD-007'],
+    'bad-publisher-or-tamper': ['HD-021', 'HD-007'],
+    'signed-rollback': ['HD-007'],
+    'config-backup-restore': ['HD-007'],
+    'file-job-defer': ['HD-028'],
+    'unsigned-local-build': ['HD-007'],
+}
+_HD034_CARD_GRANTS = {
+    'clean-install': 'no_authorized_clean_machine_install',
+    'runtime-missing': 'no_authorized_runtime_missing_vm',
+    'signed-update': 'no_authorized_signed_update_channel',
+    'bad-publisher-or-tamper': 'no_authorized_publisher_identity',
+    'signed-rollback': 'no_authorized_signed_rollback',
+    'config-backup-restore': 'no_authorized_config_restore_on_install',
+    'file-job-defer': 'no_authorized_file_job_defer_during_update',
+    'unsigned-local-build': 'no_authorized_signing_service',
+}
+_HD034_LIVE_IDS = (
+    'live-clean-install', 'live-runtime-missing', 'live-signed-update',
+    'live-bad-publisher-or-tamper', 'live-signed-rollback',
+    'live-config-backup-restore', 'live-file-job-defer',
+    'live-unsigned-local-build',
+)
+_HD034_LIVE_GRANTS = {
+    'live-clean-install': 'no_authorized_clean_machine_install',
+    'live-runtime-missing': 'no_authorized_runtime_missing_vm',
+    'live-signed-update': 'no_authorized_signed_update_channel',
+    'live-bad-publisher-or-tamper': 'no_authorized_publisher_identity',
+    'live-signed-rollback': 'no_authorized_signed_rollback',
+    'live-config-backup-restore': 'no_authorized_config_restore_on_install',
+    'live-file-job-defer': 'no_authorized_file_job_defer_during_update',
+    'live-unsigned-local-build': 'no_authorized_signing_service',
+}
+_HD034_L2_L3_KEYS = (
+    'l2_live_install', 'l2_live_sign', 'l2_live_update', 'l2_live_rollback',
+    'l3_clean_machine',
+)
+_HD034_FALSE_KEYS = (
+    'live_install', 'live_sign', 'live_update', 'live_rollback',
+    'live_clean_machine', 'publisher_identity_confirmed', 'signed_msix_built',
+    'clean_machine_install_executed', 'unsigned_local_build_is_release',
+    'exe_copy_is_rollback', 'silent_admin_runtime_install',
+    'parallel_self_update_service', 'official_app_installer_downgrade_default',
+    'linux_msix_client', 'invented_package_hashes',
+    'invented_publisher_identity',
+    'windows_app_sdk_admitted', 'killed_user_daemon', 'winui_admitted',
+    'herdr_executed', 'copy_windows_fields_onto_linux',
+    'extrapolate_macos_arm64', 'integration_ssh_project',
+    'integration_windows_project',
+)
+_HD034_TRUE_KEYS = (
+    'fake_publisher_cannot_pass_ac41',
+    'unsigned_local_build_cannot_pass_release_install',
+    'exe_copy_cannot_pass_rollback',
+    'evergreen_webview2_planned_runtime',
+    'missing_runtime_must_prompt',
+    'app_installer_planned_channel',
+    'herdr_upgrade_independent',
+)
+_HD034_NULL_KEYS = (
+    'publisher', 'publisher_cn', 'certificate_subject',
+    'certificate_thumbprint', 'thumbprint', 'timestamp_url',
+    'distribution_url', 'app_installer_url', 'package_sha256',
+    'msix_sha256', 'appinstaller_sha256', 'sidecar_sha256',
+    'install_hours', 'soak_hours',
+)
+_HD034_SUCCESS = frozenset({'passed', 'verified', 'compatible', 'success', 'ok', 'pass'})
+_HD034_SUPPORT_PASS = frozenset({'supported', 'stable', 'passed', 'compatible', 'success'})
+_HD034_TEMPLATES = (
+    'evidence/packaging/live-clean-install.template.json',
+    'evidence/packaging/live-runtime-missing.template.json',
+    'evidence/packaging/live-signed-update.template.json',
+    'evidence/packaging/live-bad-publisher-or-tamper.template.json',
+    'evidence/packaging/live-signed-rollback.template.json',
+    'evidence/packaging/live-config-backup-restore.template.json',
+    'evidence/packaging/live-file-job-defer.template.json',
+    'evidence/packaging/live-unsigned-local-build.template.json',
+)
+_HD034_NOT_RUN = (
+    'evidence/packaging/live-clean-install.not-run.json',
+    'evidence/packaging/live-runtime-missing.not-run.json',
+    'evidence/packaging/live-signed-update.not-run.json',
+    'evidence/packaging/live-bad-publisher-or-tamper.not-run.json',
+    'evidence/packaging/live-signed-rollback.not-run.json',
+    'evidence/packaging/live-config-backup-restore.not-run.json',
+    'evidence/packaging/live-file-job-defer.not-run.json',
+    'evidence/packaging/live-unsigned-local-build.not-run.json',
+)
+_HD034_SCENARIOS = (
+    'clean_install', 'runtime_missing', 'signed_update',
+    'bad_publisher_or_tamper', 'signed_rollback', 'config_backup_restore',
+    'file_job_defer', 'unsigned_local_build',
+)
+
+
+def _hd034_token(value):
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+def _is_hd034_success(value) -> bool:
+    if value is True:
+        return True
+    return _hd034_token(value) in _HD034_SUCCESS
+
+
+def _reject_hd034_invented_identity(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key in _HD034_NULL_KEYS and value is not None:
+                raise AssertionError(f'{key} must stay null; do not invent identity, hashes, or install hours')
+            _reject_hd034_invented_identity(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd034_invented_identity(item)
+
+
+def _reject_hd034_pass_claims(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key.endswith('_passed') and value is not False:
+                raise AssertionError(f'{key} must stay false')
+            if key == 'phase_gate' and _hd034_token(value) in {'passed', 'pass', 'ok'}:
+                raise AssertionError('phase_gate must stay not_passed')
+            if key in _HD034_L2_L3_KEYS and value != 'UNVERIFIED':
+                raise AssertionError(f'{key} must stay UNVERIFIED')
+            if key in {'live_result', 'result', 'live_status', 'status'} and _is_hd034_success(value):
+                raise AssertionError(f'{key} must stay not_run or UNVERIFIED')
+            if key == 'support' and _hd034_token(value) in _HD034_SUPPORT_PASS:
+                raise AssertionError('support must not be a pass token')
+            if key == 'compatible' and value is True:
+                raise AssertionError('compatible must stay false')
+            if key in _HD034_FALSE_KEYS and value is True:
+                raise AssertionError(f'{key} must stay false')
+            if key in _HD034_TRUE_KEYS and value is not True:
+                raise AssertionError(f'{key} must stay true')
+            if key == 'l1_status' and _hd034_token(value) in _HD034_SUCCESS:
+                raise AssertionError('l1_status must not be a pass token')
+            kind = _hd034_token(doc.get('kind'))
+            if kind in {
+                'live_clean_install', 'live_unsigned_local_build',
+                'live_signed_rollback',
+            } and _is_hd034_success(doc.get('result')):
+                raise AssertionError('fake install, unsigned-release, or exe-copy rollback is rejected')
+            if doc.get('unsigned_local_build_is_release') is True:
+                raise AssertionError('unsigned local build cannot pass release install')
+            if doc.get('exe_copy_is_rollback') is True:
+                raise AssertionError('copying an old EXE cannot pass rollback')
+            if doc.get('publisher_identity_confirmed') is True:
+                raise AssertionError('fake publisher cannot pass AC41')
+            if doc.get('linux_msix_client') is True:
+                raise AssertionError('Linux is not an MSIX client')
+            _reject_hd034_pass_claims(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd034_pass_claims(item)
+
+
+def _check_hd034_closeout(hd034: dict, catalog: dict, matrix: dict) -> None:
+    assert hd034.get('document_kind') == 'hd034_l2_status'
+    assert catalog.get('document_kind') == 'hd034_packaging_catalog'
+    assert matrix.get('document_kind') == 'hd034_support_matrix'
+    assert catalog.get('simulation') is True
+    assert catalog.get('fixture_origin') == 'synthetic'
+    assert catalog.get('template') is False
+    for key in _HD034_L2_L3_KEYS:
+        assert hd034.get(key) == 'UNVERIFIED', key
+        if key in catalog:
+            assert catalog.get(key) == 'UNVERIFIED', key
+        if key in matrix:
+            assert matrix.get(key) == 'UNVERIFIED', key
+    for doc in (hd034, catalog, matrix):
+        _reject_hd034_pass_claims(doc)
+        _reject_hd034_invented_identity(doc)
+        for key in _HD034_PASS_KEYS:
+            assert doc.get(key) is False, key
+        assert doc.get('phase_gate') != 'passed'
+        if 'winui_admitted' in doc:
+            assert doc.get('winui_admitted') is False
+        if 'herdr_executed' in doc:
+            assert doc.get('herdr_executed') is False
+        if 'publisher_identity_confirmed' in doc:
+            assert doc.get('publisher_identity_confirmed') is False
+        if 'signed_msix_built' in doc:
+            assert doc.get('signed_msix_built') is False
+        if 'clean_machine_install_executed' in doc:
+            assert doc.get('clean_machine_install_executed') is False
+        if 'unsigned_local_build_is_release' in doc:
+            assert doc.get('unsigned_local_build_is_release') is False
+        if 'exe_copy_is_rollback' in doc:
+            assert doc.get('exe_copy_is_rollback') is False
+        if 'linux_msix_client' in doc:
+            assert doc.get('linux_msix_client') is False
+        if 'fake_publisher_cannot_pass_ac41' in doc:
+            assert doc.get('fake_publisher_cannot_pass_ac41') is True
+        if 'unsigned_local_build_cannot_pass_release_install' in doc:
+            assert doc.get('unsigned_local_build_cannot_pass_release_install') is True
+        if 'exe_copy_cannot_pass_rollback' in doc:
+            assert doc.get('exe_copy_cannot_pass_rollback') is True
+    for key in _HD034_FALSE_KEYS:
+        assert hd034.get(key) is False, key
+        if key in catalog:
+            assert catalog.get(key) is False, key
+    for key in _HD034_TRUE_KEYS:
+        assert hd034.get(key) is True, key
+        assert catalog.get(key) is True, key
+        assert matrix.get(key) is True, key
+    assert tuple(catalog.get('templates') or ()) == _HD034_TEMPLATES
+    assert tuple(catalog.get('not_run_captures') or ()) == _HD034_NOT_RUN
+    missing = hd034.get('missing') or {}
+    for key in (
+        'clean_machine_install', 'runtime_missing_vm', 'signed_update_channel',
+        'publisher_identity', 'signed_rollback', 'config_restore_on_install',
+        'file_job_defer_during_update', 'signing_service', 'winui_shell',
+        'integration_windows', 'packaging_project',
+    ):
+        assert missing.get(key) is True, key
+    grants = hd034.get('missing_grants') or []
+    assert tuple(grants) == tuple(_HD034_CARD_GRANTS[card_id] for card_id in _HD034_CARD_IDS)
+    assert hd034.get('catalog') == 'evidence/packaging/catalog.json'
+    assert hd034.get('support_matrix') == 'evidence/packaging/support-matrix.json'
+    assert catalog.get('support_matrix') == 'evidence/packaging/support-matrix.json'
+    assert catalog.get('l2_status') == 'implementation/hd-034-l2.json'
+    assert hd034.get('herdr_executed') is False
+    assert catalog.get('herdr_executed') is False
+    redaction = catalog.get('redaction') or {}
+    for key in ('host', 'user', 'path', 'credential', 'package_body'):
+        assert redaction.get(key) == 'omitted', key
+    cards = {item['id']: item for item in catalog['execution_cards']}
+    assert tuple(cards) == _HD034_CARD_IDS
+    seen_acs = set()
+    seen_grants = []
+    for card in catalog['execution_cards']:
+        card_id = card['id']
+        assert card['live_status'] == 'UNVERIFIED'
+        assert card['live_result'] == 'not_run'
+        assert card['l1_status'] == 'shipped'
+        assert card['l1_status'] != 'passed'
+        assert card['required_evidence'] in {'L2', 'L3', 'L4'}
+        assert card['required_evidence'] != 'L1'
+        assert card['missing_grant'] == _HD034_CARD_GRANTS[card_id]
+        assert card['owner_children'] == _HD034_CARD_OWNERS[card_id]
+        assert tuple(card['ac_ids']) == _HD034_CARD_ACS[card_id]
+        seen_acs.update(card['ac_ids'])
+        seen_grants.append(card['missing_grant'])
+        assert card['l1_artifacts']
+        for rel in card['l1_artifacts']:
+            assert (ROOT / rel).is_file(), rel
+        capture = ROOT / card['live_capture']
+        assert capture.is_file()
+        loaded = json.loads(capture.read_text(encoding='utf-8'))
+        _reject_hd034_pass_claims(loaded)
+        _reject_hd034_invented_identity(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        assert not _is_hd034_success(loaded.get('result'))
+        assert loaded.get('publisher_identity_confirmed') is not True
+        assert loaded.get('signed_msix_built') is not True
+        assert loaded.get('unsigned_local_build_is_release') is not True
+        assert loaded.get('exe_copy_is_rollback') is not True
+    assert _HD034_REQUIRED_ACS <= seen_acs
+    assert len(seen_grants) == len(set(seen_grants))
+    rows = {item['id']: item for item in catalog['live_rows']}
+    assert tuple(rows) == _HD034_LIVE_IDS
+    for row in catalog['live_rows']:
+        assert row['status'] == 'UNVERIFIED'
+        assert row['result'] == 'not_run'
+        assert row.get('template') is False
+        assert row.get('owner_children')
+        assert row['missing_grant'] == _HD034_LIVE_GRANTS[row['id']]
+        evidence = ROOT / row['evidence_path']
+        assert evidence.is_file()
+        loaded = json.loads(evidence.read_text(encoding='utf-8'))
+        _reject_hd034_pass_claims(loaded)
+        _reject_hd034_invented_identity(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        if row['id'] == 'live-unsigned-local-build':
+            assert loaded.get('unsigned_local_build_is_release') is False
+            assert loaded.get('unsigned_local_build_cannot_pass_release_install') is True
+            assert not _is_hd034_success(loaded.get('result'))
+        if row['id'] == 'live-signed-rollback':
+            assert loaded.get('exe_copy_is_rollback') is False
+            assert loaded.get('exe_copy_cannot_pass_rollback') is True
+        if row['id'] == 'live-clean-install':
+            assert loaded.get('clean_machine_install_executed') is False
+            assert loaded.get('fake_publisher_cannot_pass_ac41') is True
+        if row['id'] == 'live-file-job-defer':
+            assert loaded.get('killed_user_daemon') is False
+            assert loaded.get('herdr_upgrade_independent') is True
+    for rel in _HD034_TEMPLATES:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd034_pass_claims(doc)
+        _reject_hd034_invented_identity(doc)
+        assert doc.get('template') is True
+        assert doc.get('document_kind') == 'template'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('captured_at_utc') is None
+        assert not _is_hd034_success(doc.get('result'))
+        assert doc.get('herdr_executed') is False
+        assert 'stdout' not in doc and 'stderr' not in doc
+        if 'unsigned-local-build' in rel:
+            assert doc.get('unsigned_local_build_is_release') is False
+            assert doc.get('unsigned_local_build_cannot_pass_release_install') is True
+        if 'signed-rollback' in rel:
+            assert doc.get('exe_copy_is_rollback') is False
+            assert doc.get('exe_copy_cannot_pass_rollback') is True
+    for rel in _HD034_NOT_RUN:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd034_pass_claims(doc)
+        _reject_hd034_invented_identity(doc)
+        assert doc.get('template') is False
+        assert doc.get('result') == 'not_run'
+        assert doc.get('herdr_executed') is False
+        assert doc.get('evidence_level') == 'not_run'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('host_fingerprint_redacted') is None
+        assert doc.get('command_redacted') is None
+        assert 'stdout' not in doc and 'stderr' not in doc
+        blob = json.dumps(doc).lower()
+        assert 'password' not in blob
+        assert 'private_key' not in blob
+        assert '.pfx' not in blob
+    promised = {item['id'] for item in matrix['promised_range']}
+    assert promised == {'windows-11-x64-client'}
+    by_platform = {item['id']: item for item in matrix['platforms']}
+    windows = by_platform['windows-11-x64-client']
+    assert windows['promise'] == 'promised'
+    assert windows['live_status'] == 'not_run'
+    assert windows['live_result'] == 'not_run'
+    assert windows['compatible'] is False
+    assert windows['support'] == 'promised_not_run'
+    linux = by_platform['linux-x64-remote']
+    assert linux['promise'] == 'none'
+    assert linux['support'] == 'unsupported'
+    assert linux['support'] not in ('supported', 'stable', 'promised', 'promised_not_run', 'passed')
+    assert linux['live_status'] == 'not_run'
+    assert linux['compatible'] is False
+    assert linux.get('linux_msix') is False
+    assert linux['role'] == 'remote'
+    macos = by_platform['macos-x64']
+    assert macos['support'] == 'unsupported'
+    assert macos['live_status'] == 'not_run'
+    assert macos['compatible'] is False
+    for key in ('macos-arm64', 'linux-arm64', 'windows-arm64'):
+        row = by_platform[key]
+        assert row['support'] in ('unsupported', 'experimental')
+        assert row['support'] not in ('supported', 'stable', 'promised')
+        assert row['live_status'] == 'not_run'
+        assert row['compatible'] is False
+    assert windows['missing_grant'] != linux['missing_grant']
+    scenario_ids = [item['id'] for item in matrix['scenarios']]
+    assert tuple(scenario_ids) == _HD034_SCENARIOS
+    for scenario in matrix['scenarios']:
+        assert scenario['live_status'] == 'not_run'
+        assert scenario['live_result'] == 'not_run'
+        assert scenario['support'] == 'l1_only'
+    cell_keys = {(item['platform'], item['scenario']) for item in matrix['cells']}
+    for scenario in scenario_ids:
+        assert ('windows-11-x64-client', scenario) in cell_keys
+    for cell in matrix['cells']:
+        assert cell['platform'] == 'windows-11-x64-client'
+        assert cell['live_status'] == 'not_run'
+        assert cell['live_result'] == 'not_run'
+        assert cell['compatible'] is False
+        assert not _is_hd034_success(cell['live_result'])
+    assert matrix.get('copy_windows_fields_onto_linux') is False
+    assert matrix.get('extrapolate_macos_arm64') is False
+    assert matrix.get('linux_msix_client') is False
+    assert matrix.get('compatible_by_default') == []
+    assert catalog.get('linux_msix_client') is False
+    assert hd034.get('packaging_project') is False
+    assert catalog.get('packaging_project') is False
+    assert matrix.get('packaging_project') is False
+    criteria = json.loads((ROOT / 'planning' / 'acceptance.json').read_text(encoding='utf-8'))['criteria']
+    acs = {item['id']: item for item in criteria}
+    assert acs['AC41']['status'] != 'passed'
+    assert acs['AC42']['status'] != 'passed'
+    assert acs['AC41']['status'] == 'not_run'
+    assert acs['AC42']['status'] == 'not_run'
+    assert not (ROOT / 'packaging').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    assert not (ROOT / 'packaging' / 'HerdDesk.Package.wapproj').exists()
+    assert not (ROOT / 'packaging' / 'Package.appxmanifest').exists()
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -1173,6 +1588,7 @@ def validate() -> dict:
     hd031=json.loads((ROOT/'implementation/hd-031-l2.json').read_text(encoding='utf-8'))
     hd032=json.loads((ROOT/'implementation/hd-032-l2.json').read_text(encoding='utf-8'))
     hd033=json.loads((ROOT/'implementation/hd-033-l2.json').read_text(encoding='utf-8'))
+    hd034=json.loads((ROOT/'implementation/hd-034-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -1180,6 +1596,8 @@ def validate() -> dict:
     files_matrix=json.loads((ROOT/'evidence/files/support-matrix.json').read_text(encoding='utf-8'))
     quality_catalog=json.loads((ROOT/'evidence/quality/catalog.json').read_text(encoding='utf-8'))
     quality_matrix=json.loads((ROOT/'evidence/quality/support-matrix.json').read_text(encoding='utf-8'))
+    packaging_catalog=json.loads((ROOT/'evidence/packaging/catalog.json').read_text(encoding='utf-8'))
+    packaging_matrix=json.loads((ROOT/'evidence/packaging/support-matrix.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -1330,6 +1748,7 @@ def validate() -> dict:
     _check_hd031(hd031)
     _check_hd032_closeout(hd032, files_catalog, files_matrix)
     _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
+    _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

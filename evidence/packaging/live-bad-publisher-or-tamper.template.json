@@ -1,0 +1,37 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd034-live-bad-publisher-or-tamper-template",
+  "kind": "live_bad_publisher_or_tamper",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_publisher_identity_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "reject wrong Publisher identity and reject a damaged signed package; current install remains"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "package_sha256": null,
+  "msix_sha256": null,
+  "publisher": null,
+  "certificate_subject": null,
+  "certificate_thumbprint": null,
+  "timestamp_url": null,
+  "distribution_url": null,
+  "app_installer_url": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "publisher_identity_confirmed": false,
+  "signed_msix_built": false,
+  "invented_publisher_identity": false,
+  "invented_package_hashes": false,
+  "fake_publisher_cannot_pass_ac41": true,
+  "install_hours": null,
+  "limitations": [
+    "This file is a capture template. Null hashes and publisher fields are not a successful tamper/Publisher reject.",
+    "Do not invent Publisher identity. Fake publisher cannot pass AC41 or AC42.",
+    "This L1 catalog is not AC42."
+  ]
+}

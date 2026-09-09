@@ -207,7 +207,7 @@ var cases = new (string Name, Action Run)[]
     }),
 };
 
-cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. Hd014Cases.All, .. Hd015Cases.All, .. Hd016Cases.All, .. Hd017Cases.All, .. Hd018Cases.All, .. Hd019Cases.All, .. Hd020Cases.All, .. Hd021Cases.All, .. Hd022Cases.All, .. Hd023Cases.All, .. Hd024Cases.All, .. Hd025Cases.All, .. Hd026Cases.All, .. Hd027Cases.All, .. Hd028Cases.All, .. Hd029Cases.All, .. Hd030Cases.All, .. Hd031Cases.All, .. Hd032Cases.All, .. Hd033Cases.All, .. FileBridgeProtocolVectorTests.All, .. FileBridgeClientTests.All, .. BridgeReleaseManifestTests.All, .. ResourceCommandSchemaTests.All, .. TerminalWireCases.All, .. RemoteRpcStreamContractTests.All, .. RemoteTerminalStreamContractTests.All];
+cases = [.. cases, .. RpcSchemaCases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. Hd014Cases.All, .. Hd015Cases.All, .. Hd016Cases.All, .. Hd017Cases.All, .. Hd018Cases.All, .. Hd019Cases.All, .. Hd020Cases.All, .. Hd021Cases.All, .. Hd022Cases.All, .. Hd023Cases.All, .. Hd024Cases.All, .. Hd025Cases.All, .. Hd026Cases.All, .. Hd027Cases.All, .. Hd028Cases.All, .. Hd029Cases.All, .. Hd030Cases.All, .. Hd031Cases.All, .. Hd032Cases.All, .. Hd033Cases.All, .. Hd034Cases.All, .. FileBridgeProtocolVectorTests.All, .. FileBridgeClientTests.All, .. BridgeReleaseManifestTests.All, .. ResourceCommandSchemaTests.All, .. TerminalWireCases.All, .. RemoteRpcStreamContractTests.All, .. RemoteTerminalStreamContractTests.All];
 
 var failed = 0;
 foreach (var test in cases)
