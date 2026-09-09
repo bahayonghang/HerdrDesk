@@ -35,6 +35,7 @@ fn map_io(err: io::Error) -> FsError {
     }
 }
 
+#[derive(Debug)]
 pub struct ListResult {
     pub dir: Stat,
     pub entries: Vec<(Vec<u8>, String, Stat)>,

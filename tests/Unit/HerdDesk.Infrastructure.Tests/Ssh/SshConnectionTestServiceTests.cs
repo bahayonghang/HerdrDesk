@@ -130,6 +130,8 @@ internal static class SshConnectionTestServiceTests
             var before = OwnedChildProcessKillLedger.KilledProcessIds.ToArray();
             var sw = Stopwatch.StartNew();
             cts.Cancel();
+            if (!task.Wait(TimeSpan.FromSeconds(8)))
+                throw new Exception("cancel_did_not_complete");
             var result = task.GetAwaiter().GetResult();
             sw.Stop();
             SshFixtures.Check(sw.Elapsed < TimeSpan.FromSeconds(5));
