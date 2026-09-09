@@ -56,6 +56,10 @@ UTF-8 JSON。采集记录字段：`capture_id`、`kind`、`captured_at_utc`、`o
 
 HD-026 L1 P3 收口目录。`catalog.json` 列出 AC21/22/23/24/13/14/15/26/19 与 budget 执行卡，指向已有 L1 产物。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码，不是成功运行。无第三 DeviceId，AC19 保持 `not_run`。产品 AC 仍未通过。
 
+## `files/`
+
+HD-032 L1 P4 文件故障与安全收口目录。`catalog.json` 列出 payload / permission-ENOSPC / SSH link interrupt / ssh-kill / helper-kill / symlink-junction-reparse / 32-way KeepBoth / Fail-Replace / dual-pane UI / attach-no-Enter 执行卡，指向已有 HD-028/029/030/031 L1 产物。三种中断各有独立 `missing_grant`，不可并成一条断网结论。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码，不是成功运行。假 FS / mock process 不能通过真实 TOCTOU。产品 AC31–AC35 仍未通过。
+
 ## `local-mvp/`
 
 HD-019 场景目录。`catalog.json` 列出 observe/control/IME/input/resize/scroll/release/GUI close/recovery/agent TUI。每个 live 行 `required_evidence` 为 L2 或 L3，`status` 为 `UNVERIFIED`。L1 composition 不是本地 E2E pass。缺 disposable pane、WebView2、IME desktop、agent TUI versions。产品 AC06/AC07/AC10/AC15 仍未通过。

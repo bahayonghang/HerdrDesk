@@ -1,0 +1,27 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd032-live-ssh-template",
+  "kind": "live_ssh_interrupt_kill",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_ssh_interrupt_and_owned_pid_kill_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "interrupt the test SSH link only",
+    "kill the harness-owned ssh PID",
+    "kill the harness-owned filebridge PID"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "live_ssh": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "SSH interrupt, ssh-kill, and helper-kill are three separate captures.",
+    "Do not change a production firewall. Do not kill a user daemon or agent.",
+    "Do not store host, user, path, credential, or file body."
+  ]
+}

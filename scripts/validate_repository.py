@@ -475,6 +475,314 @@ def _check_hd031_sources(core: Path, infra: Path, osc: Path) -> None:
             assert token not in text, path.name
 
 
+_HD032_PASS_KEYS = (
+    'ac31_passed', 'ac32_passed', 'ac33_passed', 'ac34_passed',
+    'ac35_passed', 'g0_passed',
+)
+_HD032_REQUIRED_ACS = frozenset({'AC31', 'AC32', 'AC33', 'AC34', 'AC35'})
+_HD032_CARD_IDS = (
+    'payload-integrity', 'permission-enospc',
+    'ssh-link-interrupt', 'ssh-kill', 'helper-kill',
+    'symlink-junction-reparse-swap', 'keepboth-32-way',
+    'fail-replace-conflict', 'dual-pane-ui-switch', 'attach-no-enter',
+)
+_HD032_INTERRUPT_KIND_IDS = (
+    'ssh-link-interrupt', 'ssh-kill', 'helper-kill',
+)
+_HD032_CARD_ACS = {
+    'payload-integrity': ('AC31',),
+    'permission-enospc': ('AC32',),
+    'ssh-link-interrupt': ('AC32',),
+    'ssh-kill': ('AC32',),
+    'helper-kill': ('AC32',),
+    'symlink-junction-reparse-swap': ('AC34',),
+    'keepboth-32-way': ('AC33',),
+    'fail-replace-conflict': ('AC33',),
+    'dual-pane-ui-switch': ('AC31', 'AC33'),
+    'attach-no-enter': ('AC35',),
+}
+_HD032_CARD_OWNERS = {
+    'payload-integrity': ['HD-028', 'HD-029'],
+    'permission-enospc': ['HD-028'],
+    'ssh-link-interrupt': ['HD-028'],
+    'ssh-kill': ['HD-028'],
+    'helper-kill': ['HD-028'],
+    'symlink-junction-reparse-swap': ['HD-027', 'HD-028'],
+    'keepboth-32-way': ['HD-028', 'HD-029'],
+    'fail-replace-conflict': ['HD-028', 'HD-029'],
+    'dual-pane-ui-switch': ['HD-029'],
+    'attach-no-enter': ['HD-030', 'HD-031'],
+}
+_HD032_CARD_GRANTS = {
+    'payload-integrity': 'no_authorized_disposable_fs_payload_lab',
+    'permission-enospc': 'no_authorized_acl_quota_volume',
+    'ssh-link-interrupt': 'no_authorized_ssh_link_interrupt',
+    'ssh-kill': 'no_authorized_owned_ssh_pid_kill',
+    'helper-kill': 'no_authorized_owned_filebridge_pid_kill',
+    'symlink-junction-reparse-swap': 'no_authorized_second_process_symlink_attack',
+    'keepboth-32-way': 'no_authorized_keepboth_race_lab',
+    'fail-replace-conflict': 'no_authorized_replace_target_changed_lab',
+    'dual-pane-ui-switch': 'no_winui_admission',
+    'attach-no-enter': 'no_authorized_live_agent_path_insert',
+}
+_HD032_LIVE_IDS = (
+    'live-fs', 'live-ssh', 'live-toctou', 'live-attack', 'live-ui',
+)
+_HD032_LIVE_GRANTS = {
+    'live-fs': 'no_authorized_disposable_fs_payload_lab',
+    'live-ssh': 'no_authorized_ssh_interrupt_or_owned_pid_kill',
+    'live-toctou': 'no_authorized_second_process_symlink_attack',
+    'live-attack': 'no_authorized_keepboth_replace_race_lab',
+    'live-ui': 'no_winui_admission',
+}
+_HD032_L2_KEYS = (
+    'l2_live_fs', 'l2_live_ssh', 'l2_live_toctou', 'l2_live_attack',
+    'l2_live_ui',
+)
+_HD032_FALSE_KEYS = (
+    'live_fs', 'live_ssh', 'live_toctou', 'live_attack', 'live_ui',
+    'winui_admitted', 'herdr_executed', 'silent_overwrite_tested',
+    'killed_user_daemon', 'glob_delete', 'auto_submit',
+    'copy_windows_fields_onto_linux', 'extrapolate_macos_arm64',
+    'integration_ssh_project', 'integration_windows_project',
+)
+_HD032_SUCCESS = frozenset({'passed', 'verified', 'compatible', 'success', 'ok', 'pass'})
+_HD032_SUPPORT_PASS = frozenset({'supported', 'stable', 'passed', 'compatible', 'success'})
+_HD032_TEMPLATES = (
+    'evidence/files/live-fs.template.json',
+    'evidence/files/live-ssh.template.json',
+    'evidence/files/live-toctou.template.json',
+    'evidence/files/live-attack.template.json',
+    'evidence/files/live-ui.template.json',
+)
+_HD032_NOT_RUN = (
+    'evidence/files/live-fs.not-run.json',
+    'evidence/files/live-ssh.not-run.json',
+    'evidence/files/live-toctou.not-run.json',
+    'evidence/files/live-attack.not-run.json',
+    'evidence/files/live-ui.not-run.json',
+)
+_HD032_SCENARIOS = (
+    'payload', 'permission_enospc', 'ssh_link_interrupt', 'ssh_kill',
+    'helper_kill', 'toctou', 'keepboth', 'fail_replace', 'dual_pane',
+    'attach_no_enter',
+)
+
+
+def _hd032_token(value):
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+def _is_hd032_success(value) -> bool:
+    if value is True:
+        return True
+    return _hd032_token(value) in _HD032_SUCCESS
+
+
+def _reject_hd032_pass_claims(doc) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key.endswith('_passed') and value is not False:
+                raise AssertionError(f'{key} must stay false')
+            if key == 'phase_gate' and _hd032_token(value) in {'passed', 'pass', 'ok'}:
+                raise AssertionError('phase_gate must stay not_passed')
+            if key in _HD032_L2_KEYS and value != 'UNVERIFIED':
+                raise AssertionError(f'{key} must stay UNVERIFIED')
+            if key in {'live_result', 'result', 'live_status', 'status'} and _is_hd032_success(value):
+                raise AssertionError(f'{key} must stay not_run or UNVERIFIED')
+            if key == 'support' and _hd032_token(value) in _HD032_SUPPORT_PASS:
+                raise AssertionError('support must not be a pass token')
+            if key == 'compatible' and value is True:
+                raise AssertionError('compatible must stay false')
+            if key in _HD032_FALSE_KEYS and value is True:
+                raise AssertionError(f'{key} must stay false')
+            if key == 'l1_status' and _hd032_token(value) in _HD032_SUCCESS:
+                raise AssertionError('l1_status must not be a pass token')
+            _reject_hd032_pass_claims(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_hd032_pass_claims(item)
+
+
+def _check_hd032_closeout(hd032: dict, catalog: dict, matrix: dict) -> None:
+    assert hd032.get('document_kind') == 'hd032_l2_status'
+    assert catalog.get('document_kind') == 'hd032_file_fault_security_catalog'
+    assert matrix.get('document_kind') == 'hd032_support_matrix'
+    for key in _HD032_L2_KEYS:
+        assert hd032.get(key) == 'UNVERIFIED', key
+        if key in catalog:
+            assert catalog.get(key) == 'UNVERIFIED', key
+    for doc in (hd032, catalog, matrix):
+        _reject_hd032_pass_claims(doc)
+        for key in _HD032_PASS_KEYS:
+            assert doc.get(key) is False, key
+        assert doc.get('phase_gate') != 'passed'
+        if 'winui_admitted' in doc:
+            assert doc.get('winui_admitted') is False
+        if 'herdr_executed' in doc:
+            assert doc.get('herdr_executed') is False
+        if 'silent_overwrite_tested' in doc:
+            assert doc.get('silent_overwrite_tested') is False
+        if 'copy_windows_fields_onto_linux' in doc:
+            assert doc.get('copy_windows_fields_onto_linux') is False
+    for key in (
+        'live_fs', 'live_ssh', 'live_toctou', 'live_attack', 'live_ui',
+        'winui_admitted', 'integration_ssh_project', 'integration_windows_project',
+        'copy_windows_fields_onto_linux', 'extrapolate_macos_arm64',
+        'silent_overwrite_tested', 'killed_user_daemon', 'glob_delete',
+        'auto_submit',
+    ):
+        assert hd032.get(key) is False, key
+        if key in catalog:
+            assert catalog.get(key) is False, key
+    assert hd032.get('fake_fs_cannot_pass_toctou') is True
+    assert catalog.get('fake_fs_cannot_pass_toctou') is True
+    assert matrix.get('fake_fs_cannot_pass_toctou') is True
+    assert hd032.get('cannot_merge_interrupt_kinds') is True
+    assert catalog.get('cannot_merge_interrupt_kinds') is True
+    assert matrix.get('cannot_merge_interrupt_kinds') is True
+    assert tuple(catalog.get('templates') or ()) == _HD032_TEMPLATES
+    assert tuple(catalog.get('not_run_captures') or ()) == _HD032_NOT_RUN
+    missing = hd032.get('missing') or {}
+    for key in (
+        'live_fs_matrix', 'live_ssh_matrix', 'toctou_lab', 'attack_lab',
+        'winui_shell', 'acl_quota_volume', 'second_process_attacker',
+        'integration_ssh', 'integration_windows',
+    ):
+        assert missing.get(key) is True, key
+    assert hd032.get('catalog') == 'evidence/files/catalog.json'
+    assert hd032.get('support_matrix') == 'evidence/files/support-matrix.json'
+    assert catalog.get('support_matrix') == 'evidence/files/support-matrix.json'
+    assert catalog.get('l2_status') == 'implementation/hd-032-l2.json'
+    assert hd032.get('herdr_executed') is False
+    assert catalog.get('herdr_executed') is False
+    redaction = catalog.get('redaction') or {}
+    for key in ('host', 'user', 'path', 'credential', 'file_body'):
+        assert redaction.get(key) == 'omitted', key
+    cards = {item['id']: item for item in catalog['execution_cards']}
+    assert tuple(cards) == _HD032_CARD_IDS
+    seen_acs = set()
+    for card in catalog['execution_cards']:
+        card_id = card['id']
+        assert card['live_status'] == 'UNVERIFIED'
+        assert card['live_result'] == 'not_run'
+        assert card['l1_status'] == 'shipped'
+        assert card['l1_status'] != 'passed'
+        assert card['required_evidence'] in {'L2', 'L3', 'L4'}
+        assert card['required_evidence'] != 'L1'
+        assert card['missing_grant'] == _HD032_CARD_GRANTS[card_id]
+        assert card['owner_children'] == _HD032_CARD_OWNERS[card_id]
+        assert tuple(card['ac_ids']) == _HD032_CARD_ACS[card_id]
+        seen_acs.update(card['ac_ids'])
+        assert card['l1_artifacts']
+        for rel in card['l1_artifacts']:
+            assert (ROOT / rel).is_file(), rel
+        capture = ROOT / card['live_capture']
+        assert capture.is_file()
+        loaded = json.loads(capture.read_text(encoding='utf-8'))
+        _reject_hd032_pass_claims(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+        assert not _is_hd032_success(loaded.get('result'))
+    assert _HD032_REQUIRED_ACS <= seen_acs
+    interrupt_grants = [cards[item]['missing_grant'] for item in _HD032_INTERRUPT_KIND_IDS]
+    assert interrupt_grants == [
+        _HD032_CARD_GRANTS[item] for item in _HD032_INTERRUPT_KIND_IDS
+    ]
+    assert len(set(interrupt_grants)) == 3
+    assert 'ssh-interrupt-kill-helper-kill' not in cards
+    rows = {item['id']: item for item in catalog['live_rows']}
+    assert tuple(rows) == _HD032_LIVE_IDS
+    for row in catalog['live_rows']:
+        assert row['status'] == 'UNVERIFIED'
+        assert row['result'] == 'not_run'
+        assert row.get('template') is False
+        assert row.get('owner_children')
+        assert row['missing_grant'] == _HD032_LIVE_GRANTS[row['id']]
+        evidence = ROOT / row['evidence_path']
+        assert evidence.is_file()
+        loaded = json.loads(evidence.read_text(encoding='utf-8'))
+        _reject_hd032_pass_claims(loaded)
+        assert loaded.get('template') is not True
+        assert loaded.get('result') == 'not_run'
+    for rel in _HD032_TEMPLATES:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd032_pass_claims(doc)
+        assert doc.get('template') is True
+        assert doc.get('document_kind') == 'template'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('captured_at_utc') is None
+        assert not _is_hd032_success(doc.get('result'))
+        assert doc.get('herdr_executed') is False
+        assert 'stdout' not in doc and 'stderr' not in doc
+    for rel in _HD032_NOT_RUN:
+        path = ROOT / rel
+        assert path.is_file(), rel
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        _reject_hd032_pass_claims(doc)
+        assert doc.get('template') is False
+        assert doc.get('result') == 'not_run'
+        assert doc.get('herdr_executed') is False
+        assert doc.get('evidence_level') == 'not_run'
+        assert doc.get('exit_code') is None
+        assert doc.get('stdout_sha256') is None
+        assert doc.get('stderr_sha256') is None
+        assert doc.get('host_fingerprint_redacted') is None
+        assert doc.get('command_redacted') is None
+        assert 'stdout' not in doc and 'stderr' not in doc
+        blob = json.dumps(doc).lower()
+        assert 'password' not in blob
+        assert 'private_key' not in blob
+    promised = {item['id'] for item in matrix['promised_range']}
+    assert promised == {'windows-11-x64-client', 'linux-x64-remote'}
+    by_platform = {item['id']: item for item in matrix['platforms']}
+    for key in ('windows-11-x64-client', 'linux-x64-remote'):
+        row = by_platform[key]
+        assert row['promise'] == 'promised'
+        assert row['live_status'] == 'not_run'
+        assert row['live_result'] == 'not_run'
+        assert row['compatible'] is False
+        assert row['support'] == 'promised_not_run'
+    macos = by_platform['macos-x64']
+    assert macos['support'] == 'unsupported'
+    assert macos['live_status'] == 'not_run'
+    assert macos['compatible'] is False
+    for key in ('macos-arm64', 'linux-arm64', 'windows-arm64'):
+        row = by_platform[key]
+        assert row['support'] in ('unsupported', 'experimental')
+        assert row['support'] not in ('supported', 'stable', 'promised')
+        assert row['live_status'] == 'not_run'
+        assert row['compatible'] is False
+    assert by_platform['windows-11-x64-client']['missing_grant'] != \
+        by_platform['linux-x64-remote']['missing_grant']
+    scenario_ids = [item['id'] for item in matrix['scenarios']]
+    assert tuple(scenario_ids) == _HD032_SCENARIOS
+    for scenario in matrix['scenarios']:
+        assert scenario['live_status'] == 'not_run'
+        assert scenario['live_result'] == 'not_run'
+        assert scenario['support'] == 'l1_only'
+    cell_keys = {(item['platform'], item['scenario']) for item in matrix['cells']}
+    for platform in ('windows-11-x64-client', 'linux-x64-remote'):
+        for scenario in scenario_ids:
+            assert (platform, scenario) in cell_keys
+    for cell in matrix['cells']:
+        assert cell['live_status'] == 'not_run'
+        assert cell['live_result'] == 'not_run'
+        assert cell['compatible'] is False
+        assert not _is_hd032_success(cell['live_result'])
+    assert matrix.get('copy_windows_fields_onto_linux') is False
+    assert matrix.get('extrapolate_macos_arm64') is False
+    assert matrix.get('compatible_by_default') == []
+    assert matrix.get('silent_overwrite_tested') is False
+    assert catalog.get('silent_overwrite_tested') is False
+    assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -508,9 +816,12 @@ def validate() -> dict:
     hd029=json.loads((ROOT/'implementation/hd-029-l2.json').read_text(encoding='utf-8'))
     hd030=json.loads((ROOT/'implementation/hd-030-l2.json').read_text(encoding='utf-8'))
     hd031=json.loads((ROOT/'implementation/hd-031-l2.json').read_text(encoding='utf-8'))
+    hd032=json.loads((ROOT/'implementation/hd-032-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
+    files_catalog=json.loads((ROOT/'evidence/files/catalog.json').read_text(encoding='utf-8'))
+    files_matrix=json.loads((ROOT/'evidence/files/support-matrix.json').read_text(encoding='utf-8'))
     assert not (ROOT/'Directory.Packages.props').is_file()
     assert packages.get('directory_packages_props') is False
     assert packages['github_required_check']=='UNVERIFIED'
@@ -659,6 +970,7 @@ def validate() -> dict:
     _check_hd029(hd029)
     _check_hd030(hd030)
     _check_hd031(hd031)
+    _check_hd032_closeout(hd032, files_catalog, files_matrix)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

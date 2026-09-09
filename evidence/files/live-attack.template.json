@@ -1,0 +1,28 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd032-live-attack-template",
+  "kind": "live_keepboth_replace_race",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_keepboth_replace_race_lab_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "32-way KeepBoth same-name commit",
+    "Fail race with no replace",
+    "Replace after confirm with target identity change"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "live_attack": false,
+  "silent_overwrite_tested": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "Do not claim silent overwrite was tested live.",
+    "KeepBoth names and hashes must be unique. Replace must not delete the attacker target.",
+    "Do not store host, user, path, credential, or file body."
+  ]
+}

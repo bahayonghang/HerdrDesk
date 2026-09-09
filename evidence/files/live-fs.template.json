@@ -1,0 +1,27 @@
+{
+  "document_kind": "template",
+  "template": true,
+  "capture_id": "hd032-live-fs-template",
+  "kind": "live_fs_matrix",
+  "captured_at_utc": null,
+  "operator_scope": "authorized_disposable_fs_payload_and_acl_quota_required",
+  "host_fingerprint_redacted": null,
+  "command_redacted": [
+    "independent SHA-256 of 0B 1KiB 50MiB over-budget on a disposable root",
+    "Windows ACL or Linux mode permission deny",
+    "quota-limited disposable volume ENOSPC"
+  ],
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": null,
+  "herdr_executed": false,
+  "live_fs": false,
+  "limitations": [
+    "This file is a capture template. Null timestamps, exit_code, and hashes are not a successful run.",
+    "Fill only after an authorized disposable filesystem payload and ACL or quota capture.",
+    "Fake FS, injected exceptions, and mock process cannot pass a real permission or ENOSPC clause.",
+    "Do not store host, user, path, credential, or file body."
+  ]
+}

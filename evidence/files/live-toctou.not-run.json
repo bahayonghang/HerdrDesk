@@ -1,0 +1,23 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "hd032-live-toctou-2026-09-09-not-run",
+  "kind": "live_toctou_swap",
+  "captured_at_utc": "2026-09-09T12:00:00Z",
+  "operator_scope": "no_authorized_second_process_symlink_attack",
+  "host_fingerprint_redacted": null,
+  "command_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": "not_run",
+  "herdr_executed": false,
+  "live_toctou": false,
+  "limitations": [
+    "Second-process symlink, junction, and reparse swap were not authorized.",
+    "WirePath and WindowsLocalNameMapping L1 tests are not live TOCTOU proof.",
+    "Fake FS cannot pass a real TOCTOU or path clause.",
+    "Do not store host, user, path, credential, or file body."
+  ]
+}

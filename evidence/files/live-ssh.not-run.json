@@ -1,0 +1,24 @@
+{
+  "document_kind": "capture_record",
+  "template": false,
+  "capture_id": "hd032-live-ssh-2026-09-09-not-run",
+  "kind": "live_ssh_interrupt_kill",
+  "captured_at_utc": "2026-09-09T12:00:00Z",
+  "operator_scope": "no_authorized_ssh_interrupt_or_owned_pid_kill",
+  "host_fingerprint_redacted": null,
+  "command_redacted": null,
+  "exit_code": null,
+  "stdout_sha256": null,
+  "stderr_sha256": null,
+  "evidence_level": "not_run",
+  "result": "not_run",
+  "herdr_executed": false,
+  "live_ssh": false,
+  "killed_user_daemon": false,
+  "limitations": [
+    "Live SSH interrupt, ssh-kill, and helper-kill were not authorized in this dispatch.",
+    "Do not merge the three cases into one network-down claim.",
+    "Do not kill a user daemon or agent. Do not change a production firewall.",
+    "Do not store host, user, path, credential, or file body."
+  ]
+}
