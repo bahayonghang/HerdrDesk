@@ -95,11 +95,11 @@ impl LocalRoot {
     ) -> Result<ListResult, FsError> {
         let dir = self.resolve(components)?;
         let dir_stat = self.stat_path(components, &dir, false)?;
-        if dir_stat.kind != EntryKind::Directory {
-            return Err(FsError::new(helper::NOT_DIRECTORY));
-        }
         if dir_stat.symlink {
             return Err(FsError::new(helper::UNSUPPORTED));
+        }
+        if dir_stat.kind != EntryKind::Directory {
+            return Err(FsError::new(helper::NOT_DIRECTORY));
         }
         let mut names: Vec<PathBuf> = fs::read_dir(&dir)
             .map_err(map_io)?
