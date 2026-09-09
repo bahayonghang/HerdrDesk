@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-036",
+  "name": "windows-hd-036",
+  "title": "HD-036 发布文档与追踪归档",
+  "description": "支持矩阵、用户手册、诊断、测试证据和hash归档",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 P5 release-docs catalog landed. Unpublished. 1.0 not claimed. Hosted required-check UNVERIFIED. AC39/40/45/47/48/G0 not passed.",
+  "meta": {
+    "source_task": "HD-036",
+    "phase": "P5"
+  }
+}
