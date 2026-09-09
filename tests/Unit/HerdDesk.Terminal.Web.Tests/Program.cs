@@ -8,7 +8,8 @@ cases =
     .. CompositionDedupTests.All,
     .. KeySequenceTranslatorTests.All,
     .. FocusRaceTests.All,
-    .. SelectionMousePolicyTests.All
+    .. SelectionMousePolicyTests.All,
+    .. OscClipboardPolicyTests.All
 ];
 
 var failed = 0;

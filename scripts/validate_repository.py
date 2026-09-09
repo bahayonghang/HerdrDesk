@@ -314,6 +314,15 @@ def _check_hd027(hd027: dict, packages: dict) -> None:
 _HD028_PASS_KEYS = ('ac30_passed', 'ac31_passed', 'ac32_passed', 'g0_passed')
 _HD029_PASS_KEYS = ('ac31_passed', 'ac33_passed', 'g0_passed')
 _HD030_PASS_KEYS = ('ac35_passed', 'ac31_passed', 'ac32_passed', 'ac36_passed', 'g0_passed')
+_HD031_PASS_KEYS = ('ac36_passed', 'g0_passed')
+_HD031_WATCHER_APIS = (
+    'AddClipboardFormatListener', 'SetClipboardViewer', 'WM_CLIPBOARDUPDATE',
+)
+_HD031_CACHE_GLOB = (
+    'Directory.GetFiles', 'EnumerateFiles', 'EnumerateFileSystemEntries',
+    'GetFileSystemEntries',
+)
+_HD031_LIVE_TEST_APIS = ('OpenClipboard', 'GetClipboardData', 'CreateWindows(', 'ReadOnce(')
 
 
 def _check_hd028(hd028: dict, packages: dict) -> None:
@@ -403,6 +412,69 @@ def _check_hd030(hd030: dict) -> None:
     assert not (ROOT / 'tests' / 'Integration.Windows').exists()
 
 
+def _check_hd031(hd031: dict) -> None:
+    assert hd031.get('document_kind') == 'hd031_l2_status'
+    assert hd031.get('l2_live_clipboard') == 'UNVERIFIED'
+    assert hd031.get('l2_live_ime') == 'UNVERIFIED'
+    for key in _HD031_PASS_KEYS:
+        assert hd031.get(key) is False, key
+    assert hd031.get('phase_gate') != 'passed'
+    for key in ('live_clipboard', 'live_ime', 'winui_admitted', 'integration_windows',
+                'integration_windows_project', 'clipboard_watcher'):
+        assert hd031.get(key) is False, key
+    assert hd031.get('osc52_read_default') == 'deny'
+    assert hd031.get('osc52_write_default') == 'deny'
+    missing = hd031.get('missing') or {}
+    assert missing.get('winui_xaml') is True
+    assert missing.get('live_clipboard') is True
+    assert missing.get('live_ime') is True
+    assert missing.get('integration_windows') is True
+    assert missing.get('clipboard_watcher') is True
+    core = ROOT / 'src' / 'HerdDesk.Core' / 'Clipboard'
+    assert (core / 'ClipboardIntentResolver.cs').is_file()
+    assert (core / 'PasteCoordinator.cs').is_file()
+    infra = ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Clipboard'
+    assert (infra / 'AttachmentCache.cs').is_file()
+    assert (infra / 'WindowsClipboardSnapshotReader.cs').is_file()
+    osc = ROOT / 'src' / 'HerdDesk.Terminal.Web' / 'Input' / 'OscClipboardPolicy.cs'
+    assert osc.is_file()
+    assert (ROOT / 'src' / 'HerdDesk.App' / 'ViewModels' / 'PastePreviewViewModel.cs').is_file()
+    assert (ROOT / 'src' / 'HerdDesk.Contracts' / 'ClipboardPorts.cs').is_file()
+    assert list((ROOT / 'src' / 'HerdDesk.App').rglob('*.xaml')) == []
+    assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    _check_hd031_sources(core, infra, osc)
+
+
+def _check_hd031_sources(core: Path, infra: Path, osc: Path) -> None:
+    src_files = [
+        core / 'ClipboardIntentResolver.cs',
+        core / 'PasteCoordinator.cs',
+        infra / 'AttachmentCache.cs',
+        infra / 'WindowsClipboardSnapshotReader.cs',
+        osc,
+        ROOT / 'src' / 'HerdDesk.App' / 'ViewModels' / 'PastePreviewViewModel.cs',
+        ROOT / 'src' / 'HerdDesk.Contracts' / 'ClipboardPorts.cs',
+    ]
+    for path in src_files:
+        text = path.read_text(encoding='utf-8')
+        for token in _HD031_WATCHER_APIS:
+            assert token not in text, path.name
+    cache = (infra / 'AttachmentCache.cs').read_text(encoding='utf-8')
+    for token in _HD031_CACHE_GLOB:
+        assert token not in cache
+    osc_text = osc.read_text(encoding='utf-8')
+    for token in ('OpenClipboard', 'GetClipboardData', 'user32.dll'):
+        assert token not in osc_text
+    for path in (ROOT / 'tests').rglob('*.cs'):
+        posix = path.as_posix()
+        if 'Clipboard' not in posix and path.name != 'OscClipboardPolicyTests.cs':
+            continue
+        text = path.read_text(encoding='utf-8')
+        for token in _HD031_LIVE_TEST_APIS:
+            assert token not in text, path.name
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -435,6 +507,7 @@ def validate() -> dict:
     hd028pkg=json.loads((ROOT/'implementation/hd-028-packages.json').read_text(encoding='utf-8'))
     hd029=json.loads((ROOT/'implementation/hd-029-l2.json').read_text(encoding='utf-8'))
     hd030=json.loads((ROOT/'implementation/hd-030-l2.json').read_text(encoding='utf-8'))
+    hd031=json.loads((ROOT/'implementation/hd-031-l2.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -585,6 +658,7 @@ def validate() -> dict:
     _check_hd028(hd028, hd028pkg)
     _check_hd029(hd029)
     _check_hd030(hd030)
+    _check_hd031(hd031)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd031_l2_status",
+  "l2_live_clipboard": "UNVERIFIED",
+  "l2_live_ime": "UNVERIFIED",
+  "live_clipboard": false,
+  "live_ime": false,
+  "clipboard_watcher": false,
+  "osc52_read_default": "deny",
+  "osc52_write_default": "deny",
+  "winui_admitted": false,
+  "integration_windows": false,
+  "integration_windows_project": false,
+  "ac36_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l1": "explicit clipboard snapshot, format-only intent, multiline confirm with default Cancel and zero extra Enter, OSC 52 read/write default deny without snapshot reads, private AttachmentCache with TTL/capacity/exact-id lease eviction",
+  "missing": {
+    "winui_xaml": true,
+    "live_clipboard": true,
+    "live_ime": true,
+    "integration_windows": true,
+    "clipboard_watcher": true
+  },
+  "note": "HD-031 ships L1 clipboard intent, paste confirm, OSC deny, and private cache. This file is not AC36 pass evidence. L2 live clipboard/IME stay UNVERIFIED. WinUI is not admitted. tests/Integration.Windows is not created. No clipboard watcher. OSC 52 read/write stay default deny. G0 stays not_passed."
+}

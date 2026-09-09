@@ -424,6 +424,7 @@ var cases = new (string Name, Action Run)[]
 cases =
 [
     .. cases,
+    .. AttachmentCacheTests.All,
     .. RpcCases.All,
     .. TerminalCliTransportCases.All,
     .. SshDeviceProfileStoreTests.All,

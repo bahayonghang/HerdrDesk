@@ -11,6 +11,7 @@ HD-014 L1 BCL renderer adapter plus HD-015 L1 IME/keyboard/selection coordinator
 - 实现 `ITerminalRenderer` 状态机（`WebTerminalRenderer`）：epoch bind、byte apply、observe no-resize、read-only gate。
 - 记录 WebView 安全拒绝码（`WebViewSecurityPolicy`）。不启动 WebView2，不加载 xterm，不拉 CDN。
 - HD-015 L1：`TerminalInputController` 绑定 `PaneKey`/`ConnectionEpoch`，经 `CompositionPolicy`/`InputPolicy` 回调放行。预编辑 0 字节；commit token 恰好一次；composition 期间 Ctrl+K/Enter/Esc 让位 IME。不授予 lease。
+- HD-031 L1：`OscClipboardPolicy` 默认拒绝 OSC 52 read/write，稳定码 `clipboard_read_denied` / `clipboard_write_denied`。不调用 snapshot reader，不写 Windows clipboard API。只依赖 Contracts。
 
 `RenderFlowController` 在 Core，消费 `RendererByteWindow` / seq gate。本项目只依赖 Contracts。
 

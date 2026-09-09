@@ -115,6 +115,10 @@
 
 `AttachmentPorts.cs`：`AttachmentIntent`、`CapabilityEvidence`、`AttachmentDraft`、`AttachmentTargetLease`、`DeliveryState`、`IAttachmentInputSink`。缺证据为 Unknown。无 `AgentAccepted` 状态。L2 live agent/IME/SSH UNVERIFIED。
 
+## HD-031 增补
+
+`ClipboardPorts.cs`：`ClipboardIntentKind`、`ClipboardSnapshot`、`PasteTargetLease`、`IClipboardSnapshotReader`、`OscClipboardDecision`、`ClipboardCodes`。无 watcher 端口。OSC 52 默认 deny 码为 `clipboard_read_denied` / `clipboard_write_denied`。L2 live clipboard/IME UNVERIFIED。
+
 ## HD-009 增补
 
 `State/`：`ConnectionPhase`、`CapabilityProfile`（`VerifiedOperations`，缺能力不写成已测 false）、投影与 decoded snapshot/event、`IRpcStateDecoder`。身份仍为 `DeviceId` / `SessionKey` / `PaneKey` / `ConnectionEpoch`。Muse/Qwen 为未知 agent。运行时 schema hash 默认 `UNVERIFIED`。不覆盖规划草案整文件。

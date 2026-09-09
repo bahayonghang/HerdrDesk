@@ -56,5 +56,6 @@
 | `hd-028-packages.json` | HD-028 crate 探针。零额外 Cargo crate。toolchain 1.98.0。 |
 | `hd-029-l2.json` | L2 live UI/SSH = `UNVERIFIED`。无 Integration.Windows。WinUI 未准入。AC31/AC33/G0 false。 |
 | `hd-030-l2.json` | L2 live agent/IME/SSH = `UNVERIFIED`。无 Integration.Windows。WinUI 未准入。auto-submit false。AC35/AC31/AC32/AC36/G0 false。 |
+| `hd-031-l2.json` | L2 live clipboard/IME = `UNVERIFIED`。无 Integration.Windows。WinUI 未准入。无 watcher。OSC 52 默认 deny。AC36/G0 false。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。

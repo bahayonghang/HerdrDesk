@@ -22,6 +22,7 @@ HD-007 composition root / host stub plus HD-011 L1 navigation ViewModels and HD-
 - HD-025 L1：`PaneVisibilityCoordinator` 编排 Visible/Hidden/WaitingForCapacity；隐藏释放 terminal/renderer；恢复为 observe/new epoch。第五可见 pane 需明确切换。无 WinUI XAML。L2 live SSH/perf 为 UNVERIFIED。产品 AC27 未通过。
 - HD-029 L1：`Files/` 双栏 `FilePaneViewModel` / `FileWorkspaceViewModel` / `TransferQueueViewModel` / `ConflictDialogViewModel`。不可变 `TransferDraft`、确认后 target lease、队列进度、Replace/KeepBoth/Cancel。无 WinUI XAML。不启动 filebridge。L2 live UI/SSH 为 UNVERIFIED。产品 AC31/AC33 未通过。
 - HD-030 L1：`ViewModels/AttachToAgentViewModel` 三种投入意图、capability 徽章、目标面包屑、CopyPath 降级。无 WinUI XAML。路径输入不声称 agent 已接收。L2 live agent/IME/SSH 为 UNVERIFIED。产品 AC35 未通过。
+- HD-031 L1：`ViewModels/PastePreviewViewModel` 显式粘贴确认、多行默认 Cancel、目标面包屑/行数/字节、键盘与 screen reader 名称。无 WinUI XAML。无 clipboard watcher。文件/图像交给 HD-030 draft，Ctrl+V 成功不声称 agent 附件能力。L2 live clipboard/IME 为 UNVERIFIED。产品 AC36 未通过。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
 - 释放顺序：SSH tester cancel → helper cancel → renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
 

@@ -25,7 +25,8 @@ cases =
     .. TransferQueueProjectionTests.All,
     .. ConflictDialogTests.All,
     .. UntrustedNameTests.All,
-    .. AttachToAgentViewModelTests.All
+    .. AttachToAgentViewModelTests.All,
+    .. PastePreviewViewModelTests.All
 ];
 
 var failed = 0;

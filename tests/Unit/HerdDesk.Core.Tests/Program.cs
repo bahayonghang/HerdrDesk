@@ -110,7 +110,9 @@ cases =
     .. CapabilitySelectionTests.All,
     .. DeliveryStateMachineTests.All,
     .. TargetLeaseRaceTests.All,
-    .. NoAutoSubmitTests.All
+    .. NoAutoSubmitTests.All,
+    .. ClipboardIntentResolverTests.All,
+    .. PasteCoordinatorTests.All
 ];
 
 var failed = 0;
