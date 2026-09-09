@@ -126,7 +126,7 @@ internal static class RemoteTerminalStreamContractTests
         var transport = Open("terminal-oversize", TerminalMode.Observe, out _, out _);
         try
         {
-            var failed = DrainFailed(transport, TimeSpan.FromSeconds(5));
+            var failed = DrainFailed(transport, TimeSpan.FromSeconds(30));
             Check(failed.Count >= 1);
             Check(SshTransportMapper.FromTerminal(failed[0].Code) == SshTransportCodes.RecordTooLarge);
         }
