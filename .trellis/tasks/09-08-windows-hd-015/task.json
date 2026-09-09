@@ -3,7 +3,7 @@
   "name": "windows-hd-015",
   "title": "HD-015 输入法、键盘与选择",
   "description": "IME composition、焦点、键序列、选择复制、模式差异回归",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-08",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 IME/keyboard coordinators landed. L3 real IME UNVERIFIED. AC09/AC10/G0 not passed. No lease grant. Muse unknown.",
+  "notes": "L1 coordinators remain. 2026-09-10 reopen to bind IME/keyboard/selection to HD-014 TerminalHost. Real IME desktop still UNVERIFIED until recorded. AC09/AC10/G0 not passed. Do not install herdr on LAN.",
   "meta": {
     "source_task": "HD-015",
     "phase": "P2"
