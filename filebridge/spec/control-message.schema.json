@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://herddesk.local/filebridge/control-message.schema.json",
+  "title": "herddesk-filebridge v1.0 control JSON",
+  "description": "JSON payloads only. Binary header, Data, and EndData are specified in protocol-v1.md. Additional constraints not expressible here: UTF-8 strict, depth 32, no duplicate keys, no JSON floats, canonical UUID, canonical decimal strings, canonical padded Base64, lowercase hex hashes, unknown fields forbidden.",
+  "$defs": {
+    "job": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "wirePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "component": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "decimalU64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "base64": {
+      "type": "string",
+      "minLength": 4
+    },
+    "op": {
+      "type": "string",
+      "enum": ["list", "stat", "read", "write", "rename"]
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["create", "replace"]
+    },
+    "entryType": {
+      "type": "string",
+      "enum": ["file", "directory", "symlink", "other"]
+    },
+    "commit": {
+      "type": "string",
+      "enum": ["committed", "not_applicable"]
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["request", "transfer", "commit", "cancel", "unknown"]
+    },
+    "errorCode": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    }
+  },
+  "oneOf": [
+    {
+      "title": "RequestJson list",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "job", "op", "path", "limit"],
+      "properties": {
+        "protocol": { "const": "1.0" },
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "const": "list" },
+        "path": { "$ref": "#/$defs/wirePath" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "cursor": { "$ref": "#/$defs/base64" }
+      }
+    },
+    {
+      "title": "RequestJson stat",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "job", "op", "path"],
+      "properties": {
+        "protocol": { "const": "1.0" },
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "const": "stat" },
+        "path": { "$ref": "#/$defs/wirePath" },
+        "observation": { "$ref": "#/$defs/hex64" }
+      }
+    },
+    {
+      "title": "RequestJson read",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "job", "op", "path"],
+      "properties": {
+        "protocol": { "const": "1.0" },
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "const": "read" },
+        "path": { "$ref": "#/$defs/wirePath" },
+        "observation": { "$ref": "#/$defs/hex64" }
+      }
+    },
+    {
+      "title": "RequestJson write create",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "job", "op", "parent", "name", "mode", "expected_parent_observation", "length", "sha256"],
+      "properties": {
+        "protocol": { "const": "1.0" },
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "const": "write" },
+        "parent": { "$ref": "#/$defs/wirePath" },
+        "name": { "$ref": "#/$defs/component" },
+        "mode": { "const": "create" },
+        "expected_parent_observation": { "$ref": "#/$defs/hex64" },
+        "length": { "$ref": "#/$defs/decimalU64" },
+        "sha256": { "$ref": "#/$defs/hex64" }
+      }
+    },
+    {
+      "title": "RequestJson write replace",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "job", "op", "parent", "name", "mode", "expected_parent_observation", "expected_target_observation", "length", "sha256"],
+      "properties": {
+        "protocol": { "const": "1.0" },
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "const": "write" },
+        "parent": { "$ref": "#/$defs/wirePath" },
+        "name": { "$ref": "#/$defs/component" },
+        "mode": { "const": "replace" },
+        "expected_parent_observation": { "$ref": "#/$defs/hex64" },
+        "expected_target_observation": { "$ref": "#/$defs/hex64" },
+        "length": { "$ref": "#/$defs/decimalU64" },
+        "sha256": { "$ref": "#/$defs/hex64" }
+      }
+    },
+    {
+      "title": "RequestJson rename create",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "job", "op", "source", "source_observation", "parent", "name", "mode", "expected_parent_observation"],
+      "properties": {
+        "protocol": { "const": "1.0" },
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "const": "rename" },
+        "source": { "$ref": "#/$defs/wirePath" },
+        "source_observation": { "$ref": "#/$defs/hex64" },
+        "parent": { "$ref": "#/$defs/wirePath" },
+        "name": { "$ref": "#/$defs/component" },
+        "mode": { "const": "create" },
+        "expected_parent_observation": { "$ref": "#/$defs/hex64" }
+      }
+    },
+    {
+      "title": "RequestJson rename replace",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "job", "op", "source", "source_observation", "parent", "name", "mode", "expected_parent_observation", "expected_target_observation"],
+      "properties": {
+        "protocol": { "const": "1.0" },
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "const": "rename" },
+        "source": { "$ref": "#/$defs/wirePath" },
+        "source_observation": { "$ref": "#/$defs/hex64" },
+        "parent": { "$ref": "#/$defs/wirePath" },
+        "name": { "$ref": "#/$defs/component" },
+        "mode": { "const": "replace" },
+        "expected_parent_observation": { "$ref": "#/$defs/hex64" },
+        "expected_target_observation": { "$ref": "#/$defs/hex64" }
+      }
+    },
+    {
+      "title": "CancelJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "reason"],
+      "properties": {
+        "job": { "$ref": "#/$defs/job" },
+        "reason": { "const": "user" }
+      }
+    },
+    {
+      "title": "AcceptedJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "op", "identity", "size"],
+      "properties": {
+        "job": { "$ref": "#/$defs/job" },
+        "op": { "$ref": "#/$defs/op" },
+        "identity": { "$ref": "#/$defs/base64" },
+        "size": { "$ref": "#/$defs/decimalU64" }
+      }
+    },
+    {
+      "title": "EntryJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "name", "display_name", "type", "size", "mtime", "mtime_precision", "identity", "symlink", "observation"],
+      "properties": {
+        "job": { "$ref": "#/$defs/job" },
+        "name": { "$ref": "#/$defs/component" },
+        "display_name": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/entryType" },
+        "size": { "$ref": "#/$defs/decimalU64" },
+        "mtime": { "$ref": "#/$defs/decimalU64" },
+        "mtime_precision": { "$ref": "#/$defs/decimalU64" },
+        "identity": { "$ref": "#/$defs/base64" },
+        "symlink": { "type": "boolean" },
+        "observation": { "$ref": "#/$defs/hex64" }
+      }
+    },
+    {
+      "title": "ProgressJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "bytes"],
+      "properties": {
+        "job": { "$ref": "#/$defs/job" },
+        "bytes": { "$ref": "#/$defs/decimalU64" }
+      }
+    },
+    {
+      "title": "CompleteJson list",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "path", "length", "sha256", "observation", "commit", "has_more"],
+      "properties": {
+        "job": { "$ref": "#/$defs/job" },
+        "path": { "$ref": "#/$defs/wirePath" },
+        "length": { "$ref": "#/$defs/decimalU64" },
+        "sha256": { "$ref": "#/$defs/hex64" },
+        "observation": { "$ref": "#/$defs/hex64" },
+        "commit": { "const": "not_applicable" },
+        "has_more": { "type": "boolean" }
+      }
+    },
+    {
+      "title": "CompleteJson other",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "path", "length", "sha256", "observation", "commit"],
+      "properties": {
+        "job": { "$ref": "#/$defs/job" },
+        "path": { "$ref": "#/$defs/wirePath" },
+        "length": { "$ref": "#/$defs/decimalU64" },
+        "sha256": { "$ref": "#/$defs/hex64" },
+        "observation": { "$ref": "#/$defs/hex64" },
+        "commit": { "$ref": "#/$defs/commit" }
+      }
+    },
+    {
+      "title": "ErrorJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "code", "stage", "retryable"],
+      "properties": {
+        "job": { "$ref": "#/$defs/job" },
+        "code": { "$ref": "#/$defs/errorCode" },
+        "stage": { "$ref": "#/$defs/stage" },
+        "retryable": { "type": "boolean" }
+      }
+    }
+  ]
+}

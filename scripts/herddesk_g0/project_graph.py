@@ -73,6 +73,7 @@ def validate_project_graph(root: Path) -> dict[str, Any]:
     root = Path(root)
     check_product_lock_absence(root)
     rust = validate_rust_bridge_lock(root)
+    validate_rust_filebridge_lock(root)
     projects = load_tree_projects(root)
     check_graph(projects)
     solution = load_solution_projects(root)
@@ -131,6 +132,45 @@ def validate_rust_bridge_lock(root: Path) -> dict[str, Any]:
         'rust_lock': 'passed',
         'interprocess': version,
         'l2_windows_named_pipe_acl': 'UNVERIFIED',
+    }
+
+
+def validate_rust_filebridge_lock(root: Path) -> dict[str, Any]:
+    root = Path(root)
+    lock_path = root / 'filebridge' / 'Cargo.lock'
+    if not lock_path.is_file():
+        raise ProjectGraphError('missing_filebridge_cargo_lock')
+    lock_text = lock_path.read_text(encoding='utf-8')
+    if cargo_lock_package_version(lock_text, 'herddesk-filebridge') is None:
+        raise ProjectGraphError('missing_filebridge_package')
+    probe_path = root / 'implementation' / 'hd-027-packages.json'
+    l2_path = root / 'implementation' / 'hd-027-l2.json'
+    if not probe_path.is_file() or not l2_path.is_file():
+        raise ProjectGraphError('missing_hd027_probe')
+    probe = json.loads(probe_path.read_text(encoding='utf-8'))
+    l2 = json.loads(l2_path.read_text(encoding='utf-8'))
+    crates = list(probe.get('crates') or [])
+    if crates:
+        raise ProjectGraphError('filebridge_unexpected_crate')
+    for line in lock_text.splitlines():
+        if line.startswith('source = '):
+            raise ProjectGraphError('filebridge_unexpected_crate')
+    for doc in (probe, l2):
+        if doc.get('ac30_passed') is True or doc.get('ac34_passed') is True:
+            raise ProjectGraphError('ac30_claimed_passed')
+        if doc.get('phase_gate') == 'passed':
+            raise ProjectGraphError('phase_gate_claimed_passed')
+        if doc.get('g0_passed') is True:
+            raise ProjectGraphError('g0_claimed_passed')
+    for key in ('l2_filesystem', 'l2_ssh', 'l2_toctou'):
+        if l2.get(key) != 'UNVERIFIED':
+            raise ProjectGraphError('l2_claimed_verified')
+        if probe.get(key) not in (None, 'UNVERIFIED'):
+            raise ProjectGraphError('l2_claimed_verified')
+    return {
+        'rust_lock': 'passed',
+        'filebridge_registry_crates': 0,
+        'l2_filesystem': 'UNVERIFIED',
     }
 
 

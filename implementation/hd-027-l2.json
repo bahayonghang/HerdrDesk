@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "document_kind": "hd027_l2_status",
+  "l2_filesystem": "UNVERIFIED",
+  "l2_ssh": "UNVERIFIED",
+  "l2_toctou": "UNVERIFIED",
+  "live_file_ops": false,
+  "live_ssh": false,
+  "binary_implemented": false,
+  "binary_entrypoint": false,
+  "main_rs": false,
+  "helper_install": false,
+  "integration_ssh_project": false,
+  "integration_windows_project": false,
+  "winui_admitted": false,
+  "ac30_passed": false,
+  "ac34_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "adr_status": "proposed",
+  "command_not_implemented": "herddesk-filebridge serve --stdio --protocol 1.0",
+  "missing": {
+    "filesystem_backend": true,
+    "live_ssh": true,
+    "toctou_lab": true,
+    "hd028_owner_review": true,
+    "published_binary": true
+  },
+  "note": "HD-027 ships an L1 protocol codec, golden vectors, and a proposed ADR. It does not implement herddesk-filebridge serve, filesystem operations, or live SSH. This file is not AC30/AC34 pass evidence. G0 stays not_passed."
+}

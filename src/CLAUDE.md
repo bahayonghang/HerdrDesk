@@ -18,7 +18,7 @@
 
 ## 规划尚未建仓
 
-`HerdDesk.Terminal.Native`、`herddesk-filebridge`、WinUI `App.xaml` 内容。HD-011 已落地 BCL ViewModels；WinUI 包仍未准入。`bridge/herddesk-bridge` 已由 HD-008 L1 建仓；L2 ACL 仍为 UNVERIFIED。
+`HerdDesk.Terminal.Native`、WinUI `App.xaml` 内容、`herddesk-filebridge` serve 二进制。HD-011 已落地 BCL ViewModels；WinUI 包仍未准入。`bridge/herddesk-bridge` 已由 HD-008 L1 建仓；L2 ACL 仍为 UNVERIFIED。`filebridge/` HD-027 L1 codec 已建仓；无 `main.rs`；L2 FS/SSH/TOCTOU 为 UNVERIFIED。
 
 ## 约束
 

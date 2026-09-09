@@ -266,6 +266,58 @@ def _check_hd026_closeout(hd026: dict, mvp: dict, matrix: dict) -> None:
     assert rows['live-three-device']['missing_grant'] == 'no_authorized_third_device_id'
 
 
+_HD027_PASS_KEYS = ('ac30_passed', 'ac34_passed', 'g0_passed')
+_HD027_VECTORS = (
+    'valid-list.hdfb', 'valid-empty-write.hdfb', 'invalid-oversize-json.hdfb',
+    'invalid-sequence-gap.hdfb', 'invalid-unknown-kind.hdfb',
+)
+
+
+def _check_hd027(hd027: dict, packages: dict) -> None:
+    assert hd027.get('document_kind') == 'hd027_l2_status'
+    assert packages.get('document_kind') == 'hd027_package_probe'
+    for key in ('l2_filesystem', 'l2_ssh', 'l2_toctou'):
+        assert hd027.get(key) == 'UNVERIFIED'
+    for key in _HD027_PASS_KEYS:
+        assert hd027.get(key) is False, key
+        assert packages.get(key) is not True, key
+    assert hd027.get('phase_gate') != 'passed'
+    assert packages.get('phase_gate') != 'passed'
+    for key in ('live_file_ops', 'live_ssh', 'binary_implemented', 'binary_entrypoint',
+                'main_rs', 'helper_install', 'integration_ssh_project',
+                'integration_windows_project', 'winui_admitted'):
+        assert hd027.get(key) is False, key
+    assert hd027.get('adr_status') == 'proposed'
+    assert hd027.get('command_not_implemented') == (
+        'herddesk-filebridge serve --stdio --protocol 1.0'
+    )
+    missing = hd027.get('missing') or {}
+    for key in ('filesystem_backend', 'live_ssh', 'toctou_lab', 'hd028_owner_review',
+                'published_binary'):
+        assert missing.get(key) is True, key
+    assert packages.get('crates') == []
+    assert (ROOT / 'filebridge' / 'src' / 'lib.rs').is_file()
+    assert not (ROOT / 'filebridge' / 'src' / 'main.rs').exists()
+    cargo = (ROOT / 'filebridge' / 'Cargo.toml').read_text(encoding='utf-8')
+    assert '[[bin]]' not in cargo
+    adr = (ROOT / 'docs' / 'adr' / '0008-filebridge-protocol-v1.md').read_text(encoding='utf-8')
+    assert 'proposed' in adr.lower()
+    assert 'status: accepted' not in adr.lower()
+    assert '**proposed**' in adr
+    vectors = ROOT / 'filebridge' / 'spec' / 'test-vectors'
+    manifest = json.loads((vectors / 'manifest.json').read_text(encoding='utf-8'))
+    names = {item['file'] for item in manifest['vectors']}
+    for name in _HD027_VECTORS:
+        assert name in names, name
+        assert (vectors / name).is_file()
+    assert (ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Files' / 'FileBridgeProtocolCodec.cs').is_file()
+    assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
+    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    rust = (ROOT / 'filebridge' / 'src' / 'lib.rs').read_text(encoding='utf-8').lower()
+    assert 'not implemented' in rust
+    assert 'no filesystem' in rust
+
+
 def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
@@ -292,6 +344,8 @@ def validate() -> dict:
     hd024=json.loads((ROOT/'implementation/hd-024-l2.json').read_text(encoding='utf-8'))
     hd025=json.loads((ROOT/'implementation/hd-025-l2.json').read_text(encoding='utf-8'))
     hd026=json.loads((ROOT/'implementation/hd-026-l2.json').read_text(encoding='utf-8'))
+    hd027=json.loads((ROOT/'implementation/hd-027-l2.json').read_text(encoding='utf-8'))
+    hd027pkg=json.loads((ROOT/'implementation/hd-027-packages.json').read_text(encoding='utf-8'))
     catalog=json.loads((ROOT/'evidence/local-mvp/catalog.json').read_text(encoding='utf-8'))
     mvp=json.loads((ROOT/'evidence/multi-device-mvp/catalog.json').read_text(encoding='utf-8'))
     matrix=json.loads((ROOT/'evidence/multi-device-mvp/support-matrix.json').read_text(encoding='utf-8'))
@@ -438,6 +492,7 @@ def validate() -> dict:
     assert hd025.get('integration_windows_project') is not True
     assert hd025.get('phase_gate')!='passed'
     _check_hd026_closeout(hd026, mvp, matrix)
+    _check_hd027(hd027, hd027pkg)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     assert not (ROOT/'tests/Integration.Windows').exists()
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

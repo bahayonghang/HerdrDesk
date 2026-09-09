@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · Infrastructure
 
-HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child process, bounded NDJSON, request/subscription RPC over two `herddesk-bridge` children. HD-009: SchemaV1 RPC document decoder. HD-013: process-level `TerminalCliTransport` over `herdr terminal session` stdio. HD-020 L1: OpenSSH config preview, staged connection test, and a private host-key trust store. HD-021 L1: helper manifest, in-memory consent, and atomic publish state machine. HD-022 L1: per-SessionKey `RemoteSessionTransportSet` wrapping HD-021 helper / configured herdr over `ssh -T` (request RPC, event RPC, per-pane terminal). No WinUI, live SSH host, live helper install, `herdr machine` catalog, or herdr daemon control.
+HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child process, bounded NDJSON, request/subscription RPC over two `herddesk-bridge` children. HD-009: SchemaV1 RPC document decoder. HD-013: process-level `TerminalCliTransport` over `herdr terminal session` stdio. HD-020 L1: OpenSSH config preview, staged connection test, and a private host-key trust store. HD-021 L1: helper manifest, in-memory consent, and atomic publish state machine. HD-022 L1: per-SessionKey `RemoteSessionTransportSet` wrapping HD-021 helper / configured herdr over `ssh -T` (request RPC, event RPC, per-pane terminal). HD-027 L1: `Files/FileBridgeProtocolCodec` reads `filebridge/spec/test-vectors/` (no filesystem, no helper process). No WinUI, live SSH host, live helper install, `herdr machine` catalog, or herdr daemon control.
 
 ## 职责
 
@@ -42,3 +42,4 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 - `Rpc/ResourceCommandAdapter.cs` — HD-017 verified operation mapping；无 generic method/argv；`close_group` 仅在显式确认时写入。L2 live mutation 为 UNVERIFIED。
 - `Ssh/` — HD-020 L1 OpenSSH locator/resolver/spec factory/trust store/test service。HD-021 L1 `HelperDeployment/` manifest/probe/receipt/planner/publisher。L2 isolated OpenSSH 与 live helper deploy UNVERIFIED。
 - `SshTransports/` — HD-022 L1 remote session transport set。复用 HD-008 RPC 与 HD-013 terminal port，不另建 parser。HD-025 L1 `SshConnectionLease` 在启动子进程前向 `ConnectionAdmissionPolicy` 取 pair/terminal 租约；失败归还。L2 live SSH UNVERIFIED。
+- `Files/` — HD-027 L1 filebridge protocol codec 与 Windows 本地名 mapping-required。无 FS 后端。`herddesk-filebridge serve` 未实现。L2 FS/SSH/TOCTOU UNVERIFIED。

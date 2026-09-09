@@ -10,6 +10,7 @@
 |---|---|
 | [harness-workflows.md](harness-workflows.md) | 五套工具入口、派发、权限核对与 CLI 缺失回退。本文件为跟踪矩阵真源；父任务 research 路径归档后不再作为依赖。五 CLI 会话加载仍为 UNVERIFIED。 |
 | [adr/0001-g0-bootstrap.md](adr/0001-g0-bootstrap.md) | 已采纳。建仓/CI/诊断代码 ≠ 跨越 G0。Python 不替换 .NET Core/Rust bridge。CI Windows job 不是 IME/herdr 验收。仓库组织 ADR，不是规划 ADR-001。 |
+| [adr/0008-filebridge-protocol-v1.md](adr/0008-filebridge-protocol-v1.md) | HD-027 **proposed**。v1 wire 未锁定。HD-028 须书面确认 commit/identity。不是 AC30/AC34 通过。 |
 | [adr/approved-baseline.md](adr/approved-baseline.md) | HD-006 冻结规划 ADR-001 至 ADR-007 与 HD-001/003/004/005 门。机器台账 [adr/approved-baseline.json](adr/approved-baseline.json)。不是 G0/AC44 通过。R5 未执行。 |
 | [implementation-g0.md](implementation-g0.md) | 建仓前第一笔实施的历史记录。其中“未推送”“C# 未编译”已被后续托管状态取代。 |
 | [publication.md](publication.md) | 2026-09-07 首次导入 GitHub。可复查 CI run `34138627135`，commit `629bb01bd6bdb76e8576fd29668aa84a4894e59b`。 |

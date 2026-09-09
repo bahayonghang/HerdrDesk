@@ -1,0 +1,14 @@
+[package]
+name = "herddesk-filebridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "HD-027 L1 filebridge protocol codec. No filesystem. No binary."
+readme = false
+rust-version = "1.98.0"
+
+[lib]
+name = "herddesk_filebridge"
+path = "src/lib.rs"
+
+[dependencies]

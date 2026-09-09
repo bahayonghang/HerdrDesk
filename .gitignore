@@ -33,6 +33,7 @@ Thumbs.db
 .grok/
 .claude/
 
-# Rust sidecar build output. Keep bridge/Cargo.lock tracked.
+# Rust sidecar build output. Keep bridge/Cargo.lock and filebridge/Cargo.lock tracked.
 bridge/target/
+filebridge/target/
 target/

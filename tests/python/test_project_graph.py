@@ -16,6 +16,7 @@ from herddesk_g0.project_graph import (
     check_project,
     validate_project_graph,
     validate_rust_bridge_lock,
+    validate_rust_filebridge_lock,
 )
 import validate_repository as repository
 
@@ -223,6 +224,43 @@ class ProjectGraphTests(unittest.TestCase):
             with self.assertRaises(ProjectGraphError) as ctx:
                 validate_rust_bridge_lock(root)
             self.assertEqual(str(ctx.exception), 'cargo_lock_version_mismatch')
+
+    def test_filebridge_extra_crate_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'filebridge').mkdir()
+            (root / 'implementation').mkdir()
+            (root / 'filebridge' / 'Cargo.lock').write_text(
+                '[[package]]\nname = "herddesk-filebridge"\nversion = "0.1.0"\n'
+                '[[package]]\nname = "serde"\nversion = "1.0.0"\nsource = "registry+https://example"\n',
+                encoding='utf-8',
+            )
+            (root / 'implementation' / 'hd-027-packages.json').write_text(
+                json.dumps({
+                    'crates': [],
+                    'ac30_passed': False,
+                    'ac34_passed': False,
+                    'phase_gate': 'not_passed',
+                    'l2_filesystem': 'UNVERIFIED',
+                    'l2_ssh': 'UNVERIFIED',
+                    'l2_toctou': 'UNVERIFIED',
+                }),
+                encoding='utf-8',
+            )
+            (root / 'implementation' / 'hd-027-l2.json').write_text(
+                json.dumps({
+                    'l2_filesystem': 'UNVERIFIED',
+                    'l2_ssh': 'UNVERIFIED',
+                    'l2_toctou': 'UNVERIFIED',
+                    'ac30_passed': False,
+                    'ac34_passed': False,
+                    'phase_gate': 'not_passed',
+                }),
+                encoding='utf-8',
+            )
+            with self.assertRaises(ProjectGraphError) as ctx:
+                validate_rust_filebridge_lock(root)
+            self.assertEqual(str(ctx.exception), 'filebridge_unexpected_crate')
 
     def test_packages_lock_json_fails(self):
         with tempfile.TemporaryDirectory() as tmp:

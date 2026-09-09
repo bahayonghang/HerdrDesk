@@ -1,0 +1,885 @@
+{
+  "schema_version": 1,
+  "protocol": "1.0",
+  "header_bytes": 16,
+  "magic": "HDFB",
+  "command_not_implemented": "herddesk-filebridge serve --stdio --protocol 1.0",
+  "job": "01234567-89ab-4def-8123-456789abcdef",
+  "vectors": [
+    {
+      "id": "valid-list",
+      "file": "valid-list.hdfb",
+      "sha256": "98a4cb80dce8fceba6da2c5c52c7488556c2698e1dbd6ba6740c17624df6544a",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 114,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 114
+        },
+        {
+          "dir": "helper",
+          "kind": "EntryJson",
+          "seq": 1,
+          "length": 294,
+          "offset": 225
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 2,
+          "length": 286,
+          "offset": 519
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true
+    },
+    {
+      "id": "valid-empty-write",
+      "file": "valid-empty-write.hdfb",
+      "sha256": "1d89a6475e60ff26b62ecdc246920c91938245a7dacd92f2a4df578d48f71c8f",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 329,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 112,
+          "offset": 329
+        },
+        {
+          "dir": "client",
+          "kind": "EndData",
+          "seq": 1,
+          "length": 16,
+          "offset": 441
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 1,
+          "length": 276,
+          "offset": 457
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true,
+      "exclusive_temp_deleted": false
+    },
+    {
+      "id": "valid-stat",
+      "file": "valid-stat.hdfb",
+      "sha256": "221c0b3238fc8828e1d7afe633215836df2e4487e80b27d1bd4b697f2688864f",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 110,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 110
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 1,
+          "length": 277,
+          "offset": 221
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true
+    },
+    {
+      "id": "valid-read",
+      "file": "valid-read.hdfb",
+      "sha256": "5f5a646ae4750b8f37fcb0a92e9e1923b32022a345cda52280068695692a2325",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 110,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 110
+        },
+        {
+          "dir": "helper",
+          "kind": "Data",
+          "seq": 1,
+          "length": 21,
+          "offset": 221
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 2,
+          "length": 277,
+          "offset": 242
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true
+    },
+    {
+      "id": "valid-rename-create",
+      "file": "valid-rename-create.hdfb",
+      "sha256": "9c5662eef5311c8c40505ccdbfb174402abf847e6bcd35896d97c212879d8e80",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 338,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 113,
+          "offset": 338
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 1,
+          "length": 268,
+          "offset": 451
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true
+    },
+    {
+      "id": "valid-list-unicode-space-newline",
+      "file": "valid-list-unicode-space-newline.hdfb",
+      "sha256": "1d6cd42130ea9cfeafdb5ba85c2871dc8b91e5d4f53eb2c8f4fba000bd623fea",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 136,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 136
+        },
+        {
+          "dir": "helper",
+          "kind": "EntryJson",
+          "seq": 1,
+          "length": 315,
+          "offset": 247
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 2,
+          "length": 310,
+          "offset": 562
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true
+    },
+    {
+      "id": "valid-list-non-utf8",
+      "file": "valid-list-non-utf8.hdfb",
+      "sha256": "040f6b0e6bd34273161d0e013a2a97a75245518dc4666878395fca564958e099",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 116,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 116
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 1,
+          "length": 290,
+          "offset": 227
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true
+    },
+    {
+      "id": "valid-keepboth-exclusive-create",
+      "file": "valid-keepboth-exclusive-create.hdfb",
+      "sha256": "6eda93c73b776f7904c61d68115de5859fa5b169dd3e2b4630056a9d7793d497",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 333,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 112,
+          "offset": 333
+        },
+        {
+          "dir": "client",
+          "kind": "EndData",
+          "seq": 1,
+          "length": 16,
+          "offset": 445
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 1,
+          "length": 280,
+          "offset": 461
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true,
+      "keep_both_exclusive_create": true
+    },
+    {
+      "id": "valid-cancel-before-commit",
+      "file": "valid-cancel-before-commit.hdfb",
+      "sha256": "00a4e68b716b2b210dcd430cc6963194441378d9a6aa1b91174ec61920ccb499",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 321,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 112,
+          "offset": 321
+        },
+        {
+          "dir": "client",
+          "kind": "Data",
+          "seq": 1,
+          "length": 18,
+          "offset": 433
+        },
+        {
+          "dir": "client",
+          "kind": "CancelJson",
+          "seq": 2,
+          "length": 78,
+          "offset": 451
+        },
+        {
+          "dir": "helper",
+          "kind": "ErrorJson",
+          "seq": 1,
+          "length": 116,
+          "offset": 529
+        }
+      ],
+      "outcome": "cancelled",
+      "exit_code": 1,
+      "eof_after_frames": true,
+      "exclusive_temp_deleted": true
+    },
+    {
+      "id": "valid-cancel-after-commit",
+      "file": "valid-cancel-after-commit.hdfb",
+      "sha256": "4485b7480c531c83924d17e64dee5247c4a1c518ff7ab4e77aa9e0a722fdb1a4",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 329,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 112,
+          "offset": 329
+        },
+        {
+          "dir": "client",
+          "kind": "EndData",
+          "seq": 1,
+          "length": 16,
+          "offset": 441
+        },
+        {
+          "dir": "client",
+          "kind": "CancelJson",
+          "seq": 2,
+          "length": 78,
+          "offset": 457
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 1,
+          "length": 276,
+          "offset": 535
+        }
+      ],
+      "outcome": "success",
+      "exit_code": 0,
+      "eof_after_frames": true,
+      "commit_linearized_after_frame": 2,
+      "exclusive_temp_deleted": false
+    },
+    {
+      "id": "valid-replace-stale-target",
+      "file": "valid-replace-stale-target.hdfb",
+      "sha256": "4b531aebb52d6cdb4324fd19277214a3a13da1599a7b99e23bdbe6fcb4533f38",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 419,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "ErrorJson",
+          "seq": 0,
+          "length": 120,
+          "offset": 419
+        }
+      ],
+      "outcome": "failed",
+      "exit_code": 1,
+      "eof_after_frames": true,
+      "auto_replay_forbidden": true
+    },
+    {
+      "id": "valid-disconnect-before-receipt",
+      "file": "valid-disconnect-before-receipt.hdfb",
+      "sha256": "cbb9d6bc7ee0e4435dcda6ee03b3d0295af2c7526aacb3942c7dde1a1aed501d",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 329,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 112,
+          "offset": 329
+        },
+        {
+          "dir": "client",
+          "kind": "EndData",
+          "seq": 1,
+          "length": 16,
+          "offset": 441
+        }
+      ],
+      "outcome": "unknown",
+      "exit_code": null,
+      "eof_after_frames": true,
+      "commit_linearized_after_frame": 2,
+      "auto_replay_forbidden": true,
+      "skip_exit": true
+    },
+    {
+      "id": "invalid-oversize-json",
+      "file": "invalid-oversize-json.hdfb",
+      "sha256": "d55006e976a4e9ded679bee4ed63085e477c269ef792341f05db34276644e5c6",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 16,
+          "offset": 0
+        }
+      ],
+      "error": "payload_too_large",
+      "allocate_payload": false
+    },
+    {
+      "id": "invalid-oversize-data",
+      "file": "invalid-oversize-data.hdfb",
+      "sha256": "baf25fb947b8b1bd2bb61cbbd4427d7e83d13e4945f541c4400f4d0be9ac022c",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "helper",
+          "kind": "Data",
+          "seq": 0,
+          "length": 16,
+          "offset": 0
+        }
+      ],
+      "error": "payload_too_large",
+      "allocate_payload": false,
+      "note": "Feed as helper Data after a valid read request in unit tests if used alone; standalone header is rejected on length before kind state."
+    },
+    {
+      "id": "invalid-sequence-gap",
+      "file": "invalid-sequence-gap.hdfb",
+      "sha256": "5dbbd1ad685fa68d46460d3835ec0a3ec906617726caf9e71f4f58854732cf1a",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 112,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 2,
+          "length": 111,
+          "offset": 112
+        }
+      ],
+      "error": "sequence_gap"
+    },
+    {
+      "id": "invalid-unknown-kind",
+      "file": "invalid-unknown-kind.hdfb",
+      "sha256": "28d9d15e3b0360b6f34192e7c840ca6f71e1ce6fde1ad423648401695111471f",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "unknown",
+          "seq": 0,
+          "length": 16,
+          "offset": 0
+        }
+      ],
+      "error": "unknown_kind"
+    },
+    {
+      "id": "invalid-truncated-header",
+      "file": "invalid-truncated-header.hdfb",
+      "sha256": "acb4b35e131bbb76be2f63e5301e8b9e31fb8d5cc2f203242d43c99ca7f2d30e",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 8,
+          "offset": 0
+        }
+      ],
+      "error": "truncated_header",
+      "eof_after_frames": true
+    },
+    {
+      "id": "invalid-truncated-payload",
+      "file": "invalid-truncated-payload.hdfb",
+      "sha256": "a0ea83018460b2819053bb420758f495d149acc1fdc768fc0aa2b68786fc594e",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 20,
+          "offset": 0
+        }
+      ],
+      "error": "truncated_payload",
+      "eof_after_frames": true
+    },
+    {
+      "id": "invalid-sequence-replay",
+      "file": "invalid-sequence-replay.hdfb",
+      "sha256": "d9e4c1c99a2a4e14bf192571503243db7a38f9e21ba53ce66fd1e164c0518a1a",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 114,
+          "offset": 0
+        },
+        {
+          "dir": "client",
+          "kind": "CancelJson",
+          "seq": 0,
+          "length": 78,
+          "offset": 114
+        }
+      ],
+      "error": "sequence_replay"
+    },
+    {
+      "id": "invalid-wrong-direction",
+      "file": "invalid-wrong-direction.hdfb",
+      "sha256": "df1275a67f45b0e611ee69a5b86076e9a53fbfb16fd5fd5de726aa6bbcecac47",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 0
+        }
+      ],
+      "error": "wrong_direction"
+    },
+    {
+      "id": "invalid-second-request",
+      "file": "invalid-second-request.hdfb",
+      "sha256": "48af1b2112ffcfd96b0f53f3b0b6902cb38819f07c004409ca3569a1abaa1824",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 114,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 114
+        },
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 1,
+          "length": 114,
+          "offset": 225
+        }
+      ],
+      "error": "second_request"
+    },
+    {
+      "id": "invalid-data-before-accepted",
+      "file": "invalid-data-before-accepted.hdfb",
+      "sha256": "85f048d52c55b72dc6685bbb21632db686906e17870386aaf52cf7d8c8c68052",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 329,
+          "offset": 0
+        },
+        {
+          "dir": "client",
+          "kind": "Data",
+          "seq": 1,
+          "length": 17,
+          "offset": 329
+        }
+      ],
+      "error": "data_before_accepted"
+    },
+    {
+      "id": "invalid-unknown-flags",
+      "file": "invalid-unknown-flags.hdfb",
+      "sha256": "03819a5e93b7205f2529e5089588e21e2869d9fd6b5cfd88b445008e05fcb3f4",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 114,
+          "offset": 0
+        }
+      ],
+      "error": "unknown_flags"
+    },
+    {
+      "id": "invalid-unknown-version",
+      "file": "invalid-unknown-version.hdfb",
+      "sha256": "3eb3ec4803278a4e9a85a51ff0ffca1d17997eba10ebf0f6eacee98b05a8e678",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 114,
+          "offset": 0
+        }
+      ],
+      "error": "unsupported_version"
+    },
+    {
+      "id": "invalid-dot-component",
+      "file": "invalid-dot-component.hdfb",
+      "sha256": "439b7c67165250c9fe623f053cf35496f8ffdc9d0141176d8953f647fca7ae18",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 116,
+          "offset": 0
+        }
+      ],
+      "error": "invalid_component"
+    },
+    {
+      "id": "invalid-dotdot-component",
+      "file": "invalid-dotdot-component.hdfb",
+      "sha256": "859f86c7752414e3009ac6fe3334f5fad1d172c7c3e7f4b84777745e7f9966d7",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 116,
+          "offset": 0
+        }
+      ],
+      "error": "invalid_component"
+    },
+    {
+      "id": "invalid-slash-component",
+      "file": "invalid-slash-component.hdfb",
+      "sha256": "2449e09b47ad57b8d9e8f6a89f975c3792667250a3e6baa450ccad6731aa8312",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 116,
+          "offset": 0
+        }
+      ],
+      "error": "invalid_component"
+    },
+    {
+      "id": "invalid-nul-component",
+      "file": "invalid-nul-component.hdfb",
+      "sha256": "17db408367afcbc4b422f5bbb228db13ab082b2ab76b60dbd16af84cc9a849b7",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 116,
+          "offset": 0
+        }
+      ],
+      "error": "invalid_component"
+    },
+    {
+      "id": "invalid-empty-component",
+      "file": "invalid-empty-component.hdfb",
+      "sha256": "44546c2c14c848fa16965c2ca5ae52e87026b9c1216cf40056c669e05f030cda",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 113,
+          "offset": 0
+        }
+      ],
+      "error": "invalid_wire_path"
+    },
+    {
+      "id": "invalid-oversize-cursor",
+      "file": "invalid-oversize-cursor.hdfb",
+      "sha256": "cdb68d4853e16f3a32c607e8e5da8bc3a1b09d8e0df3c8d300f024ed1745bdf8",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 5588,
+          "offset": 0
+        }
+      ],
+      "error": "invalid_cursor"
+    },
+    {
+      "id": "invalid-replace-missing-observation",
+      "file": "invalid-replace-missing-observation.hdfb",
+      "sha256": "530baefa5fbc52f24643c95547f7b8d3a74f3aab3ea728378326a2f250ba11b9",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 322,
+          "offset": 0
+        }
+      ],
+      "error": "replace_observation_required"
+    },
+    {
+      "id": "invalid-json-float",
+      "file": "invalid-json-float.hdfb",
+      "sha256": "fd6c1c10ad5a87a1d9e5d83d95fd46e1f76964c83a5975606fd3c726bf8ef2f6",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 114,
+          "offset": 0
+        }
+      ],
+      "error": "json_float_rejected"
+    },
+    {
+      "id": "invalid-duplicate-key",
+      "file": "invalid-duplicate-key.hdfb",
+      "sha256": "b38bbe2a6e8cbe589bb2333a8a7b8ffba377cf28efab58adc9becf7143dd2cee",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 124,
+          "offset": 0
+        }
+      ],
+      "error": "duplicate_json_key"
+    },
+    {
+      "id": "invalid-pollution",
+      "file": "invalid-pollution.hdfb",
+      "sha256": "157043ece66a85d22afdcd8bb402c7e8fc1d1f5de604999660e20469aa900bfb",
+      "expect": "reject",
+      "frames": [
+        {
+          "dir": "helper",
+          "kind": "pollution",
+          "seq": 0,
+          "length": 21,
+          "offset": 0
+        }
+      ],
+      "error": "protocol_pollution",
+      "eof_after_frames": true
+    },
+    {
+      "id": "invalid-terminal-exit-mismatch",
+      "file": "invalid-terminal-exit-mismatch.hdfb",
+      "sha256": "7d713c374b92759eefaec8e1dd17b569cf3a49f39dbe22225bf142e3d311db6f",
+      "expect": "accept",
+      "frames": [
+        {
+          "dir": "client",
+          "kind": "RequestJson",
+          "seq": 0,
+          "length": 114,
+          "offset": 0
+        },
+        {
+          "dir": "helper",
+          "kind": "AcceptedJson",
+          "seq": 0,
+          "length": 111,
+          "offset": 114
+        },
+        {
+          "dir": "helper",
+          "kind": "CompleteJson",
+          "seq": 1,
+          "length": 286,
+          "offset": 225
+        }
+      ],
+      "outcome": "unknown",
+      "exit_code": 1,
+      "eof_after_frames": true,
+      "error": "terminal_result_mismatch"
+    }
+  ]
+}

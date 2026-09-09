@@ -66,6 +66,18 @@ jobs:
       - name: Bridge tests
         working-directory: bridge
         run: cargo test --workspace --locked
+      - name: Install pinned filebridge Rust toolchain
+        working-directory: filebridge
+        run: rustup show
+      - name: Filebridge fmt
+        working-directory: filebridge
+        run: cargo fmt --all -- --check
+      - name: Filebridge clippy
+        working-directory: filebridge
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Filebridge tests
+        working-directory: filebridge
+        run: cargo test --workspace --locked
       # No daemon installation, SSH access, terminal takeover, release publishing,
       # UI acceptance or credentials belong to this offline G0 job.
       # Linux must not compile WinUI. This job is not full-application green.

@@ -438,7 +438,9 @@ cases =
     .. RemoteSessionTransportSetTests.All,
     .. SshConnectionBudgetTests.All,
     .. SshFailureClassifierTests.All,
-    .. SshRecoveryBlockStoreTests.All
+    .. SshRecoveryBlockStoreTests.All,
+    .. WindowsLocalNameMappingTests.All,
+    .. FileBridgeCodecLimitTests.All
 ];
 
 var failed = 0;

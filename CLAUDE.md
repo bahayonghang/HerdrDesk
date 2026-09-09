@@ -23,7 +23,7 @@
 
 ## 架构
 
-当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本、配置/诊断基础设施、组合根宿主 stub、Python 诊断探针，以及 HD-008 L1 `bridge/herddesk-bridge` 字节转发。WinUI 外壳内容、Native renderer、`herddesk-filebridge` 尚未建仓。named-pipe ACL 仍为 UNVERIFIED。
+当前仓库实现 BCL-only 契约、单连接帧解析、输入策略标本、配置/诊断基础设施、组合根宿主 stub、Python 诊断探针，HD-008 L1 `bridge/herddesk-bridge` 字节转发，以及 HD-027 L1 `filebridge/` 协议 codec。WinUI 外壳内容、Native renderer、`herddesk-filebridge` serve 二进制尚未建仓。named-pipe ACL 与 filebridge L2 FS/SSH 仍为 UNVERIFIED。
 
 两条通信平面必须分离：JSON RPC 走 API socket 或自有 bridge；终端帧走 `herdr terminal session` 的 stdio。禁止把 JSON RPC 发到 herdr 二进制 client socket。远端使用 `ssh -T`；stdout banner 视为协议污染。文件面不解析 `ls` 文本。
 
@@ -60,11 +60,12 @@ flowchart TB
     Fixtures --> Probe
     PlanDocs -.-> Active
     Bridge["bridge/herddesk-bridge L1"]
+    FileBrCodec["filebridge L1 codec"]
   end
   subgraph planned [规划尚未建仓]
     NativeTerm["HerdDesk.Terminal.Native"]
     WinUiShell["WinUI App.xaml / HD-011"]
-    FileBr["herddesk-filebridge"]
+    FileBr["herddesk-filebridge serve"]
     NativeTerm --> Contracts
     WinUiShell --> App
   end
@@ -85,6 +86,7 @@ flowchart TB
 | [src/HerdDesk.Core](src/HerdDesk.Core/CLAUDE.md) | 单 epoch 帧解析器与输入策略、HD-023 L1 多设备聚合 | 已生成 |
 | [src/HerdDesk.Infrastructure](src/HerdDesk.Infrastructure/CLAUDE.md) | 配置存储、诊断、RPC stdio | 已生成 |
 | [bridge](bridge/CLAUDE.md) | herddesk-bridge L1 字节转发 | 已生成 |
+| [filebridge](filebridge/CLAUDE.md) | HD-027 L1 protocol codec；无 serve 二进制 | 已生成 |
 | [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter + HD-015 L1 input coordinators | 已生成 |
 | [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub + HD-011 L1 ViewModels + HD-015 L1 focus/input | 已生成 |
 | [tests](tests/CLAUDE.md) | 检查导航 | 已生成 |
@@ -103,7 +105,7 @@ flowchart TB
 | [implementation](implementation/CLAUDE.md) | 已运行检查的 JSON | 已生成 |
 | [.github](.github/CLAUDE.md) | G0 CI | 已生成 |
 
-尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、`herddesk-filebridge`、WinUI `App.xaml`（HD-011）。`bridge/herddesk-bridge` 为 HD-008 L1；named-pipe ACL L2 仍 UNVERIFIED。HD-007 骨架已落地；AC39/AC40/AC47 与 `phase_gate` 仍未通过。
+尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、`herddesk-filebridge` serve 二进制、WinUI `App.xaml`（HD-011）。`bridge/herddesk-bridge` 为 HD-008 L1；named-pipe ACL L2 仍 UNVERIFIED。`filebridge/` 为 HD-027 L1 codec；无 `main.rs`。HD-007 骨架已落地；AC39/AC40/AC47 与 `phase_gate` 仍未通过。
 
 `docs/plan/` 保存原规划正文。活动状态以根目录 `planning/` 与 `tasks/` 为准。`docs/implementation-g0.md` 是建仓前历史记录；其中“未推送”“C# 未编译”不代表当前托管状态。
 
@@ -121,7 +123,7 @@ flowchart TB
 | ControlVerified | 仅当适配器证明拥有输入权后为 true；首帧、进程存活、窗口聚焦均不能置位 |
 | terminal.frame | 上游 ANSI 重建帧；`bytes` 为 canonical Base64；`full` 是重绘属性 |
 | herddesk-bridge | 拟建 RPC 字节转发 sidecar；不是 herdr 已有命令 |
-| herddesk-filebridge | 拟建按调用文件 helper；P4 锁协议；不是 SFTP 宣称 |
+| herddesk-filebridge | 按调用文件 helper；v1 wire 为 HD-027 L1 codec（ADR proposed）；serve 二进制未实现；不是 SFTP 宣称 |
 | workspace | UI 中文「工作区」；内部类型保留英文 |
 | session | UI 中文「会话」；不得与 workspace 互换 |
 

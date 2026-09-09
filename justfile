@@ -104,10 +104,22 @@ bridge-clippy:
 bridge-test:
     cargo test --manifest-path bridge/Cargo.toml --workspace --locked
 
+[group('rust')]
+filebridge-fmt:
+    cargo fmt --manifest-path filebridge/Cargo.toml --all -- --check
+
+[group('rust')]
+filebridge-clippy:
+    cargo clippy --manifest-path filebridge/Cargo.toml --workspace --all-targets --locked -- -D warnings
+
+[group('rust')]
+filebridge-test:
+    cargo test --manifest-path filebridge/Cargo.toml --workspace --locked
+
 # Offline gate used by GitHub Actions. G0 BCL/Python/Rust on every OS.
 # Windows desktop restore runs only the skip/admit helper; it is not live WinUI.
 # Cargo recipes belong to HD-008. npm/xterm and WebView2 stay not admitted.
 [group('ci')]
-ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop bridge-fmt bridge-clippy bridge-test
+ci: test-python selftest capture structure build format-check smoke unit-tests contract-tests desktop bridge-fmt bridge-clippy bridge-test filebridge-fmt filebridge-clippy filebridge-test
 
 alias check := ci

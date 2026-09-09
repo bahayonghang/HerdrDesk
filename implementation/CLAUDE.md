@@ -50,5 +50,7 @@
 | `hd-024-l2.json` | L2 live auth = `UNVERIFIED`。L1 DeviceSession backoff/block 不能关闭产品 AC22/AC26。`phase_gate=not_passed`。 |
 | `hd-025-l2.json` | L2 live SSH/perf = `UNVERIFIED`。`b_ssh_measured=false`。L1 准入/队列政策不能关闭产品 AC27。`phase_gate=not_passed`。 |
 | `hd-026-l2.json` | L2 live SSH = `UNVERIFIED`。L1 P3 收口目录不能关闭产品 AC13/14/15/19/21/22/23/24/26。`phase_gate=not_passed`。 |
+| `hd-027-l2.json` | L2 FS/SSH/TOCTOU = `UNVERIFIED`。无 binary。L1 codec 不能关闭产品 AC30/AC34。`phase_gate=not_passed`。 |
+| `hd-027-packages.json` | HD-027 Rust 探针。无额外 crate。toolchain 1.98.0。不是 AC30/AC34 通过。 |
 
 这些文件多数来自 2026-09-07 Linux 实施环境。不要用其中的 `csharp_compiled=false` 覆盖已经通过的 CI。
