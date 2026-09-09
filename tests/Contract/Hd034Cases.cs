@@ -95,7 +95,7 @@ internal static class Hd034Cases
         Check(typeof(ProductInfo).IsClass);
 
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         Check(!Directory.Exists(Path.Combine(root, "packaging")));
         AppXamlSurface.CheckBlankContainerOnly(root);
 

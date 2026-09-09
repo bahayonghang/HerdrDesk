@@ -123,7 +123,7 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertTrue(missing['dpi_theme_matrix'])
         self.assertTrue(missing['eight_hour_soak'])
         self.assertTrue(missing['winui_shell'])
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])

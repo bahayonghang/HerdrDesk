@@ -34,7 +34,7 @@ class Hd029ResidualTests(unittest.TestCase):
         self.assertTrue(doc['missing']['integration_windows'])
         self.assertTrue((APP_FILES / 'FileWorkspaceViewModel.cs').is_file())
         self.assertTrue((APP_FILES / 'FilePaneViewModel.cs').is_file())
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         self.assertFalse((ROOT / 'tests' / 'Integration.Ssh').exists())
         self.assertEqual(list(APP_FILES.glob('*.xaml')), [])
         result = repository.validate()

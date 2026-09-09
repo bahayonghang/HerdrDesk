@@ -27,9 +27,11 @@
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-    <ApplicationDefinition Remove="App.xaml" />
-    <Page Remove="MainWindow.xaml" />
-    <Compile Remove="App.xaml.cs;MainWindow.xaml.cs" />
-    <None Include="App.xaml;App.xaml.cs;MainWindow.xaml;MainWindow.xaml.cs" />
+    <ApplicationDefinition Remove="**/*.xaml" />
+    <Page Remove="**/*.xaml" />
+    <Compile Remove="**/*.xaml.cs" />
+    <Compile Remove="Activation/WinUiActivationHost.cs" />
+    <None Include="**/*.xaml;**/*.xaml.cs" />
+    <None Include="Activation/WinUiActivationHost.cs" />
   </ItemGroup>
 </Project>

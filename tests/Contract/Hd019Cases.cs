@@ -36,9 +36,7 @@ internal static class Hd019Cases
         Check(AgentInputProfiles.Resolve("muse").IsUnknown);
         Check(!AgentInputProfiles.Resolve("claude-code").LiveVerified);
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
-        Check(!File.Exists(Path.Combine(root, "tests", "Integration.Windows",
-            "HerdDesk.Integration.Windows.csproj")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         AppXamlSurface.CheckBlankContainerOnly(root);
         foreach (var rel in new[]
                  {

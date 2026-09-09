@@ -9,5 +9,5 @@
   "ac19_passed": false,
   "phase_gate": "not_passed",
   "g0_passed": false,
-  "note": "HD-011 ships BCL Shell/navigation/search/settings/diagnostics ViewModels on fake Store projections. Microsoft.WindowsAppSDK remains not admitted. This file is not AC pass evidence. L2 window activation/visual layout and L3 IME/screen-reader/DPI stay UNVERIFIED."
+  "note": "HD-011 ships four-zone WinUI Shell XAML bound to L1 ViewModels plus a net10.0 Integration.Windows console runner. Microsoft.WindowsAppSDK.WinUI 2.3.6 remains the HD-007 App lock; the WASDK 2.4.0 umbrella is not admitted. This file is not AC pass evidence. L2 window activation/visual layout and L3 IME/screen-reader/DPI stay UNVERIFIED. ac19_passed stays false. CI does not pump a WinUI message loop."
 }

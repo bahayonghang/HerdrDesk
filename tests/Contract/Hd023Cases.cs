@@ -31,7 +31,7 @@ internal static class Hd023Cases
         Check(typeof(GlobalEntityRef).GetProperty("Password") is null);
         Check(typeof(SearchDocument).GetProperty("Bytes") is null);
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         AppXamlSurface.CheckBlankContainerOnly(root);
         Check(!Directory.EnumerateFiles(Path.Combine(root, "src", "HerdDesk.App"),
             "DeviceConnectionSummary.xaml", SearchOption.AllDirectories).Any());

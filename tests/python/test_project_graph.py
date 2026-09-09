@@ -257,8 +257,8 @@ class ProjectGraphTests(unittest.TestCase):
 
     def test_unknown_integration_project_fails(self):
         graph = allowed_graph()
-        graph['tests/Integration.Windows/HerdDesk.Integration.Windows.csproj'] = {
-            'project': ['src/HerdDesk.App/HerdDesk.App.csproj'],
+        graph['tests/Integration.Ssh/HerdDesk.Integration.Ssh.csproj'] = {
+            'project': ['src/HerdDesk.Infrastructure/HerdDesk.Infrastructure.csproj'],
             'package': [],
         }
         with self.assertRaises(ProjectGraphError) as ctx:

@@ -1,0 +1,65 @@
+<UserControl
+    x:Class="HerdDesk.App.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    AutomationProperties.Name="设置">
+    <ScrollViewer>
+        <StackPanel Padding="16" Spacing="8">
+            <TextBlock Style="{ThemeResource SubtitleTextBlockStyle}" Text="设置" />
+            <TextBlock x:Name="StatusText" />
+            <TextBox
+                x:Name="LabelBox"
+                Header="设备名称"
+                TextChanged="OnDraftChanged" />
+            <TextBox
+                x:Name="PathBox"
+                Header="本机 herdr 路径"
+                TextChanged="OnDraftChanged" />
+            <TextBox
+                x:Name="NamedSessionBox"
+                Header="命名会话" />
+            <Button
+                x:Name="AddNamedButton"
+                Click="OnAddNamed"
+                Content="添加命名会话" />
+            <TextBox
+                x:Name="EndpointBox"
+                Header="显式端点" />
+            <Button
+                x:Name="AddEndpointButton"
+                Click="OnAddEndpoint"
+                Content="添加显式端点" />
+            <ListView x:Name="SessionList" AutomationProperties.Name="会话" />
+            <TextBox
+                x:Name="FontBox"
+                Header="字体"
+                TextChanged="OnDisplayChanged" />
+            <TextBox
+                x:Name="SizeBox"
+                Header="字号"
+                TextChanged="OnDisplayChanged" />
+            <TextBox
+                x:Name="ZoomBox"
+                Header="缩放"
+                TextChanged="OnDisplayChanged" />
+            <ComboBox
+                x:Name="ThemeBox"
+                Header="主题"
+                SelectionChanged="OnThemeChanged" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button
+                    x:Name="SaveButton"
+                    Click="OnSave"
+                    Content="保存" />
+                <Button
+                    x:Name="DiscardButton"
+                    Click="OnDiscard"
+                    Content="放弃" />
+            </StackPanel>
+            <TextBlock
+                x:Name="SshBanner"
+                AutomationProperties.Name="SSH 由 HD-020 提供"
+                Text="SSH 由 HD-020 提供" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

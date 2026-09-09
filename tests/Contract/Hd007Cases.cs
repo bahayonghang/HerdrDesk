@@ -45,7 +45,8 @@ internal static class Hd007Cases
                      Path.Combine("src", "HerdDesk.Core", "HerdDesk.Core.csproj"),
                      Path.Combine("src", "HerdDesk.Infrastructure", "HerdDesk.Infrastructure.csproj"),
                      Path.Combine("src", "HerdDesk.Terminal.Web", "HerdDesk.Terminal.Web.csproj"),
-                     Path.Combine("tests", "Unit", "HerdDesk.App.Tests", "HerdDesk.App.Tests.csproj")
+                     Path.Combine("tests", "Unit", "HerdDesk.App.Tests", "HerdDesk.App.Tests.csproj"),
+                     Path.Combine("tests", "Integration.Windows", "HerdDesk.Integration.Windows.csproj")
                  })
         {
             var csproj = File.ReadAllText(Path.Combine(root, rel));

@@ -33,7 +33,7 @@
 | `hd-008-packages.json` | HD-008 Rust 探针。`interprocess` 2.4.4（0BSD OR Apache-2.0），toolchain 1.98.0。不是 AC03/AC04 通过。 |
 | `hd-008-l2.json` | L2 Windows named-pipe ACL / live EP01–EP05 = `UNVERIFIED`。 |
 | `hd-010-l2.json` | L2 live `events.subscribe` interleave = `UNVERIFIED`。L1 fake race 不能关闭产品 AC12。`ac12_passed=false`，`phase_gate=not_passed`。 |
-| `hd-011-l2.json` | L2 Windows visual/activation 与 L3 IME/screen-reader/DPI = `UNVERIFIED`。WinUI 未准入。`ac19_passed=false`，`phase_gate=not_passed`。 |
+| `hd-011-l2.json` | L2 Windows visual/activation 与 L3 IME/screen-reader/DPI = `UNVERIFIED`。四区 Shell XAML 已建仓。`ac19_passed=false`，`phase_gate=not_passed`。 |
 | `hd-012-l2.json` | L2 Windows toast activation = `UNVERIFIED`。L1 reducer/ViewModel 不能关闭产品 AC17/AC18。`ac17_passed=false`，`ac18_passed=false`，`phase_gate=not_passed`。 |
 | `hd-013-l2.json` | L2 live `herdr terminal session` = `UNVERIFIED`。L1 fake-child transport 不能关闭产品 AC05/AC06。`ac05_passed=false`，`ac06_passed=false`，`phase_gate=not_passed`。 |
 | `hd-014-l2.json` | L2 WebView process 与 L3 DPI/theme/focus = `UNVERIFIED`。L1 message/flow 不能关闭产品 AC08/AC27。WebView2 与 npm xterm 未准入。 |

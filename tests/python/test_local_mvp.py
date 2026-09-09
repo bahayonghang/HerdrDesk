@@ -93,7 +93,7 @@ class LocalMvpCatalogTests(unittest.TestCase):
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])
         self.assertFalse(result['windows_verified'])
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
 
 
 if __name__ == '__main__':

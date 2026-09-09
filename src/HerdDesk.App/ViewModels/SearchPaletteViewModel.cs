@@ -101,6 +101,13 @@ public sealed class SearchPaletteViewModel
         SelectedIndex = (SelectedIndex + delta + _results.Count * 8) % _results.Count;
     }
 
+    public void SelectIndex(int index)
+    {
+        if (_results.Count == 0 || index < 0 || index >= _results.Count)
+            return;
+        SelectedIndex = index;
+    }
+
     public SearchHit? Selected =>
         SelectedIndex >= 0 && SelectedIndex < _results.Count ? _results[SelectedIndex] : null;
 

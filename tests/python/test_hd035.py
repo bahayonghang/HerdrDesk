@@ -136,7 +136,7 @@ class Hd035ResidualTests(unittest.TestCase):
         self.assertTrue(missing['nuget_advisory_scan'])
         self.assertTrue(missing['webview_process_observation'])
         self.assertTrue(missing['signed_package_unpack'])
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         self.assertFalse((ROOT / 'web' / 'terminal' / 'package-lock.json').exists())
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')

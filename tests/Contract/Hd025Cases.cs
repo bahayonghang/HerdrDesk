@@ -48,7 +48,7 @@ internal static class Hd025Cases
 
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         AppXamlSurface.CheckBlankContainerOnly(root);
     }
 

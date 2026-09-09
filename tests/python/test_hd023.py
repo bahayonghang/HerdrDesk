@@ -25,7 +25,7 @@ class Hd023ResidualTests(unittest.TestCase):
         self.assertFalse(doc['integration_windows_project'])
         self.assertTrue(doc['missing']['live_three_device_ssh'])
         self.assertTrue(doc['missing']['live_search_p95'])
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])

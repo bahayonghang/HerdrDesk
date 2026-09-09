@@ -49,7 +49,7 @@ internal static class Hd028Cases
     {
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         Check(File.Exists(Path.Combine(root, "filebridge", "src", "main.rs")));
     }
 

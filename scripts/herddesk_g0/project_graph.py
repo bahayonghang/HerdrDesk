@@ -50,6 +50,9 @@ ALLOWED_PROJECTS: dict[str, tuple[str, ...]] = {
         'src/HerdDesk.Core/HerdDesk.Core.csproj',
         'src/HerdDesk.App/HerdDesk.App.csproj',
     ),
+    'tests/Integration.Windows/HerdDesk.Integration.Windows.csproj': (
+        'src/HerdDesk.App/HerdDesk.App.csproj',
+    ),
 }
 
 APP_PROJECT = 'src/HerdDesk.App/HerdDesk.App.csproj'

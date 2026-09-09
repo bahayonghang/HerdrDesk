@@ -1,0 +1,131 @@
+<UserControl
+    x:Class="HerdDesk.App.Views.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:HerdDesk.App.Controls"
+    xmlns:views="using:HerdDesk.App.Views">
+    <Grid
+        x:Name="RootGrid"
+        KeyDown="OnRootKeyDown"
+        SizeChanged="OnRootSizeChanged">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid
+            Padding="12,8"
+            ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="2">
+                <TextBlock
+                    x:Name="TitleText"
+                    Style="{ThemeResource SubtitleTextBlockStyle}" />
+                <TextBlock
+                    x:Name="BreadcrumbText"
+                    FontSize="12"
+                    Opacity="0.8" />
+                <TextBlock
+                    x:Name="StatusText"
+                    AutomationProperties.Name="连接状态" />
+            </StackPanel>
+            <StackPanel
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    x:Name="NavOverlayButton"
+                    Click="OnToggleNav"
+                    Content="打开导航"
+                    Visibility="Collapsed" />
+                <Button
+                    Click="OnOpenSettings"
+                    Content="设置" />
+                <Button
+                    Click="OnOpenDiagnostics"
+                    Content="诊断" />
+                <Button
+                    Click="OnOpenAbout"
+                    Content="关于" />
+                <Button
+                    x:Name="DetailsToggle"
+                    Click="OnToggleDetails"
+                    Content="展开详情" />
+            </StackPanel>
+        </Grid>
+        <Grid
+            x:Name="Zones"
+            Grid.Row="1"
+            ColumnSpacing="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="RailColumn" Width="220" />
+                <ColumnDefinition x:Name="TreeColumn" Width="240" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="DetailsColumn" Width="280" />
+            </Grid.ColumnDefinitions>
+            <controls:DeviceSessionRail x:Name="DeviceRail" />
+            <controls:WorkspacePaneTree
+                x:Name="PaneTree"
+                Grid.Column="1" />
+            <Grid Grid.Column="2">
+                <StackPanel
+                    x:Name="WelcomePanel"
+                    Padding="24"
+                    Spacing="8">
+                    <TextBlock x:Name="WelcomeText" TextWrapping="Wrap" />
+                    <Button
+                        x:Name="AddDeviceButton"
+                        Click="OnAddDevice"
+                        Content="添加设备" />
+                    <Button
+                        Click="OnOpenDiagnostics"
+                        Content="诊断" />
+                </StackPanel>
+                <TextBlock
+                    x:Name="TerminalPlaceholder"
+                    Padding="24"
+                    AutomationProperties.Name="终端"
+                    Text="终端尚未接入。选择窗格后观察，不获得控制。"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+                <views:SettingsPage x:Name="SettingsHost" Visibility="Collapsed" />
+                <views:DiagnosticsPage x:Name="DiagnosticsHost" Visibility="Collapsed" />
+                <views:AboutPage x:Name="AboutHost" Visibility="Collapsed" />
+            </Grid>
+            <Border
+                x:Name="DetailsHost"
+                Grid.Column="3"
+                Padding="12"
+                AutomationProperties.Name="详情">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="DetailsText" TextWrapping="Wrap" />
+                    <TextBlock Text="文件区尚未启用" />
+                </StackPanel>
+            </Border>
+        </Grid>
+        <Border
+            x:Name="SearchHost"
+            Grid.RowSpan="2"
+            Background="#99000000"
+            Visibility="Collapsed">
+            <controls:SearchPalette
+                x:Name="SearchControl"
+                Width="520"
+                Height="360"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Margin="0,48,0,0" />
+        </Border>
+        <Border
+            x:Name="NavOverlay"
+            Grid.Row="1"
+            Width="280"
+            HorizontalAlignment="Left"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+            Visibility="Collapsed">
+            <controls:DeviceSessionRail x:Name="OverlayRail" />
+        </Border>
+    </Grid>
+</UserControl>

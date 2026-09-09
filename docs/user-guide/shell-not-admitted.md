@@ -1,8 +1,8 @@
-# Shell not admitted
+# Shell not product-accepted
 
-The product WinUI window is not in the tree. `App.xaml` content is absent. `tests/Integration.Windows` is absent. Windows App SDK is not in the product lock.
+HD-011 ships four-zone WinUI Shell XAML bound to L1 ViewModels. L2 visual/activation and L3 IME/Narrator/DPI stay UNVERIFIED. Product AC19 is not passed. `just ci` does not launch a WinUI window.
 
-This page does not invent button names, screenshots, or an install wizard.
+This page does not invent screenshots or an install wizard.
 
 ## Install
 
@@ -18,6 +18,6 @@ Live Windows named-pipe ACL, live herdr connect, and daemon-unreachable desktop 
 
 ## Chrome that would need UI
 
-Search palette, device tree, settings, and diagnostics ViewModels exist as BCL objects. They are not a shipped window. Keyboard, Narrator, and DPI evidence stay UNVERIFIED (HD-033). Do not write walkthrough steps that click unbuilt chrome.
+Search palette, device tree, settings, and diagnostics bind those ViewModels in WinUI XAML. Keyboard, Narrator, and DPI evidence stay UNVERIFIED (HD-033). Do not write walkthrough steps that treat a local window as AC19 or AC37/AC38.
 
 Independent-user verification of this page is not authorized. Missing grant: `no_authorized_independent_user_walkthrough`.

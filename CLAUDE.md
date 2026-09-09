@@ -88,7 +88,7 @@ flowchart TB
 | [bridge](bridge/CLAUDE.md) | herddesk-bridge L1 字节转发 | 已生成 |
 | [filebridge](filebridge/CLAUDE.md) | HD-027 codec + HD-028 L1 `herddesk-filebridge serve` | 已生成 |
 | [src/HerdDesk.Terminal.Web](src/HerdDesk.Terminal.Web/CLAUDE.md) | HD-014 L1 message validator + BCL renderer adapter + HD-015 L1 input coordinators | 已生成 |
-| [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub + HD-011 L1 ViewModels + HD-015 L1 focus/input + HD-029 L1 文件工作区 ViewModels + HD-030 L1 AttachToAgentViewModel + HD-031 L1 PastePreviewViewModel | 已生成 |
+| [src/HerdDesk.App](src/HerdDesk.App/CLAUDE.md) | 组合根宿主 stub + HD-011 L2 四区 WinUI Shell + L1 ViewModels + HD-015 L1 focus/input + HD-029 L1 文件工作区 ViewModels + HD-030 L1 AttachToAgentViewModel + HD-031 L1 PastePreviewViewModel | 已生成 |
 | [tests](tests/CLAUDE.md) | 检查导航 | 已生成 |
 | [tests/HerdDesk.Core.SmokeTests](tests/HerdDesk.Core.SmokeTests/CLAUDE.md) | C# G0 smoke runner | 已生成 |
 | [tests/Unit/HerdDesk.Core.Tests](tests/Unit/HerdDesk.Core.Tests/CLAUDE.md) | Core unit runner | 已生成 |
@@ -105,7 +105,7 @@ flowchart TB
 | [implementation](implementation/CLAUDE.md) | 已运行检查的 JSON | 已生成 |
 | [.github](.github/CLAUDE.md) | G0 CI | 已生成 |
 
-尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`、WinUI Shell 内容（HD-011）。HD-007 L2 已准入空白 `App.xaml`/`MainWindow` 与 WinUI 2.3.6 lock。`bridge/herddesk-bridge` 为 HD-008 L1；named-pipe ACL L2 仍 UNVERIFIED。`filebridge/` 为 HD-027 codec 加 HD-028 L1 serve；L2 FS/SSH/TOCTOU UNVERIFIED。AC39/AC40/AC47 与 `phase_gate` 仍未通过。
+尚未建仓、仅出现在规划中的模块：`HerdDesk.Terminal.Native`。HD-007 L2 已准入 `App.xaml`/`MainWindow` 与 WinUI 2.3.6 lock。HD-011 L2 已填四区 Shell XAML；L2 视觉/激活与 L3 IME/DPI 仍为 UNVERIFIED。`bridge/herddesk-bridge` 为 HD-008 L1；named-pipe ACL L2 仍 UNVERIFIED。`filebridge/` 为 HD-027 codec 加 HD-028 L1 serve；L2 FS/SSH/TOCTOU UNVERIFIED。AC39/AC40/AC47 与 `phase_gate` 仍未通过。
 
 `docs/plan/` 保存原规划正文。活动状态以根目录 `planning/` 与 `tasks/` 为准。`docs/implementation-g0.md` 是建仓前历史记录；其中“未推送”“C# 未编译”不代表当前托管状态。
 

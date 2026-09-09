@@ -37,7 +37,7 @@ internal static class Hd029Cases
         Check(!UntrustedText.TryAsCommand("rm -rf /"));
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         AppXamlSurface.CheckBlankContainerOnly(root);
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.App", "Files", "FileWorkspaceViewModel.cs")));
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.App", "Files", "FilePaneViewModel.cs")));

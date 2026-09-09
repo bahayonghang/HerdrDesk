@@ -309,7 +309,7 @@ def _check_hd027(hd027: dict, packages: dict) -> None:
         assert (vectors / name).is_file()
     assert (ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Files' / 'FileBridgeProtocolCodec.cs').is_file()
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
 
 
 _HD028_PASS_KEYS = ('ac30_passed', 'ac31_passed', 'ac32_passed', 'g0_passed')
@@ -354,14 +354,49 @@ def _check_hd028(hd028: dict, packages: dict) -> None:
     assert (ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Files' / 'LocalFileEndpoint.cs').is_file()
     assert (ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Files' / 'FileBridgeClient.cs').is_file()
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
     lock = (ROOT / 'filebridge' / 'Cargo.lock').read_text(encoding='utf-8')
     from herddesk_g0.project_graph import cargo_lock_package_version
     assert cargo_lock_package_version(lock, 'sha2') == '0.10.8'
 
 
 _APP_XAML_SKIP = frozenset({'bin', 'obj'})
-_APP_BLANK_XAML = ('App.xaml', 'MainWindow.xaml')
+_APP_SHELL_XAML = (
+    'App.xaml',
+    'Controls/DeviceSessionRail.xaml',
+    'Controls/SearchPalette.xaml',
+    'Controls/WorkspacePaneTree.xaml',
+    'MainWindow.xaml',
+    'Views/AboutPage.xaml',
+    'Views/DiagnosticsPage.xaml',
+    'Views/SettingsPage.xaml',
+    'Views/ShellPage.xaml',
+)
+_APP_BLANK_XAML = _APP_SHELL_XAML
+
+
+def check_integration_windows_layout(root: Path | None = None) -> None:
+    """Allow the HD-011 console runner. Catalog token integration_windows_project stays false."""
+    base = Path(root) if root is not None else ROOT
+    project = base / 'tests' / 'Integration.Windows' / 'HerdDesk.Integration.Windows.csproj'
+    assert project.is_file()
+    text = project.read_text(encoding='utf-8')
+    assert '<PackageReference' not in text
+    assert 'Microsoft.NET.Test.Sdk' not in text
+    assert 'Microsoft.WindowsAppSDK' not in text
+    assert '2.4.0' not in text
+    assert 'net10.0' in text
+    assert 'HerdDeskBclOnly' in text
+    program = base / 'tests' / 'Integration.Windows' / 'Program.cs'
+    assert program.is_file()
+    src = program.read_text(encoding='utf-8')
+    assert 'Application.Start' not in src
+    assert 'new MainWindow' not in src
+    ci = (base / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    assert '--ui' not in ci
+    assert 'Application.Start' not in ci
+    just = (base / 'justfile').read_text(encoding='utf-8')
+    assert '--ui' not in just
 
 
 def app_source_xaml(root: Path | None = None) -> list[str]:
@@ -398,7 +433,7 @@ def _check_hd029(hd029: dict) -> None:
     assert list(files.glob('*.xaml')) == []
     assert tuple(app_source_xaml(ROOT)) == _APP_BLANK_XAML
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
 
 
 def _check_hd030(hd030: dict) -> None:
@@ -425,7 +460,7 @@ def _check_hd030(hd030: dict) -> None:
     assert (ROOT / 'src' / 'HerdDesk.Contracts' / 'AttachmentPorts.cs').is_file()
     assert tuple(app_source_xaml(ROOT)) == _APP_BLANK_XAML
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
 
 
 def _check_hd031(hd031: dict) -> None:
@@ -458,7 +493,7 @@ def _check_hd031(hd031: dict) -> None:
     assert (ROOT / 'src' / 'HerdDesk.Contracts' / 'ClipboardPorts.cs').is_file()
     assert tuple(app_source_xaml(ROOT)) == _APP_BLANK_XAML
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
     _check_hd031_sources(core, infra, osc)
 
 
@@ -796,7 +831,7 @@ def _check_hd032_closeout(hd032: dict, catalog: dict, matrix: dict) -> None:
     assert matrix.get('silent_overwrite_tested') is False
     assert catalog.get('silent_overwrite_tested') is False
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
 
 
 _HD033_PASS_KEYS = (
@@ -1151,7 +1186,7 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert matrix.get('eight_hour_soak_executed') is False
     assert catalog.get('eight_hour_soak_executed') is False
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
 
 
 _HD034_PASS_KEYS = (
@@ -1564,7 +1599,7 @@ def _check_hd034_closeout(hd034: dict, catalog: dict, matrix: dict) -> None:
     assert acs['AC41']['status'] == 'not_run'
     assert acs['AC42']['status'] == 'not_run'
     assert not (ROOT / 'packaging').exists()
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
     assert not (ROOT / 'packaging' / 'HerdDesk.Package.wapproj').exists()
     assert not (ROOT / 'packaging' / 'Package.appxmanifest').exists()
 
@@ -1747,7 +1782,9 @@ def _reject_hd035_pass_claims(doc) -> None:
             if doc.get('invented_scan_dates') is True:
                 raise AssertionError('invented scan dates cannot pass as success')
             if doc.get('integration_windows_project') is True:
-                raise AssertionError('tests/Integration.Windows is not admitted')
+                raise AssertionError(
+                    'integration_windows_project catalog token is not AC pass'
+                )
             _reject_hd035_pass_claims(value)
     elif isinstance(doc, list):
         for item in doc:
@@ -2074,7 +2111,7 @@ def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: d
     assert acs['AC02']['status'] == 'not_run'
     assert acs['AC43']['status'] == 'not_run'
     assert acs['AC44']['status'] == 'not_run'
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
     assert not (ROOT / 'web' / 'terminal' / 'package-lock.json').exists()
     assert not (ROOT / 'packages.lock.json').exists()
     assert (ROOT / 'bridge' / 'Cargo.lock').is_file()
@@ -2262,7 +2299,9 @@ def _reject_hd036_pass_claims(doc) -> None:
             if doc.get('invented_github_required_check') is True:
                 raise AssertionError('invented hosted required-check cannot pass as success')
             if doc.get('integration_windows_project') is True:
-                raise AssertionError('tests/Integration.Windows is not admitted')
+                raise AssertionError(
+                    'integration_windows_project catalog token is not AC pass'
+                )
             if doc.get('impersonates_1_x_extensions') is True:
                 raise AssertionError('core 1.0 must not impersonate EP-01..EP-07')
             _reject_hd036_pass_claims(value)
@@ -2556,7 +2595,7 @@ def _check_hd036_closeout(hd036: dict, catalog: dict, matrix: dict, index: dict)
     assert acs['AC45']['status'] == 'not_run'
     assert acs['AC47']['status'] == 'not_run'
     assert acs['AC48']['status'] == 'not_run'
-    assert not (ROOT / 'tests' / 'Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
     for rel in (
         'docs/user-guide/index.md',
         'docs/user-guide/shell-not-admitted.md',
@@ -2793,7 +2832,7 @@ def validate() -> dict:
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)
     _check_hd036_closeout(hd036, release_catalog, release_matrix, release_index)
     assert not (ROOT/'tests/Integration.Ssh').exists()
-    assert not (ROOT/'tests/Integration.Windows').exists()
+    check_integration_windows_layout(ROOT)
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']
     by_id={task['id']:task for task in tasks}
     assert len(by_id)==len(tasks)==36,'Unexpected backlog IDs'

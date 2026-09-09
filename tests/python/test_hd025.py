@@ -28,7 +28,7 @@ class Hd025ResidualTests(unittest.TestCase):
         self.assertTrue(doc['missing']['measured_b_ssh'])
         self.assertTrue(doc['missing']['live_ssh_matrix'])
         self.assertFalse((ROOT / 'tests' / 'Integration.Ssh').exists())
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])

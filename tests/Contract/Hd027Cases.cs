@@ -25,7 +25,7 @@ internal static class Hd027Cases
         Check(typeof(FileBridgeProtocolCodec).IsClass);
         var root = FindRepoRoot();
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         using var doc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "implementation", "hd-027-l2.json")));
         var obj = doc.RootElement;
@@ -47,7 +47,7 @@ internal static class Hd027Cases
         var cargo = File.ReadAllText(Path.Combine(root, "filebridge", "Cargo.toml"));
         Check(cargo.Contains("[[bin]]"));
         Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Ssh")));
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         var adr = File.ReadAllText(Path.Combine(root, "docs", "adr", "0008-filebridge-protocol-v1.md"));
         Check(adr.Contains("**accepted**"));
         Check(adr.Contains("wire only"));

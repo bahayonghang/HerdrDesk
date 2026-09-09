@@ -1,6 +1,6 @@
 # Frontend Development Guidelines
 
-**Deferred WinUI/React templates.** `src/HerdDesk.App` is a net10.0 composition-root host plus HD-011 L1 ViewModels and an HD-007 L2 blank windows TFM `App.xaml` / `MainWindow`. There is no WinUI Shell, no React app, and no WebView2 renderer host. Visual Shell remains HD-011. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`.
+**Deferred React templates.** `src/HerdDesk.App` is a net10.0 composition-root host plus HD-011 L1 ViewModels and an HD-007/HD-011 L2 windows TFM `App.xaml` / four-zone `MainWindow` on `Microsoft.WindowsAppSDK.WinUI` 2.3.6. There is no React app and no WebView2 renderer host. L2 visual/activation and L3 IME/DPI stay UNVERIFIED. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`.
 
 The Markdown files in this folder are Trellis init templates (component / hook / React-style type safety). They are **not** live implementation contracts. Do not write React, Next.js, Vue, or generic CSS from those templates. Do not treat hook-guidelines or state-management as if a UI exists.
 
@@ -31,7 +31,7 @@ Do not implement features by “filling” those templates as if they described 
 
 ## Pre-Development Checklist
 
-- [ ] Confirm an approved task actually asks for UI. HD-007 L2 admits a blank windows TFM `App.xaml` / `MainWindow` and WinUI 2.3.6. HD-011 still owns Shell content. Do not fill React templates. Do not PackageReference the WASDK 2.4.0 umbrella.
+- [ ] Confirm an approved task actually asks for UI. HD-007 L2 admits windows TFM `App.xaml` / `MainWindow` and WinUI 2.3.6. HD-011 L2 ships four-zone Shell XAML. Do not fill React templates. Do not PackageReference the WASDK 2.4.0 umbrella.
 - [ ] Read [AGENTS.md](../../../AGENTS.md): no live WinUI writes in the G0 gate.
 - [ ] Use Contracts types (`PaneKey`, `ConnectionEpoch`, `TerminalAccess`, `ControlVerified`) when UI work starts. Do not invent a second identity model.
 

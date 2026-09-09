@@ -39,7 +39,8 @@ internal static class Hd011Cases
         }
 
         var root = FindRepoRoot();
-        AppXamlSurface.CheckBlankContainerOnly(root);
+        AppXamlSurface.CheckShellSurface(root);
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         var csproj = File.ReadAllText(Path.Combine(root, "src", "HerdDesk.App", "HerdDesk.App.csproj"));
         Check(csproj.Contains("Microsoft.WindowsAppSDK.WinUI", StringComparison.Ordinal));
         Check(!csproj.Contains("Include=\"Microsoft.WindowsAppSDK\"", StringComparison.Ordinal));

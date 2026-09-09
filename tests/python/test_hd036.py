@@ -122,7 +122,7 @@ class Hd036ResidualTests(unittest.TestCase):
         self.assertTrue(missing['github_required_check_on_head'])
         self.assertTrue(missing['external_publish'])
         self.assertTrue(missing['signed_msix_hash'])
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])

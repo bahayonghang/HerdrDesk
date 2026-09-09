@@ -137,7 +137,7 @@ class Hd034ResidualTests(unittest.TestCase):
         self.assertTrue(missing['publisher_identity'])
         self.assertTrue(missing['signing_service'])
         self.assertTrue(missing['packaging_project'])
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         self.assertFalse((ROOT / 'packaging').exists())
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')

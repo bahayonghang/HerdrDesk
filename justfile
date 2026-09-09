@@ -70,7 +70,7 @@ structure:
 
 [group('dotnet')]
 format-check: build
-    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/SshConnectionContracts.cs --include src/HerdDesk.Contracts/SshTransportContracts.cs --include src/HerdDesk.Contracts/HelperDeploymentContracts.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/RendererModels.cs --include src/HerdDesk.Contracts/ResourceOperationPorts.cs --include src/HerdDesk.Contracts/ResourceBudgets.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Contracts/Terminal --include src/HerdDesk.Core/Store --include src/HerdDesk.Core/DeviceSessions --include src/HerdDesk.Core/Attention --include src/HerdDesk.Core/Aggregation --include src/HerdDesk.Core/Commands --include src/HerdDesk.Core/Recovery --include src/HerdDesk.Core/Connections --include src/HerdDesk.Core/Terminal --include src/HerdDesk.Core/Projection --include src/HerdDesk.Core/RenderFlowController.cs --include src/HerdDesk.Core/WebMessagePolicy.cs --include tests/Unit --include tests/Contract --include tests/HerdDesk.TestSupport
+    {{dotnet}} format {{solution}} --verify-no-changes --no-restore --include src/HerdDesk.App --include src/HerdDesk.Infrastructure --include src/HerdDesk.Terminal.Web --include src/HerdDesk.Contracts/ConfigurationModels.cs --include src/HerdDesk.Contracts/SshConnectionContracts.cs --include src/HerdDesk.Contracts/SshTransportContracts.cs --include src/HerdDesk.Contracts/HelperDeploymentContracts.cs --include src/HerdDesk.Contracts/DiagnosticModels.cs --include src/HerdDesk.Contracts/HostModels.cs --include src/HerdDesk.Contracts/RendererModels.cs --include src/HerdDesk.Contracts/ResourceOperationPorts.cs --include src/HerdDesk.Contracts/ResourceBudgets.cs --include src/HerdDesk.Contracts/Rpc --include src/HerdDesk.Contracts/State --include src/HerdDesk.Contracts/Terminal --include src/HerdDesk.Core/Store --include src/HerdDesk.Core/DeviceSessions --include src/HerdDesk.Core/Attention --include src/HerdDesk.Core/Aggregation --include src/HerdDesk.Core/Commands --include src/HerdDesk.Core/Recovery --include src/HerdDesk.Core/Connections --include src/HerdDesk.Core/Terminal --include src/HerdDesk.Core/Projection --include src/HerdDesk.Core/RenderFlowController.cs --include src/HerdDesk.Core/WebMessagePolicy.cs --include tests/Unit --include tests/Contract --include tests/Integration.Windows --include tests/HerdDesk.TestSupport
 
 [group('dotnet')]
 unit-tests: build
@@ -78,6 +78,7 @@ unit-tests: build
     {{dotnet}} run --project tests/Unit/HerdDesk.Infrastructure.Tests --configuration {{configuration}} --no-build
     {{dotnet}} run --project tests/Unit/HerdDesk.App.Tests --configuration {{configuration}} --no-build
     {{dotnet}} run --project tests/Unit/HerdDesk.Terminal.Web.Tests --configuration {{configuration}} --no-build
+    {{dotnet}} run --project tests/Integration.Windows --configuration {{configuration}} --no-build
 
 [group('dotnet')]
 contract-tests: build

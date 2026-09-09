@@ -100,7 +100,7 @@ internal static class Hd035Cases
         Check(typeof(SshProcessSpecFactory).IsClass);
 
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         Check(!File.Exists(Path.Combine(root, "web", "terminal", "package-lock.json")));
         Check(!File.Exists(Path.Combine(root, "packages.lock.json")));
         Check(File.Exists(Path.Combine(root, "bridge", "Cargo.lock")));

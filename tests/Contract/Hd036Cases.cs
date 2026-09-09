@@ -98,7 +98,7 @@ internal static class Hd036Cases
         Check(typeof(PastePreviewViewModel).IsClass);
 
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         Check(File.Exists(Path.Combine(root, "docs", "user-guide", "index.md")));
         Check(File.Exists(Path.Combine(root, "docs", "release", "notes.md")));
         Check(File.Exists(Path.Combine(root, "docs", "testing", "release-checklist.md")));

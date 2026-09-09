@@ -94,7 +94,7 @@ internal static class Hd033Cases
         Check(typeof(TerminalInputController).IsClass);
 
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
         AppXamlSurface.CheckBlankContainerOnly(root);
 
         using var catalogDoc = JsonDocument.Parse(

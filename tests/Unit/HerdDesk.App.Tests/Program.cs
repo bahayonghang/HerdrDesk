@@ -2,6 +2,7 @@ var cases = new (string Name, Action Run)[] { };
 cases =
 [
     .. ShellViewModelTests.All,
+    .. ShellSurfaceTests.All,
     .. NavigationIdentityTests.All,
     .. SearchPaletteTests.All,
     .. LocalDeviceSettingsTests.All,

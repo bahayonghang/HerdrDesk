@@ -51,9 +51,7 @@ internal static class Hd012Cases
     static void NoIntegrationProject()
     {
         var root = FindRepoRoot();
-        Check(!Directory.Exists(Path.Combine(root, "tests", "Integration.Windows")));
-        Check(!File.Exists(Path.Combine(root, "tests", "Integration.Windows",
-            "HerdDesk.Integration.Windows.csproj")));
+        AppXamlSurface.CheckIntegrationWindowsProject(root);
     }
 
     static string FindRepoRoot()

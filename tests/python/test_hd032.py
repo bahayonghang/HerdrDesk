@@ -136,7 +136,7 @@ class Hd032ResidualTests(unittest.TestCase):
         self.assertTrue(missing['acl_quota_volume'])
         self.assertTrue(missing['second_process_attacker'])
         self.assertFalse((ROOT / 'tests' / 'Integration.Ssh').exists())
-        self.assertFalse((ROOT / 'tests' / 'Integration.Windows').exists())
+        repository.check_integration_windows_layout(ROOT)
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])
