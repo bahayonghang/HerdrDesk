@@ -1,0 +1,29 @@
+{
+  "id": "windows-hd-028",
+  "name": "windows-hd-028",
+  "title": "HD-028 文件枚举与传输后端",
+  "description": "list/stat、独占临时写、长度/hash、取消和原子rename",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-08",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-08-windows-desktop-full",
+  "relatedFiles": [],
+  "notes": "L1 serve, local FS adapter, client, and TransferCoordinator landed. ADR-0008 accepted wire-only. L2 live FS/SSH/TOCTOU UNVERIFIED. AC30/31/32/G0 not passed.",
+  "meta": {
+    "source_task": "HD-028",
+    "phase": "P4"
+  }
+}

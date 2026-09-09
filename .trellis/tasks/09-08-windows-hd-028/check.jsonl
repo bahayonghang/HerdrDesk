@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check no false completion, blind retry, or unsafe cleanup."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Check file and SSH data stay out of diagnostics."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Check exact gate, limits, dependency boundaries, and real evidence."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Check identity, state, errors, and progress remain single-source."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/current-state.md","reason":"Check planned modules are not reported as already implemented."}
+{"file":".trellis/tasks/09-08-windows-desktop-full/research/test-layout.md","reason":"Shared test-project ownership and discovery contract; future targets are not current execution evidence."}
