@@ -4,13 +4,13 @@
 
 交付完整的 Windows 原生 herdr 工作台：用户可在一个窗口管理本机及远端设备的会话、工作区、Agent和普通shell pane，安全地观察/控制真实终端，使用搜索通知、SSH、文件与附件，并获得可安装、可更新、可诊断的产品。herdr继续拥有运行进程，HerdDesk负责连接和桌面交互。
 
-本轮用户明确要求“根据当前项目实施情况和plan，深入分析后创建完整Trellis实施任务及子任务，覆盖UI与后端”。当前授权是规划文件的创建与核验；不包含产品实现、依赖安装、live herdr/SSH/WinUI、产品AC状态变更、提交或发布。全部新任务保持planning，未启动实施。
+本轮用户明确要求“根据当前项目实施情况和plan，深入分析后创建完整Trellis实施任务及子任务，覆盖UI与后端”。Goal 已授权范围内本地 L1 实施、验证、提交、归档。live herdr / SSH / WinUI / IME / soak / Publisher / push 仍须另行授权。产品 AC01–AC48 保持 `not_run`。父任务保持 `planning`，在 L2/L3/L4 与 hosted 证据齐备前不归档。
 
 ## 已确认背景
 
-- 当前是G0协议/策略骨架：`HerdDesk.slnx:2`；源码只包含Contracts、Core及smoke项目，未来App/Infrastructure/renderer/sidecar均未创建。
-- `implementation/status.json:2` 记录G0未通过、Windows live not_run和无已验证AC；历史离线/hosted结果不能当作当前完整产品可用性。
-- `evidence/compatibility-baseline.json` 已记录本机 preview protocol 22 与源码 v0.8.2/20 分栏；规划上游改为 GitHub **v0.9.0 / protocol 22**（[research/herdr-0.9.0.md](research/herdr-0.9.0.md)）。稳定 tag 运行时、ACL、远端、IME 仍缺。不得把 preview 或网站 latest.json 的 0.8.2 当作当前 GitHub latest。
+- 当前产品是 G0 未过的 L1 骨架：`HerdDesk.slnx` 含 Contracts、Core、Infrastructure、Terminal.Web、App 与 Unit/Contract/Smoke 测试。WinUI `App.xaml` 内容、Native renderer、filebridge L2 FS/SSH 仍未准入。
+- `implementation/status.json` 记录 `phase_gate=not_passed`、Windows live not_run、无已验证 AC。历史离线/hosted 结果不能当作当前完整产品可用性。HD-001–036 已 L1 归档。
+- 规划上游钉 GitHub **v0.9.0 / protocol 22** / commit `b99002a`（[research/herdr-0.9.0.md](research/herdr-0.9.0.md)，2026-09-09 二次复核）。v0.8.2 / protocol 20 为历史对照。本机 PATH preview `0.9.0-preview.2026-09-08-62431dbd033b` 不得写入 `compatible_by_default`。稳定 tag 运行时、ACL、远端、IME 仍缺。不得把 preview 或网站 `latest.json` 的 0.8.2 当作当前 GitHub latest。
 - 活动产品需求来自`planning/backlog.json`和`tasks/HD-001.md`至`tasks/HD-036.md`；48项验收来自`planning/acceptance.json`。`docs/plan/`仅作为既有设计档案，不能覆盖活动状态。
 - 完整现状/差距见 [research/current-state.md](research/current-state.md)，公开技术依据复核见 [research/technical-sources.md](research/technical-sources.md)。
 
@@ -79,4 +79,4 @@
 
 本轮结果见 [research/validation.md](research/validation.md)；独立合并报告位于
 [整树规划审查](../../reviews/09-08-windows-desktop-full.md)。Phase 1规划交付已核验；
-本轮未启动产品实施，原48项产品AC保持not_run，已有G0代码与源任务进度保留。
+HD-001–036 已完成 L1 产品提交与归档。原48项产品AC保持 `not_run`。父任务未归档。完整 1.0 未宣称。

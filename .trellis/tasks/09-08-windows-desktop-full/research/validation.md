@@ -3,6 +3,8 @@
 日期：2026-09-08。基线：main / `1cce6e4`。本记录只证明规划文件与静态结构，
 不改变产品 G0、原任务或原 AC 的运行状态。
 
+2026-09-09 二次网上复核：规划钉仍为 GitHub v0.9.0 / protocol 22。父 design/ui-blueprint/research 补 last-interactor、#3519 detach、dim 缓存、graphics omitted、禁止 `--no-session`、Herdr Cloud 排除。不改 AC 状态。不归档父任务。`master` #3661/#3755 仅附录。
+
 ## 实际检查结果
 
 | 检查 | 结果与边界 |

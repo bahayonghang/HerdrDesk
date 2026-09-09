@@ -136,3 +136,40 @@ CHANGELOG：兼容终端上 pane 图像与 graphics API **默认开启**；`term
 1. Windows 1.0 远端路径：牧台 DeviceId + OpenSSH + API socket + `herdr terminal session`。不在 1.0 实现 endpoint generation 1，不读写 `herdr machine` catalog。
 2. 不执行 `herdr channel set`。稳定 zip 仅记录 hash，本机安装与 runtime 采集另授权。
 3. AC10 仍为 Claude Code / Codex / OpenCode。Muse / Qwen 未知降级。
+
+## 2026-09-09 二次网上复核
+
+规划钉不变：GitHub 稳定 tag **v0.9.0** / protocol 22 / commit `b99002a`。
+不重开 Q1–Q3。不切 channel。不把 preview 或 `master` 升为 1.0 钉。
+`herdr.dev` 现网页混有 preview/`master` 文案（仍写 `--no-session`、`experimental.kitty_graphics`）。合同以 tag CHANGELOG 与 tag 源码为准。
+
+复核来源：GitHub Releases `v0.9.0`（2026-09-07T19:21:31Z，`prerelease=false`）、tag `CHANGELOG.md`、`docs/next/website/src/content/docs/connecting-machines.mdx`、`windows-beta.mdx`（tag）、`src/protocol/wire.rs`（`PROTOCOL_VERSION=22`）、博客 [Connecting the machines](https://herdr.dev/blog/connecting-the-machines/)。`master` 仅作漂移附录。
+
+### 补写入 1.0 行为合同（写入 design / ui-blueprint）
+
+1. **#3526 同 tab 最后交互者控制尺寸。** 另一 client 改 cols/rows 不等于本应用获得 stdin。`ControlVerified` 仍只由 HD-016 适配器证明。HerdDesk 发送 resize 必须已有该 pane 的控制权，或已验证的 observe-resize 许可（HD-004）。不得为了成为“最后交互者”而发送空输入。
+2. **#3487 终端 UI 在每个 client 本地。** theme / menu / copy-mode 属于查看端。HerdDesk 使用自有 WinUI chrome，不依赖 herdr TUI 外壳。
+3. **#3519 SSH 客户端终端消失则 detach。** `herdr terminal session` stdout 上的 `terminal.closed` 可能表示桥断开，不是 pane 进程死亡。HD-013/018 按失连恢复：停输入、epoch 作废、先 RPC 再 observe。不得把任意 `reason` 当成 pane 退出。
+4. **丢失连接的 dim 缓存。** 官方多机 UI：失连后最后 workspace/agent 状态可见但变暗，是缓存不是 live。输入与导航进缓存 pane 禁用，直到新连接与匹配 screen。1.0 多设备（DeviceId）采用同一呈现：变暗 + 时间戳；写禁用；重连不抢当前选择。
+5. **Graphics 默认开 + owning-client 绑定。** 兼容终端上 pane 图像默认开启。stdio 路径仍丢弃 `Graphics`。1.0 renderer 显示「图形已省略」。不得把空匹配当解析失败。`pane.graphics.*` 不进 mutation allowlist。图形绑定 owning client 属于 EP-06。
+6. **禁止 `--no-session`。** CHANGELOG Removed。argv 不得带该 flag。无名 session 仍附着后台 server。网站 persistence 页仍写该 flag，以 tag CHANGELOG 为准。
+7. **1.0 不发送** `surface_interest` / `health_check`（saved-machine 专用）。不读写 `herdr machine` catalog。
+8. **Herdr Cloud** 未进 0.9.0，在 waitlist。1.0 排除云账号/中继。
+9. **Agent：** AC10 仍 Claude Code / Codex / OpenCode。Muse / Qwen / Copilot 等只保留 raw，按未知降级。
+10. **herdr `install.cmd` / 无单独 VC++ runtime** 是上游 Windows 安装，不是牧台 MSIX（HD-034）。
+11. **WSL clipboard 图像** 走 `herdr --remote` 客户端桥。牧台 1.0 文件/附件仍是 HD-031 意图区分；不宣称 WSL 图像桥（EP-05）。
+12. **Direct terminal attach** 在 Windows 上 unsupported。1.0 继续走 `herdr terminal session`。herdr TUI 的 CJK IME 锚点为 partial；HerdDesk 仍按 HD-015 自有 IME 合同验收。
+
+### v0.9.0 tag 内 Windows 文档（1.0 对照）
+
+tag `windows-beta.mdx`：`herdr --remote` 目标为 Linux/macOS host。CJK IME composition anchoring 为 partial。Kitty 依赖外层终端；Windows Terminal 不暴露 Herdr 使用的 Kitty 路径。本地 native pane 没有 Herdr 剪贴板图像桥。Direct attach / live handoff 在 Windows 上 unsupported。
+
+### `master` / preview 漂移（附录，非 1.0）
+
+| 提交 | 日期 | 内容 | 1.0 |
+|---|---|---|---|
+| `62431dbd` | 2026-09-07 | idle SSH CPU。本机 PATH preview `0.9.0-preview.2026-09-08-62431dbd033b` 钉在此 | 不写入 `compatible_by_default` |
+| `8996fc54` #3661 | 2026-09-08 | Windows 作为 SSH 远端宿主。master `windows-beta.mdx` 已写 Windows x86_64 host；tag 文档仍只写 Linux/macOS。`connecting-machines.mdx` 在 master 仍写 Windows 多机未支持 | 不纳入 1.0 |
+| `b9ce968` #3755 | 2026-09-08 | 跨已连接机器的 workspace 导航 | 不纳入 1.0 |
+
+文档互相矛盾时，1.0 仍以 **tag v0.9.0** 为准。

@@ -1,14 +1,14 @@
 # 当前实施与规划差距
 
-核查日期：2026-09-08。仓库起点：main，HEAD `1cce6e4`；开始时工作树干净。本次为源码、文档与任务结构核查，未运行产品或现场测试。
+核查日期：2026-09-09。仓库起点曾为 main / `1cce6e4`。2026-09-09 二次复核时父任务仍 `planning`；HD-001–036 已 L1 归档。本次为规划合同更新，未运行 live herdr/SSH/WinUI。
 
-2026-09-08 规划修订：上游规划基线为 GitHub **v0.9.0 / protocol 22** / commit `b99002a`（见 [herdr-0.9.0.md](herdr-0.9.0.md)）。G0 子任务 HD-001–006 已归档；`phase_gate` 仍为 not_passed。本机 preview `0.9.0-preview.2026-09-08` 已记入 `evidence/`，不得与 v0.8.2/20 互证。IME/SSH L3 与 named-pipe ACL 仍缺。HD-007 产品骨架已提交 `00e9aa6`；WinUI 包未准入；planning 待归档。官方 Windows 多机（`herdr machine`）未支持。Q1–Q3=A/A/A：1.0 默认仍为 API socket + `herdr terminal session`；endpoint generation 1 并行；不切 channel；AC10 不扩大。
+上游规划基线为 GitHub **v0.9.0 / protocol 22** / commit `b99002a`（见 [herdr-0.9.0.md](herdr-0.9.0.md) 2026-09-09 节）。`phase_gate` 仍为 not_passed。本机 preview `0.9.0-preview.2026-09-08-62431dbd033b` 已记入 `evidence/`，不得与 v0.8.2/20 互证，不得写入 `compatible_by_default`。IME/SSH L3 与 named-pipe ACL 仍缺。WinUI 包未准入。官方 Windows 多机（`herdr machine`）在 v0.9.0 tag 未支持。Q1–Q3=A/A/A：1.0 默认仍为 API socket + `herdr terminal session`；endpoint generation 1 并行；不切 channel；AC10 不扩大。`master` 上的 Windows SSH 宿主（#3661）与跨机导航（#3755）不纳入 1.0。
 
 ## 1. 事实来源与复用边界
 
 | 证据 | 已有内容 | 对实施的意义 |
 |---|---|---|
-| `HerdDesk.slnx:2` | Contracts、Core、SmokeTests 三个项目 | WinUI App、Infrastructure、terminal renderer、Rust sidecar 尚未进入 solution |
+| `HerdDesk.slnx` | Contracts、Core、Infrastructure、Terminal.Web、App 与 Unit/Contract/Smoke | WinUI `App.xaml` 内容、Native renderer、Integration.Windows 未准入；L2/L3 live 仍 UNVERIFIED |
 | `src/HerdDesk.Contracts/TerminalModels.cs:4` | 身份、epoch、TerminalAccess、RendererInput、InputContext | 增量补齐 ports；保持现有身份定义，不整文件覆盖规划草案 |
 | `src/HerdDesk.Core/TerminalFrameParser.cs:13` | 单 epoch、完整 record 的 fail-closed parser | transport 仍须实现 framing、生命周期、队列、重连；parser 不是整条终端链路 |
 | `src/HerdDesk.Core/InputPolicy.cs:5` | 只有同 pane/epoch 且 Controlling + ControlVerified 可输入 | policy 不负责获取控制权，不可由首帧/进程存活填充证明 |
@@ -18,7 +18,7 @@
 | `evidence/compatibility-baseline.json:17` | runtime binary、daemon、schema hash 为空 | 上游源码 blob 与运行二进制 hash 分开记录 |
 | `docs/adr/0001-g0-bootstrap.md:5` | G0 提前建仓不等于 HD-007 完成 | 后续完整 solution、应用依赖和质量门仍属 HD-007 |
 
-`planning/backlog.json` 的活动状态：HD-001/002 in_progress，HD-003/004 blocked，HD-005–036 planned；`planning/acceptance.json` 共 48 项，全为 not_run。新 Trellis 子任务统一 planning，表示本次实施计划尚待批准，不能反向抹去旧 HD 任务的已有准备。
+`planning/acceptance.json` 共 48 项，全为 `not_run`。Trellis 子任务 HD-001–036 已 L1 归档；父任务保持 `planning`。`planning/backlog.json` 计数可能滞后于归档，以 Trellis archive 与 git 历史为准。
 
 `implementation/status.json` 的 73 个 Python / 22 个 smoke 及 hosted commit 是历史记录；源码 smoke 已新增用例。本文不把旧计数当当前 HEAD 执行结果。本轮只需任务/文档结构验证，不为规划修改重复运行全部产品测试。
 
@@ -26,12 +26,12 @@
 
 | 阶段 | 已有可复用准备 | 缺失交付 |
 |---|---|---|
-| G0 | 上游固定 tag/协议记录、探针、synthetic fixtures、BCL parser/policy | 本地与远端 runtime 基线、实际 endpoint/ACL、控制证明、renderer/IME spike、授权/工具链/ADR 定案 |
-| P1 | 目录与 G0 CI | 产品 solution、窄 RPC relay、请求/订阅 transport、actor Store、收敛、WinUI 壳、导航搜索、通知 |
-| P2 | 输入拒绝策略 | terminal 长连接/生命周期、renderer、真实 IME、控制/释放/接管、资源命令、故障恢复及本地验收 |
-| P3 | SSH 主线设计 | 配置与身份 UI、部署 helper、远端透明流、认证阻断、设备隔离、带宽预算、多设备验收 |
-| P4 | file service 草案 | 独立 filebridge wire contract、安全文件操作、传输、双栏、冲突、附件、剪贴板和故障验收 |
-| P5 | 发布历史与许可初表 | 全应用性能/可访问性/soak、签名 MSIX、更新回滚、最终安全许可和可追溯发布 |
+| G0 | 上游 v0.9.0/22 规划钉、探针、synthetic fixtures、BCL parser/policy、HD-001–006 L1 目录 | 稳定 tag 运行时、named-pipe ACL、控制证明、IME spike L3；`phase_gate` 仍 not_passed |
+| P1 | HD-007–012 L1：solution 骨架、RPC relay、schema 22 decoder、subscribe→snapshot、ViewModels | WinUI 壳、live RPC、搜索 p95、通知激活 |
+| P2 | HD-013–019 L1：stdio transport、renderer ports、IME/control coordinators、close_group、recovery | live 帧/IME/lease/mutation、Agent TUI、#3519 detach 分类（规划已写，产品未分 reason） |
+| P3 | HD-020–026 L1：OpenSSH preview、helper 状态机、远端 transport set、多设备聚合 | live SSH、helper 部署、三设备、host-key；`herdr machine` 非 1.0 默认 |
+| P4 | HD-027–032 L1：filebridge codec/serve、双栏 ViewModel、附件/剪贴板 intent、故障目录 | live FS/SSH/TOCTOU、上传不自动提交的真机、OSC52 真拒绝 |
+| P5 | HD-033–036 L1：质量/打包/安全/发布目录 | 8h soak、签名 MSIX、干净机、hosted required-check、外部发布 |
 
 ## 3. 对旧 plan 的必要解释
 

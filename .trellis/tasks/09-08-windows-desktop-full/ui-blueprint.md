@@ -47,6 +47,9 @@
 | Ready但无workspace/pane | 空列表与可用创建入口 | 仅真实schema确认的创建命令 |
 | 目标尚未建立terminal基线 | 单独loading；不把空白区标可控制 | 取消/重试观察 |
 | Offline / Stale | 文本和图标显示过期，保留上次快照并标时间 | 重新连接/诊断；禁止写 |
+| 丢失连接（dim 缓存） | 最后一次 workspace/agent/pane 投影变暗并标时间戳；标明「缓存，非 live」 | 输入、resize、导航进缓存 pane 全部禁用，直到新连接且匹配 screen 到达；重连不抢当前设备/会话选择（v0.9.0 多机 UI 合同，1.0 按 DeviceId 复用） |
+| 本 client 未拥有 tab 尺寸 | 尺寸由其他查看端最后交互者控制时，显示只读尺寸；本端 resize 控件禁用或需先取得控制 | 不得为成为最后交互者而发送空输入；#3526 尺寸所有权 ≠ stdin（HD-016） |
+| 图形已省略 | 文本 TUI 继续画；状态条标明「图形已省略」（stdio 丢弃 Graphics） | 不显示空白失败；不开放 `pane.graphics.*`；EP-06 另议 |
 | Incompatible / Unknown capability | 版本/缺失能力说明 | 可验证的只读浏览；不默认尝试未知写方法 |
 | Acquiring / Unknown control | 显示申请中或控制状态未知 | 取消/释放/只读；不接受输入 |
 | Busy controller | 显示占用信息（能获得时） | 保持观察；用户另行明确确认接管 |

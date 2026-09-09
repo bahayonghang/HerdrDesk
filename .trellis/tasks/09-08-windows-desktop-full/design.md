@@ -61,23 +61,29 @@ flowchart LR
 
 不假设事件可回放、revision存在或持久exactly-once。首次/重连快照建立通知基线，禁止历史done补发；晚到旧epoch消息不改变当前Store。未知protocol禁写，缺能力使按钮禁用并给原因。`workspace.close` 在关联 worktree 仍打开时需要显式 `close_group: true`，缺省返回 `workspace_group_close_required`，不得静默升级为组关闭。
 
-官方 `herdr machine` 多机在 Windows 客户端尚未支持。Q1=A：1.0 默认走 API socket + `herdr terminal session` stdio。`herdr terminal session` 丢弃内部 `Graphics` 消息；renderer 不宣称 Kitty/Sixel。endpoint generation 1 与 `herdr machine` catalog 保持并行合同，HD-008/020 不实现为默认路径。
+官方 `herdr machine` 多机在 Windows 客户端尚未支持（v0.9.0 tag）。Q1=A：1.0 默认走 API socket + `herdr terminal session` stdio。argv 禁止 `--no-session`；无名 session 仍附着后台 server。1.0 不发送 `surface_interest` / `health_check`，不读写 `herdr machine` catalog。Herdr Cloud 未进 0.9.0，1.0 排除云账号/中继。
+
+`herdr terminal session` 丢弃内部 `Graphics` 消息；renderer 不宣称 Kitty/Sixel，UI 标明「图形已省略」，不得把该丢弃写成解析失败。`pane.graphics.*` 不进 mutation allowlist。图形绑定 owning client 属于 EP-06。endpoint generation 1 与 `herdr machine` catalog 保持并行合同，HD-008/020 不实现为默认路径。
+
+v0.9.0 #3487：外层终端 UI 在每个 client 上跑。HerdDesk 使用自有 WinUI chrome（theme / menu / copy-mode），不依赖 herdr TUI 外壳。v0.9.0 #3526：同 tab 多个查看端时，最后交互者控制该 tab 的尺寸。另一 client 改 cols/rows **不等于** 本应用获得 stdin。`ControlVerified` 仍只由 HD-016 适配器证明。发送 resize 必须已有该 pane 的控制权，或已验证的 observe-resize 许可（HD-004）。不得为成为最后交互者而发送空输入。
 
 ### 操作与控制
 
 普通打开pane默认observe，显示控制按钮；acquire不自动takeover，被占用后再显示有目标文本的显式确认。失权/EOF/取消立刻停止输入；重连先RPC收敛，再observe，不重发旧输入。无逐input ACK，已写入stdin却不能确认执行的输入显示结果未知，不显示“执行成功”。
 
-资源操作通过实际schema验证的窄领域命令创建workspace/terminal/agent、重命名和关闭。非幂等请求超时先权威查询，不盲目重试。聚焦、通知点击、搜索和拖放只改变目标选择，不自动授予写入/接管权限。
+资源操作通过实际schema验证的窄领域命令创建workspace/terminal/agent、重命名和关闭。非幂等请求超时先权威查询，不盲目重试。聚焦、通知点击、搜索和拖放只改变目标选择，不自动授予写入/接管权限。Agent 投影：AC10 验收仍为 Claude Code / Codex / OpenCode。Muse / Qwen / Copilot 等保留 raw kind，按未知降级。
 
 ### 终端与renderer
 
-Host把原始byte帧转为结构化消息，renderer恢复Uint8Array输入xterm，不每帧独立UTF8 GetString，不插入HTML。full只表示上游重绘属性，不保证所有VT模式重置；新视图/崩溃要建立新基线。消息限定ready/input/resize/scroll/selection/frame-consumed/focus-changed/open-link-request等现有规划意图；固定origin与host绑定，禁止generic exec/RPC/readFile。
+Host把原始byte帧转为结构化消息，renderer恢复Uint8Array输入xterm，不每帧独立UTF8 GetString，不插入HTML。full只表示上游重绘属性，不保证所有VT模式重置；新视图/崩溃要建立新基线。消息限定ready/input/resize/scroll/selection/frame-consumed/focus-changed/open-link-request等现有规划意图；固定origin与host绑定，禁止generic exec/RPC/readFile。Windows 不支持 `herdr terminal attach`；1.0 只使用 `herdr terminal session`。stdio 若出现非 `terminal.frame` / `terminal.closed` 的类型（含未丢弃干净的 Graphics）按协议失败关闭该 epoch，不得当空帧继续画。`terminal.closed` 的 `reason` 在未分类前一律按桥断开处理。
 
 IME预编辑不发送，提交恰好一次；composition期间Ctrl+K不切pane。观察态键盘/终端自动应答均无写入通道；resize/scroll的observe许可按HD-004真实证据决定，不能默认输出任何stdin指令。Ctrl+C保留terminal控制语义，复制/粘贴用明确快捷键。selection和链接在能力许可下由用户动作触发，OSC52读取默认拒绝。
 
 ### SSH与文件
 
 本地固定executable path和ArgumentList；远端exec参数仍经单一POSIX引用函数。使用ssh -T，不开伪终端；stdout污染直接失败，stderr只诊断。每SessionKey由其DeviceSession唯一拥有timer/attempt，独立1–30s退避+jitter；DeviceId/profile级认证或host信任阻断适用于该profile的sessions，修正前停止后台重试，不另设设备级恢复timer。host指纹、安装helper、远端写均有用户意图及明确目标。
+
+v0.9.0 #3519：SSH 客户端终端消失时 herdr 选择 detach，不把运行中 pane resize 成 fallback。HerdDesk 将该事件映射为桥断开：立即停输入、作废当前 ConnectionEpoch、投影标过期/变暗、先 RPC 收敛再 observe。不得把 `terminal.closed` 默认解释为 pane 进程已退出。herdr `install.cmd` 与“无需单独 VC++ runtime”属于上游安装，不进入牧台 MSIX 依赖。WSL 剪贴板图像桥属于 `herdr --remote` 客户端能力，1.0 不宣称（EP-05）。
 
 文件面复用SSH身份，不假称SFTP；filebridge按调用启动，无公网监听/任意exec/递归删除。HD-027锁定版本化结构消息+有界内容通道；HD-028实现同目录独占临时文件、hash、原子rename，Replace/KeepBoth/Cancel均防竞争覆盖。取消只删job拥有temp，下载名无法无损映射Windows则询问。上传完成、路径输入、agent附件接收、提交是不同状态，默认不自动提交。
 
