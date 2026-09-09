@@ -40,6 +40,7 @@ internal static class Hd014Cases
         Check(Directory.Exists(Path.Combine(FindRepoRoot(), "web", "terminal")));
         Check(File.Exists(Path.Combine(FindRepoRoot(), "web", "terminal", "package-lock.json")));
         Check(File.Exists(Path.Combine(FindRepoRoot(), "web", "terminal", "dist", "xterm.mjs")));
+        Check(File.Exists(Path.Combine(FindRepoRoot(), "web", "terminal", "dist", "ime.js")));
         Check(WebRendererHost.PackageStatus == "admitted");
         Check(WebRendererHost.L2WebViewProcess == "UNVERIFIED");
         Check(WebRendererHost.L3DpiThemeFocus == "UNVERIFIED");

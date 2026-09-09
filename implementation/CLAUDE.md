@@ -37,7 +37,7 @@
 | `hd-012-l2.json` | L2 Windows toast activation = `UNVERIFIED`。L1 reducer/ViewModel 不能关闭产品 AC17/AC18。`ac17_passed=false`，`ac18_passed=false`，`phase_gate=not_passed`。 |
 | `hd-013-l2.json` | L2 live `herdr terminal session` = `UNVERIFIED`。L1 fake-child transport 不能关闭产品 AC05/AC06。`ac05_passed=false`，`ac06_passed=false`，`phase_gate=not_passed`。 |
 | `hd-014-l2.json` | L2 WebView process 与 L3 DPI/theme/focus = `UNVERIFIED`。`@xterm/xterm` 6.0.0 与 WinUI WebView2 控制已准入。L1/L2 不能关闭产品 AC08/AC27。`github_required_check=UNVERIFIED`。 |
-| `hd-015-l3.json` | L3 真机 IME 桌面 = `UNVERIFIED`。L1 coordinators 不能关闭产品 AC09/AC10。WebView2 / npm xterm 未准入。 |
+| `hd-015-l3.json` | L3 真机 IME 桌面 = `UNVERIFIED`。L2 WebView IME = `UNVERIFIED`。`webview2_admitted` / `npm_xterm_admitted` 与 HD-014 一致。`winui_admitted` 与 HD-011 一致（false）。`github_required_check=UNVERIFIED`。不能关闭产品 AC09/AC10。 |
 | `hd-016-l2.json` | L2 live lease = `UNVERIFIED`。L1 coordinator 不能关闭产品 AC07/AC14/AC16。`phase_gate=not_passed`。 |
 | `hd-017-l2.json` | L2 live mutation = `UNVERIFIED`。L1 coordinator 不能关闭产品 AC20。`phase_gate=not_passed`。 |
 | `hd-018-l2.json` | L2 live disconnect = `UNVERIFIED`。L1 RecoveryPolicy 不能关闭产品 AC13/AC14/AC15。`phase_gate=not_passed`。 |

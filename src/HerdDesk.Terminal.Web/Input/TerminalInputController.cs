@@ -142,14 +142,20 @@ public sealed class TerminalInputController
         pendingFocusSerial = -1;
     }
 
-    public HostInputResult StartComposition()
+    public HostInputResult StartComposition(string? token = null)
     {
         if (IsSuspended)
             return Reject(HostInputCodes.InputPaused);
         if (pane is null || epoch is null)
             return Reject(HostInputCodes.StaleEpoch);
-        var token = bridge.Start();
-        _ = token;
+        _ = bridge.Start(token);
+        var decision = composition(ImeHostEvent.PreeditUpdate, context, null);
+        return Reject(decision.Code);
+    }
+
+    public HostInputResult CancelComposition()
+    {
+        bridge.Cancel();
         var decision = composition(ImeHostEvent.PreeditUpdate, context, null);
         return Reject(decision.Code);
     }
@@ -196,6 +202,30 @@ public sealed class TerminalInputController
         if (proposed is null)
             return Reject(HostInputCodes.StaleEpoch);
         var decision = composition(ImeHostEvent.Commit, context, proposed);
+        return Finish(decision, proposed);
+    }
+
+    public HostInputResult HandleOriginBytes(InputOrigin origin, byte[] bytes)
+    {
+        ArgumentNullException.ThrowIfNull(bytes);
+        if (IsSuspended)
+            return Reject(HostInputCodes.InputPaused, origin, bytes.Length);
+        if (bridge.IsComposing)
+            return Reject(
+                origin is InputOrigin.ExplicitPaste
+                    ? HostInputCodes.CompositionActive
+                    : HostInputCodes.PreeditNotSent,
+                origin, bytes.Length);
+        if (readOnly)
+            return Reject(HostInputCodes.ControlNotVerified, origin, bytes.Length);
+        var proposed = Propose(origin, bytes);
+        if (proposed is null)
+            return Reject(HostInputCodes.StaleEpoch, origin, bytes.Length);
+        var decision = origin == InputOrigin.CommittedText
+            ? composition(ImeHostEvent.Commit, context, proposed)
+            : origin == InputOrigin.UserKey
+                ? composition(ImeHostEvent.KeyIdle, context, proposed)
+                : input(context, proposed);
         return Finish(decision, proposed);
     }
 

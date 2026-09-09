@@ -37,7 +37,8 @@ function emitJs(name) {
   let js = stripTypeScriptTypes(source);
   js = js
     .replaceAll(' from "./protocol.ts"', ' from "./protocol.js"')
-    .replaceAll(' from "./utf8.ts"', ' from "./utf8.js"');
+    .replaceAll(' from "./utf8.ts"', ' from "./utf8.js"')
+    .replaceAll(' from "./ime.ts"', ' from "./ime.js"');
   const out = path.join(dist, name.replace(/\.ts$/, ".js"));
   fs.writeFileSync(out, js);
   assertBrowserJs(out);
@@ -77,7 +78,7 @@ function copyXterm() {
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 const version = copyXterm();
-for (const name of ["protocol.ts", "utf8.ts", "terminal.ts"]) {
+for (const name of ["protocol.ts", "utf8.ts", "ime.ts", "terminal.ts"]) {
   emitJs(name);
 }
 fs.copyFileSync(path.join(root, "src", "styles.css"), path.join(dist, "styles.css"));

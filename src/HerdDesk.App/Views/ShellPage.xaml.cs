@@ -209,6 +209,12 @@ public sealed partial class ShellPage : UserControl
             return;
         }
 
+        if (TerminalSurface.Session.IsComposing)
+        {
+            args.Handled = true;
+            return;
+        }
+
         args.Handled = Shell.HandleAccelerator(ShellAccelerator.OpenSearch);
         Refresh();
     }
@@ -223,6 +229,12 @@ public sealed partial class ShellPage : UserControl
             Shell.CycleRegion();
             args.Handled = true;
             Refresh();
+            return;
+        }
+
+        if (args.Key == VirtualKey.Escape && TerminalSurface.Session.IsComposing)
+        {
+            args.Handled = true;
             return;
         }
 

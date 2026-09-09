@@ -9,6 +9,7 @@ import {
   parseEnvelope,
 } from "./protocol.js";
 import { asWriteBytes } from "./utf8.js";
+import { createCompositionGate, isImeShortcut } from "./ime.js";
 
 interface WebViewHost {
   postMessage(message: unknown): void;
@@ -25,6 +26,7 @@ let term: Terminal | null = null;
 let boundEpoch = 0;
 let readOnly = true;
 let readyPosted = false;
+const composition = createCompositionGate();
 
 function post(message: Record<string, unknown>): void {
   if (!host) {
@@ -82,6 +84,9 @@ function resetTerminal(): void {
     if (readOnly || boundEpoch <= 0) {
       return;
     }
+    if (composition.suppressData(data)) {
+      return;
+    }
     const bytes = new TextEncoder().encode(data);
     post({
       version: SCHEMA_VERSION,
@@ -105,6 +110,18 @@ function resetTerminal(): void {
       epoch: boundEpoch,
       origin: ORIGINS.emulator_reply,
       bytes: encodeCanonicalBase64(bytes),
+    });
+  });
+  term.onSelectionChange(() => {
+    if (boundEpoch <= 0 || !term) {
+      return;
+    }
+    post({
+      version: SCHEMA_VERSION,
+      kind: KINDS.selectionChanged,
+      epoch: boundEpoch,
+      visibleText: term.getSelection(),
+      shift: false,
     });
   });
   term.onResize((size: { cols: number; rows: number }) => {
@@ -215,5 +232,125 @@ document.addEventListener("click", (event) => {
   event.preventDefault();
   onLink(target.href, event.isTrusted);
 });
+
+document.addEventListener("compositionstart", () => {
+  if (boundEpoch <= 0) {
+    return;
+  }
+  const token = composition.start();
+  post({
+    version: SCHEMA_VERSION,
+    kind: KINDS.composition,
+    epoch: boundEpoch,
+    phase: "start",
+    token,
+  });
+}, true);
+
+document.addEventListener("compositionupdate", () => {
+  if (boundEpoch <= 0 || !composition.update()) {
+    return;
+  }
+  post({
+    version: SCHEMA_VERSION,
+    kind: KINDS.composition,
+    epoch: boundEpoch,
+    phase: "update",
+    token: composition.token,
+  });
+}, true);
+
+document.addEventListener("compositionend", (event: CompositionEvent) => {
+  if (boundEpoch <= 0 || !composition.composing) {
+    return;
+  }
+  const ended = composition.end(event.data || "");
+  if (ended.cancel) {
+    post({
+      version: SCHEMA_VERSION,
+      kind: KINDS.composition,
+      epoch: boundEpoch,
+      phase: "cancel",
+      token: ended.token,
+    });
+    return;
+  }
+  post({
+    version: SCHEMA_VERSION,
+    kind: KINDS.composition,
+    epoch: boundEpoch,
+    phase: "end",
+    token: ended.token,
+    text: ended.text,
+  });
+}, true);
+
+document.addEventListener("keydown", (event: KeyboardEvent) => {
+  if (boundEpoch <= 0) {
+    return;
+  }
+  const ctrl = event.ctrlKey === true;
+  const shift = event.shiftKey === true;
+  const alt = event.altKey === true;
+  if (composition.composing) {
+    post({
+      version: SCHEMA_VERSION,
+      kind: KINDS.key,
+      epoch: boundEpoch,
+      key: event.key,
+      ctrl,
+      shift,
+      alt,
+      altGr: event.getModifierState("AltGraph"),
+      capsLock: event.getModifierState("CapsLock"),
+    });
+    if (isImeShortcut(event.key, ctrl, alt, shift)) {
+      event.stopPropagation();
+    }
+    return;
+  }
+  if (ctrl && shift && event.key.toLowerCase() === "c") {
+    post({
+      version: SCHEMA_VERSION,
+      kind: KINDS.key,
+      epoch: boundEpoch,
+      key: "c",
+      ctrl: true,
+      shift: true,
+      alt: false,
+      altGr: false,
+      capsLock: false,
+    });
+    event.preventDefault();
+  }
+}, true);
+
+document.addEventListener("paste", (event: ClipboardEvent) => {
+  if (boundEpoch <= 0) {
+    return;
+  }
+  event.preventDefault();
+  const text = event.clipboardData ? event.clipboardData.getData("text/plain") : "";
+  post({
+    version: SCHEMA_VERSION,
+    kind: KINDS.pasteIntent,
+    epoch: boundEpoch,
+    text,
+  });
+}, true);
+
+document.addEventListener("wheel", (event: WheelEvent) => {
+  if (boundEpoch <= 0) {
+    return;
+  }
+  post({
+    version: SCHEMA_VERSION,
+    kind: KINDS.mouseIntent,
+    epoch: boundEpoch,
+    action: "scroll",
+    delta: event.deltaY === 0 ? 0 : event.deltaY > 0 ? 1 : -1,
+    shift: event.shiftKey === true,
+  });
+}, { capture: true, passive: true });
 
 void LOCAL_ORIGIN;

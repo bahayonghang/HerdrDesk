@@ -11,7 +11,8 @@ internal static class CompositionDedupTests
         ("ctrl+k enter escape yield during composition", ShortcutsYield),
         ("commit encodes chinese english emoji combining once", MixedText),
         ("fabricated token does not commit or cancel composition", FabricatedToken),
-        ("old token during new composition stays local", OldTokenDoesNotAbort)
+        ("old token during new composition stays local", OldTokenDoesNotAbort),
+        ("same commit text as a later user key is a new input", HostUserKeyAfterCommitIsNewInput)
     ];
 
     static void PreeditZeroBytes()
@@ -123,5 +124,19 @@ internal static class CompositionDedupTests
         WebTestHost.Check(ok.Allowed);
         WebTestHost.Check(controller.Sent.Count == 1);
         WebTestHost.Check(!controller.IsComposing);
+    }
+
+    static void HostUserKeyAfterCommitIsNewInput()
+    {
+        var controller = WebTestHost.Input();
+        controller.StartComposition("c9");
+        WebTestHost.Check(controller.ActiveCommitToken == "c9");
+        WebTestHost.Check(controller.Commit("c9", "词").Allowed);
+        WebTestHost.Check(!controller.Commit("c9", "词").Allowed);
+        WebTestHost.Check(controller.LastRejectCode == "commit_already_accepted");
+        var later = controller.HandleOriginBytes(InputOrigin.UserKey, Encoding.UTF8.GetBytes("词"));
+        WebTestHost.Check(later.Allowed);
+        WebTestHost.Check(later.Origin == InputOrigin.UserKey);
+        WebTestHost.Check(controller.Sent.Count == 2);
     }
 }

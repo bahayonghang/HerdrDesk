@@ -122,6 +122,7 @@ ADMITTED_NPM_BUNDLE_REL = (
     'web/terminal/dist/terminal.js',
     'web/terminal/dist/protocol.js',
     'web/terminal/dist/utf8.js',
+    'web/terminal/dist/ime.js',
     'web/terminal/dist/styles.css',
     'web/terminal/dist/xterm.mjs',
     'web/terminal/dist/xterm.css',
@@ -130,6 +131,7 @@ DIST_JS_RELS = (
     'web/terminal/dist/terminal.js',
     'web/terminal/dist/protocol.js',
     'web/terminal/dist/utf8.js',
+    'web/terminal/dist/ime.js',
 )
 DIST_TS_REMNANTS = (
     ' as {',

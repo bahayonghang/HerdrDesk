@@ -10,7 +10,7 @@ HD-014 L1 BCL renderer adapter plus HD-015 L1 IME/keyboard/selection coordinator
 - 校验版本化 host↔web JSON allowlist（`WebMessageValidator` / `WebMessageCodec`）。
 - 实现 `ITerminalRenderer` 状态机（`WebTerminalRenderer`）：epoch bind、byte apply、observe no-resize、read-only gate。
 - 记录 WebView 安全拒绝码（`WebViewSecurityPolicy`）。本项目不引用 WebView2。App windows TFM `TerminalHost` 承载固定本地 origin。不拉 CDN。
-- HD-015 L1：`TerminalInputController` 绑定 `PaneKey`/`ConnectionEpoch`，经 `CompositionPolicy`/`InputPolicy` 回调放行。预编辑 0 字节；commit token 恰好一次；composition 期间 Ctrl+K/Enter/Esc 让位 IME。不授予 lease。
+- HD-015：`TerminalInputController` 绑定 `PaneKey`/`ConnectionEpoch`，经 `CompositionPolicy`/`InputPolicy` 回调放行。host↔web 增加 `composition`/`key`/`pasteIntent`/`selectionChanged`/`mouseIntent`；预编辑不得作为 `input` 传输。commit token 恰好一次；composition 期间 Ctrl+K/Enter/Esc 让位 IME。App `TerminalHostSession` 调用这些 coordinator。不授予 lease。L3 真机 IME 仍为 UNVERIFIED。
 - HD-031 L1：`OscClipboardPolicy` 默认拒绝 OSC 52 read/write，稳定码 `clipboard_read_denied` / `clipboard_write_denied`。不调用 snapshot reader，不写 Windows clipboard API。只依赖 Contracts。
 
 `RenderFlowController` 在 Core，消费 `RendererByteWindow` / seq gate。本项目只依赖 Contracts。

@@ -50,6 +50,67 @@ public static class WebMessageCodec
         });
     }
 
+    public static byte[] Composition(ConnectionEpoch epoch, string phase, string token, string? text = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(phase);
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        return Write(epoch, WebMessageKinds.Composition, writer =>
+        {
+            writer.WriteString("phase", phase);
+            writer.WriteString("token", token);
+            if (phase == "end")
+                writer.WriteString("text", text ?? "");
+        });
+    }
+
+    public static byte[] Key(
+        ConnectionEpoch epoch,
+        string key,
+        bool ctrl = false,
+        bool shift = false,
+        bool alt = false,
+        bool altGr = false,
+        bool capsLock = false)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        return Write(epoch, WebMessageKinds.Key, writer =>
+        {
+            writer.WriteString("key", key);
+            writer.WriteBoolean("ctrl", ctrl);
+            writer.WriteBoolean("shift", shift);
+            writer.WriteBoolean("alt", alt);
+            writer.WriteBoolean("altGr", altGr);
+            writer.WriteBoolean("capsLock", capsLock);
+        });
+    }
+
+    public static byte[] PasteIntent(ConnectionEpoch epoch, string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return Write(epoch, WebMessageKinds.PasteIntent, writer => writer.WriteString("text", text));
+    }
+
+    public static byte[] SelectionChanged(ConnectionEpoch epoch, string visibleText, bool shift = false)
+    {
+        ArgumentNullException.ThrowIfNull(visibleText);
+        return Write(epoch, WebMessageKinds.SelectionChanged, writer =>
+        {
+            writer.WriteString("visibleText", visibleText);
+            writer.WriteBoolean("shift", shift);
+        });
+    }
+
+    public static byte[] MouseIntent(ConnectionEpoch epoch, string action, int delta, bool shift = false)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(action);
+        return Write(epoch, WebMessageKinds.MouseIntent, writer =>
+        {
+            writer.WriteString("action", action);
+            writer.WriteNumber("delta", delta);
+            writer.WriteBoolean("shift", shift);
+        });
+    }
+
     private static byte[] Write(
         ConnectionEpoch epoch,
         string kind,

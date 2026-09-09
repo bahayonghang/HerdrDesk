@@ -56,6 +56,11 @@ public static class WebMessageValidator
                 WebMessageKinds.Resize => Resize(root, epoch),
                 WebMessageKinds.LinkRequest => Link(root, epoch),
                 WebMessageKinds.Fault => Fault(root, epoch),
+                WebMessageKinds.Composition => Composition(root, epoch),
+                WebMessageKinds.Key => Key(root, epoch),
+                WebMessageKinds.PasteIntent => PasteIntent(root, epoch),
+                WebMessageKinds.SelectionChanged => SelectionChanged(root, epoch),
+                WebMessageKinds.MouseIntent => MouseIntent(root, epoch),
                 _ => Reject("unknown_web_message_type"),
             };
         }
@@ -63,7 +68,8 @@ public static class WebMessageValidator
         {
             return Reject(error.Code);
         }
-        catch (Exception error) when (error is JsonException or DecoderFallbackException or FormatException)
+        catch (Exception error) when (error is JsonException or DecoderFallbackException
+            or EncoderFallbackException or FormatException)
         {
             return Reject("malformed_web_message");
         }
@@ -160,6 +166,89 @@ public static class WebMessageValidator
         if (!IsStableCode(code))
             throw new WebMessageException("malformed_web_message");
         return Ok(WebMessageKinds.Fault, epoch, WebMessageDirection.RendererToHost, 0, faultCode: code);
+    }
+
+    private static WebMessageValidation Composition(JsonElement root, ConnectionEpoch epoch)
+    {
+        var phase = GetString(root, "phase");
+        if (phase is not ("start" or "update" or "end" or "cancel"))
+            throw new WebMessageException("malformed_web_message");
+        if (phase == "end")
+            RequireFields(root, "phase", "token", "text");
+        else
+            RequireFields(root, "phase", "token");
+        var token = GetString(root, "token");
+        if (!IsStableCode(token))
+            throw new WebMessageException("malformed_web_message");
+        string? text = null;
+        var payload = 0;
+        if (phase == "end")
+        {
+            text = GetString(root, "text");
+            payload = StrictUtf8.GetByteCount(text);
+            if (payload > WebMessageLimits.MaxInputBytes)
+                throw new WebMessageException("web_message_bytes_limit");
+        }
+
+        return new WebMessageValidation(
+            true, "allowed", WebMessageKinds.Composition, WebMessageLimits.SchemaVersion, epoch,
+            WebMessageDirection.RendererToHost, payload, Phase: phase, Token: token, Text: text);
+    }
+
+    private static WebMessageValidation Key(JsonElement root, ConnectionEpoch epoch)
+    {
+        RequireFields(root, "key", "ctrl", "shift", "alt", "altGr", "capsLock");
+        var key = GetString(root, "key");
+        if (key.Length is <= 0 or > 32)
+            throw new WebMessageException("malformed_web_message");
+        return new WebMessageValidation(
+            true, "allowed", WebMessageKinds.Key, WebMessageLimits.SchemaVersion, epoch,
+            WebMessageDirection.RendererToHost, 0, KeyName: key, Ctrl: GetBoolean(root, "ctrl"),
+            Shift: GetBoolean(root, "shift"), Alt: GetBoolean(root, "alt"),
+            AltGr: GetBoolean(root, "altGr"), CapsLock: GetBoolean(root, "capsLock"));
+    }
+
+    private static WebMessageValidation PasteIntent(JsonElement root, ConnectionEpoch epoch)
+    {
+        RequireFields(root, "text");
+        var text = GetString(root, "text");
+        var payload = StrictUtf8.GetByteCount(text);
+        if (payload > WebMessageLimits.MaxInputBytes)
+            throw new WebMessageException("web_message_bytes_limit");
+        return new WebMessageValidation(
+            true, "allowed", WebMessageKinds.PasteIntent, WebMessageLimits.SchemaVersion, epoch,
+            WebMessageDirection.RendererToHost, payload, Text: text);
+    }
+
+    private static WebMessageValidation SelectionChanged(JsonElement root, ConnectionEpoch epoch)
+    {
+        RequireFields(root, "visibleText", "shift");
+        var text = GetString(root, "visibleText");
+        if (text.Length > WebMessageLimits.MaxInputBytes)
+            throw new WebMessageException("web_message_bytes_limit");
+        return new WebMessageValidation(
+            true, "allowed", WebMessageKinds.SelectionChanged, WebMessageLimits.SchemaVersion, epoch,
+            WebMessageDirection.RendererToHost, 0, VisibleText: text, Shift: GetBoolean(root, "shift"));
+    }
+
+    private static WebMessageValidation MouseIntent(JsonElement root, ConnectionEpoch epoch)
+    {
+        RequireFields(root, "action", "delta", "shift");
+        var action = GetString(root, "action");
+        if (action is not ("scroll" or "drag"))
+            throw new WebMessageException("malformed_web_message");
+        return new WebMessageValidation(
+            true, "allowed", WebMessageKinds.MouseIntent, WebMessageLimits.SchemaVersion, epoch,
+            WebMessageDirection.RendererToHost, 0, MouseAction: action,
+            Delta: GetInt32(root, "delta"), Shift: GetBoolean(root, "shift"));
+    }
+
+    private static bool GetBoolean(JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var element) ||
+            element.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+            throw new WebMessageException("malformed_web_message");
+        return element.GetBoolean();
     }
 
     private static WebMessageValidation Control(

@@ -67,6 +67,7 @@ def _write_npm(root: Path, *, extra_dep=None, unscoped=False, cdn=False, version
     (dist / 'terminal.js').write_text('export const ok = 1;\n', encoding='utf-8')
     (dist / 'protocol.js').write_text('export const SCHEMA_VERSION = 1;\n', encoding='utf-8')
     (dist / 'utf8.js').write_text('export function asWriteBytes(bytes) { return bytes; }\n', encoding='utf-8')
+    (dist / 'ime.js').write_text('export function createCompositionGate() { return {}; }\n', encoding='utf-8')
     (dist / 'styles.css').write_text('#terminal{}\n', encoding='utf-8')
     (dist / 'xterm.mjs').write_text('export class Terminal {}\n', encoding='utf-8')
     (dist / 'xterm.css').write_text('.xterm{}\n', encoding='utf-8')
@@ -163,12 +164,13 @@ class Hd014NpmLockTests(unittest.TestCase):
             (dist / 'terminal.js').write_text('function f(): void {}\n', encoding='utf-8')
             (dist / 'protocol.js').write_text('export const x = 1;\n', encoding='utf-8')
             (dist / 'utf8.js').write_text('export const x = 1;\n', encoding='utf-8')
+            (dist / 'ime.js').write_text('export const x = 1;\n', encoding='utf-8')
             with self.assertRaises(ProjectGraphError) as ctx:
                 check_dist_javascript(root)
             self.assertEqual(str(ctx.exception), 'dist_typescript_forbidden')
 
     def test_dist_javascript_has_no_typescript(self):
-        for name in ('terminal.js', 'protocol.js', 'utf8.js'):
+        for name in ('terminal.js', 'protocol.js', 'utf8.js', 'ime.js'):
             text = (ROOT / 'web' / 'terminal' / 'dist' / name).read_text(encoding='utf-8')
             self.assertNotIn(' as {', text, name)
             self.assertNotIn(': void', text, name)
@@ -180,3 +182,5 @@ class Hd014NpmLockTests(unittest.TestCase):
         self.assertRegex(text, r'onData\([\s\S]*?readOnly')
         self.assertRegex(text, r'onBinary\([\s\S]*?readOnly')
         self.assertRegex(text, r'onResize\([\s\S]*?readOnly')
+        self.assertRegex(text, r'suppressData')
+        self.assertRegex(text, r'compositionstart')

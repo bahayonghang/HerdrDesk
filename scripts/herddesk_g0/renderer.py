@@ -73,6 +73,8 @@ ALLOWLIST = {
     ('input.emulator_reply', 'renderer_to_host'),
     ('ime.preedit', 'renderer_to_host'),
     ('terminal.resize', 'renderer_to_host'),
+    ('selection.local', 'renderer_to_host'),
+    ('mouse.intent', 'renderer_to_host'),
 }
 ORIGIN_FOR_TYPE = {
     'input.user_key': 'user_key',
@@ -217,12 +219,12 @@ def evaluate_web_message(message: dict[str, Any], context: dict[str, Any]) -> di
         return _decision(False, 'preedit_not_sent')
     payload = message.get('payload_bytes')
     limit = MAX_FRAME_BYTES if type_name == 'frame.apply' else MAX_INPUT_BYTES
-    if type_name in ('parse.consumed', 'terminal.resize'):
+    if type_name in ('parse.consumed', 'terminal.resize', 'selection.local', 'mouse.intent'):
         if payload != 0:
             return _decision(False, 'web_message_bytes_limit')
     elif type(payload) is not int or payload <= 0 or payload > limit:
         return _decision(False, 'web_message_bytes_limit')
-    if type_name in ('frame.apply', 'parse.consumed'):
+    if type_name in ('frame.apply', 'parse.consumed', 'selection.local', 'mouse.intent'):
         return _decision(True, 'allowed')
     if type_name == 'terminal.resize':
         if context.get('access') != 'controlling' or context.get('control_verified') is not True:

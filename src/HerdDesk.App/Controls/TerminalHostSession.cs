@@ -8,6 +8,7 @@ public sealed class TerminalHostSession : ITerminalDisplaySurface, IAsyncDisposa
 {
     private readonly List<byte[]> outbound = [];
     private WebTerminalRenderer? renderer;
+    private TerminalInputController? input;
     private InputContext? context;
     private bool visible = true;
     private string theme = "dark";
@@ -25,6 +26,10 @@ public sealed class TerminalHostSession : ITerminalDisplaySurface, IAsyncDisposa
     public int UpstreamResizeCount { get; private set; }
     public int OutboundCount => outbound.Count;
     public IReadOnlyList<byte[]> Outbound => outbound;
+    public TerminalInputController? Input => input;
+    public bool IsComposing => input?.IsComposing == true;
+    public bool ControlVerified => context?.ControlVerified == true;
+    public int TransportByteCount => input?.TransportByteCount ?? 0;
 
     public string OverlayText => SurfaceState switch
     {
@@ -58,6 +63,18 @@ public sealed class TerminalHostSession : ITerminalDisplaySurface, IAsyncDisposa
         renderer.SetInputContext(context);
         renderer.BindAsync(pane, epoch).AsTask().GetAwaiter().GetResult();
         renderer.SetReadOnlyAsync(readOnly).AsTask().GetAwaiter().GetResult();
+        if (input is null)
+        {
+            input = new TerminalInputController(
+                context, CompositionPolicy.Evaluate, InputPolicy.Evaluate);
+        }
+        else
+        {
+            input.SetInputContext(context);
+        }
+
+        input.Bind(pane, epoch);
+        input.SetReadOnly(readOnly);
         Queue(WebMessageCodec.Initialize(epoch, theme, readOnly));
     }
 
@@ -78,16 +95,26 @@ public sealed class TerminalHostSession : ITerminalDisplaySurface, IAsyncDisposa
 
     public InputDecision AcceptFromWeb(ReadOnlyMemory<byte> json)
     {
-        if (disposed || renderer is null)
+        if (disposed || renderer is null || input is null || renderer.Epoch is null)
             return new(false, "terminal_stream_not_active");
+        var parsed = WebMessageValidator.Evaluate(json, renderer.Epoch.Value);
+        if (!parsed.Accepted)
+            return renderer.AcceptWebMessage(json);
+        if (WebMessageKinds.IsHostInputKind(parsed.Kind))
+            return ToDecision(DispatchInput(parsed));
+        if (parsed.Kind == WebMessageKinds.Ready)
+            input.SetRendererReady(true);
         return renderer.AcceptWebMessage(json);
     }
 
     public void SetVisible(bool value)
     {
         visible = value;
-        if (!value && renderer is not null)
-            renderer.RetryObserve();
+        if (!value)
+        {
+            input?.CancelComposition();
+            renderer?.RetryObserve();
+        }
     }
 
     public void RetryObserve()
@@ -95,6 +122,8 @@ public sealed class TerminalHostSession : ITerminalDisplaySurface, IAsyncDisposa
         if (renderer is null || renderer.Epoch is null)
             return;
         var epoch = renderer.Epoch.Value;
+        input?.Reset();
+        input?.SetRendererReady(false);
         renderer.RetryObserve();
         Queue(WebMessageCodec.Dispose(epoch));
         Queue(WebMessageCodec.Initialize(epoch, theme, renderer.IsReadOnly));
@@ -106,6 +135,7 @@ public sealed class TerminalHostSession : ITerminalDisplaySurface, IAsyncDisposa
         if (renderer is null || renderer.Epoch is null)
             return;
         renderer.FocusAsync().AsTask().GetAwaiter().GetResult();
+        input?.RequestFocus();
         Queue(WebMessageCodec.Focus(renderer.Epoch.Value, token));
     }
 
@@ -148,10 +178,50 @@ public sealed class TerminalHostSession : ITerminalDisplaySurface, IAsyncDisposa
         if (disposed)
             return ValueTask.CompletedTask;
         disposed = true;
+        input?.Reset();
         if (renderer?.Epoch is { } epoch)
             Queue(WebMessageCodec.Dispose(epoch));
         return renderer?.DisposeAsync() ?? ValueTask.CompletedTask;
     }
+
+    private HostInputResult DispatchInput(WebMessageValidation parsed)
+    {
+        if (input is null)
+            return HostInputResult.Deny("terminal_stream_not_active");
+        return parsed.Kind switch
+        {
+            WebMessageKinds.Composition => DispatchComposition(parsed),
+            WebMessageKinds.Key => input.HandleKey(new PhysicalKeyEvent(
+                parsed.KeyName ?? "", parsed.Ctrl, parsed.Shift, parsed.Alt, parsed.AltGr,
+                parsed.CapsLock)),
+            WebMessageKinds.PasteIntent => input.HandlePaste(parsed.Text ?? ""),
+            WebMessageKinds.SelectionChanged => input.HandleSelection(
+                parsed.VisibleText ?? "", parsed.Shift),
+            WebMessageKinds.MouseIntent when parsed.MouseAction == "scroll" =>
+                input.HandleScroll(parsed.Delta),
+            WebMessageKinds.MouseIntent => input.HandleSelection("", parsed.Shift),
+            WebMessageKinds.Input when parsed.Origin is { } origin =>
+                input.HandleOriginBytes(origin, parsed.Bytes.ToArray()),
+            _ => HostInputResult.Deny(HostInputCodes.InputOriginDenied)
+        };
+    }
+
+    private HostInputResult DispatchComposition(WebMessageValidation parsed)
+    {
+        if (input is null)
+            return HostInputResult.Deny("terminal_stream_not_active");
+        return parsed.Phase switch
+        {
+            "start" => input.StartComposition(parsed.Token),
+            "update" => input.UpdatePreedit(),
+            "cancel" => input.CancelComposition(),
+            "end" => input.Commit(parsed.Token ?? "", parsed.Text ?? ""),
+            _ => HostInputResult.Deny(HostInputCodes.InputOriginDenied)
+        };
+    }
+
+    private static InputDecision ToDecision(HostInputResult result) =>
+        new(result.Allowed, result.Code);
 
     private void Queue(byte[] json)
     {

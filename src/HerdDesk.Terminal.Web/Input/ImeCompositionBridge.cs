@@ -13,15 +13,18 @@ public sealed class ImeCompositionBridge
     public bool HasPreedit { get; private set; }
     public string? ActiveToken => activeToken;
 
-    public string Start()
+    public string Start(string? token = null)
     {
         if (activeToken is { } previous)
             consumed.Add(previous);
         IsComposing = true;
         HasPreedit = false;
         serial++;
-        activeToken = "c" + serial.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        return activeToken;
+        if (IsUsable(token))
+            activeToken = token;
+        else
+            activeToken = "c" + serial.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return activeToken!;
     }
 
     public void Update()
@@ -60,6 +63,25 @@ public sealed class ImeCompositionBridge
     }
 
     public void Suspend() => Cancel();
+
+    private bool IsUsable(string? token) =>
+        !string.IsNullOrEmpty(token) &&
+        token.Length <= 64 &&
+        !consumed.Contains(token) &&
+        IsStable(token);
+
+    private static bool IsStable(string token)
+    {
+        if (token[0] is < 'a' or > 'z')
+            return false;
+        foreach (var ch in token)
+        {
+            if (ch is not (>= 'a' and <= 'z') and not (>= '0' and <= '9') and not '_')
+                return false;
+        }
+
+        return true;
+    }
 
     private void ClearActive()
     {

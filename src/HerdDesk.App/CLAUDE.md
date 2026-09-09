@@ -11,7 +11,7 @@ HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 W
 - HD-011 L1/L2：`ShellViewModel` 与 identity coordinators 消费 Store 投影和 HD-007 配置端口。WinUI 四区绑定这些 ViewModel。选择不授予控制，不发送输入。不创建隐藏 terminal bridge。L2 视觉/激活与 L3 IME 仍为 UNVERIFIED。产品 AC19 未通过。
 - HD-014 L2：`Controls/TerminalHost.xaml` 在 windows TFM 承载 WebView2 + 本地 origin xterm。`TerminalHostSession` 在 net10.0 上绑定 `PaneKey`/`ConnectionEpoch` 并走 `WebMessageValidator`。组合根 renderer factory 仍不可用。L2 process 与 AC08/AC27 仍未通过。
 - HD-012 L1：`NotificationCenterViewModel` 消费 Core `AttentionReducer`；`WindowsNotificationSink.Available` 恒为 false。点击只定位完整 `PaneKey`，不携带 takeover/input/command。
-- HD-015 L1：`TerminalFocusCoordinator` 在 renderer Ready 后恢复焦点；`TerminalInputViewModel` 展示观察/申请控制/控制/输入暂停/连接过期。焦点不置位 `ControlVerified`。`RequestControl` 不授予 lease。
+- HD-015：`TerminalHostSession` 绑定 `TerminalInputController`（CompositionPolicy / InputPolicy）。预编辑 0 字节；commit token 恰好一次；composition 期间 Ctrl+K/Enter/Esc 让位 IME。观察态拒绝 user key/paste/mouse/emulator reply。选择复制只含可见字符。焦点与 renderer Ready 不置位 `ControlVerified`。`RequestControl` 不授予 lease。L2 WebView IME 与 L3 真机 IME 仍为 UNVERIFIED。产品 AC09/AC10 未通过。
 - HD-016 L1：`TerminalControlViewModel` 调用 `ControlLeaseCoordinator`。无 WinUI ControlBar。无 always-takeover。选择变化使 takeover handle 失效。L2 live lease 为 UNVERIFIED。
 - HD-017 L1：`ResourceCommandViewModel` 调用 `ResourceCommandCoordinator`。无 WinUI 对话框。无全局 bypass。选择变化使未提交对话框 stale。L2 live mutation 为 UNVERIFIED。
 - HD-018 L1：`Recovery/RecoveryBindings.cs` 把 `DeviceSessionState` 路由给 lease 的 stale/ready 信号，并投影 `RecoveryViewState`。无 timer、epoch 或 mutation 权。不启动 daemon，不 `RecoverControl`。`AppExitCoordinator` kill ledger 只含 owned bridge/CLI。L2 live disconnect 为 UNVERIFIED。

@@ -11,7 +11,12 @@
     "input",
     "resize",
     "linkRequest",
-    "fault"
+    "fault",
+    "composition",
+    "key",
+    "pasteIntent",
+    "selectionChanged",
+    "mouseIntent"
   ],
   "origins": [
     "user_key",

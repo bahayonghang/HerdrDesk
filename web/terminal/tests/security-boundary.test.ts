@@ -39,6 +39,7 @@ test("ANSI is not concatenated into HTML in sources", () => {
   const files = [
     "src/terminal.ts",
     "src/protocol.ts",
+    "src/ime.ts",
     "src/index.html",
     "scripts/build.mjs",
   ];
@@ -54,6 +55,8 @@ test("observe path gates user input, emulator reply, and resize", () => {
   assert.match(text, /onData\([\s\S]*?readOnly/);
   assert.match(text, /onBinary\([\s\S]*?readOnly/);
   assert.match(text, /onResize\([\s\S]*?readOnly/);
+  assert.match(text, /suppressData/);
+  assert.match(text, /compositionstart/);
 });
 
 test("dist host scripts are browser JavaScript", () => {
@@ -67,7 +70,7 @@ test("dist host scripts are browser JavaScript", () => {
     ": string",
     "Record<string",
   ];
-  for (const rel of ["dist/terminal.js", "dist/protocol.js", "dist/utf8.js"]) {
+  for (const rel of ["dist/terminal.js", "dist/protocol.js", "dist/utf8.js", "dist/ime.js"]) {
     const text = fs.readFileSync(path.join(root, rel), "utf8");
     for (const marker of remnants) {
       assert.equal(text.includes(marker), false, rel + " " + marker);

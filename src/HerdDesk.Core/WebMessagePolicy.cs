@@ -28,7 +28,7 @@ public static class WebMessagePolicy
             return new(false, "web_message_bytes_limit");
         if (message.Type is "frame.apply" or "parse.consumed" or "host.initialize" or "host.focus"
             or "host.dispose" or "host.display" or "renderer.ready" or "renderer.fault"
-            or "link.request")
+            or "link.request" or "selection.local" or "mouse.intent")
             return new(true, "allowed");
         if (message.Type == "terminal.resize")
         {
@@ -46,7 +46,8 @@ public static class WebMessagePolicy
 
     private static bool PayloadAllowed(string type, int payloadBytes) => type switch
     {
-        "parse.consumed" or "terminal.resize" or "host.dispose" or "renderer.ready" =>
+        "parse.consumed" or "terminal.resize" or "host.dispose" or "renderer.ready"
+            or "selection.local" or "mouse.intent" =>
             payloadBytes == 0,
         "frame.apply" => payloadBytes is > 0 and <= WebMessageLimits.MaxFrameBytes,
         "link.request" => payloadBytes is > 0 and <= WebMessageLimits.MaxLinkUriChars,
@@ -71,6 +72,8 @@ public static class WebMessagePolicy
             ("ime.preedit", WebMessageDirection.RendererToHost) => true,
             ("terminal.resize", WebMessageDirection.RendererToHost) => true,
             ("link.request", WebMessageDirection.RendererToHost) => true,
+            ("selection.local", WebMessageDirection.RendererToHost) => true,
+            ("mouse.intent", WebMessageDirection.RendererToHost) => true,
             ("renderer.ready", WebMessageDirection.RendererToHost) => true,
             ("renderer.fault", WebMessageDirection.RendererToHost) => true,
             _ => false,

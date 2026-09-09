@@ -2721,8 +2721,10 @@ def validate() -> dict:
     assert hd015.get('ac09_passed') is not True
     assert hd015.get('ac10_passed') is not True
     assert hd015.get('g0_passed') is not True
-    assert hd015.get('webview2_admitted') is not True
-    assert hd015.get('npm_xterm_admitted') is not True
+    assert hd015.get('webview2_admitted') is True
+    assert hd015.get('npm_xterm_admitted') is True
+    assert hd015.get('winui_admitted') is not True
+    assert hd015.get('github_required_check')=='UNVERIFIED'
     assert hd015.get('live_herdr') is not True
     assert hd015.get('phase_gate')!='passed'
     assert hd016.get('l2_live_lease')=='UNVERIFIED'

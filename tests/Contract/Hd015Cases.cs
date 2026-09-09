@@ -62,13 +62,15 @@ internal static class Hd015Cases
         var root = document.RootElement;
         Check(root.GetProperty("l3_ime_desktop").GetString() == "UNVERIFIED");
         Check(root.GetProperty("l2_webview_ime").GetString() == "UNVERIFIED");
-        Check(root.GetProperty("webview2_admitted").GetBoolean() is false);
-        Check(root.GetProperty("npm_xterm_admitted").GetBoolean() is false);
+        Check(root.GetProperty("webview2_admitted").GetBoolean() is true);
+        Check(root.GetProperty("npm_xterm_admitted").GetBoolean() is true);
+        Check(root.GetProperty("winui_admitted").GetBoolean() is false);
+        Check(root.GetProperty("github_required_check").GetString() == "UNVERIFIED");
         Check(root.GetProperty("ac09_passed").GetBoolean() is false);
         Check(root.GetProperty("ac10_passed").GetBoolean() is false);
         Check(root.GetProperty("g0_passed").GetBoolean() is false);
         Check(root.GetProperty("phase_gate").GetString() != "passed");
-        Check(root.GetProperty("windows_desktop_restore").GetString() == "not_admitted");
+        Check(root.GetProperty("windows_desktop_restore").GetString() == "admitted");
         Check(root.GetProperty("live_herdr").GetBoolean() is false);
     }
 

@@ -9,6 +9,7 @@ const require = createRequire(path.join(root, "package.json"));
 const KINDS = [
   "initialize", "frame", "focus", "dispose", "display", "ready", "parsed",
   "input", "resize", "linkRequest", "fault",
+  "composition", "key", "pasteIntent", "selectionChanged", "mouseIntent",
 ];
 const CDN = [
   "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com", "jsdelivr.net",

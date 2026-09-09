@@ -20,4 +20,16 @@ public sealed record WebMessageValidation(
     ushort? Rows = null,
     uint? CellWidthPx = null,
     uint? CellHeightPx = null,
-    string? FaultCode = null);
+    string? FaultCode = null,
+    string? Phase = null,
+    string? Token = null,
+    string? Text = null,
+    string? KeyName = null,
+    bool Ctrl = false,
+    bool Shift = false,
+    bool Alt = false,
+    bool AltGr = false,
+    bool CapsLock = false,
+    string? VisibleText = null,
+    string? MouseAction = null,
+    int Delta = 0);

@@ -3,10 +3,11 @@
   "document_kind": "hd015_l3_status",
   "l2_webview_ime": "UNVERIFIED",
   "l3_ime_desktop": "UNVERIFIED",
-  "webview2_admitted": false,
-  "npm_xterm_admitted": false,
+  "webview2_admitted": true,
+  "npm_xterm_admitted": true,
   "winui_admitted": false,
-  "windows_desktop_restore": "not_admitted",
+  "windows_desktop_restore": "admitted",
+  "github_required_check": "UNVERIFIED",
   "live_herdr": false,
   "agent_matrix": "synthetic-l1",
   "l1_input_coordinators": "required; does not close product AC09 or AC10",
@@ -14,5 +15,5 @@
   "ac10_passed": false,
   "phase_gate": "not_passed",
   "g0_passed": false,
-  "note": "HD-015 ships BCL IME/keyboard/selection/focus coordinators on InputPolicy and CompositionPolicy. Microsoft.Web.WebView2, WinUI, and npm xterm are not admitted. Tests drive the shipped coordinators with synthetic agent profiles for Claude Code / Codex / OpenCode. Muse stays unknown. This file is not AC pass evidence. L3 real IME desktop stays UNVERIFIED."
+  "note": "HD-015 binds CompositionPolicy, InputPolicy, and IME/keyboard/selection coordinators to TerminalHostSession over the HD-014 local @xterm/xterm 6.0.0 plus WinUI WebView2 host. webview2_admitted and npm_xterm_admitted match HD-014. winui_admitted matches HD-011 (false). windows_desktop_restore is the HD-007 App lock, not an IME desktop pass. Tests drive shipped coordinators and TerminalHostSession from start state. This file is not AC pass evidence. L2 WebView IME and L3 real Microsoft Pinyin desktop stay UNVERIFIED. github_required_check stays UNVERIFIED."
 }

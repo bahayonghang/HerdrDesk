@@ -43,6 +43,21 @@ internal static class WebMessageContractTests
             """{"version":1,"kind":"fault","epoch":1,"code":"renderer_crash"}"""), epoch).Accepted);
         WebTestHost.Check(WebMessageValidator.Evaluate(WebTestHost.Utf8Json(
             """{"version":1,"kind":"ready","epoch":1}"""), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.Composition(epoch, "start", "c1"), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(WebTestHost.Utf8Json(
+            """{"version":1,"kind":"composition","epoch":1,"phase":"start","token":"c1","text":"ni"}"""),
+            epoch).Code == "unknown_web_message_field");
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.Composition(epoch, "end", "c1", "词"), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.Key(epoch, "k", ctrl: true), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.PasteIntent(epoch, "ab"), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.SelectionChanged(epoch, "hello"), epoch).Accepted);
+        WebTestHost.Check(WebMessageValidator.Evaluate(
+            WebMessageCodec.MouseIntent(epoch, "scroll", 1), epoch).Accepted);
         WebTestHost.Check(WebMessageValidator.Evaluate(WebTestHost.Utf8Json(
             """{"version":2,"kind":"ready","epoch":1}"""), epoch).Code == "unsupported_web_message_version");
     }
@@ -118,6 +133,16 @@ internal static class WebMessageContractTests
         WebTestHost.Check(WebMessagePolicy.Evaluate(message, WebTestHost.Observe()).Code ==
                           "control_not_verified");
         WebTestHost.Check(WebMessagePolicy.Evaluate(message, WebTestHost.Control()).Allowed);
+        var selection = new WebMessage(
+            "selection.local", parsed.Version, parsed.Epoch, WebTestHost.Pane(), 0,
+            WebMessageDirection.RendererToHost);
+        WebTestHost.Check(WebMessagePolicy.Evaluate(selection, WebTestHost.Observe()).Allowed);
+        var mouse = new WebMessage(
+            "mouse.intent", parsed.Version, parsed.Epoch, WebTestHost.Pane(), 0,
+            WebMessageDirection.RendererToHost);
+        WebTestHost.Check(WebMessagePolicy.Evaluate(mouse, WebTestHost.Observe()).Allowed);
+        WebTestHost.Check(WebMessagePolicy.Evaluate(
+            mouse with { PayloadBytes = 1 }, WebTestHost.Observe()).Code == "web_message_bytes_limit");
     }
 
     static void CodecRoundtrip()
@@ -150,6 +175,9 @@ internal static class WebMessageContractTests
         WebTestHost.Check(kinds.Contains(WebMessageKinds.Initialize));
         WebTestHost.Check(kinds.Contains(WebMessageKinds.Frame));
         WebTestHost.Check(kinds.Contains(WebMessageKinds.LinkRequest));
+        WebTestHost.Check(kinds.Contains(WebMessageKinds.Composition));
+        WebTestHost.Check(kinds.Contains(WebMessageKinds.Key));
+        WebTestHost.Check(kinds.Contains(WebMessageKinds.PasteIntent));
     }
 
     static string FindRepoRoot()

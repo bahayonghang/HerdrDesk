@@ -8,7 +8,7 @@
   },
   "scripts": {
     "typecheck": "node scripts/typecheck.mjs",
-    "test": "node --experimental-strip-types --test tests/utf8-chunks.test.ts tests/security-boundary.test.ts",
+    "test": "node --experimental-strip-types --test tests/utf8-chunks.test.ts tests/security-boundary.test.ts tests/ime-events.test.ts",
     "build": "node scripts/build.mjs"
   },
   "dependencies": {

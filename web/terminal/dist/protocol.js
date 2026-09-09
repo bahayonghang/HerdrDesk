@@ -12,6 +12,11 @@ export const KINDS = Object.freeze({
   resize: "resize",
   linkRequest: "linkRequest",
   fault: "fault",
+  composition: "composition",
+  key: "key",
+  pasteIntent: "pasteIntent",
+  selectionChanged: "selectionChanged",
+  mouseIntent: "mouseIntent",
 });
 
 export const ORIGINS = Object.freeze({
@@ -36,6 +41,11 @@ export const WEB_TO_HOST = Object.freeze([
   KINDS.resize,
   KINDS.linkRequest,
   KINDS.fault,
+  KINDS.composition,
+  KINDS.key,
+  KINDS.pasteIntent,
+  KINDS.selectionChanged,
+  KINDS.mouseIntent,
 ]);
 
 export const LOCAL_ORIGIN = "https://herddesk.terminal.local";
@@ -65,6 +75,11 @@ const FIELDS                                    = {
   [KINDS.resize]: ["cols", "rows", "cellPx"],
   [KINDS.linkRequest]: ["uri", "userGesture"],
   [KINDS.fault]: ["code"],
+  [KINDS.composition]: ["phase", "token"],
+  [KINDS.key]: ["key", "ctrl", "shift", "alt", "altGr", "capsLock"],
+  [KINDS.pasteIntent]: ["text"],
+  [KINDS.selectionChanged]: ["visibleText", "shift"],
+  [KINDS.mouseIntent]: ["action", "delta", "shift"],
 };
 
                               
@@ -125,7 +140,7 @@ export function parseEnvelope(value         , boundEpoch        )              {
     return reject("unknown_web_message_type");
   }
   const kind = root.kind;
-  const extra = FIELDS[kind];
+  const extra = extraFields(kind, root);
   if (extra === undefined) {
     return reject("unknown_web_message_type");
   }
@@ -200,7 +215,70 @@ function parseKind(kind        , root                         , epoch        )  
     }
     return { accepted: true, code: "allowed", kind, epoch };
   }
+  if (kind === KINDS.composition) {
+    const phase = asString(root.phase);
+    if (phase !== "start" && phase !== "update" && phase !== "end" && phase !== "cancel") {
+      throw new Error("malformed_web_message");
+    }
+    const token = asString(root.token);
+    if (!/^[a-z][a-z0-9_]{0,63}$/.test(token)) {
+      throw new Error("malformed_web_message");
+    }
+    if (phase === "end") {
+      asString(root.text);
+    }
+    return { accepted: true, code: "allowed", kind, epoch };
+  }
+  if (kind === KINDS.key) {
+    const key = asString(root.key);
+    if (key.length === 0 || key.length > 32) {
+      throw new Error("malformed_web_message");
+    }
+    requireBoolean(root.ctrl);
+    requireBoolean(root.shift);
+    requireBoolean(root.alt);
+    requireBoolean(root.altGr);
+    requireBoolean(root.capsLock);
+    return { accepted: true, code: "allowed", kind, epoch };
+  }
+  if (kind === KINDS.pasteIntent) {
+    asString(root.text);
+    return { accepted: true, code: "allowed", kind, epoch };
+  }
+  if (kind === KINDS.selectionChanged) {
+    asString(root.visibleText);
+    requireBoolean(root.shift);
+    return { accepted: true, code: "allowed", kind, epoch };
+  }
+  if (kind === KINDS.mouseIntent) {
+    const action = asString(root.action);
+    if (action !== "scroll" && action !== "drag") {
+      throw new Error("malformed_web_message");
+    }
+    if (typeof root.delta !== "number" || !Number.isInteger(root.delta)) {
+      throw new Error("malformed_web_message");
+    }
+    requireBoolean(root.shift);
+    return { accepted: true, code: "allowed", kind, epoch };
+  }
   return { accepted: true, code: "allowed", kind, epoch };
+}
+
+function extraFields(kind        , root                         )                                {
+  if (kind === KINDS.composition) {
+    if (root.phase === "end") {
+      return ["phase", "token", "text"];
+    }
+    return ["phase", "token"];
+  }
+  return FIELDS[kind];
+}
+
+function requireBoolean(value         )          {
+  if (value !== true && value !== false) {
+    throw new Error("malformed_web_message");
+  }
+  return value;
 }
 
 export function classifyLink(uri                    , userGesture         )                                     {
