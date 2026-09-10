@@ -18,14 +18,18 @@ from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
 from herddesk_g0.quality import (
+    LIVE_WORKING_SET_REL,
     SOAK_ELAPSED_REL,
+    SOAK_WORKING_SET_REL,
     collect_dpi_overlay,
     collect_narrator_overlay,
     soak_interrupt_capture_rels,
+    soak_start_app_pid,
     validate_eight_hour_soak_elapsed,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
+    validate_soak_working_set,
 )
 from herddesk_g0.release import bind_release_candidate
 from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
@@ -1112,6 +1116,8 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
     assert catalog.get('dpi_overlay_pointer') == 'evidence/quality/dpi-overlay-pointer.json'
     assert catalog.get('soak_start_capture') == 'evidence/quality/live-soak-start.json'
+    assert catalog.get('soak_working_set_capture') == 'evidence/quality/live-soak-working-set.json'
+    assert (ROOT / 'scripts' / 'record_soak_working_set.py').is_file()
     assert catalog.get('soak_interruption_capture') == 'evidence/quality/live-soak-interrupted.json'
     assert catalog.get('soak_interruption_captures') == [
         'evidence/quality/live-soak-interrupted.json',
@@ -1287,6 +1293,9 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
         if row['id'] == 'live-working-set':
             assert loaded.get('derive_process_memory_from_q_p') is False
             assert loaded.get('mib_bytes') == 1048576
+            assert loaded.get('live_working_set') is False
+            assert loaded.get('working_set_bytes') is None
+            assert row['evidence_path'] == 'evidence/quality/live-working-set.not-run.json'
     for rel in _HD033_TEMPLATES:
         path = ROOT / rel
         assert path.is_file(), rel
@@ -1712,6 +1721,70 @@ def _check_hd033_soak_start() -> None:
     assert report.get('prior_interruption_started_at_utc') == (
         interruption.get('started_at_utc')
     )
+
+
+def _check_hd033_soak_working_set() -> None:
+    """Validate optional soak-process overlay. Do not claim AC29 or AC46."""
+    assert (ROOT / 'scripts' / 'record_soak_working_set.py').is_file()
+    src = (ROOT / 'scripts' / 'record_soak_working_set.py').read_text(encoding='utf-8')
+    assert '--record' in src
+    assert 'do not launch' in src.lower() or 'without launching another --ui' in src
+    assert 'CREATE_BREAKAWAY_FROM_JOB' in src or '_spawn_detached' in src
+    assert 'hd033-soak-resources.jsonl' in src
+    assert 'live-working-set.not-run.json' in src
+    assert 'sampler_added_to_start_owned_pids' in src
+    assert 'if not alive:' in src
+    assert 'return 0' in src
+    assert 'taskkill' not in src.lower()
+    assert "ui_argv" not in src
+    ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    just = (ROOT / 'justfile').read_text(encoding='utf-8')
+    assert 'record_soak_working_set.py --record' not in ci
+    assert 'record_soak_working_set.py --record' not in just
+    not_run = json.loads((ROOT / LIVE_WORKING_SET_REL).read_text(encoding='utf-8'))
+    _reject_hd033_pass_claims(not_run)
+    _reject_hd033_invented_timings(not_run)
+    assert not_run.get('result') == 'not_run'
+    assert not_run.get('live_working_set') is False
+    assert not_run.get('working_set_bytes') is None
+    assert not_run.get('kind') == 'live_working_set'
+    start = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    app_pid = soak_start_app_pid(start)
+    assert isinstance(app_pid, int) and app_pid > 0
+    overlay_path = ROOT / SOAK_WORKING_SET_REL
+    report = validate_soak_working_set(ROOT)
+    if overlay_path.is_file():
+        assert report is not None
+        assert report.get('ac29_passed') is False
+        assert report.get('ac46_passed') is False
+        assert report.get('live_working_set') is False
+        assert report.get('eight_hour_soak_executed') is False
+        assert report.get('soak_hours') is None
+        assert report.get('one_quarter_pane_lab') is False
+        assert report.get('open_close_100') is False
+        overlay = json.loads(overlay_path.read_text(encoding='utf-8'))
+        _reject_hd033_pass_claims(overlay)
+        assert overlay.get('ac29_passed') is False
+        assert overlay.get('ac46_passed') is False
+        assert overlay.get('live_working_set') is False
+        assert overlay.get('eight_hour_soak_executed') is False
+        assert overlay.get('soak_hours') is None
+        assert overlay.get('one_quarter_pane_lab') is False
+        assert overlay.get('open_close_100') is False
+        assert overlay.get('pid') == app_pid
+        assert overlay.get('started_at_utc') == start.get('started_at_utc')
+        assert isinstance(overlay.get('working_set_bytes'), int)
+        assert overlay.get('working_set_bytes') > 0
+        sampler = overlay.get('sampler_pid')
+        if isinstance(sampler, int):
+            assert sampler not in start.get('owned_pids')
+        assert overlay.get('sampler_added_to_start_owned_pids') is False
+    else:
+        assert report is None
 
 
 _HD034_PASS_KEYS = (
@@ -3751,6 +3824,7 @@ def validate() -> dict:
     _check_hd033_narrator_product_ui_launch()
     _check_hd033_dpi_overlay()
     _check_hd033_soak_start()
+    _check_hd033_soak_working_set()
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd034_package_script_contract()
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)

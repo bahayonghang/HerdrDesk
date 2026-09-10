@@ -1,4 +1,4 @@
-"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, soak-interruption, and optional soak-elapsed checks. Not AC37, AC38, or AC46. Interrupted STARTs are not 8h. Wall-clock elapsed is not AC46."""
+"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, soak-interruption, optional soak-elapsed, and optional soak-process working-set overlay checks. Not AC37, AC38, AC29, or AC46. Interrupted STARTs are not 8h. Wall-clock elapsed is not AC46. A soak-process sample is not 1/4 pane, not 100 open/close, and not live_working_set."""
 from __future__ import annotations
 
 import ctypes
@@ -586,7 +586,10 @@ SOAK_INTERRUPT_4_REL = 'evidence/quality/live-soak-interrupted-4.json'
 SOAK_INTERRUPT_5_REL = 'evidence/quality/live-soak-interrupted-5.json'
 SOAK_INTERRUPT_6_REL = 'evidence/quality/live-soak-interrupted-6.json'
 SOAK_ELAPSED_REL = 'evidence/quality/live-soak-elapsed.json'
+SOAK_WORKING_SET_REL = 'evidence/quality/live-soak-working-set.json'
+LIVE_WORKING_SET_REL = 'evidence/quality/live-working-set.not-run.json'
 SOAK_START_KIND = 'hd033_eight_hour_soak_start'
+SOAK_WORKING_SET_KIND = 'hd033_soak_working_set_overlay'
 SOAK_INTERRUPT_KIND = 'hd033_eight_hour_soak_interruption'
 SOAK_ELAPSED_KIND = 'hd033_eight_hour_soak_elapsed'
 SOAK_WALL_CLOCK = timedelta(hours=8)
@@ -1034,4 +1037,187 @@ def validate_eight_hour_soak_elapsed(root: Path) -> dict[str, Any] | None:
         'git_sha': git_sha,
         'started_at_utc': doc.get('started_at_utc'),
         'elapsed_at_utc': doc.get('elapsed_at_utc'),
+    }
+
+
+def soak_start_app_pid(doc: dict[str, Any]) -> int:
+    """Product-UI PID from a soak START document. Identity-loose; not a frozen PID."""
+    commands = doc.get('commands')
+    if not isinstance(commands, list):
+        raise QualityError('missing_record_field')
+    for item in commands:
+        if not isinstance(item, dict) or item.get('role') != 'product_ui':
+            continue
+        pid = item.get('pid')
+        if isinstance(pid, int) and pid > 0:
+            return pid
+    raise QualityError('missing_record_field')
+
+
+SOAK_WORKING_SET_REQUIRED_KEYS = (
+    'document_kind', 'result', 'live_working_set', 'ac29_passed',
+    'ac46_passed', 'eight_hour_soak_executed', 'soak_hours', 'pid',
+    'started_at_utc', 'sampled_at_utc', 'working_set_bytes', 'git_sha',
+    'start_capture', 'herdr_executed', 'g0_passed', 'invented_timings',
+    'one_quarter_pane_lab', 'open_close_100', 'derive_process_memory_from_q_p',
+    'mib_bytes', 'sampler_added_to_start_owned_pids',
+)
+SOAK_WORKING_SET_FALSE_KEYS = (
+    'live_working_set', 'ac29_passed', 'ac46_passed',
+    'eight_hour_soak_executed', 'live_soak', 'herdr_executed',
+    'invented_timings', 'g0_passed', 'one_quarter_pane_lab',
+    'open_close_100', 'derive_process_memory_from_q_p',
+    'sampler_added_to_start_owned_pids',
+)
+SOAK_WORKING_SET_FORBIDDEN_TIMING_KEYS = (
+    'soak_hours', 'p95_ms', 'visible_pixel_ms', 'parser_consumed_ms',
+    'q_p_bytes', 'cycle_count', 'disconnect_switch_count', 'resize_rate',
+    'visible_pane_count',
+)
+
+
+def _working_set_false_key_code(key: str) -> str:
+    if key in {
+        'ac29_passed', 'ac46_passed', 'g0_passed', 'eight_hour_soak_executed',
+    }:
+        return key
+    if key == 'live_working_set':
+        return 'live_working_set_claimed'
+    if key == 'live_soak':
+        return 'live_soak_claimed'
+    if key == 'one_quarter_pane_lab':
+        return 'one_quarter_pane_lab_claimed'
+    if key == 'open_close_100':
+        return 'open_close_100_claimed'
+    if key == 'sampler_added_to_start_owned_pids':
+        return 'sampler_added_to_start_owned_pids'
+    return key
+
+
+def _reject_soak_working_set_false_keys(doc: dict[str, Any]) -> None:
+    for key in SOAK_WORKING_SET_FALSE_KEYS:
+        if key in doc and doc.get(key) is not False:
+            raise QualityError(_working_set_false_key_code(key))
+
+
+def _reject_soak_working_set_invented(doc: Any) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key in SOAK_WORKING_SET_FORBIDDEN_TIMING_KEYS and value is not None:
+                raise QualityError('invented_timings')
+            _reject_soak_working_set_invented(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_soak_working_set_invented(item)
+
+
+def validate_soak_working_set(root: Path) -> dict[str, Any] | None:
+    """Optional soak-process working-set overlay. Missing is allowed. Not AC29."""
+    root = Path(root)
+    path = root / SOAK_WORKING_SET_REL
+    if not path.is_file():
+        return None
+    doc = _load_json(path)
+    for key in SOAK_WORKING_SET_REQUIRED_KEYS:
+        if key not in doc:
+            raise QualityError('missing_record_field')
+    if doc.get('document_kind') != SOAK_WORKING_SET_KIND:
+        raise QualityError('missing_record_field')
+    if doc.get('result') != 'not_run' or _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if doc.get('l4_soak') not in (None, 'UNVERIFIED'):
+        raise QualityError('l4_soak_claimed')
+    if _is_success(doc.get('ac29_passed')):
+        raise QualityError('ac29_passed')
+    if _is_success(doc.get('ac46_passed')):
+        raise QualityError('ac46_passed')
+    if _is_success(doc.get('g0_passed')):
+        raise QualityError('g0_passed')
+    if _is_success(doc.get('phase_gate')) or doc.get('phase_gate') == 'passed':
+        raise QualityError('ac29_passed')
+    if _is_success(doc.get('live_working_set')):
+        raise QualityError('live_working_set_claimed')
+    if _is_success(doc.get('eight_hour_soak_executed')):
+        raise QualityError('eight_hour_soak_executed')
+    _reject_soak_working_set_false_keys(doc)
+    _reject_soak_working_set_invented(doc)
+    if doc.get('start_capture') != SOAK_START_REL:
+        raise QualityError('missing_record_field')
+    if doc.get('mib_bytes') != 1048576:
+        raise QualityError('missing_record_field')
+    working = doc.get('working_set_bytes')
+    if not isinstance(working, int) or working <= 0:
+        raise QualityError('missing_record_field')
+    pid = doc.get('pid')
+    if not isinstance(pid, int) or pid <= 0:
+        raise QualityError('missing_record_field')
+    private_bytes = doc.get('private_bytes')
+    if private_bytes is not None and (
+        not isinstance(private_bytes, int) or private_bytes < 0
+    ):
+        raise QualityError('missing_record_field')
+    handle_count = doc.get('handle_count')
+    if handle_count is not None and (
+        not isinstance(handle_count, int) or handle_count < 0
+    ):
+        raise QualityError('missing_record_field')
+    process_count = doc.get('process_count')
+    if process_count is not None and process_count != 1:
+        raise QualityError('invented_timings')
+    git_sha = doc.get('git_sha')
+    if not isinstance(git_sha, str) or len(git_sha) < 7:
+        raise QualityError('missing_record_field')
+    _parse_utc(doc.get('started_at_utc'))
+    _parse_utc(doc.get('sampled_at_utc'))
+    _check_ac_status(root, 'AC29', 'ac29_passed')
+    _check_ac_status(root, 'AC46', 'ac46_passed')
+    start = _load_json(root / SOAK_START_REL)
+    if doc.get('started_at_utc') != start.get('started_at_utc'):
+        raise QualityError('missing_record_field')
+    start_pid = soak_start_app_pid(start)
+    if pid != start_pid:
+        raise QualityError('missing_record_field')
+    owned = start.get('owned_pids')
+    if not isinstance(owned, list) or start_pid not in owned:
+        raise QualityError('missing_record_field')
+    sampler_pid = doc.get('sampler_pid')
+    if sampler_pid is not None:
+        if not isinstance(sampler_pid, int) or sampler_pid <= 0:
+            raise QualityError('missing_record_field')
+        if sampler_pid in owned:
+            raise QualityError('sampler_added_to_start_owned_pids')
+    not_run = _load_json(root / LIVE_WORKING_SET_REL)
+    if not_run.get('live_working_set') is not False:
+        raise QualityError('live_working_set_claimed')
+    if not_run.get('working_set_bytes') is not None:
+        raise QualityError('invented_timings')
+    if not_run.get('result') != 'not_run':
+        raise QualityError('live_success_claimed')
+    return {
+        'document_kind': SOAK_WORKING_SET_KIND,
+        'soak_working_set_capture': SOAK_WORKING_SET_REL,
+        'soak_start_capture': SOAK_START_REL,
+        'live_working_set_row': LIVE_WORKING_SET_REL,
+        'recorded': True,
+        'pid': pid,
+        'working_set_bytes': working,
+        'private_bytes': private_bytes,
+        'handle_count': handle_count,
+        'started_at_utc': doc.get('started_at_utc'),
+        'sampled_at_utc': doc.get('sampled_at_utc'),
+        'sampler_pid': sampler_pid if isinstance(sampler_pid, int) else None,
+        'live_working_set': False,
+        'ac29_passed': False,
+        'ac46_passed': False,
+        'eight_hour_soak_executed': False,
+        'soak_hours': None,
+        'one_quarter_pane_lab': False,
+        'open_close_100': False,
+        'result': 'not_run',
+        'l4_soak': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'invented_timings': False,
+        'git_sha': git_sha,
     }

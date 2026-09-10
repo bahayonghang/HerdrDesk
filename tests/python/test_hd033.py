@@ -17,18 +17,23 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 from herddesk_g0.quality import (
     AC37_STEP_KEYS,
     EMPTY_SHA256,
+    LIVE_WORKING_SET_REL,
     QualityError,
     SOAK_ELAPSED_REL,
+    SOAK_WORKING_SET_REL,
     collect_dpi_overlay,
     collect_narrator_overlay,
     narrator_exe_path,
     soak_interrupt_capture_rels,
+    soak_start_app_pid,
     system_dpi,
     validate_eight_hour_soak_elapsed,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
+    validate_soak_working_set,
 )
+import record_soak_working_set as working_set_cli
 import start_eight_hour_soak as soak_cli
 import validate_repository as repository
 
@@ -197,6 +202,11 @@ class Hd033ResidualTests(unittest.TestCase):
             catalog['soak_start_capture'],
             'evidence/quality/live-soak-start.json',
         )
+        self.assertEqual(
+            catalog['soak_working_set_capture'],
+            'evidence/quality/live-soak-working-set.json',
+        )
+        self.assertTrue((ROOT / 'scripts' / 'record_soak_working_set.py').is_file())
         self.assertEqual(
             catalog['soak_interruption_capture'],
             'evidence/quality/live-soak-interrupted.json',
@@ -442,6 +452,8 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertEqual(working['mib_bytes'], 1048576)
         self.assertIsNone(working['working_set_bytes'])
         self.assertIsNone(working['q_p_bytes'])
+        self.assertFalse(working['live_working_set'])
+        self.assertEqual(working['result'], 'not_run')
 
     def test_support_matrix_promised_rows_stay_not_run(self):
         matrix = json.loads(MATRIX.read_text(encoding='utf-8'))
@@ -684,6 +696,16 @@ class Hd033ResidualTests(unittest.TestCase):
 
         bad = deepcopy(catalog)
         bad['soak_start_capture'] = 'evidence/quality/live-soak.not-run.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad.pop('soak_working_set_capture')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['soak_working_set_capture'] = 'evidence/quality/live-working-set.not-run.json'
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
@@ -2852,6 +2874,361 @@ class Hd033SoakInterruptionTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 validate_eight_hour_soak_interruption(root)
             self.assertEqual(str(ctx.exception), 'l4_soak_claimed')
+
+
+def _copy_live_working_set_not_run(tmp: Path) -> None:
+    quality = tmp / 'evidence' / 'quality'
+    quality.mkdir(parents=True, exist_ok=True)
+    src = ROOT / LIVE_WORKING_SET_REL
+    (quality / 'live-working-set.not-run.json').write_text(
+        src.read_text(encoding='utf-8'), encoding='utf-8'
+    )
+
+
+def _overlay_doc(start: dict, **overrides):
+    pid = soak_start_app_pid(start)
+    doc = {
+        'document_kind': 'hd033_soak_working_set_overlay',
+        'template': False,
+        'result': 'not_run',
+        'live_working_set': False,
+        'live_soak': False,
+        'ac29_passed': False,
+        'ac46_passed': False,
+        'eight_hour_soak_executed': False,
+        'soak_hours': None,
+        'pid': pid,
+        'started_at_utc': start.get('started_at_utc'),
+        'sampled_at_utc': '2026-09-10T14:00:00Z',
+        'working_set_bytes': 123456789,
+        'private_bytes': 1000,
+        'handle_count': 200,
+        'process_count': 1,
+        'git_sha': start.get('git_sha') or ('a' * 40),
+        'start_capture': 'evidence/quality/live-soak-start.json',
+        'herdr_executed': False,
+        'g0_passed': False,
+        'invented_timings': False,
+        'one_quarter_pane_lab': False,
+        'open_close_100': False,
+        'derive_process_memory_from_q_p': False,
+        'mib_bytes': 1048576,
+        'sampler_added_to_start_owned_pids': False,
+        'l4_soak': 'UNVERIFIED',
+        'phase_gate': 'not_passed',
+        'sampler_pid': 4242,
+    }
+    doc.update(overrides)
+    return doc
+
+
+def _write_soak_working_set(tmp: Path, *, overlay_overrides=None) -> None:
+    _write_soak_start(tmp)
+    _copy_live_working_set_not_run(tmp)
+    start = json.loads(
+        (tmp / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    overrides = overlay_overrides or {}
+    doc = _overlay_doc(start, **overrides)
+    (tmp / 'evidence' / 'quality' / 'live-soak-working-set.json').write_text(
+        json.dumps(doc), encoding='utf-8'
+    )
+
+
+class Hd033SoakWorkingSetTests(unittest.TestCase):
+    def test_overlay_file_is_optional_until_record(self):
+        overlay_path = ROOT / SOAK_WORKING_SET_REL
+        report = validate_soak_working_set(ROOT)
+        if overlay_path.is_file():
+            self.assertIsNotNone(report)
+            self.assertFalse(report['ac29_passed'])
+            self.assertFalse(report['live_working_set'])
+            self.assertFalse(report['ac46_passed'])
+            self.assertFalse(report['eight_hour_soak_executed'])
+            self.assertIsNone(report['soak_hours'])
+            start = json.loads(
+                (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            self.assertEqual(report['pid'], soak_start_app_pid(start))
+            self.assertEqual(report['started_at_utc'], start['started_at_utc'])
+            self.assertIsInstance(report['working_set_bytes'], int)
+            self.assertGreater(report['working_set_bytes'], 0)
+        else:
+            self.assertIsNone(report)
+
+    def test_cli_validates_without_recording(self):
+        script = ROOT / 'scripts' / 'record_soak_working_set.py'
+        self.assertTrue(script.is_file())
+        src = script.read_text(encoding='utf-8')
+        self.assertIn('--record', src)
+        self.assertNotIn('76508', src)
+        self.assertNotIn('85848', src)
+        overlay_path = ROOT / SOAK_WORKING_SET_REL
+        start_path = ROOT / 'evidence' / 'quality' / 'live-soak-start.json'
+        not_run_path = ROOT / LIVE_WORKING_SET_REL
+        before_overlay = (
+            overlay_path.read_text(encoding='utf-8') if overlay_path.is_file() else None
+        )
+        before_start = start_path.read_text(encoding='utf-8')
+        before_not_run = not_run_path.read_text(encoding='utf-8')
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertFalse(report['ac29_passed'])
+        self.assertFalse(report['live_working_set'])
+        self.assertFalse(report['ac46_passed'])
+        self.assertFalse(report['eight_hour_soak_executed'])
+        self.assertIsNone(report['soak_hours'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertEqual(start_path.read_text(encoding='utf-8'), before_start)
+        self.assertEqual(not_run_path.read_text(encoding='utf-8'), before_not_run)
+        if before_overlay is None:
+            self.assertFalse(overlay_path.is_file())
+            self.assertFalse(report.get('recorded'))
+        else:
+            self.assertEqual(overlay_path.read_text(encoding='utf-8'), before_overlay)
+            self.assertTrue(report.get('recorded'))
+
+    def test_cli_does_not_launch_ui_or_freeze_start_pids(self):
+        src = (ROOT / 'scripts' / 'record_soak_working_set.py').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('without launching another --ui', src)
+        self.assertNotIn("ui_argv", src)
+        self.assertNotIn('taskkill', src.lower())
+        self.assertIn('hd033-soak-resources.jsonl', src)
+        self.assertIn('if not alive:', src)
+        self.assertIn('return 0', src)
+        self.assertNotIn('76508', src)
+        self.assertNotIn('85848', src)
+        start = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        pid = soak_start_app_pid(start)
+        self.assertIsInstance(pid, int)
+        self.assertGreater(pid, 0)
+        self.assertIn(pid, start['owned_pids'])
+
+    def test_not_run_working_set_row_stays_not_run(self):
+        working = json.loads((ROOT / LIVE_WORKING_SET_REL).read_text(encoding='utf-8'))
+        self.assertEqual(working['kind'], 'live_working_set')
+        self.assertEqual(working['result'], 'not_run')
+        self.assertFalse(working['live_working_set'])
+        self.assertIsNone(working['working_set_bytes'])
+        catalog = json.loads(CATALOG.read_text(encoding='utf-8'))
+        rows = {item['id']: item for item in catalog['live_rows']}
+        self.assertEqual(
+            rows['live-working-set']['evidence_path'],
+            'evidence/quality/live-working-set.not-run.json',
+        )
+        cards = {item['id']: item for item in catalog['execution_cards']}
+        self.assertEqual(
+            cards['working-set-1-4-pane']['live_capture'],
+            'evidence/quality/live-working-set.not-run.json',
+        )
+
+    def test_structure_contract_invokes_working_set_overlay(self):
+        repository._check_hd033_soak_working_set()
+
+    def test_record_samples_start_pid_without_mutating_start(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            _copy_live_working_set_not_run(root)
+            start_path = root / 'evidence' / 'quality' / 'live-soak-start.json'
+            not_run_path = root / LIVE_WORKING_SET_REL
+            before_start = start_path.read_text(encoding='utf-8')
+            before_not_run = not_run_path.read_text(encoding='utf-8')
+            start = json.loads(before_start)
+            app_pid = soak_start_app_pid(start)
+
+            def sample(pid):
+                self.assertEqual(pid, app_pid)
+                return {
+                    'working_set_bytes': 987654321,
+                    'private_bytes': 1111,
+                    'handle_count': 222,
+                    'process_count': 1,
+                }
+
+            doc = working_set_cli.record(
+                root,
+                pid_running=lambda pid: True,
+                pid_image=lambda pid: 'HerdDesk.App.exe',
+                sample_process=sample,
+                start_heartbeat=lambda _root, pid, _started: 4242,
+                git_sha='b' * 40,
+                now='2026-09-10T14:05:00Z',
+            )
+            self.assertEqual(doc['pid'], app_pid)
+            self.assertEqual(doc['working_set_bytes'], 987654321)
+            self.assertEqual(doc['sampler_pid'], 4242)
+            self.assertFalse(doc['live_working_set'])
+            self.assertFalse(doc['ac29_passed'])
+            self.assertFalse(doc['ac46_passed'])
+            self.assertFalse(doc['eight_hour_soak_executed'])
+            self.assertIsNone(doc['soak_hours'])
+            self.assertFalse(doc['one_quarter_pane_lab'])
+            self.assertFalse(doc['open_close_100'])
+            self.assertEqual(start_path.read_text(encoding='utf-8'), before_start)
+            self.assertEqual(not_run_path.read_text(encoding='utf-8'), before_not_run)
+            after = json.loads(before_start)
+            self.assertNotIn(4242, after['owned_pids'])
+            report = validate_soak_working_set(root)
+            self.assertIsNotNone(report)
+            self.assertEqual(report['pid'], app_pid)
+            self.assertEqual(report['working_set_bytes'], 987654321)
+            self.assertEqual(report['sampler_pid'], 4242)
+
+    def test_heartbeat_exits_when_app_pid_gone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'hd033-soak-resources.jsonl'
+            code = working_set_cli.run_resource_heartbeat(
+                12,
+                path,
+                '2026-09-10T13:30:51Z',
+                interval_sec=60,
+                pid_running=lambda pid: False,
+                sample_process=lambda pid: (_ for _ in ()).throw(
+                    AssertionError('dead pid must not be sampled')
+                ),
+            )
+            self.assertEqual(code, 0)
+            rows = [
+                json.loads(line)
+                for line in path.read_text(encoding='utf-8').splitlines()
+                if line.strip()
+            ]
+            self.assertEqual(len(rows), 1)
+            self.assertFalse(rows[0]['alive'])
+            self.assertFalse(rows[0]['ac29_passed'])
+            self.assertFalse(rows[0]['live_working_set'])
+            self.assertIsNone(rows[0]['soak_hours'])
+
+    def test_heartbeat_sleeps_then_exits_after_app_gone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'hd033-soak-resources.jsonl'
+            state = {'n': 0}
+
+            def running(_pid):
+                state['n'] += 1
+                return state['n'] == 1
+
+            with patch.object(working_set_cli.time, 'sleep') as slept:
+                code = working_set_cli.run_resource_heartbeat(
+                    12,
+                    path,
+                    '2026-09-10T13:30:51Z',
+                    interval_sec=60,
+                    pid_running=running,
+                    sample_process=lambda pid: {
+                        'working_set_bytes': 50,
+                        'private_bytes': 40,
+                        'handle_count': 3,
+                        'process_count': 1,
+                    },
+                )
+            self.assertEqual(code, 0)
+            slept.assert_called_once_with(60)
+            rows = [
+                json.loads(line)
+                for line in path.read_text(encoding='utf-8').splitlines()
+                if line.strip()
+            ]
+            self.assertEqual(len(rows), 2)
+            self.assertTrue(rows[0]['alive'])
+            self.assertEqual(rows[0]['working_set_bytes'], 50)
+            self.assertFalse(rows[1]['alive'])
+
+    def test_ac29_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_working_set(root, overlay_overrides={'ac29_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_soak_working_set(root)
+            self.assertEqual(str(ctx.exception), 'ac29_passed')
+
+    def test_live_working_set_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_working_set(root, overlay_overrides={'live_working_set': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_soak_working_set(root)
+            self.assertEqual(str(ctx.exception), 'live_working_set_claimed')
+
+    def test_eight_hour_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_working_set(
+                root, overlay_overrides={'eight_hour_soak_executed': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_soak_working_set(root)
+            self.assertEqual(str(ctx.exception), 'eight_hour_soak_executed')
+
+    def test_soak_hours_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_working_set(root, overlay_overrides={'soak_hours': 8})
+            with self.assertRaises(QualityError) as ctx:
+                validate_soak_working_set(root)
+            self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_one_quarter_pane_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_working_set(
+                root, overlay_overrides={'one_quarter_pane_lab': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_soak_working_set(root)
+            self.assertEqual(str(ctx.exception), 'one_quarter_pane_lab_claimed')
+
+    def test_open_close_100_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_working_set(root, overlay_overrides={'open_close_100': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_soak_working_set(root)
+            self.assertEqual(str(ctx.exception), 'open_close_100_claimed')
+
+    def test_sampler_in_start_owned_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            _copy_live_working_set_not_run(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            owned = list(start['owned_pids'])
+            doc = _overlay_doc(start, sampler_pid=owned[0])
+            (root / 'evidence' / 'quality' / 'live-soak-working-set.json').write_text(
+                json.dumps(doc), encoding='utf-8'
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_soak_working_set(root)
+            self.assertEqual(str(ctx.exception), 'sampler_added_to_start_owned_pids')
+
+    def test_ci_and_justfile_do_not_record(self):
+        ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+        just = (ROOT / 'justfile').read_text(encoding='utf-8')
+        self.assertNotIn('record_soak_working_set.py --record', ci)
+        self.assertNotIn('record_soak_working_set.py --record', just)
 
 
 if __name__ == '__main__':
