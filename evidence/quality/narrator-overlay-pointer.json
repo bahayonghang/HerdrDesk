@@ -19,6 +19,7 @@
   "l2_collectors_are_not_live_pass": true,
   "limitations": [
     "Narrator.exe presence is recorded by the overlay. Tests and CI do not start Narrator.exe.",
+    "A separate product-UI + Narrator.exe launch record lives at evidence/quality/narrator-product-ui-launch.json. That record is not AC37.",
     "Shipped AutomationProperties names are not screen-reader evidence.",
     "This pointer is not live AC37 evidence.",
     "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",

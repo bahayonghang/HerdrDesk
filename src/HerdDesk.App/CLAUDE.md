@@ -2,7 +2,7 @@
 
 [根索引](../../CLAUDE.md) · [src](../CLAUDE.md) · App
 
-HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 Windows 上的 `net10.0-windows10.0.19041.0` TFM。该 TFM 准入 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 与四区 `App.xaml` / `MainWindow` / Shell 页。HD-014 L2 用 WinUI `WebView2` 承载 `web/terminal/dist`（`@xterm/xterm` 6.0.0）。`WindowsPackageType=None`，`WindowsAppSDKSelfContained=true`，`RuntimeIdentifier=win-x64`。BCL CI 传 `-p:HerdDeskBclOnly=true`，此时 TargetFrameworks 仅为 `net10.0`，且不编译 XAML code-behind。桌面 gate 不传该开关。`--shell-smoke` 只解析窗口类型，不泵 message loop。`--ui <temp-root>` 才启动 WinUI。CI 不启动 WinUI 窗口。L2 WebView process 与 L3 IME/Narrator/DPI 为 UNVERIFIED。Windows toast 注册为 L2 UNVERIFIED。
+HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 Windows 上的 `net10.0-windows10.0.19041.0` TFM。该 TFM 准入 `Microsoft.WindowsAppSDK.WinUI` 2.3.6 与四区 `App.xaml` / `MainWindow` / Shell 页。HD-014 L2 用 WinUI `WebView2` 承载 `web/terminal/dist`（`@xterm/xterm` 6.0.0）。`WindowsPackageType=None`，`WindowsAppSDKSelfContained=true`，`RuntimeIdentifier=win-x64`。BCL CI 传 `-p:HerdDeskBclOnly=true`，此时 TargetFrameworks 仅为 `net10.0`，且不编译 XAML code-behind。桌面 gate 不传该开关。`--shell-smoke` 只解析窗口类型，不泵 message loop。`--ui <temp-root>` 才启动 WinUI。CI 不启动 WinUI 窗口。HD-033 有一次本机 `--ui` + Narrator.exe 启动记录，不是 AC37。L2 WebView process 与 L3 IME/Narrator/DPI 为 UNVERIFIED。Windows toast 注册为 L2 UNVERIFIED。
 
 ## 职责
 
@@ -24,7 +24,7 @@ HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 W
 - HD-029 L1：`Files/` 双栏 `FilePaneViewModel` / `FileWorkspaceViewModel` / `TransferQueueViewModel` / `ConflictDialogViewModel`。不可变 `TransferDraft`、确认后 target lease、队列进度、Replace/KeepBoth/Cancel。无 WinUI XAML。不启动 filebridge。L2 live UI/SSH 为 UNVERIFIED。产品 AC31/AC33 未通过。
 - HD-030 L1：`ViewModels/AttachToAgentViewModel` 三种投入意图、capability 徽章、目标面包屑、CopyPath 降级。无 WinUI XAML。路径输入不声称 agent 已接收。L2 live agent/IME/SSH 为 UNVERIFIED。产品 AC35 未通过。
 - HD-031 L1：`ViewModels/PastePreviewViewModel` 显式粘贴确认、多行默认 Cancel、目标面包屑/行数/字节、键盘与 screen reader 名称。无 WinUI XAML。无 clipboard watcher。文件/图像交给 HD-030 draft，Ctrl+V 成功不声称 agent 附件能力。L2 live clipboard/IME 为 UNVERIFIED。产品 AC36 未通过。
-- HD-033 L2：`Quality/` 冷启动 / 搜索延迟 / 无障碍名称采集器。原始 JSON 写 gitignored `probe-results/`。不是 live 8h soak、可见像素、Narrator 或 AC 通过。CI 不启动 `--ui`。
+- HD-033 L2：`Quality/` 冷启动 / 搜索延迟 / 无障碍名称采集器。原始 JSON 写 gitignored `probe-results/`。本机 `--ui` + Narrator.exe 启动记录见 `evidence/quality/narrator-product-ui-launch.json`；不是 live 8h soak、可见像素、AC37 或 G0 通过。CI 不启动 `--ui`。
 - 生产启动不得注册 `IsFakeSuccess` adapter。
 - 释放顺序：SSH tester cancel → helper cancel → renderer → transports → RPC → diagnostics。退出只释放本应用 child processes。
 
@@ -33,6 +33,7 @@ HD-007 composition root: `net10.0` 控制台宿主（`--compose-only`）加上 W
 ```powershell
 dotnet run --project src/HerdDesk.App -- --compose-only <temp-root>
 dotnet run --project src/HerdDesk.App --framework net10.0-windows10.0.19041.0 -- --shell-smoke
+dotnet run --project src/HerdDesk.App --framework net10.0-windows10.0.19041.0 -- --ui <temp-root>
 ```
 
 默认不写用户 AppData。不要在 CI 里对真实用户目录跑宿主。`--ui <temp-root>` 才显示窗口。L1 测试：`dotnet run --project tests/Unit/HerdDesk.App.Tests`。L2 控制台：`dotnet run --project tests/Integration.Windows`。

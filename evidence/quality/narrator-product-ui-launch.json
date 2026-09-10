@@ -1,0 +1,112 @@
+{
+  "document_kind": "hd033_narrator_product_ui_launch",
+  "template": false,
+  "capture_id": "hd033-narrator-product-ui-launch-2026-09-10",
+  "kind": "narrator_product_ui_launch",
+  "captured_at_utc": "2026-09-10T09:18:20Z",
+  "operator_scope": "product_ui_and_narrator_launch_ac37_workflow_incomplete",
+  "git_sha": "20c64e8a866289e3cf042a6afce135c7779da2ea",
+  "platform": {
+    "sys_platform": "win32",
+    "system": "Windows",
+    "release": "11",
+    "version": "10.0.26200",
+    "machine": "AMD64",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "result": "not_run",
+  "evidence_level": "launch_recorded",
+  "live_narrator": false,
+  "ac37_passed": false,
+  "l3_narrator": "UNVERIFIED",
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "herdr_executed": false,
+  "winui_admitted": false,
+  "invented_timings": false,
+  "product_ui_started": true,
+  "window_seen": true,
+  "narrator_exe_present": true,
+  "narrator_started_by_this_run": true,
+  "narrator_started_by_collector": false,
+  "narrator_was_already_running": false,
+  "automation_names_are_not_screen_reader_evidence": true,
+  "ac37_workflow_completed": false,
+  "ac37_steps": {
+    "search": "not_completed",
+    "request_control": "not_completed",
+    "release": "not_completed",
+    "close_confirm": "not_completed"
+  },
+  "keyboard_chrome": "set_foreground_failed",
+  "uia_chrome_names_found": [
+    "连接状态",
+    "设置",
+    "诊断",
+    "关于",
+    "设备与会话",
+    "设备与会话",
+    "添加设备",
+    "诊断"
+  ],
+  "uia": {
+    "ok": true,
+    "error": null,
+    "name_count": 14
+  },
+  "windows": [
+    {
+      "title": "HerdDesk",
+      "pid": 52564
+    }
+  ],
+  "commands": [
+    {
+      "role": "product_ui",
+      "command_redacted": [
+        "dotnet",
+        "run",
+        "--project",
+        "src/HerdDesk.App",
+        "--framework",
+        "net10.0-windows10.0.19041.0",
+        "--configuration",
+        "Release",
+        "--",
+        "--ui",
+        "<temp-root>"
+      ],
+      "pid": 78280,
+      "app_pids": [
+        52564
+      ],
+      "exit_code": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_gitignored_path": "probe-results/hd033-narrator-product-ui-stdout.txt",
+      "stderr_gitignored_path": "probe-results/hd033-narrator-product-ui-stderr.txt"
+    },
+    {
+      "role": "narrator",
+      "command_redacted": [
+        "Narrator.exe"
+      ],
+      "start_method": "shellexecute",
+      "pid": 83824,
+      "exit_code": 255,
+      "stdout_sha256": null,
+      "stderr_sha256": null
+    }
+  ],
+  "raw_gitignored_path": "probe-results/hd033-narrator-product-ui-launch.json",
+  "committed_raw": true,
+  "blocker": null,
+  "limitations": [
+    "Product UI --ui and Narrator.exe were launched on this Windows desktop.",
+    "AC37 search / request-control / release / close-confirm was not completed; no live session; herdr writes remain forbidden.",
+    "RequestControl was not invoked. Overlay collector did not start Narrator.",
+    "Shipped AutomationProperties names are not screen-reader evidence.",
+    "This file is not live_narrator success and does not pass AC37 or G0.",
+    "Hosted CI is not an interactive desktop and must not run --record."
+  ]
+}

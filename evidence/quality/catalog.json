@@ -39,6 +39,7 @@
   "l2_collectors_are_not_live_pass": true,
   "environment_manifest_pointer": "evidence/quality/environment-pointer.json",
   "narrator_overlay_pointer": "evidence/quality/narrator-overlay-pointer.json",
+  "narrator_product_ui_launch": "evidence/quality/narrator-product-ui-launch.json",
   "dpi_overlay_pointer": "evidence/quality/dpi-overlay-pointer.json",
   "copy_windows_fields_onto_linux": false,
   "extrapolate_macos_arm64": false,
@@ -199,7 +200,7 @@
       "live_result": "not_run",
       "required_evidence": "L3",
       "live_capture": "evidence/quality/live-narrator.not-run.json",
-      "missing_grant": "no_authorized_narrator_desktop"
+      "missing_grant": "ac37_workflow_incomplete_no_live_session"
     },
     {
       "id": "dpi-100-150-200",
@@ -306,7 +307,7 @@
       "result": "not_run",
       "template": false,
       "evidence_path": "evidence/quality/live-narrator.not-run.json",
-      "missing_grant": "no_authorized_narrator_desktop"
+      "missing_grant": "ac37_workflow_incomplete_no_live_session"
     },
     {
       "id": "live-dpi",
@@ -331,5 +332,5 @@
       "missing_grant": "no_authorized_eight_hour_soak"
     }
   ],
-  "note": "HD-033 L1 closeout catalog plus L2 collectors and a Narrator presence overlay. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. L2 collectors write gitignored probe-results and do not close live rows. The Narrator overlay is not AC37. Shipped AutomationProperties names are not screen-reader evidence. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator, and working-set stay not_run. github_required_check stays UNVERIFIED. This file is not product AC pass evidence."
+  "note": "HD-033 L1 closeout catalog plus L2 collectors, a Narrator presence overlay, and a product-UI + Narrator.exe launch record. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. L2 collectors write gitignored probe-results and do not close live rows. The Narrator overlay is not AC37 and does not start Narrator. The product-UI launch record is not live_narrator success and does not pass AC37. Shipped AutomationProperties names are not screen-reader evidence. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator AC37 workflow, and working-set stay not_run. github_required_check stays UNVERIFIED. This file is not product AC pass evidence."
 }

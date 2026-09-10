@@ -18,6 +18,6 @@ Live Windows named-pipe ACL, live herdr connect, and daemon-unreachable desktop 
 
 ## Chrome that would need UI
 
-Search palette, device tree, settings, and diagnostics bind those ViewModels in WinUI XAML. Keyboard, Narrator, and DPI evidence stay UNVERIFIED (HD-033). Do not write walkthrough steps that treat a local window as AC19 or AC37/AC38.
+Search palette, device tree, settings, and diagnostics bind those ViewModels in WinUI XAML. A local `--ui` + Narrator.exe launch was recorded for HD-033; keyboard, Narrator AC37 workflow, and DPI evidence stay UNVERIFIED. Do not write walkthrough steps that treat a local window as AC19 or AC37/AC38.
 
 Independent-user verification of this page is not authorized. Missing grant: `no_authorized_independent_user_walkthrough`.

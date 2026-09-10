@@ -17,7 +17,7 @@ from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
-from herddesk_g0.quality import collect_dpi_overlay, collect_narrator_overlay
+from herddesk_g0.quality import collect_dpi_overlay, collect_narrator_overlay, validate_narrator_product_ui_launch
 from herddesk_g0.release import bind_release_candidate
 from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
 import run_windows_desktop_gate as desktop_gate
@@ -878,7 +878,7 @@ _HD033_CARD_GRANTS = {
     'search-p95': 'no_authorized_live_search_p95',
     'working-set-1-4-pane': 'no_authorized_working_set_process_sample',
     'hide-show-100': 'no_authorized_pane_hide_show_handle_lab',
-    'narrator': 'no_authorized_narrator_desktop',
+    'narrator': 'ac37_workflow_incomplete_no_live_session',
     'dpi-100-150-200': 'no_authorized_dpi_theme_monitor_matrix',
     'eight-hour-soak': 'no_authorized_eight_hour_soak',
 }
@@ -893,7 +893,7 @@ _HD033_LIVE_GRANTS = {
     'live-search-p95': 'no_authorized_live_search_p95',
     'live-working-set': 'no_authorized_working_set_process_sample',
     'live-handle-reclaim': 'no_authorized_pane_hide_show_handle_lab',
-    'live-narrator': 'no_authorized_narrator_desktop',
+    'live-narrator': 'ac37_workflow_incomplete_no_live_session',
     'live-dpi': 'no_authorized_dpi_theme_monitor_matrix',
     'live-soak': 'no_authorized_eight_hour_soak',
 }
@@ -1083,6 +1083,7 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert pointer.get('l2_collectors_are_not_live_pass') is True
     assert pointer.get('complete_1_0_claimed') is not True
     assert catalog.get('narrator_overlay_pointer') == 'evidence/quality/narrator-overlay-pointer.json'
+    assert catalog.get('narrator_product_ui_launch') == 'evidence/quality/narrator-product-ui-launch.json'
     overlay_pointer = json.loads((ROOT / catalog['narrator_overlay_pointer']).read_text(encoding='utf-8'))
     _reject_hd033_pass_claims(overlay_pointer)
     _reject_hd033_invented_timings(overlay_pointer)
@@ -1284,6 +1285,52 @@ def _check_hd033_narrator_overlay() -> None:
     assert live.get('result') == 'not_run'
     assert not _is_hd033_success(live.get('result'))
     assert live.get('live_narrator') is False
+
+
+def _check_hd033_narrator_product_ui_launch() -> None:
+    """Validate launch record. Do not start --ui or Narrator.exe. Not AC37."""
+    assert (ROOT / 'scripts' / 'record_narrator_product_ui_launch.py').is_file()
+    assert (ROOT / 'evidence' / 'quality' / 'narrator-product-ui-launch.json').is_file()
+    report = validate_narrator_product_ui_launch(ROOT)
+    assert report.get('document_kind') == 'hd033_narrator_product_ui_launch'
+    assert report.get('product_ui_started') is True
+    assert report.get('narrator_started_by_this_run') is True
+    assert report.get('narrator_started_by_collector') is False
+    assert report.get('automation_names_are_not_screen_reader_evidence') is True
+    assert report.get('ac37_passed') is False
+    assert report.get('ac37_workflow_completed') is False
+    assert report.get('live_narrator') is False
+    assert report.get('result') == 'not_run'
+    assert not _is_hd033_success(report.get('result'))
+    assert report.get('l3_narrator') == 'UNVERIFIED'
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('herdr_executed') is False
+    assert report.get('invented_timings') is False
+    launch = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'narrator-product-ui-launch.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(launch)
+    _reject_hd033_invented_timings(launch)
+    assert launch.get('result') == 'not_run'
+    assert launch.get('live_narrator') is False
+    assert launch.get('ac37_passed') is False
+    assert launch.get('ac37_workflow_completed') is False
+    assert launch.get('product_ui_started') is True
+    assert launch.get('narrator_started_by_this_run') is True
+    assert launch.get('keyboard_chrome') == 'set_foreground_failed'
+    steps = launch.get('ac37_steps')
+    assert isinstance(steps, dict)
+    for key in ('search', 'request_control', 'release', 'close_confirm'):
+        assert steps.get(key) == 'not_completed', key
+    ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    just = (ROOT / 'justfile').read_text(encoding='utf-8')
+    assert 'record_narrator_product_ui_launch.py --record' not in ci
+    assert 'record_narrator_product_ui_launch.py --record' not in just
+    assert '--ui' not in ci
+    assert '--ui' not in just
 
 
 def _check_hd033_dpi_overlay() -> None:
@@ -3352,6 +3399,7 @@ def validate() -> dict:
     _check_hd032_closeout(hd032, files_catalog, files_matrix)
     _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
     _check_hd033_narrator_overlay()
+    _check_hd033_narrator_product_ui_launch()
     _check_hd033_dpi_overlay()
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd034_package_script_contract()

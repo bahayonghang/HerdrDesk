@@ -1,7 +1,8 @@
-"""HD-033 Narrator presence and current-system-DPI overlays. Not AC37 or AC38."""
+"""HD-033 Narrator presence overlay, product-UI launch record check, and DPI overlay. Not AC37 or AC38."""
 from __future__ import annotations
 
 import ctypes
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -360,4 +361,208 @@ def collect_dpi_overlay(root: Path) -> dict[str, Any]:
         'phase_gate': 'not_passed',
         'herdr_executed': False,
         'invented_timings': False,
+    }
+
+
+LAUNCH_REL = 'evidence/quality/narrator-product-ui-launch.json'
+LAUNCH_KIND = 'hd033_narrator_product_ui_launch'
+LAUNCH_REQUIRED_KEYS = (
+    'document_kind', 'result', 'live_narrator', 'ac37_passed', 'l3_narrator',
+    'product_ui_started', 'narrator_started_by_this_run',
+    'narrator_started_by_collector', 'ac37_workflow_completed',
+    'automation_names_are_not_screen_reader_evidence', 'git_sha',
+    'captured_at_utc', 'platform', 'commands', 'herdr_executed',
+    'g0_passed', 'invented_timings', 'keyboard_chrome', 'ac37_steps',
+)
+EMPTY_SHA256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+KEYBOARD_CHROME_PASS = frozenset({'completed', 'complete'})
+LAUNCH_FALSE_KEYS = (
+    'ac37_passed', 'live_narrator', 'narrator_started_by_collector',
+    'ac37_workflow_completed', 'herdr_executed', 'invented_timings',
+    'g0_passed',
+)
+LAUNCH_TRUE_KEYS = ('automation_names_are_not_screen_reader_evidence',)
+AC37_STEP_KEYS = ('search', 'request_control', 'release', 'close_confirm')
+
+
+def _launch_false_key_code(key: str) -> str:
+    if key in {'ac37_passed', 'g0_passed'}:
+        return key
+    if key == 'narrator_started_by_collector':
+        return 'collector_started_narrator'
+    if key == 'live_narrator':
+        return 'live_narrator_claimed'
+    if key == 'ac37_workflow_completed':
+        return 'ac37_workflow_claimed'
+    return key
+
+
+def _reject_launch_false_keys(doc: dict[str, Any]) -> None:
+    for key in LAUNCH_FALSE_KEYS:
+        if key in doc and doc.get(key) is not False:
+            raise QualityError(_launch_false_key_code(key))
+
+
+def _reject_keyboard_chrome(doc: dict[str, Any]) -> None:
+    chrome = doc.get('keyboard_chrome')
+    if not isinstance(chrome, str) or not chrome:
+        raise QualityError('missing_record_field')
+    token = _token(chrome)
+    if _is_success(chrome) or token in KEYBOARD_CHROME_PASS:
+        raise QualityError('ac37_workflow_claimed')
+
+
+def _check_launch_hashes(root: Path, item: dict[str, Any]) -> None:
+    """Empty SHA is valid only when the gitignored capture file is empty."""
+    for key, path_key in (
+        ('stdout_sha256', 'stdout_gitignored_path'),
+        ('stderr_sha256', 'stderr_gitignored_path'),
+    ):
+        value = item.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, str) or len(value) != 64:
+            raise QualityError('missing_record_field')
+        try:
+            int(value, 16)
+        except ValueError as exc:
+            raise QualityError('missing_record_field') from exc
+        digest = value.lower()
+        rel = item.get(path_key)
+        if not isinstance(rel, str) or not rel:
+            continue
+        path = root / rel
+        if not path.is_file():
+            continue
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != digest:
+            raise QualityError('invented_hash')
+
+
+def _reject_launch_pass_claims(doc: dict[str, Any]) -> None:
+    if _is_success(doc.get('ac37_passed')):
+        raise QualityError('ac37_passed')
+    if _is_success(doc.get('g0_passed')):
+        raise QualityError('g0_passed')
+    if _is_success(doc.get('phase_gate')) or doc.get('phase_gate') == 'passed':
+        raise QualityError('ac37_passed')
+    if _is_success(doc.get('live_narrator')):
+        raise QualityError('live_narrator_claimed')
+    if _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if 'l3_narrator' in doc and doc.get('l3_narrator') != 'UNVERIFIED':
+        raise QualityError('l3_narrator_claimed')
+    if _is_success(doc.get('narrator_started_by_collector')):
+        raise QualityError('collector_started_narrator')
+    if _is_success(doc.get('ac37_workflow_completed')):
+        raise QualityError('ac37_workflow_claimed')
+    if (
+        'automation_names_are_not_screen_reader_evidence' in doc
+        and doc.get('automation_names_are_not_screen_reader_evidence') is not True
+    ):
+        raise QualityError('automation_names_claimed_as_evidence')
+    _reject_launch_false_keys(doc)
+
+
+def validate_narrator_product_ui_launch(root: Path) -> dict[str, Any]:
+    """Fail-closed check of a product-UI + Narrator launch record. Not AC37."""
+    root = Path(root)
+    doc = _load_json(root / LAUNCH_REL)
+    for key in LAUNCH_REQUIRED_KEYS:
+        if key not in doc:
+            raise QualityError('missing_record_field')
+    if doc.get('document_kind') != LAUNCH_KIND:
+        raise QualityError('missing_record_field')
+    if doc.get('result') != 'not_run' or _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if doc.get('l3_narrator') != 'UNVERIFIED':
+        raise QualityError('l3_narrator_claimed')
+    for key in LAUNCH_TRUE_KEYS:
+        if doc.get(key) is not True:
+            raise QualityError('automation_names_claimed_as_evidence')
+    _reject_launch_pass_claims(doc)
+    _check_acceptance(root)
+    git_sha = doc.get('git_sha')
+    if not isinstance(git_sha, str) or len(git_sha) < 7:
+        raise QualityError('missing_record_field')
+    captured = doc.get('captured_at_utc')
+    if not isinstance(captured, str) or not captured:
+        raise QualityError('missing_record_field')
+    platform = doc.get('platform')
+    if not isinstance(platform, dict):
+        raise QualityError('missing_record_field')
+    commands = doc.get('commands')
+    if not isinstance(commands, list) or not commands:
+        raise QualityError('missing_record_field')
+    if not isinstance(doc.get('product_ui_started'), bool):
+        raise QualityError('missing_record_field')
+    if not isinstance(doc.get('narrator_started_by_this_run'), bool):
+        raise QualityError('missing_record_field')
+    steps = doc.get('ac37_steps')
+    if not isinstance(steps, dict):
+        raise QualityError('missing_record_field')
+    for key in AC37_STEP_KEYS:
+        if steps.get(key) != 'not_completed':
+            raise QualityError('ac37_workflow_claimed')
+    _reject_keyboard_chrome(doc)
+    roles: dict[str, Any] = {}
+    for item in commands:
+        if not isinstance(item, dict):
+            raise QualityError('missing_record_field')
+        role = item.get('role')
+        if not isinstance(role, str):
+            raise QualityError('missing_record_field')
+        roles[role] = item
+        command = item.get('command_redacted')
+        if not isinstance(command, list) or not command:
+            raise QualityError('missing_record_field')
+        if item.get('pid') is not None and (
+            not isinstance(item.get('pid'), int) or item.get('pid') <= 0
+        ):
+            raise QualityError('missing_record_field')
+        _check_launch_hashes(root, item)
+    if doc.get('product_ui_started') is True:
+        ui = roles.get('product_ui')
+        if not isinstance(ui, dict) or not isinstance(ui.get('pid'), int):
+            raise QualityError('missing_record_field')
+        argv = [str(part) for part in ui.get('command_redacted') or []]
+        joined = ' '.join(argv)
+        if '--ui' not in argv and '--ui' not in joined:
+            raise QualityError('missing_record_field')
+        if '--shell-smoke' in argv or '--compose-only' in argv:
+            raise QualityError('missing_record_field')
+    if doc.get('narrator_started_by_this_run') is True:
+        narrator = roles.get('narrator')
+        if not isinstance(narrator, dict) or not isinstance(narrator.get('pid'), int):
+            raise QualityError('missing_record_field')
+        argv = [str(part).lower() for part in narrator.get('command_redacted') or []]
+        if not any('narrator.exe' in part for part in argv):
+            raise QualityError('missing_record_field')
+    pointer = _load_json(root / POINTER_REL)
+    live = _load_json(root / LIVE_NARRATOR_REL)
+    _reject_pass_claims(pointer)
+    _reject_pass_claims(live)
+    if pointer.get('narrator_started_by_collector') is not False:
+        raise QualityError('collector_started_narrator')
+    if live.get('result') != 'not_run' or live.get('live_narrator') is not False:
+        raise QualityError('live_narrator_claimed')
+    return {
+        'document_kind': LAUNCH_KIND,
+        'launch_capture': LAUNCH_REL,
+        'pointer': POINTER_REL,
+        'live_capture': LIVE_NARRATOR_REL,
+        'product_ui_started': doc.get('product_ui_started') is True,
+        'narrator_started_by_this_run': doc.get('narrator_started_by_this_run') is True,
+        'narrator_started_by_collector': False,
+        'automation_names_are_not_screen_reader_evidence': True,
+        'ac37_passed': False,
+        'ac37_workflow_completed': False,
+        'live_narrator': False,
+        'result': 'not_run',
+        'l3_narrator': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'invented_timings': False,
+        'git_sha': git_sha,
     }

@@ -1,5 +1,6 @@
 from copy import deepcopy
 from pathlib import Path
+import hashlib
 import json
 import os
 import subprocess
@@ -10,11 +11,14 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from herddesk_g0.quality import (
+    AC37_STEP_KEYS,
+    EMPTY_SHA256,
     QualityError,
     collect_dpi_overlay,
     collect_narrator_overlay,
     narrator_exe_path,
     system_dpi,
+    validate_narrator_product_ui_launch,
 )
 import validate_repository as repository
 
@@ -67,7 +71,7 @@ CARD_GRANTS = {
     'search-p95': 'no_authorized_live_search_p95',
     'working-set-1-4-pane': 'no_authorized_working_set_process_sample',
     'hide-show-100': 'no_authorized_pane_hide_show_handle_lab',
-    'narrator': 'no_authorized_narrator_desktop',
+    'narrator': 'ac37_workflow_incomplete_no_live_session',
     'dpi-100-150-200': 'no_authorized_dpi_theme_monitor_matrix',
     'eight-hour-soak': 'no_authorized_eight_hour_soak',
 }
@@ -77,7 +81,7 @@ LIVE_GRANTS = {
     'live-search-p95': 'no_authorized_live_search_p95',
     'live-working-set': 'no_authorized_working_set_process_sample',
     'live-handle-reclaim': 'no_authorized_pane_hide_show_handle_lab',
-    'live-narrator': 'no_authorized_narrator_desktop',
+    'live-narrator': 'ac37_workflow_incomplete_no_live_session',
     'live-dpi': 'no_authorized_dpi_theme_monitor_matrix',
     'live-soak': 'no_authorized_eight_hour_soak',
 }
@@ -172,6 +176,10 @@ class Hd033ResidualTests(unittest.TestCase):
             'evidence/quality/narrator-overlay-pointer.json',
         )
         self.assertEqual(
+            catalog['narrator_product_ui_launch'],
+            'evidence/quality/narrator-product-ui-launch.json',
+        )
+        self.assertEqual(
             catalog['dpi_overlay_pointer'],
             'evidence/quality/dpi-overlay-pointer.json',
         )
@@ -202,6 +210,25 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertTrue(overlay_pointer['l2_collectors_are_not_live_pass'])
         self.assertIsNot(overlay_pointer.get('complete_1_0_claimed'), True)
         self.assertTrue((ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file())
+        self.assertTrue((ROOT / 'scripts' / 'record_narrator_product_ui_launch.py').is_file())
+        launch = json.loads(
+            (ROOT / catalog['narrator_product_ui_launch']).read_text(encoding='utf-8')
+        )
+        self.assertEqual(launch['document_kind'], 'hd033_narrator_product_ui_launch')
+        self.assertEqual(launch['result'], 'not_run')
+        self.assertFalse(launch['live_narrator'])
+        self.assertFalse(launch['ac37_passed'])
+        self.assertFalse(launch['ac37_workflow_completed'])
+        self.assertEqual(launch['l3_narrator'], 'UNVERIFIED')
+        self.assertTrue(launch['product_ui_started'])
+        self.assertTrue(launch['narrator_started_by_this_run'])
+        self.assertFalse(launch['narrator_started_by_collector'])
+        self.assertFalse(launch['herdr_executed'])
+        self.assertFalse(launch['g0_passed'])
+        self.assertTrue(launch['automation_names_are_not_screen_reader_evidence'])
+        self.assertEqual(launch['keyboard_chrome'], 'set_foreground_failed')
+        for key in AC37_STEP_KEYS:
+            self.assertEqual(launch['ac37_steps'][key], 'not_completed', key)
         dpi_overlay_pointer = json.loads(
             (ROOT / catalog['dpi_overlay_pointer']).read_text(encoding='utf-8')
         )
@@ -533,6 +560,11 @@ class Hd033ResidualTests(unittest.TestCase):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
         bad = deepcopy(catalog)
+        bad.pop('narrator_product_ui_launch')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
         bad['narrator_overlay_pointer'] = 'evidence/quality/environment-pointer.json'
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
@@ -637,6 +669,14 @@ class Hd033NarratorOverlayTests(unittest.TestCase):
         self.assertTrue(report['automation_names_are_not_screen_reader_evidence'])
         self.assertFalse(report['narrator_started_by_collector'])
         self.assertFalse(report['g0_passed'])
+
+    def test_overlay_collector_does_not_start_narrator(self):
+        src = (ROOT / 'scripts' / 'collect_narrator_overlay.py').read_text(
+            encoding='utf-8'
+        )
+        self.assertNotIn('Start-Process', src)
+        self.assertNotIn('ShellExecute', src)
+        self.assertNotIn('--record', src)
 
     def test_structure_contract_invokes_shipped_overlay(self):
         repository._check_hd033_narrator_overlay()
@@ -748,6 +788,221 @@ class Hd033NarratorOverlayTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 collect_narrator_overlay(root)
             self.assertEqual(str(ctx.exception), 'ac37_passed')
+
+
+def _write_launch(tmp: Path, *, launch_overrides=None, pointer_overrides=None, live_overrides=None) -> None:
+    quality = tmp / 'evidence' / 'quality'
+    quality.mkdir(parents=True, exist_ok=True)
+    launch = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'narrator-product-ui-launch.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    pointer = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'narrator-overlay-pointer.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    live = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-narrator.not-run.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    if launch_overrides:
+        launch.update(launch_overrides)
+    if pointer_overrides:
+        pointer.update(pointer_overrides)
+    if live_overrides:
+        live.update(live_overrides)
+    (quality / 'narrator-product-ui-launch.json').write_text(
+        json.dumps(launch), encoding='utf-8'
+    )
+    (quality / 'narrator-overlay-pointer.json').write_text(
+        json.dumps(pointer), encoding='utf-8'
+    )
+    (quality / 'live-narrator.not-run.json').write_text(
+        json.dumps(live), encoding='utf-8'
+    )
+
+
+class Hd033NarratorProductUiLaunchTests(unittest.TestCase):
+    def test_shipped_launch_record_is_not_ac37(self):
+        report = validate_narrator_product_ui_launch(ROOT)
+        self.assertEqual(report['document_kind'], 'hd033_narrator_product_ui_launch')
+        self.assertTrue(report['product_ui_started'])
+        self.assertTrue(report['narrator_started_by_this_run'])
+        self.assertFalse(report['narrator_started_by_collector'])
+        self.assertTrue(report['automation_names_are_not_screen_reader_evidence'])
+        self.assertFalse(report['ac37_passed'])
+        self.assertFalse(report['ac37_workflow_completed'])
+        self.assertFalse(report['live_narrator'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertNotIn(str(report['result']).lower(), SUCCESS)
+        self.assertEqual(report['l3_narrator'], 'UNVERIFIED')
+        self.assertFalse(report['g0_passed'])
+        launch = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'narrator-product-ui-launch.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(launch['keyboard_chrome'], 'set_foreground_failed')
+        for key in AC37_STEP_KEYS:
+            self.assertEqual(launch['ac37_steps'][key], 'not_completed', key)
+        overlay = collect_narrator_overlay(ROOT)
+        self.assertFalse(overlay['ac37_passed'])
+        self.assertFalse(overlay['live_narrator'])
+        self.assertFalse(overlay['narrator_started_by_collector'])
+        self.assertEqual(overlay['result'], 'not_run')
+        ui = next(
+            item for item in launch['commands'] if item.get('role') == 'product_ui'
+        )
+        for key, path_key in (
+            ('stdout_sha256', 'stdout_gitignored_path'),
+            ('stderr_sha256', 'stderr_gitignored_path'),
+        ):
+            digest = ui[key]
+            path = ROOT / ui[path_key]
+            self.assertEqual(len(digest), 64)
+            if path.is_file():
+                actual = hashlib.sha256(path.read_bytes()).hexdigest()
+                self.assertEqual(actual, digest, path_key)
+                if digest == EMPTY_SHA256:
+                    self.assertEqual(path.stat().st_size, 0, path_key)
+
+    def test_cli_validates_without_starting_processes(self):
+        script = ROOT / 'scripts' / 'record_narrator_product_ui_launch.py'
+        self.assertTrue(script.is_file())
+        src = script.read_text(encoding='utf-8')
+        self.assertIn('--record', src)
+        self.assertIn('--ui', src)
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertFalse(report['ac37_passed'])
+        self.assertFalse(report['live_narrator'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertTrue(report['product_ui_started'])
+        self.assertTrue(report['narrator_started_by_this_run'])
+
+    def test_structure_contract_invokes_launch_record(self):
+        repository._check_hd033_narrator_product_ui_launch()
+
+    def test_missing_launch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(Path(tmp))
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_ac37_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, launch_overrides={'ac37_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'ac37_passed')
+
+    def test_live_narrator_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, launch_overrides={'live_narrator': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'live_narrator_claimed')
+
+    def test_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_launch(root, launch_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    validate_narrator_product_ui_launch(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_l3_narrator_pass_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, launch_overrides={'l3_narrator': 'passed'})
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'l3_narrator_claimed')
+
+    def test_workflow_completed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, launch_overrides={'ac37_workflow_completed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'ac37_workflow_claimed')
+
+    def test_collector_started_narrator_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, launch_overrides={'narrator_started_by_collector': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'collector_started_narrator')
+
+    def test_search_step_completed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(
+                root,
+                launch_overrides={
+                    'ac37_steps': {
+                        'search': 'completed',
+                        'request_control': 'not_completed',
+                        'release': 'not_completed',
+                        'close_confirm': 'not_completed',
+                    }
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'ac37_workflow_claimed')
+
+    def test_overlay_live_narrator_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, live_overrides={'live_narrator': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'live_narrator_claimed')
+
+    def test_g0_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, launch_overrides={'g0_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'g0_passed')
+
+    def test_keyboard_chrome_success_fails_closed(self):
+        for value in ('success', 'passed', 'ok', 'completed'):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_launch(root, launch_overrides={'keyboard_chrome': value})
+                with self.assertRaises(QualityError) as ctx:
+                    validate_narrator_product_ui_launch(root)
+                self.assertEqual(str(ctx.exception), 'ac37_workflow_claimed')
+
+    def test_empty_stdout_sha_rejected_when_file_nonempty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root)
+            probe = root / 'probe-results'
+            probe.mkdir(parents=True, exist_ok=True)
+            (probe / 'hd033-narrator-product-ui-stdout.txt').write_bytes(b'not-empty')
+            (probe / 'hd033-narrator-product-ui-stderr.txt').write_bytes(b'')
+            with self.assertRaises(QualityError) as ctx:
+                validate_narrator_product_ui_launch(root)
+            self.assertEqual(str(ctx.exception), 'invented_hash')
 
 
 def _write_dpi_overlay(tmp: Path, *, pointer_overrides=None, live_overrides=None) -> None:

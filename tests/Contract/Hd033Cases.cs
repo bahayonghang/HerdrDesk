@@ -62,7 +62,7 @@ internal static class Hd033Cases
         ["search-p95"] = "no_authorized_live_search_p95",
         ["working-set-1-4-pane"] = "no_authorized_working_set_process_sample",
         ["hide-show-100"] = "no_authorized_pane_hide_show_handle_lab",
-        ["narrator"] = "no_authorized_narrator_desktop",
+        ["narrator"] = "ac37_workflow_incomplete_no_live_session",
         ["dpi-100-150-200"] = "no_authorized_dpi_theme_monitor_matrix",
         ["eight-hour-soak"] = "no_authorized_eight_hour_soak"
     };
@@ -74,7 +74,7 @@ internal static class Hd033Cases
         ["live-search-p95"] = "no_authorized_live_search_p95",
         ["live-working-set"] = "no_authorized_working_set_process_sample",
         ["live-handle-reclaim"] = "no_authorized_pane_hide_show_handle_lab",
-        ["live-narrator"] = "no_authorized_narrator_desktop",
+        ["live-narrator"] = "ac37_workflow_incomplete_no_live_session",
         ["live-dpi"] = "no_authorized_dpi_theme_monitor_matrix",
         ["live-soak"] = "no_authorized_eight_hour_soak"
     };
@@ -131,8 +131,12 @@ internal static class Hd033Cases
               == "evidence/quality/environment-pointer.json");
         Check(catalog.GetProperty("narrator_overlay_pointer").GetString()
               == "evidence/quality/narrator-overlay-pointer.json");
+        Check(catalog.GetProperty("narrator_product_ui_launch").GetString()
+              == "evidence/quality/narrator-product-ui-launch.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "narrator-overlay-pointer.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "collect_narrator_overlay.py")));
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "narrator-product-ui-launch.json")));
+        Check(File.Exists(Path.Combine(root, "scripts", "record_narrator_product_ui_launch.py")));
         Check(catalog.GetProperty("dpi_overlay_pointer").GetString()
               == "evidence/quality/dpi-overlay-pointer.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
@@ -160,6 +164,22 @@ internal static class Hd033Cases
         Check(overlay.GetProperty("automation_names_are_not_screen_reader_evidence").GetBoolean());
         Check(overlay.GetProperty("narrator_started_by_collector").GetBoolean() is false);
         Check(overlay.GetProperty("invented_timings").GetBoolean() is false);
+        using var launchDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "narrator-product-ui-launch.json")));
+        var launch = launchDoc.RootElement;
+        Check(launch.GetProperty("document_kind").GetString() == "hd033_narrator_product_ui_launch");
+        Check(launch.GetProperty("result").GetString() == "not_run");
+        Check(launch.GetProperty("live_narrator").GetBoolean() is false);
+        Check(launch.GetProperty("ac37_passed").GetBoolean() is false);
+        Check(launch.GetProperty("ac37_workflow_completed").GetBoolean() is false);
+        Check(launch.GetProperty("l3_narrator").GetString() == "UNVERIFIED");
+        Check(launch.GetProperty("product_ui_started").GetBoolean());
+        Check(launch.GetProperty("narrator_started_by_this_run").GetBoolean());
+        Check(launch.GetProperty("narrator_started_by_collector").GetBoolean() is false);
+        Check(launch.GetProperty("herdr_executed").GetBoolean() is false);
+        Check(launch.GetProperty("keyboard_chrome").GetString() == "set_foreground_failed");
+        foreach (var key in new[] { "search", "request_control", "release", "close_confirm" })
+            Check(launch.GetProperty("ac37_steps").GetProperty(key).GetString() == "not_completed");
         using var dpiOverlayDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
         var dpiOverlay = dpiOverlayDoc.RootElement;

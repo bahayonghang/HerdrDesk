@@ -4,7 +4,7 @@
   "capture_id": "hd033-live-narrator-2026-09-09-not-run",
   "kind": "live_narrator",
   "captured_at_utc": "2026-09-09T12:00:00Z",
-  "operator_scope": "narrator_exe_present_not_launched",
+  "operator_scope": "product_ui_and_narrator_launch_ac37_workflow_incomplete",
   "host_fingerprint_redacted": null,
   "command_redacted": null,
   "exit_code": null,
@@ -17,7 +17,9 @@
   "winui_admitted": false,
   "invented_timings": false,
   "limitations": [
-    "Narrator.exe presence is recorded by the environment collector and the Narrator overlay. Narrator was not launched against product UI.",
+    "A product-UI --ui + Narrator.exe launch was recorded in evidence/quality/narrator-product-ui-launch.json. That launch is not AC37 and does not set live_narrator success.",
+    "AC37 search / request-control / release / close-confirm was not completed; no live session; herdr writes remain forbidden.",
+    "The L2 Narrator overlay still records presence versus launched and does not start Narrator.exe.",
     "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
     "Shipped AutomationProperties names are not screen-reader evidence.",
     "Hosted CI is not an interactive desktop."
