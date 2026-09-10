@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "Product e2df5ad: 8h soak START at 2026-09-10T09:49:06Z PIDs 89580/59552/57712. soak_hours null. eight_hour_soak_executed false. AC46/G0 not passed. Do not archive until 8 wall-clock hours elapse. Do not change display scale.",
+  "notes": "Product b871938: interruptions 09:49 and 11:11 recorded. Current soak START 2026-09-10T11:35:26Z PIDs 24744/27844 HerdDesk.App.exe DETACHED. soak_hours null. eight_hour_soak_executed false. AC46/G0 not passed. Do not archive until 8 wall-clock hours from 11:35:26Z. Do not change display scale.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"
