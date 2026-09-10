@@ -1,11 +1,14 @@
 from copy import deepcopy
 from pathlib import Path
 import json
+import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
+from herddesk_g0.release import ReleaseError, bind_release_candidate
 import validate_repository as repository
 
 L2 = ROOT / 'implementation' / 'hd-036-l2.json'
@@ -122,6 +125,10 @@ class Hd036ResidualTests(unittest.TestCase):
         self.assertTrue(missing['github_required_check_on_head'])
         self.assertTrue(missing['external_publish'])
         self.assertTrue(missing['signed_msix_hash'])
+        self.assertEqual(
+            doc['hosted_workflow_pointer'],
+            'evidence/releases/hosted-workflow-pointer.json',
+        )
         repository.check_integration_windows_layout(ROOT)
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
@@ -146,6 +153,29 @@ class Hd036ResidualTests(unittest.TestCase):
         self.assertFalse(catalog['screenshot_as_evidence'])
         self.assertEqual(catalog['github_required_check'], 'UNVERIFIED')
         self.assertEqual(catalog['windows_desktop_restore'], 'not_admitted')
+        self.assertEqual(
+            catalog['hosted_workflow_pointer'],
+            'evidence/releases/hosted-workflow-pointer.json',
+        )
+        pointer = json.loads(
+            (ROOT / catalog['hosted_workflow_pointer']).read_text(encoding='utf-8')
+        )
+        self.assertEqual(pointer['document_kind'], 'hd036_hosted_workflow_pointer')
+        self.assertEqual(pointer['result'], 'not_run')
+        self.assertEqual(pointer['bound_sha'], '602c252ae10303b63c6d8fc584e193e1ed5654c4')
+        self.assertEqual(pointer['hosted_workflow_run_id'], '34438599236')
+        self.assertEqual(pointer['hosted_workflow_conclusion'], 'success')
+        self.assertEqual(pointer['github_required_check'], 'UNVERIFIED')
+        self.assertNotIn(str(pointer['github_required_check']).lower(), SUCCESS)
+        self.assertTrue(pointer['hosted_workflow_is_not_required_check_ruleset'])
+        self.assertFalse(pointer['published'])
+        self.assertFalse(pointer['complete_1_0_claimed'])
+        self.assertFalse(pointer['ac40_passed'])
+        self.assertFalse(pointer['g0_passed'])
+        self.assertIsNone(pointer['candidate_sha'])
+        self.assertIsNone(pointer['hosted_check_run_id'])
+        self.assertIsNone(catalog['candidate_sha'])
+        self.assertIsNone(catalog['hosted_check_run_id'])
         self.assertEqual(catalog['redaction']['credential'], 'omitted')
         self.assertEqual(catalog['redaction']['host'], 'omitted')
         for key in NULL_KEYS:
@@ -486,6 +516,172 @@ class Hd036ResidualTests(unittest.TestCase):
         soak['live_rows'][0]['status'] = 'passed'
         with self.assertRaises(AssertionError):
             repository._check_hd036_closeout(hd036, soak, matrix, index)
+
+
+def _write_pointer(tmp: Path, **overrides) -> None:
+    src = json.loads(
+        (ROOT / 'evidence' / 'releases' / 'hosted-workflow-pointer.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    src.update(overrides)
+    dest = tmp / 'evidence' / 'releases' / 'hosted-workflow-pointer.json'
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(src), encoding='utf-8')
+
+
+class Hd036ReleaseCandidateBindTests(unittest.TestCase):
+    def test_shipped_function_binds_hosted_workflow_pointer(self):
+        report = bind_release_candidate(ROOT)
+        self.assertEqual(report['document_kind'], 'hd036_hosted_workflow_pointer')
+        self.assertEqual(report['bound_sha'], '602c252ae10303b63c6d8fc584e193e1ed5654c4')
+        self.assertEqual(report['hosted_workflow_run_id'], '34438599236')
+        self.assertEqual(
+            report['hosted_workflow_url'],
+            'https://github.com/bahayonghang/HerdrDesk/actions/runs/34438599236',
+        )
+        self.assertEqual(report['hosted_workflow_conclusion'], 'success')
+        self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+        self.assertNotIn(str(report['github_required_check']).lower(), SUCCESS)
+        self.assertTrue(report['hosted_workflow_is_not_required_check_ruleset'])
+        self.assertTrue(report['hosted_actions_on_older_sha_is_not_head_proof'])
+        self.assertTrue(report['local_just_ci_is_not_hosted_bar'])
+        self.assertFalse(report['published'])
+        self.assertFalse(report['complete_1_0_claimed'])
+        self.assertFalse(report['ac39_passed'])
+        self.assertFalse(report['ac40_passed'])
+        self.assertFalse(report['ac45_passed'])
+        self.assertFalse(report['ac47_passed'])
+        self.assertFalse(report['ac48_passed'])
+        self.assertFalse(report['g0_passed'])
+        self.assertNotEqual(report['phase_gate'], 'passed')
+        self.assertFalse(report['invented_github_required_check'])
+        self.assertFalse(report['invented_package_hashes'])
+        self.assertFalse(report['invented_sbom'])
+        self.assertFalse(report['independent_user_walkthrough_executed'])
+        self.assertFalse(report['signed_package_unpacked'])
+        self.assertIsNone(report['package_sha256'])
+        self.assertIsNone(report['msix_sha256'])
+        self.assertIsNone(report['sbom_sha256'])
+        self.assertIsNone(report['publisher'])
+        self.assertIsNone(report['candidate_sha'])
+        self.assertIsNone(report['hosted_check_run_id'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertIn('git_head', report)
+        self.assertIn('head_equals_bound_sha', report)
+        git_head = report.get('git_head')
+        self.assertEqual(
+            report['head_equals_bound_sha'],
+            bool(git_head) and git_head == report['bound_sha'],
+        )
+        if git_head != report['bound_sha']:
+            self.assertFalse(report['ac40_passed'])
+            self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+
+    def test_cli_prints_one_json_object(self):
+        script = ROOT / 'scripts' / 'bind_release_candidate.py'
+        self.assertTrue(script.is_file())
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertIsInstance(report, dict)
+        self.assertEqual(report['document_kind'], 'hd036_hosted_workflow_pointer')
+        self.assertEqual(report['bound_sha'], '602c252ae10303b63c6d8fc584e193e1ed5654c4')
+        self.assertEqual(report['hosted_workflow_run_id'], '34438599236')
+        self.assertEqual(report['hosted_workflow_conclusion'], 'success')
+        self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+        self.assertNotIn(str(report['github_required_check']).lower(), SUCCESS)
+        self.assertTrue(report['hosted_workflow_is_not_required_check_ruleset'])
+        self.assertFalse(report['published'])
+        self.assertFalse(report['complete_1_0_claimed'])
+        self.assertFalse(report['ac40_passed'])
+        self.assertFalse(report['g0_passed'])
+        self.assertFalse(report['signed_package_unpacked'])
+        self.assertIsNone(report['package_sha256'])
+        self.assertIsNone(report['msix_sha256'])
+        self.assertIsNone(report['sbom_sha256'])
+        self.assertIsNone(report['publisher'])
+        self.assertIn('git_head', report)
+        self.assertIn('head_equals_bound_sha', report)
+        git_head = report.get('git_head')
+        if git_head != report['bound_sha']:
+            self.assertFalse(report['ac40_passed'])
+            self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+
+    def test_structure_contract_invokes_shipped_binder(self):
+        repository._check_hd036_release_candidate_bind()
+
+    def test_missing_pointer_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ReleaseError) as ctx:
+                bind_release_candidate(Path(tmp))
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_complete_1_0_claimed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_pointer(root, complete_1_0_claimed=True)
+            with self.assertRaises(ReleaseError) as ctx:
+                bind_release_candidate(root)
+            self.assertEqual(str(ctx.exception), 'complete_1_0_claimed')
+
+    def test_published_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_pointer(root, published=True)
+            with self.assertRaises(ReleaseError) as ctx:
+                bind_release_candidate(root)
+            self.assertEqual(str(ctx.exception), 'published')
+
+    def test_ac40_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_pointer(root, ac40_passed=True)
+            with self.assertRaises(ReleaseError) as ctx:
+                bind_release_candidate(root)
+            self.assertEqual(str(ctx.exception), 'ac40_passed')
+
+    def test_github_required_check_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_pointer(root, github_required_check=value)
+                with self.assertRaises(ReleaseError) as ctx:
+                    bind_release_candidate(root)
+                self.assertEqual(str(ctx.exception), 'github_required_check_claimed')
+
+    def test_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_pointer(root, result=value)
+                with self.assertRaises(ReleaseError) as ctx:
+                    bind_release_candidate(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_invented_candidate_fields_fail_closed(self):
+        for key, value in (('candidate_sha', 'abc'), ('hosted_check_run_id', '1')):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_pointer(root, **{key: value})
+                with self.assertRaises(ReleaseError) as ctx:
+                    bind_release_candidate(root)
+                self.assertEqual(str(ctx.exception), 'invented_package_hashes')
+
+    def test_g0_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_pointer(root, g0_passed=True)
+            with self.assertRaises(ReleaseError) as ctx:
+                bind_release_candidate(root)
+            self.assertEqual(str(ctx.exception), 'g0_passed')
 
 
 if __name__ == '__main__':

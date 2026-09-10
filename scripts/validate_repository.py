@@ -17,6 +17,7 @@ from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
+from herddesk_g0.release import bind_release_candidate
 from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
 import run_windows_desktop_gate as desktop_gate
 from herddesk_g0.renderer import validate_renderer_matrix
@@ -2642,9 +2643,26 @@ def _check_hd036_closeout(hd036: dict, catalog: dict, matrix: dict, index: dict)
     assert hd036.get('catalog') == 'evidence/releases/catalog.json'
     assert hd036.get('support_matrix') == 'evidence/releases/support-matrix.json'
     assert hd036.get('ac_index') == 'evidence/releases/ac-index.json'
+    assert hd036.get('hosted_workflow_pointer') == 'evidence/releases/hosted-workflow-pointer.json'
     assert catalog.get('support_matrix') == 'evidence/releases/support-matrix.json'
     assert catalog.get('ac_index') == 'evidence/releases/ac-index.json'
     assert catalog.get('l2_status') == 'implementation/hd-036-l2.json'
+    assert catalog.get('hosted_workflow_pointer') == 'evidence/releases/hosted-workflow-pointer.json'
+    pointer_path = ROOT / 'evidence' / 'releases' / 'hosted-workflow-pointer.json'
+    assert pointer_path.is_file()
+    pointer = json.loads(pointer_path.read_text(encoding='utf-8'))
+    assert pointer.get('document_kind') == 'hd036_hosted_workflow_pointer'
+    _reject_hd036_pass_claims(pointer)
+    _reject_hd036_invented_identity(pointer)
+    assert pointer.get('result') == 'not_run'
+    assert not _is_hd036_success(pointer.get('result'))
+    assert pointer.get('github_required_check') == 'UNVERIFIED'
+    assert pointer.get('hosted_workflow_is_not_required_check_ruleset') is True
+    assert pointer.get('published') is False
+    assert pointer.get('complete_1_0_claimed') is False
+    assert pointer.get('ac40_passed') is False
+    assert pointer.get('candidate_sha') is None
+    assert pointer.get('hosted_check_run_id') is None
     assert hd036.get('herdr_executed') is False
     assert catalog.get('herdr_executed') is False
     redaction = catalog.get('redaction') or {}
@@ -2831,8 +2849,56 @@ def _check_hd036_closeout(hd036: dict, catalog: dict, matrix: dict, index: dict)
         'docs/release/notes.md',
         'docs/release/support-matrix.md',
         'docs/testing/release-checklist.md',
+        'scripts/bind_release_candidate.py',
+        'evidence/releases/hosted-workflow-pointer.json',
     ):
         assert (ROOT / rel).is_file(), rel
+
+
+def _check_hd036_release_candidate_bind() -> None:
+    """Invoke shipped binder. Do not reimplement SHA or required-check checks."""
+    assert (ROOT / 'scripts' / 'bind_release_candidate.py').is_file()
+    report = bind_release_candidate(ROOT)
+    assert report.get('document_kind') == 'hd036_hosted_workflow_pointer'
+    assert report.get('bound_sha') == '602c252ae10303b63c6d8fc584e193e1ed5654c4'
+    assert report.get('hosted_workflow_run_id') == '34438599236'
+    assert report.get('hosted_workflow_conclusion') == 'success'
+    assert report.get('github_required_check') == 'UNVERIFIED'
+    assert not _is_hd036_success(report.get('github_required_check'))
+    assert report.get('hosted_workflow_is_not_required_check_ruleset') is True
+    assert report.get('hosted_actions_on_older_sha_is_not_head_proof') is True
+    assert report.get('local_just_ci_is_not_hosted_bar') is True
+    assert report.get('published') is False
+    assert report.get('complete_1_0_claimed') is False
+    assert report.get('ac39_passed') is False
+    assert report.get('ac40_passed') is False
+    assert report.get('ac45_passed') is False
+    assert report.get('ac47_passed') is False
+    assert report.get('ac48_passed') is False
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('invented_github_required_check') is False
+    assert report.get('invented_package_hashes') is False
+    assert report.get('invented_sbom') is False
+    assert report.get('independent_user_walkthrough_executed') is False
+    assert report.get('signed_package_unpacked') is False
+    assert report.get('package_sha256') is None
+    assert report.get('msix_sha256') is None
+    assert report.get('sbom_sha256') is None
+    assert report.get('publisher') is None
+    assert report.get('candidate_sha') is None
+    assert report.get('hosted_check_run_id') is None
+    assert report.get('result') == 'not_run'
+    assert 'git_head' in report
+    assert 'head_equals_bound_sha' in report
+    git_head = report.get('git_head')
+    assert report.get('head_equals_bound_sha') is bool(
+        git_head and git_head == report.get('bound_sha')
+    )
+    if git_head != report.get('bound_sha'):
+        assert report.get('ac40_passed') is False
+        assert report.get('github_required_check') == 'UNVERIFIED'
+        assert report.get('complete_1_0_claimed') is False
 
 
 def _check_hd007_package_admission(packages: dict) -> None:
@@ -3068,6 +3134,7 @@ def validate() -> dict:
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)
     _check_hd035_release_input_audit()
     _check_hd036_closeout(hd036, release_catalog, release_matrix, release_index)
+    _check_hd036_release_candidate_bind()
     assert not (ROOT/'tests/Integration.Ssh').exists()
     check_integration_windows_layout(ROOT)
     tasks=json.loads((ROOT/'planning/backlog.json').read_text(encoding='utf-8'))['tasks']

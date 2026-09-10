@@ -103,6 +103,8 @@ internal static class Hd036Cases
         Check(File.Exists(Path.Combine(root, "docs", "release", "notes.md")));
         Check(File.Exists(Path.Combine(root, "docs", "testing", "release-checklist.md")));
         Check(File.Exists(Path.Combine(root, "planning", "acceptance.json")));
+        Check(File.Exists(Path.Combine(root, "scripts", "bind_release_candidate.py")));
+        Check(File.Exists(Path.Combine(root, "evidence", "releases", "hosted-workflow-pointer.json")));
 
         using var catalogDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "releases", "catalog.json")));
@@ -121,9 +123,29 @@ internal static class Hd036Cases
         Check(catalog.GetProperty("windows_desktop_restore").GetString() == "not_admitted");
         Check(catalog.GetProperty("core_1_0_does_not_impersonate_1_x_extensions").GetBoolean());
         Check(catalog.GetProperty("unpublished_candidate_is_not_published").GetBoolean());
+        Check(catalog.GetProperty("hosted_workflow_pointer").GetString()
+              == "evidence/releases/hosted-workflow-pointer.json");
+        using var pointerDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "releases", "hosted-workflow-pointer.json")));
+        var pointer = pointerDoc.RootElement;
+        Check(pointer.GetProperty("document_kind").GetString() == "hd036_hosted_workflow_pointer");
+        Check(pointer.GetProperty("result").GetString() == "not_run");
+        Check(pointer.GetProperty("bound_sha").GetString() == "602c252ae10303b63c6d8fc584e193e1ed5654c4");
+        Check(pointer.GetProperty("hosted_workflow_run_id").GetString() == "34438599236");
+        Check(pointer.GetProperty("hosted_workflow_conclusion").GetString() == "success");
+        Check(pointer.GetProperty("github_required_check").GetString() == "UNVERIFIED");
+        Check(pointer.GetProperty("hosted_workflow_is_not_required_check_ruleset").GetBoolean());
+        Check(pointer.GetProperty("published").GetBoolean() is false);
+        Check(pointer.GetProperty("complete_1_0_claimed").GetBoolean() is false);
+        Check(pointer.GetProperty("ac40_passed").GetBoolean() is false);
+        Check(pointer.GetProperty("g0_passed").GetBoolean() is false);
+        Check(pointer.GetProperty("candidate_sha").ValueKind == JsonValueKind.Null);
+        Check(pointer.GetProperty("hosted_check_run_id").ValueKind == JsonValueKind.Null);
         Check(catalog.GetProperty("redaction").GetProperty("credential").GetString() == "omitted");
         Check(catalog.GetProperty("package_sha256").ValueKind == JsonValueKind.Null);
         Check(catalog.GetProperty("screenshot_path").ValueKind == JsonValueKind.Null);
+        Check(catalog.GetProperty("candidate_sha").ValueKind == JsonValueKind.Null);
+        Check(catalog.GetProperty("hosted_check_run_id").ValueKind == JsonValueKind.Null);
         foreach (var key in PassKeys)
             Check(catalog.GetProperty(key).GetBoolean() is false);
 
@@ -271,6 +293,8 @@ internal static class Hd036Cases
         Check(root.GetProperty("missing").GetProperty("github_required_check_on_head").GetBoolean());
         Check(root.GetProperty("missing").GetProperty("external_publish").GetBoolean());
         Check(root.GetProperty("missing").GetProperty("signed_msix_hash").GetBoolean());
+        Check(root.GetProperty("hosted_workflow_pointer").GetString()
+              == "evidence/releases/hosted-workflow-pointer.json");
     }
 
     static string FindRepoRoot()

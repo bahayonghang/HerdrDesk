@@ -66,3 +66,4 @@ There is no HTTP API and no ORM. App ships four-zone WinUI Shell XAML on the adm
 - [ ] `herddesk_g0.lease` keeps `ac05_passed` and `windows_verified` false. Synthetic lease fixtures, probe selftest, and isolated observe/control captures with `control_verified=false` are not AC05 pass.
 - [ ] `herddesk_g0.renderer` keeps `ac08_passed`, `ac09_passed`, and `windows_verified` false. Synthetic renderer fixtures are not WinUI, WebView2, IME, or native runtime proof.
 - [ ] `herddesk_g0.adr` keeps `ac44_passed`, `g0_passed`, and `windows_verified` false. Blocked or unknown ledger rows are not passed. R5 is not executed.
+- [ ] `herddesk_g0.release` keeps `ac40_passed`, `published`, and `complete_1_0_claimed` false. A hosted workflow run is not a required-check. `github_required_check` stays UNVERIFIED. A git HEAD mismatch with the bound SHA is reported and does not pass AC40.

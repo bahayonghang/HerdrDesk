@@ -87,6 +87,7 @@
   "ac_index": "evidence/releases/ac-index.json",
   "support_matrix": "evidence/releases/support-matrix.json",
   "l2_status": "implementation/hd-036-l2.json",
+  "hosted_workflow_pointer": "evidence/releases/hosted-workflow-pointer.json",
   "templates": [
     "evidence/releases/live-user-guide.template.json",
     "evidence/releases/live-support-matrix.template.json",

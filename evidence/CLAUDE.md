@@ -75,7 +75,7 @@ HD-035 L1 P5 安全与许可收口目录加 L2 工作树 admitted-input auditor�
 
 ## `releases/`
 
-HD-036 L1 P5 发布文档与追踪归档收口目录。`catalog.json` 列出 user-guide / support-matrix / ac48-trace / ac39-clean-restore / ac40-hosted-required-check / ac47-dep-graph / unpublished-candidate / signed-hash-sbom 执行卡，指向已有 HD-001–035 L1 产物与 `docs/user-guide/`、`docs/release/`。`ac-index.json` 追溯 AC01–AC48，状态保持 `not_run`。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。core 1.0 不冒充 EP-01..EP-07。模板 `template=true`，空 hash，不是成功运行。未发布。不是完整 1.0。产品 AC39/AC40/AC45/AC47/AC48 仍未通过。
+HD-036 L1 P5 发布文档与追踪归档收口目录，外加 L2 hosted-workflow pointer overlay。`catalog.json` 列出 user-guide / support-matrix / ac48-trace / ac39-clean-restore / ac40-hosted-required-check / ac47-dep-graph / unpublished-candidate / signed-hash-sbom 执行卡，指向已有 HD-001–035 L1 产物与 `docs/user-guide/`、`docs/release/`。`hosted-workflow-pointer.json` 绑定 observed SHA `602c252` 与 hosted run `34438599236`；hosted workflow 不是 GitHub required-check ruleset。`ac-index.json` 追溯 AC01–AC48，状态保持 `not_run`。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`candidate_sha` 与 `hosted_check_run_id` 保持 null。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。core 1.0 不冒充 EP-01..EP-07。模板 `template=true`，空 hash，不是成功运行。未发布。不是完整 1.0。产品 AC39/AC40/AC45/AC47/AC48 仍未通过。
 
 ## `local-mvp/`
 

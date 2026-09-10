@@ -1,6 +1,6 @@
 # Independent-user release checklist (later)
 
-This file records steps for a later authorized independent user. **This L1 catalog is not AC45.** The walkthrough was not executed. `independent_user_walkthrough_executed=false`.
+This file records steps for a later authorized independent user. **This L1 catalog is not AC45.** The walkthrough was not executed. `independent_user_walkthrough_executed=false`. The L2 hosted-workflow pointer overlay (`evidence/releases/hosted-workflow-pointer.json`) records one observed Actions run; a hosted workflow is not a GitHub required-check ruleset. `github_required_check` stays `UNVERIFIED`. This is not a complete 1.0.
 
 Do not fill results here from structure validation or from a Markdown link.
 
@@ -10,7 +10,7 @@ Do not fill results here from structure validation or from a Markdown link.
 2. Signed package with recorded SHA-256. No fake Publisher.
 3. Independent reviewer who did not implement the candidate SHA.
 4. Live platform evidence for promised Windows 11 x64 client and Linux x64 remote. Do not copy one platform onto the other.
-5. GitHub required-check on that HEAD. Older hosted SHA is not a substitute.
+5. GitHub required-check on that HEAD. Older hosted SHA is not a substitute. A hosted workflow pointer is not that ruleset.
 6. Clean-machine locked restore of the frozen SHA.
 
 ## Later steps (not run)

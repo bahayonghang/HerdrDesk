@@ -31,13 +31,14 @@ tests/python/               stdlib unittest (sys.path → scripts/)
 tests/fixtures/             synthetic NDJSON, protocol-edge-cases.json, endpoint-cases.json, lease-cases.json, renderer-cases.json; real-terminal-v082/ placeholder
 docs/licensing/             register.json and candidate admission templates
 docs/adr/                   0001-g0-bootstrap.md, approved-baseline.md, approved-baseline.json
-scripts/herddesk_g0/        protocol.py, evidence.py, licensing.py, endpoint.py, lease.py, renderer.py, adr.py
+scripts/herddesk_g0/        protocol.py, evidence.py, licensing.py, release.py, endpoint.py, lease.py, renderer.py, adr.py
 scripts/probe_herdr.py      herdr probe
 scripts/Invoke-HerdDeskDotnetSetup.ps1
 scripts/validate_repository.py
 scripts/check_capture.py
 scripts/package_release.ps1  HD-034 L2 unsigned layout Build/Verify/Sign; Sign fails closed without -CertificatePath
 scripts/audit_release_inputs.py  HD-035 L2 admitted-input auditor CLI; not a live scan; AC02/AC43/AC44 stay false
+scripts/bind_release_candidate.py  HD-036 L2 hosted-workflow pointer CLI; not a required-check; AC39/AC40/AC45/AC47/AC48 stay false
 packaging/                  HD-034 L2 lab identity overlay (`Package.appxmanifest`, `runtime.json`). Not a wapproj. Not a release install.
 HerdDesk.slnx
 Directory.Build.props       net10.0 default TFM, nullable, TreatWarningsAsErrors
@@ -78,6 +79,7 @@ Present: `src/HerdDesk.App` (net10.0 BCL host + windows TFM four-zone Shell XAML
 | Terminal lease diagnostics | `scripts/herddesk_g0/lease.py` |
 | Renderer L1 diagnostics | `scripts/herddesk_g0/renderer.py` |
 | Licensing register rules | `scripts/herddesk_g0/licensing.py` |
+| Hosted-workflow pointer bind | `scripts/herddesk_g0/release.py` |
 | Licensing inventory and templates | `docs/licensing/` |
 | Approved G0 ADR freeze | `scripts/herddesk_g0/adr.py` |
 | ADR freeze documents | `docs/adr/` |
