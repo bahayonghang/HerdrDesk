@@ -35,7 +35,7 @@ Python 3.10+，仅标准库。将本目录加入 `sys.path` 后 `import herddesk
 | `quality.collect_dpi_overlay` | HD-033 L2 当前系统 DPI overlay；记录 `GetDpiForSystem` 当前值；不改显示缩放；单样本不是 100/150/200 矩阵；AC38 恒为 false |
 | `quality.validate_eight_hour_soak_start` | HD-033 产品 UI `--ui` 8h soak START 记录校验；不启动进程；不是 AC46；`eight_hour_soak_executed` 与 `live_soak` 恒为 false；新 START 不得复用中断墙钟或已退出 PID |
 | `quality.validate_eight_hour_soak_interruption` | HD-033 产品 UI `--ui` soak START 中断记录校验；可有多次中断捕获；不是 8h 完成；不是 AC46；`soak_hours` 恒为 null；不发明 crash cause |
-| `quality.validate_eight_hour_soak_elapsed` | HD-033 可选墙钟 elapsed 记录校验；文件可不存在；存在时 `eight_hour_soak_executed` 可为 true，但 `ac46_passed`/`live_soak` 恒为 false；`soak_hours` 恒为 null；不是 AC46 |
+| `quality.validate_eight_hour_soak_elapsed` | HD-033 墙钟 elapsed 记录校验；文件现已提交；`eight_hour_soak_executed` 仅可在该文件为 true，但 `ac46_passed`/`live_soak` 恒为 false；`soak_hours` 恒为 null；不是 AC46 |
 | `quality.validate_soak_working_set` | HD-033 可选 soak 进程 working-set overlay 校验；文件可不存在；存在时允许诚实 `working_set_bytes`，但 `live_working_set`/`ac29_passed`/`ac46_passed`/`eight_hour_soak_executed` 恒为 false；`soak_hours` 恒为 null；不是 1/4 pane，也不是 100 次 open/close |
 | `release.bind_release_candidate` | HD-036 L2 hosted-workflow pointer overlay；绑定 observed SHA 与 hosted run；hosted workflow 不是 required-check；AC39/AC40/AC45/AC47/AC48 与完整 1.0 恒为 false |
 | `endpoint.EndpointError` | 稳定 endpoint 规则码；消息仅为码 |
