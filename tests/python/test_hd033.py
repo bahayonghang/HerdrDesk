@@ -3093,6 +3093,30 @@ class Hd033SoakWorkingSetTests(unittest.TestCase):
             self.assertEqual(report['working_set_bytes'], 987654321)
             self.assertEqual(report['sampler_pid'], 4242)
 
+    def test_record_without_hooks_fails_closed_off_windows(self):
+        if os.name == 'nt':
+            self.skipTest('omitted hooks use live Windows APIs')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            _copy_live_working_set_not_run(root)
+            overlay = root / SOAK_WORKING_SET_REL
+            start_path = root / 'evidence' / 'quality' / 'live-soak-start.json'
+            not_run_path = root / LIVE_WORKING_SET_REL
+            before_start = start_path.read_text(encoding='utf-8')
+            before_not_run = not_run_path.read_text(encoding='utf-8')
+            err = StringIO()
+            with patch.object(working_set_cli, 'ROOT', root), redirect_stderr(err):
+                with self.assertRaises(QualityError) as ctx:
+                    working_set_cli.record(root)
+                code = working_set_cli.main(['--record'])
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+            self.assertEqual(code, 2, err.getvalue())
+            self.assertEqual(json.loads(err.getvalue())['error'], 'missing_record_field')
+            self.assertFalse(overlay.is_file())
+            self.assertEqual(start_path.read_text(encoding='utf-8'), before_start)
+            self.assertEqual(not_run_path.read_text(encoding='utf-8'), before_not_run)
+
     def test_heartbeat_exits_when_app_pid_gone(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'hd033-soak-resources.jsonl'

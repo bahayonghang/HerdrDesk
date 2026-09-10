@@ -68,10 +68,14 @@ def _utc_now() -> str:
 
 
 def _pid_running(pid: int) -> bool:
+    if os.name != 'nt' or pid <= 0:
+        return False
     return soak_cli._pid_running(pid)
 
 
 def _pid_image(pid: int) -> str | None:
+    if os.name != 'nt' or pid <= 0:
+        return None
     return soak_cli._pid_image(pid)
 
 
@@ -249,9 +253,20 @@ def record(
     git_sha: str | None = None,
     now: str | None = None,
 ) -> dict[str, Any]:
-    """Sample the START App PID. Do not launch --ui. Do not edit START owned_pids."""
+    """Sample the START App PID. Do not launch --ui. Do not edit START owned_pids.
+
+    Injected pid_running / pid_image / sample_process / start_heartbeat allow
+    tempfile tests on non-Windows. Live --record without those hooks stays
+    fail-closed off Windows and must not write an overlay.
+    """
     root = Path(root)
-    if os.name != 'nt':
+    hooks = (
+        pid_running is not None
+        and pid_image is not None
+        and sample_process is not None
+        and start_heartbeat is not None
+    )
+    if os.name != 'nt' and not hooks:
         raise QualityError('missing_record_field')
     validate_eight_hour_soak_start(root)
     not_run_path = root / LIVE_WORKING_SET_REL

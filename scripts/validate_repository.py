@@ -1737,6 +1737,12 @@ def _check_hd033_soak_working_set() -> None:
     assert 'return 0' in src
     assert 'taskkill' not in src.lower()
     assert "ui_argv" not in src
+    record_src = src[src.find('def record('):src.find('def _unrecorded_report')]
+    assert 'if os.name != \'nt\' and not hooks:' in record_src
+    assert (
+        "if os.name != 'nt':\n        raise QualityError('missing_record_field')"
+        not in record_src
+    )
     ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
     just = (ROOT / 'justfile').read_text(encoding='utf-8')
     assert 'record_soak_working_set.py --record' not in ci
