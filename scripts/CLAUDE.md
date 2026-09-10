@@ -35,6 +35,7 @@ Python 3.10+，仅标准库。将本目录加入 `sys.path` 后 `import herddesk
 | `quality.collect_dpi_overlay` | HD-033 L2 当前系统 DPI overlay；记录 `GetDpiForSystem` 当前值；不改显示缩放；单样本不是 100/150/200 矩阵；AC38 恒为 false |
 | `quality.validate_eight_hour_soak_start` | HD-033 产品 UI `--ui` 8h soak START 记录校验；不启动进程；不是 AC46；`eight_hour_soak_executed` 与 `live_soak` 恒为 false；新 START 不得复用中断墙钟或已退出 PID |
 | `quality.validate_eight_hour_soak_interruption` | HD-033 产品 UI `--ui` soak START 中断记录校验；可有多次中断捕获；不是 8h 完成；不是 AC46；`soak_hours` 恒为 null；不发明 crash cause |
+| `quality.validate_eight_hour_soak_elapsed` | HD-033 可选墙钟 elapsed 记录校验；文件可不存在；存在时 `eight_hour_soak_executed` 可为 true，但 `ac46_passed`/`live_soak` 恒为 false；`soak_hours` 恒为 null；不是 AC46 |
 | `release.bind_release_candidate` | HD-036 L2 hosted-workflow pointer overlay；绑定 observed SHA 与 hosted run；hosted workflow 不是 required-check；AC39/AC40/AC45/AC47/AC48 与完整 1.0 恒为 false |
 | `endpoint.EndpointError` | 稳定 endpoint 规则码；消息仅为码 |
 | `endpoint.validate_endpoint_matrix` / `check_endpoint_matrix` / `resolve_endpoint` | 七行模拟矩阵与受控映射；拒绝 APPDATA 猜测、named 回退、UNC、fixture 当 runtime/AC03 通过；`windows_verified` 与 `ac03_passed` 恒为 false |
@@ -90,7 +91,7 @@ argv：`herdr [--session S] terminal session {observe|control} TARGET --cols --r
 | `collect_narrator_overlay.py` | HD-033 L2 Narrator 存在性 overlay CLI；stdout 一个 JSON 对象。不启动 Narrator。不是 AC37 |
 | `record_narrator_product_ui_launch.py` | HD-033 产品 UI `--ui` + Narrator.exe 启动记录。默认只校验已提交 JSON。`--record` 仅交互桌面；CI/`just` 不得调用。不是 AC37 |
 | `collect_dpi_overlay.py` | HD-033 L2 当前系统 DPI overlay CLI；stdout 一个 JSON 对象。不改显示缩放。不是 AC38，也不是 100/150/200 矩阵 |
-| `start_eight_hour_soak.py` | HD-033 产品 UI `--ui` 8h soak START。默认只校验已提交 JSON。`--record` 仅交互桌面；CI/`just` 不得调用。启动 windows TFM Release win-x64 `HerdDesk.App.exe`，CREATE_BREAKAWAY_FROM_JOB \| CREATE_NEW_PROCESS_GROUP \| DETACHED_PROCESS，STARTF_USESHOWWINDOW + SW_SHOWMINNOACTIVE=7，stdin 不继承。不是 AC46 |
+| `start_eight_hour_soak.py` | HD-033 产品 UI `--ui` 8h soak START。默认只校验已提交 JSON。`--record` 仅交互桌面；`--record-elapsed` 仅在 START 墙钟满 8h 且 PID 仍匹配时写 `live-soak-elapsed.json`，过早或 PID 不匹配则 fail-closed（`eight_hour_wall_clock_incomplete`），不写成功 elapsed JSON，不覆盖 START。CI/`just` 不得调用 `--record` 或 `--record-elapsed`。启动 windows TFM Release win-x64 `HerdDesk.App.exe`，CREATE_BREAKAWAY_FROM_JOB \| CREATE_NEW_PROCESS_GROUP \| DETACHED_PROCESS，STARTF_USESHOWWINDOW + SW_SHOWMINNOACTIVE=7，stdin 不继承。墙钟 idle 不是 AC46 |
 | `audit_release_inputs.py` | HD-035 L2 admitted-input auditor CLI；stdout 一个 JSON 对象。不是 live 扫描。AC02/AC43/AC44 仍为 false |
 | `bind_release_candidate.py` | HD-036 L2 hosted-workflow pointer CLI；stdout 一个 JSON 对象。hosted workflow 不是 required-check。AC39/AC40/AC45/AC47/AC48 仍为 false。不是完整 1.0 |
 
