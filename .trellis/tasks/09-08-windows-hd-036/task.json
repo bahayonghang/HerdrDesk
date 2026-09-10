@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 catalog remains. 2026-09-10 reopen for SHA/hosted-workflow pointer overlay. A workflow run is not a GitHub required-check ruleset. Do not publish. Do not claim 1.0. AC39/40/45/47/48/G0 not passed.",
+  "notes": "L2 product 60b86ff: bind_release_candidate.py hosted-workflow pointer for 602c252 run 34438599236. Workflow run is not required-check. Unpublished. 1.0 not claimed. AC39/40/45/47/48/G0 not passed.",
   "meta": {
     "source_task": "HD-036",
     "phase": "P5"
