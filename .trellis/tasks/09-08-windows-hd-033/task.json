@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "Narrator product-UI launch remains (c2ce0c0). 2026-09-10 reopen to START 8h soak. Do not mark AC46 until 8 wall-clock hours elapse. Do not invent soak_hours. Do not change display scale. Parent not archived.",
+  "notes": "Product e2df5ad: 8h soak START at 2026-09-10T09:49:06Z PIDs 89580/59552/57712. soak_hours null. eight_hour_soak_executed false. AC46/G0 not passed. Do not archive until 8 wall-clock hours elapse. Do not change display scale.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"
