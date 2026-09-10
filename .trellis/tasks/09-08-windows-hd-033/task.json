@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "Product 05d5e4c: soak WS overlay of App PID 76508; sampler 46176 not on START owned_pids. START 2026-09-10T13:30:51Z PIDs 76508/85848 still running; soak_hours null; eight_hour_soak_executed false; live_working_set false; AC29/AC46/G0 not passed. Do not archive until 8 wall-clock hours from 13:30:51Z. Do not kill soak PIDs 76508/85848/46176. Do not change display scale.",
+  "notes": "Product 53e6fea: Linux injected-hook WS tempfile test; live --record still fail-closes off Windows. Overlay 05d5e4c. START 2026-09-10T13:30:51Z PIDs 76508/85848 sampler 46176 still running; soak_hours null; AC29/AC46/G0 not passed. Do not archive until 8 wall-clock hours from 13:30:51Z. Do not kill soak PIDs. Do not change display scale.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"
