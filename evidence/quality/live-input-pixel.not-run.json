@@ -21,9 +21,10 @@
   "parser_callback_cannot_pass_input_to_pixel": true,
   "invented_timings": false,
   "limitations": [
-    "Visible-pixel latency probe was not authorized in this dispatch.",
+    "Visible-pixel latency probe was not run. No herdr terminal bytes.",
     "Parser consumed is not GPU presentation.",
     "RenderFlowController ack and xterm write callback cannot pass input-to-pixel.",
+    "WinUI four-zone Shell XAML and TerminalHost are in tree. That is not a visible-pixel probe.",
     "Do not invent timings."
   ]
 }

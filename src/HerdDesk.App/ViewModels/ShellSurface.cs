@@ -26,6 +26,12 @@ public static class ShellSurface
         ShellStrings.TerminalHost,
         ShellStrings.Details,
         ShellStrings.Search,
-        ShellStrings.ConnectionStatus
+        ShellStrings.ConnectionStatus,
+        ShellStrings.Settings,
+        ShellStrings.Diagnostics,
+        ShellStrings.About,
+        ShellStrings.AddDevice,
+        ShellStrings.OpenNavigation,
+        ShellStrings.ExpandDetails
     ];
 }

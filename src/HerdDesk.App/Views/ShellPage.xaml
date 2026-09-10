@@ -37,20 +37,25 @@
                 Spacing="8">
                 <Button
                     x:Name="NavOverlayButton"
+                    AutomationProperties.Name="打开导航"
                     Click="OnToggleNav"
                     Content="打开导航"
                     Visibility="Collapsed" />
                 <Button
+                    AutomationProperties.Name="设置"
                     Click="OnOpenSettings"
                     Content="设置" />
                 <Button
+                    AutomationProperties.Name="诊断"
                     Click="OnOpenDiagnostics"
                     Content="诊断" />
                 <Button
+                    AutomationProperties.Name="关于"
                     Click="OnOpenAbout"
                     Content="关于" />
                 <Button
                     x:Name="DetailsToggle"
+                    AutomationProperties.Name="展开详情"
                     Click="OnToggleDetails"
                     Content="展开详情" />
             </StackPanel>
@@ -77,6 +82,7 @@
                     <TextBlock x:Name="WelcomeText" TextWrapping="Wrap" />
                     <Button
                         x:Name="AddDeviceButton"
+                        AutomationProperties.Name="添加设备"
                         Click="OnAddDevice"
                         Content="添加设备" />
                     <Button

@@ -983,6 +983,12 @@ def _reject_hd033_pass_claims(doc) -> None:
                 raise AssertionError(f'{key} must stay true')
             if key == 'l1_status' and _hd033_token(value) in _HD033_SUCCESS:
                 raise AssertionError('l1_status must not be a pass token')
+            if key == 'l2_collectors' and _is_hd033_success(value):
+                raise AssertionError('l2_collectors must not be a pass token')
+            if key == 'l2_collectors_are_not_live_pass' and value is not True:
+                raise AssertionError('l2_collectors_are_not_live_pass must stay true')
+            if key == 'complete_1_0_claimed' and value is True:
+                raise AssertionError('complete_1_0_claimed must stay false')
             if key == 'mib_bytes' and value not in (None, 1048576):
                 raise AssertionError('mib_bytes must be 1048576')
             kind = _hd033_token(doc.get('kind'))
@@ -1050,6 +1056,27 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert catalog.get('l2_status') == 'implementation/hd-033-l2.json'
     assert hd033.get('herdr_executed') is False
     assert catalog.get('herdr_executed') is False
+    assert hd033.get('github_required_check') == 'UNVERIFIED'
+    assert catalog.get('github_required_check') == 'UNVERIFIED'
+    assert hd033.get('l2_collectors_are_not_live_pass') is True
+    assert catalog.get('l2_collectors_are_not_live_pass') is True
+    assert not _is_hd033_success(hd033.get('l2_collectors'))
+    assert not _is_hd033_success(catalog.get('l2_collectors'))
+    assert hd033.get('complete_1_0_claimed') is not True
+    assert catalog.get('complete_1_0_claimed') is not True
+    assert catalog.get('environment_manifest_pointer') == 'evidence/quality/environment-pointer.json'
+    pointer = json.loads((ROOT / catalog['environment_manifest_pointer']).read_text(encoding='utf-8'))
+    _reject_hd033_pass_claims(pointer)
+    _reject_hd033_invented_timings(pointer)
+    assert pointer.get('result') == 'not_run'
+    assert pointer.get('live_status') == 'UNVERIFIED'
+    assert pointer.get('committed_raw') is False
+    assert pointer.get('eight_hour_soak_executed') is False
+    assert pointer.get('live_dpi') is False
+    assert pointer.get('live_narrator') is False
+    assert pointer.get('github_required_check') == 'UNVERIFIED'
+    assert pointer.get('l2_collectors_are_not_live_pass') is True
+    assert pointer.get('complete_1_0_claimed') is not True
     redaction = catalog.get('redaction') or {}
     for key in ('host', 'user', 'path', 'credential', 'terminal_body'):
         assert redaction.get(key) == 'omitted', key

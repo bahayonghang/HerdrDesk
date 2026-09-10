@@ -1,7 +1,25 @@
 using System.Xml.Linq;
 using HerdDesk.App;
+using HerdDesk.App.Quality;
 using HerdDesk.Contracts;
 using HerdDesk.Core;
+using HerdDesk.Infrastructure.Quality;
+
+if (args.Length >= 1 && args[0] == "--hd033-collect")
+{
+    var dest = args.Length >= 2
+        ? args[1]
+        : Path.Combine(RepoRoot(), "probe-results");
+    return Hd033LocalCapture.Run(RepoRoot(), dest);
+}
+
+if (args.Length >= 1 && args[0] == "--hd033-ui-smoke")
+{
+    var dest = args.Length >= 2
+        ? args[1]
+        : Path.Combine(RepoRoot(), "probe-results");
+    return Hd033LocalCapture.RunUiSmoke(RepoRoot(), dest);
+}
 
 var cases = new (string Name, Action Run)[]
 {
@@ -10,7 +28,8 @@ var cases = new (string Name, Action Run)[]
     ("named panes stay isolated and selection is observe-only", NavigationIdentity),
     ("search composition does not open palette", SearchComposition),
     ("settings diagnostics about remain reachable", Routes),
-    ("narrow overlay keeps breadcrumb", Responsive)
+    ("narrow overlay keeps breadcrumb", Responsive),
+    ("hd033 collectors run from start state", Hd033Collectors)
 };
 
 var failed = 0;
@@ -65,6 +84,8 @@ static void XamlSurface()
     var joined = string.Join('\n', found.Select(rel => File.ReadAllText(Path.Combine(app, rel))));
     foreach (var name in ShellSurface.AutomationNames)
         Check(joined.Contains("AutomationProperties.Name=\"" + name + "\"", StringComparison.Ordinal));
+    foreach (var name in AccessibilityNameCatalog.ShellAutomationNames)
+        Check(AccessibilityNameCatalog.XamlDeclares(RepoRoot(), name));
     Check(joined.Contains("x:Class=\"HerdDesk.App." + ShellSurface.WindowTypeName + "\"", StringComparison.Ordinal));
     var shell = XDocument.Load(Path.Combine(app, "Views", "ShellPage.xaml"));
     Check(shell.Root is not null);
@@ -184,6 +205,54 @@ static void Responsive()
     Check(!string.IsNullOrWhiteSpace(shell.Breadcrumb));
     shell.SetWidth(1400);
     Check(shell.Layout == LayoutBreakpoint.Wide);
+}
+
+static void Hd033Collectors()
+{
+    var root = RepoRoot();
+    var manifest = EnvironmentManifestCollector.Collect(root);
+    Check(manifest.LogicalCpus >= 1);
+    Check(manifest.SdkPinVersion == "10.0.400");
+    Check(!manifest.NarratorStartedByCollector);
+    var search = SearchLatencyCollector.Measure();
+    Check(search.ProjectionCount >= SearchLatencyCollector.RequiredProjections);
+    Check(search.SampleCount == SearchLatencyCollector.DefaultSamples);
+    Check(!search.LiveThreeDevice);
+    Check(!search.ClosesAc19);
+    Check(!search.ClosesAc21);
+    Check(!search.ClosesAc28);
+    Check(search.P95Ms < 100);
+    var idle = ProcessResourceSampler.MeasureIdle(TimeSpan.FromMilliseconds(50));
+    Check(!idle.EightHourSeries);
+    Check(idle.After.ProcessId == Environment.ProcessId);
+    Check(idle.After.OwnedProcessCount >= 0);
+    if (!ColdStartSampler.TryResolveComposeOnly(AppContext.BaseDirectory, out var executable, out var prefix))
+    {
+        var net10 = Path.Combine(root, "src", "HerdDesk.App", "bin", "Release", "net10.0");
+        if (!ColdStartSampler.TryResolveComposeOnly(net10, out executable, out prefix))
+            throw new Exception("app_host_missing");
+    }
+    var temp = Path.Combine(Path.GetTempPath(), "herddesk-hd033-iw-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(temp);
+    try
+    {
+        var args = new List<string>(prefix.Count + 1);
+        args.AddRange(prefix);
+        args.Add(temp);
+        var report = ColdStartSampler.Run(executable, args, 1, TimeSpan.FromSeconds(30), "compose-only");
+        Check(report.SampleCount == 1);
+        Check(!report.FirstInteractivePixel);
+        Check(report.ParserConsumedIsNotPresentation);
+        Check(!report.LaunchedUi);
+        Check(report.Samples[0].ExitCode == 0);
+    }
+    finally
+    {
+        Directory.Delete(temp, true);
+    }
+
+    foreach (var name in AccessibilityNameCatalog.KeyboardAndNarratorNames)
+        Check(!string.IsNullOrWhiteSpace(name));
 }
 
 static ShellViewModel EmptyShell() =>

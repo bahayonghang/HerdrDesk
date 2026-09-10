@@ -44,3 +44,4 @@ HD-007 BCL adapters: configuration store and diagnostics. HD-008: owned child pr
 - `SshTransports/` — HD-022 L1 remote session transport set。复用 HD-008 RPC 与 HD-013 terminal port，不另建 parser。HD-025 L1 `SshConnectionLease` 在启动子进程前向 `ConnectionAdmissionPolicy` 取 pair/terminal 租约；失败归还。L2 live SSH UNVERIFIED。
 - `Files/` — HD-027 L1 codec 与 Windows 本地名 mapping-required。HD-028 L1 `LocalFileEndpoint`、`FileBridgeClient`、`FileBridgeProcessFactory`、`RemoteFileService`。L2 FS/SSH/TOCTOU UNVERIFIED。
 - `Clipboard/` — HD-031 L1 `WindowsClipboardSnapshotReader`（显式 Read，无 watcher）与 `AttachmentCache`（注入 AppDataPaths 私有目录、原子 temp+rename、TTL/容量、仅 exact-id 且 lease=0 淘汰）。测试注入 fake snapshot 与 disposable cache root。L2 live clipboard UNVERIFIED。
+- `Quality/` — HD-033 L2 环境清单与短窗 process/handle/idle CPU 采集。不发明 8h 序列。不是 AC 通过。

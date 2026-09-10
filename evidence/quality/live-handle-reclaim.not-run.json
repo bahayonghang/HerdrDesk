@@ -20,8 +20,9 @@
   "cycle_count": null,
   "invented_timings": false,
   "limitations": [
-    "100 hide/show handle reclaim was not authorized in this dispatch.",
-    "HD-025 PaneVisibilityCoordinator tests do not measure live handles.",
+    "100 hide/show handle reclaim lab was not run.",
+    "Short-window process handle samples are not 100 pane hide/show reclaim.",
+    "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
     "Do not invent handle_count."
   ]
 }

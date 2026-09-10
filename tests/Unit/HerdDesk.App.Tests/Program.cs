@@ -28,7 +28,8 @@ cases =
     .. UntrustedNameTests.All,
     .. AttachToAgentViewModelTests.All,
     .. PastePreviewViewModelTests.All,
-    .. TerminalHostSessionTests.All
+    .. TerminalHostSessionTests.All,
+    .. Hd033CollectorTests.All
 ];
 
 var failed = 0;

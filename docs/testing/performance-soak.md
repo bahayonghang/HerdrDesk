@@ -1,6 +1,6 @@
 # HD-033 性能、可访问性与 soak 证据索引
 
-L1 收口目录。指向已交付的 HD-023 搜索 p95 单元、HD-025 队列/准入、HD-011 ViewModel 产物。不是产品 AC 通过，也不是 live 8h soak / 输入到可见像素 / DPI / Narrator / working-set 证明。
+L1 收口目录加 L2 采集器。指向已交付的 HD-023 搜索 p95 单元、HD-025 队列/准入、HD-011 ViewModel 产物，以及环境/冷启动/搜索/短窗 idle 采集器。不是产品 AC 通过，也不是 live 8h soak / 输入到可见像素 / DPI / Narrator / working-set 证明。
 
 权威机器文件：
 
@@ -38,8 +38,8 @@ Contract catalog 各条保持 `not_run`。不得发明 timings。不得把 parse
 | live search p95 | `UNVERIFIED` / `not_run` | 内存搜索不是 live p95 |
 | live working set | `UNVERIFIED` / `not_run` | 无授权进程采样；不得从 `Q_p` 推导 |
 | live handle reclaim | `UNVERIFIED` / `not_run` | 无授权 100 次 hide/show |
-| live Narrator | `UNVERIFIED` / `not_run` | WinUI 未准入；无 Narrator 桌面 |
-| live DPI/theme | `UNVERIFIED` / `not_run` | 无授权 DPI/主题矩阵 |
-| live 8h soak | `UNVERIFIED` / `not_run` | 本派遣未执行 8h soak |
+| live Narrator | `UNVERIFIED` / `not_run` | Narrator 未对产品 UI 启动 |
+| live DPI/theme | `UNVERIFIED` / `not_run` | 100/150/200 矩阵未跑 |
+| live 8h soak | `UNVERIFIED` / `not_run` | 未执行 8h soak |
 
-残差 JSON：`implementation/hd-033-l2.json`。`l3_ime` / `l3_narrator` / `l3_dpi` / `l4_soak` 为 `UNVERIFIED`。产品 AC27/AC28/AC29/AC37/AC38/AC46 仍为 `not_run`。`tests/Integration.Windows` 不存在。
+残差 JSON：`implementation/hd-033-l2.json`。`l3_ime` / `l3_narrator` / `l3_dpi` / `l4_soak` 为 `UNVERIFIED`。`github_required_check` 为 `UNVERIFIED`。产品 AC27/AC28/AC29/AC37/AC38/AC46 仍为 `not_run`。WinUI 四区 Shell 已在树中。`tests/Integration.Windows` 是 net10.0 控制台 runner，不启动窗口。L2 采集器不是 live 通过。

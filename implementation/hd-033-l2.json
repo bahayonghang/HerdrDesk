@@ -22,6 +22,9 @@
   "integration_ssh_project": false,
   "integration_windows_project": false,
   "herdr_executed": false,
+  "github_required_check": "UNVERIFIED",
+  "l2_collectors": "shipped",
+  "l2_collectors_are_not_live_pass": true,
   "copy_windows_fields_onto_linux": false,
   "extrapolate_macos_arm64": false,
   "l1_closeout_catalog": "required; does not close product AC27, AC28, AC29, AC37, AC38, or AC46",
@@ -46,5 +49,5 @@
     "integration_windows": true,
     "live_search_p95": true
   },
-  "note": "HD-033 ships an L1 P5 performance/a11y/soak closeout catalog that points at existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. Parser consumed is not GPU or visible-pixel presentation. Do not derive process working set from Q_p. MiB is 1,048,576 bytes. Live 8h soak, input-to-pixel latency, DPI/theme, Narrator, and working-set stay UNVERIFIED. This file is not AC pass evidence. Product AC27/AC28/AC29/AC37/AC38/AC46 stay with a later authorized live matrix. Hosted CI is not an interactive desktop."
+  "note": "HD-033 ships L2 collectors for environment, compose-only/shell-smoke cold start, in-memory search, and short-window idle/handle samples. Raw JSON lives in gitignored probe-results/. Live rows stay not_run. L2/L3/L4 stay UNVERIFIED. github_required_check stays UNVERIFIED. Parser consumed is not GPU or visible-pixel presentation. Do not derive process working set from Q_p. MiB is 1,048,576 bytes. Live 8h soak, input-to-pixel latency, DPI/theme, Narrator, and working-set stay UNVERIFIED. This file is not AC pass evidence. Product AC27/AC28/AC29/AC37/AC38/AC46 stay with a later authorized live matrix. Hosted CI is not an interactive desktop."
 }

@@ -115,6 +115,10 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertFalse(doc['integration_ssh_project'])
         self.assertFalse(doc['integration_windows_project'])
         self.assertFalse(doc['herdr_executed'])
+        self.assertEqual(doc['github_required_check'], 'UNVERIFIED')
+        self.assertTrue(doc['l2_collectors_are_not_live_pass'])
+        self.assertNotIn(str(doc.get('l2_collectors', '')).lower(), SUCCESS)
+        self.assertIsNot(doc.get('complete_1_0_claimed'), True)
         missing = doc['missing']
         self.assertTrue(missing['interactive_desktop'])
         self.assertTrue(missing['visible_pixel_probe'])
@@ -145,6 +149,24 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertFalse(catalog['hosted_ci_is_interactive_desktop'])
         self.assertEqual(catalog['redaction']['credential'], 'omitted')
         self.assertEqual(catalog['redaction']['host'], 'omitted')
+        self.assertEqual(catalog['github_required_check'], 'UNVERIFIED')
+        self.assertTrue(catalog['l2_collectors_are_not_live_pass'])
+        self.assertNotIn(str(catalog.get('l2_collectors', '')).lower(), SUCCESS)
+        self.assertIsNot(catalog.get('complete_1_0_claimed'), True)
+        self.assertEqual(
+            catalog['environment_manifest_pointer'],
+            'evidence/quality/environment-pointer.json',
+        )
+        pointer = json.loads((ROOT / catalog['environment_manifest_pointer']).read_text(encoding='utf-8'))
+        self.assertEqual(pointer['result'], 'not_run')
+        self.assertEqual(pointer['live_status'], 'UNVERIFIED')
+        self.assertFalse(pointer['committed_raw'])
+        self.assertFalse(pointer['live_dpi'])
+        self.assertFalse(pointer['live_narrator'])
+        self.assertFalse(pointer['eight_hour_soak_executed'])
+        self.assertEqual(pointer['github_required_check'], 'UNVERIFIED')
+        self.assertTrue(pointer['l2_collectors_are_not_live_pass'])
+        self.assertIsNot(pointer.get('complete_1_0_claimed'), True)
         cards = {item['id']: item for item in catalog['execution_cards']}
         self.assertEqual(tuple(cards), REQUIRED_CARDS)
         seen = set()
@@ -358,6 +380,26 @@ class Hd033ResidualTests(unittest.TestCase):
 
         bad = deepcopy(hd033)
         bad['herdr_executed'] = True
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(bad, catalog, matrix)
+
+        bad = deepcopy(hd033)
+        bad['github_required_check'] = 'passed'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(bad, catalog, matrix)
+
+        bad = deepcopy(hd033)
+        bad['l2_collectors_are_not_live_pass'] = False
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(bad, catalog, matrix)
+
+        bad = deepcopy(hd033)
+        bad['l2_collectors'] = 'passed'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(bad, catalog, matrix)
+
+        bad = deepcopy(hd033)
+        bad['complete_1_0_claimed'] = True
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(bad, catalog, matrix)
 

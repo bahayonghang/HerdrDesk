@@ -23,8 +23,9 @@
   "mib_bytes": 1048576,
   "invented_timings": false,
   "limitations": [
-    "Working-set process sampling was not authorized in this dispatch.",
-    "HD-025 TerminalQueueBudget is a Core queue ceiling, not App plus WebView2 working set.",
+    "1/4 visible pane WebView working-set lab was not run.",
+    "Short-window process samples are not App plus WebView2 1/4 pane working set.",
+    "HD-025 TerminalQueueBudget is a Core queue ceiling, not process memory.",
     "Do not derive process memory from Q_p.",
     "MiB is 1,048,576 bytes."
   ]

@@ -17,8 +17,9 @@
   "sample_count": null,
   "invented_timings": false,
   "limitations": [
-    "Live search p95 was not authorized in this dispatch.",
-    "HD-023 in-memory search under a unit p95 budget is not live p95.",
-    "Do not invent p95_ms."
+    "Live 3-device search p95 was not run.",
+    "In-memory GlobalSearchViewModel samples over Store projections are not live 3-device p95.",
+    "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
+    "Do not invent p95_ms. Raw in-memory samples stay in gitignored probe-results/."
   ]
 }

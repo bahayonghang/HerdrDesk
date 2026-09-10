@@ -1,0 +1,24 @@
+{
+  "document_kind": "hd033_environment_manifest_pointer",
+  "template": false,
+  "live_status": "UNVERIFIED",
+  "result": "not_run",
+  "raw_gitignored_path": "probe-results/hd033-environment-manifest.json",
+  "committed_raw": false,
+  "herdr_executed": false,
+  "live_dpi": false,
+  "live_narrator": false,
+  "eight_hour_soak_executed": false,
+  "invented_timings": false,
+  "parser_consumed_is_not_presentation": true,
+  "github_required_check": "UNVERIFIED",
+  "l2_collectors": "shipped",
+  "l2_collectors_are_not_live_pass": true,
+  "limitations": [
+    "Raw OS/CPU/RAM/SDK/WebView2/DPI/Narrator capture lives in gitignored probe-results/.",
+    "This pointer is not live AC28 evidence.",
+    "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
+    "Live DPI/Narrator/soak matrix was not run.",
+    "Hosted CI is not an interactive desktop."
+  ]
+}

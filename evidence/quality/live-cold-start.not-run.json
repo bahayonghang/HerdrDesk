@@ -17,9 +17,10 @@
   "sample_count": null,
   "invented_timings": false,
   "limitations": [
-    "Independent cold-start samples were not authorized in this dispatch.",
-    "HD-011 L1 ViewModels and the console host stub are not first-interactive pixel evidence.",
+    "Packaged first-interactive pixel cold start was not run.",
+    "compose-only and shell-smoke process samples are not first-interactive pixel evidence.",
+    "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
     "Hosted CI is not an interactive desktop.",
-    "Do not invent p95_ms."
+    "Do not invent p95_ms. Raw process samples stay in gitignored probe-results/."
   ]
 }

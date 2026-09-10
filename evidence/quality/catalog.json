@@ -34,6 +34,10 @@
   "integration_ssh_project": false,
   "integration_windows_project": false,
   "herdr_executed": false,
+  "github_required_check": "UNVERIFIED",
+  "l2_collectors": "shipped",
+  "l2_collectors_are_not_live_pass": true,
+  "environment_manifest_pointer": "evidence/quality/environment-pointer.json",
   "copy_windows_fields_onto_linux": false,
   "extrapolate_macos_arm64": false,
   "redaction": {
@@ -85,6 +89,7 @@
       "l1_artifacts": [
         "src/HerdDesk.App/Program.cs",
         "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
+        "src/HerdDesk.App/Quality/ColdStartSampler.cs",
         "tests/Unit/HerdDesk.App.Tests/ShellViewModelTests.cs",
         "implementation/hd-011-l2.json"
       ],
@@ -123,6 +128,7 @@
         "src/HerdDesk.Core/Aggregation/GlobalSearchIndex.cs",
         "src/HerdDesk.Core/Aggregation/GlobalProjectionStore.cs",
         "src/HerdDesk.App/ViewModels/GlobalSearchViewModel.cs",
+        "src/HerdDesk.App/Quality/SearchLatencyCollector.cs",
         "tests/Unit/HerdDesk.Core.Tests/Aggregation/GlobalSearchPerformanceTests.cs",
         "tests/Unit/HerdDesk.App.Tests/SearchPaletteTests.cs",
         "implementation/hd-023-l2.json"
@@ -143,6 +149,7 @@
         "src/HerdDesk.Core/Terminal/TerminalQueueBudget.cs",
         "src/HerdDesk.Core/Projection/DirtySetBudget.cs",
         "src/HerdDesk.Core/Connections/ConnectionAdmissionPolicy.cs",
+        "src/HerdDesk.Infrastructure/Quality/ProcessResourceSampler.cs",
         "tests/Unit/HerdDesk.Core.Tests/Terminal/TerminalQueueBudgetTests.cs",
         "implementation/hd-025-l2.json"
       ],
@@ -160,6 +167,7 @@
       "owner_children": ["HD-025", "HD-011"],
       "l1_artifacts": [
         "src/HerdDesk.App/Services/PaneVisibilityCoordinator.cs",
+        "src/HerdDesk.Infrastructure/Quality/ProcessResourceSampler.cs",
         "tests/Unit/HerdDesk.App.Tests/Services/PaneVisibilityBudgetTests.cs",
         "implementation/hd-025-l2.json"
       ],
@@ -179,6 +187,7 @@
         "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
         "src/HerdDesk.App/ViewModels/SearchPaletteViewModel.cs",
         "src/HerdDesk.App/ViewModels/TerminalControlViewModel.cs",
+        "src/HerdDesk.App/Quality/AccessibilityNameCatalog.cs",
         "tests/Unit/HerdDesk.App.Tests/SearchPaletteTests.cs",
         "tests/Unit/HerdDesk.App.Tests/TerminalControlTests.cs",
         "implementation/hd-011-l2.json"
@@ -198,6 +207,7 @@
       "l1_artifacts": [
         "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
         "src/HerdDesk.App/ViewModels/TerminalDisplayCoordinator.cs",
+        "src/HerdDesk.Infrastructure/Quality/EnvironmentManifestCollector.cs",
         "tests/Unit/HerdDesk.App.Tests/TerminalDisplaySettingsTests.cs",
         "implementation/hd-011-l2.json",
         "implementation/hd-014-l2.json"
@@ -319,5 +329,5 @@
       "missing_grant": "no_authorized_eight_hour_soak"
     }
   ],
-  "note": "HD-033 L1 closeout catalog. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator, and working-set stay not_run. This file is not product AC pass evidence."
+  "note": "HD-033 L1 closeout catalog plus L2 collectors. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. L2 collectors write gitignored probe-results and do not close live rows. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator, and working-set stay not_run. github_required_check stays UNVERIFIED. This file is not product AC pass evidence."
 }

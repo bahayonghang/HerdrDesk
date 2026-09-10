@@ -1,6 +1,8 @@
 using System.Text.Json;
 using HerdDesk.App;
+using HerdDesk.App.Quality;
 using HerdDesk.Core;
+using HerdDesk.Infrastructure.Quality;
 using HerdDesk.Terminal.Web;
 
 internal static class Hd033Cases
@@ -92,6 +94,11 @@ internal static class Hd033Cases
         Check(typeof(PaneVisibilityCoordinator).IsClass);
         Check(typeof(RenderFlowController).IsClass);
         Check(typeof(TerminalInputController).IsClass);
+        Check(typeof(EnvironmentManifestCollector).IsClass);
+        Check(typeof(ProcessResourceSampler).IsClass);
+        Check(typeof(SearchLatencyCollector).IsClass);
+        Check(typeof(ColdStartSampler).IsClass);
+        Check(typeof(AccessibilityNameCatalog).IsClass);
 
         var root = FindRepoRoot();
         AppXamlSurface.CheckIntegrationWindowsProject(root);
@@ -117,6 +124,22 @@ internal static class Hd033Cases
         Check(catalog.GetProperty("hosted_ci_is_interactive_desktop").GetBoolean() is false);
         Check(catalog.GetProperty("winui_admitted").GetBoolean() is false);
         Check(catalog.GetProperty("herdr_executed").GetBoolean() is false);
+        Check(catalog.GetProperty("github_required_check").GetString() == "UNVERIFIED");
+        Check(catalog.GetProperty("l2_collectors_are_not_live_pass").GetBoolean());
+        Check(catalog.GetProperty("l2_collectors").GetString() != "passed");
+        Check(catalog.GetProperty("environment_manifest_pointer").GetString()
+              == "evidence/quality/environment-pointer.json");
+        using var pointerDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "environment-pointer.json")));
+        var pointer = pointerDoc.RootElement;
+        Check(pointer.GetProperty("result").GetString() == "not_run");
+        Check(pointer.GetProperty("live_status").GetString() == "UNVERIFIED");
+        Check(pointer.GetProperty("committed_raw").GetBoolean() is false);
+        Check(pointer.GetProperty("live_dpi").GetBoolean() is false);
+        Check(pointer.GetProperty("live_narrator").GetBoolean() is false);
+        Check(pointer.GetProperty("eight_hour_soak_executed").GetBoolean() is false);
+        Check(pointer.GetProperty("github_required_check").GetString() == "UNVERIFIED");
+        Check(pointer.GetProperty("l2_collectors_are_not_live_pass").GetBoolean());
         Check(catalog.GetProperty("redaction").GetProperty("credential").GetString() == "omitted");
         Check(catalog.GetProperty("redaction").GetProperty("host").GetString() == "omitted");
         foreach (var key in PassKeys)
@@ -271,6 +294,9 @@ internal static class Hd033Cases
         Check(root.GetProperty("integration_windows_project").GetBoolean() is false);
         Check(root.GetProperty("herdr_executed").GetBoolean() is false);
         Check(root.GetProperty("hosted_ci_is_interactive_desktop").GetBoolean() is false);
+        Check(root.GetProperty("github_required_check").GetString() == "UNVERIFIED");
+        Check(root.GetProperty("l2_collectors_are_not_live_pass").GetBoolean());
+        Check(root.GetProperty("l2_collectors").GetString() != "passed");
         Check(root.GetProperty("missing").GetProperty("eight_hour_soak").GetBoolean());
         Check(root.GetProperty("missing").GetProperty("visible_pixel_probe").GetBoolean());
         Check(root.GetProperty("missing").GetProperty("narrator_desktop").GetBoolean());
