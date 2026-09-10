@@ -8,7 +8,7 @@ L1 收口目录。指向已交付的 HD-007 配置/宿主、HD-011 设置 ViewMo
 - `evidence/packaging/support-matrix.json`
 - `implementation/hd-034-l2.json`
 
-`phase_gate=not_passed`。`g0_passed=false`。`ac41_passed` / `ac42_passed` 为 false。模板文件 `template=true`，空 hash / 退出码 / Publisher，不是一次成功运行。假 Publisher 不能让 AC41 通过。未签名本地构建不能当发行安装证据。复制旧 EXE 不能当回滚。`packaging/` 为 lab identity 未签名 layout 叠加，不是 WAP 工程，不是发行 Publisher。`App.xaml` 已存在。`tests/Integration.Windows` 是 `net10.0` 控制台 runner，catalog token 仍为 false。
+`phase_gate=not_passed`。`g0_passed=false`。`ac41_passed` / `ac42_passed` 为 false。模板文件 `template=true`，空 hash / 退出码 / Publisher，不是一次成功运行。假 Publisher 不能让 AC41 通过。未签名本地构建不能当发行安装证据。复制旧 EXE 不能当回滚。`packaging/` 为 lab identity 未签名 layout 叠加，不是 WAP 工程，不是发行 Publisher。`scripts/new_lab_certificate.ps1` 是 lab CurrentUser 证书 overlay，不是 AC41；PFX 只写 gitignored 路径。`evidence/packaging/lab-sign-overlay-pointer.json` 不是 live 签名成功行。`App.xaml` 已存在。`tests/Integration.Windows` 是 `net10.0` 控制台 runner，catalog token 仍为 false。
 
 ## 执行卡
 
@@ -42,7 +42,7 @@ Contract catalog 各条保持 `not_run`。不得发明 Publisher、证书主题�
 | live file job defer | `UNVERIFIED` / `not_run` | 无授权更新期间作业延后 |
 | live unsigned local build | `UNVERIFIED` / `not_run` | 无授权签名服务 |
 
-残差 JSON：`implementation/hd-034-l2.json`。`l2_live_install` / `l2_live_sign` / `l2_live_update` / `l2_live_rollback` / `l3_clean_machine` 为 `UNVERIFIED`。产品 AC41/AC42 仍为 `not_run`。`tests/Integration.Windows` 是控制台 runner，不是 live 安装工程。`scripts/package_release.ps1 -Action Verify` 对 fixture 的退出码不是 AC41。
+残差 JSON：`implementation/hd-034-l2.json`。`l2_live_install` / `l2_live_sign` / `l2_live_update` / `l2_live_rollback` / `l3_clean_machine` 为 `UNVERIFIED`。产品 AC41/AC42 仍为 `not_run`。`tests/Integration.Windows` 是控制台 runner，不是 live 安装工程。`scripts/package_release.ps1 -Action Verify` 对 fixture 的退出码不是 AC41。lab 证书 overlay 不是 AC41。
 
 ## 后续获权干净机矩阵（本目录未执行）
 

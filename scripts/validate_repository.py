@@ -1385,10 +1385,17 @@ _HD034_SCENARIOS = (
 _HD034_LAB_NAME = 'HerdDesk.Lab'
 _HD034_LAB_PUBLISHER = 'CN=HerdDesk Lab (not release)'
 _HD034_SCRIPT = ROOT / 'scripts' / 'package_release.ps1'
+_HD034_CERT_SCRIPT = ROOT / 'scripts' / 'new_lab_certificate.ps1'
+_HD034_LAB_SIGN_POINTER = 'evidence/packaging/lab-sign-overlay-pointer.json'
 _HD034_VALID_LAYOUT = 'tests/fixtures/packaging/layout-valid'
 _HD034_STORE_LAYOUT = 'tests/fixtures/packaging/layout-store-identity'
 _HD034_PRIVATE_KEY_SUFFIXES = ('.pfx', '.p12', '.pem', '.key', '.snk')
 _HD034_SCRIPT_CONTRACT_OK = False
+_HD034_FORBIDDEN_PFX = (
+    'packaging/HerdDesk.Lab.pfx',
+    'src/HerdDesk.App/HerdDesk.Lab.pfx',
+    'tests/fixtures/packaging/lab.pfx',
+)
 
 
 def find_pwsh() -> str:
@@ -1429,6 +1436,8 @@ def run_package_release(
         cwd=str(ROOT),
         capture_output=True,
         text=True,
+        encoding='utf-8',
+        errors='replace',
         timeout=timeout,
         check=False,
     )
@@ -1436,6 +1445,50 @@ def run_package_release(
     report: dict = {}
     if report_path.is_file():
         report = json.loads(report_path.read_text(encoding='utf-8'))
+    code = completed.returncode if completed.returncode is not None else 1
+    return code, report
+
+
+def _parse_ps_json_object(text: str) -> dict:
+    blob = (text or '').strip().lstrip('\ufeff')
+    if not blob:
+        return {}
+    try:
+        value = json.loads(blob)
+        return value if isinstance(value, dict) else {}
+    except json.JSONDecodeError:
+        start = blob.find('{')
+        end = blob.rfind('}')
+        if start >= 0 and end > start:
+            value = json.loads(blob[start:end + 1])
+            return value if isinstance(value, dict) else {}
+        return {}
+
+
+def run_new_lab_certificate(
+    certificate_path: str | Path,
+    *,
+    timeout: int = 120,
+) -> tuple[int, dict]:
+    """Invoke shipped scripts/new_lab_certificate.ps1. Do not reimplement path checks."""
+    cmd = [
+        find_pwsh(), '-NoLogo', '-NoProfile', '-NonInteractive',
+        '-File', str(_HD034_CERT_SCRIPT),
+        '-CertificatePath', str(certificate_path),
+    ]
+    completed = subprocess.run(
+        cmd,
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
+        timeout=timeout,
+        check=False,
+    )
+    report = _parse_ps_json_object(completed.stdout)
+    if not report:
+        report = _parse_ps_json_object(completed.stderr)
     code = completed.returncode if completed.returncode is not None else 1
     return code, report
 
@@ -1461,10 +1514,18 @@ def _check_hd034_package_files() -> None:
     assert (packaging / 'Assets' / 'Square44x44Logo.png').is_file()
     assert (packaging / 'Assets' / 'Square150x150Logo.png').is_file()
     assert _HD034_SCRIPT.is_file()
+    assert _HD034_CERT_SCRIPT.is_file()
+    assert (ROOT / _HD034_LAB_SIGN_POINTER).is_file()
     assert (ROOT / _HD034_VALID_LAYOUT / 'AppxManifest.xml').is_file()
     assert (ROOT / _HD034_STORE_LAYOUT / 'AppxManifest.xml').is_file()
     assert not (packaging / 'HerdDesk.Package.wapproj').exists()
     assert not list(packaging.rglob('*.wapproj'))
+    ignore_lines = [
+        line.strip()
+        for line in (ROOT / '.gitignore').read_text(encoding='utf-8').splitlines()
+        if line.strip() and not line.lstrip().startswith('#')
+    ]
+    assert '*.pfx' in ignore_lines
     _reject_hd034_private_key_files(packaging)
     _reject_hd034_private_key_files(ROOT / 'tests' / 'fixtures' / 'packaging')
     runtime = json.loads((packaging / 'runtime.json').read_text(encoding='utf-8'))
@@ -1487,9 +1548,13 @@ def _check_hd034_package_files() -> None:
     validation_job, sep, desktop_job = ci.partition('windows-desktop:')
     assert sep, 'windows-desktop job missing'
     assert '-Action Build' not in validation_job
+    assert '-Action Sign' not in ci
+    assert 'new_lab_certificate.ps1' not in ci
     assert '--ui' not in ci
     just = (ROOT / 'justfile').read_text(encoding='utf-8')
     assert '-Action Build' not in just
+    assert '-Action Sign' not in just
+    assert 'new_lab_certificate.ps1' not in just
     assert '--ui' not in just
 
 
@@ -1530,7 +1595,62 @@ def _check_hd034_package_script_contract() -> None:
     assert sign_code != 0, sign_report
     assert sign_report.get('ok') is not True
     assert sign_report.get('signed') is not True
+    _check_hd034_lab_certificate_script_contract()
     _HD034_SCRIPT_CONTRACT_OK = True
+
+
+def _check_hd034_lab_sign_pointer(doc: dict) -> None:
+    assert doc.get('document_kind') == 'hd034_lab_sign_overlay_pointer'
+    _reject_hd034_pass_claims(doc)
+    _reject_hd034_invented_identity(doc)
+    assert doc.get('result') == 'not_run'
+    assert not _is_hd034_success(doc.get('result'))
+    assert doc.get('l2_live_sign') == 'UNVERIFIED'
+    assert doc.get('l2_live_install') == 'UNVERIFIED'
+    assert doc.get('l3_clean_machine') == 'UNVERIFIED'
+    assert doc.get('script') == 'scripts/new_lab_certificate.ps1'
+    assert doc.get('package_script') == 'scripts/package_release.ps1'
+    assert doc.get('lab_certificate_script_is_not_signed_release_msix') is True
+    assert doc.get('lab_identity_not_release') is True
+    assert doc.get('lab_identity_not_store') is True
+    assert doc.get('is_release_install') is False
+    assert doc.get('signed_msix_built') is False
+    assert doc.get('publisher_identity_confirmed') is False
+    assert doc.get('live_sign') is False
+    assert doc.get('pfx_written') is False
+    assert doc.get('pfx_in_git') is False
+    assert doc.get('ac41_passed') is False
+    assert doc.get('ac42_passed') is False
+    assert doc.get('g0_passed') is False
+    assert doc.get('phase_gate') != 'passed'
+    assert doc.get('fake_publisher_cannot_pass_ac41') is True
+    assert doc.get('unsigned_local_build_cannot_pass_release_install') is True
+    assert (_HD034_CERT_SCRIPT).is_file()
+
+
+def _check_hd034_lab_certificate_script_contract() -> None:
+    assert _HD034_CERT_SCRIPT.is_file()
+    text = _HD034_CERT_SCRIPT.read_text(encoding='utf-8')
+    assert _HD034_LAB_PUBLISHER in text
+    assert 'Cert:\\CurrentUser\\My' in text
+    assert 'Cert:\\LocalMachine' not in text
+    for rel in _HD034_FORBIDDEN_PFX:
+        target = ROOT / rel
+        assert not target.exists(), rel
+        code, report = run_new_lab_certificate(target)
+        assert code != 0, report
+        assert report.get('ok') is not True
+        assert report.get('pfx_written') is not True
+        assert report.get('pfx_in_git') is not True
+        assert report.get('ac41_passed') is False
+        assert report.get('ac42_passed') is False
+        assert report.get('g0_passed') is False
+        assert report.get('is_release_install') is False
+        assert report.get('signed_msix_built') is False
+        assert report.get('publisher_identity_confirmed') is False
+        assert report.get('document_kind') == 'hd034_lab_certificate'
+        assert report.get('subject') == _HD034_LAB_PUBLISHER
+        assert not target.exists(), rel
 
 
 def _hd034_token(value):
@@ -1825,6 +1945,11 @@ def _check_hd034_closeout(hd034: dict, catalog: dict, matrix: dict) -> None:
     assert acs['AC42']['status'] != 'passed'
     assert acs['AC41']['status'] == 'not_run'
     assert acs['AC42']['status'] == 'not_run'
+    pointer_rel = catalog.get('lab_sign_overlay_pointer')
+    assert pointer_rel == _HD034_LAB_SIGN_POINTER
+    assert hd034.get('lab_sign_overlay_pointer') == pointer_rel
+    pointer = json.loads((ROOT / pointer_rel).read_text(encoding='utf-8'))
+    _check_hd034_lab_sign_pointer(pointer)
     _check_hd034_package_files()
     check_integration_windows_layout(ROOT)
     assert not (ROOT / 'packaging' / 'HerdDesk.Package.wapproj').exists()

@@ -419,51 +419,66 @@ function Invoke-ActionVerify([string]$outputRoot, [string]$layout) {
 
 function Invoke-ActionSign([string]$outputRoot, [string]$layout) {
     $report = New-BaseReport -actionName 'Sign' -outputRoot $outputRoot -layout $layout
-    if ([string]::IsNullOrWhiteSpace($CertificatePath)) {
-        $report['signature'] = 'skipped'
-        $report['error'] = 'Signature is skipped: -CertificatePath is required for -Action Sign.'
+    try {
+        if ([string]::IsNullOrWhiteSpace($CertificatePath)) {
+            $report['signature'] = 'skipped'
+            $report['error'] = 'Signature is skipped: -CertificatePath is required for -Action Sign.'
+            $report['ok'] = $false
+            Write-Host $report['error']
+            Write-ReportObject $report
+            exit 1
+        }
+        if (-not (Test-Path -LiteralPath $CertificatePath -PathType Leaf)) {
+            throw "CertificatePath not found: $CertificatePath"
+        }
+        $certFull = (Resolve-Path -LiteralPath $CertificatePath).Path
+        if (Test-PathUnder -child $certFull -parent $layout) {
+            throw 'CertificatePath must not live inside the package layout.'
+        }
+        if (Test-PathUnder -child $certFull -parent $outputRoot) {
+            throw 'CertificatePath must not live under the packaging output root.'
+        }
+        $msix = $PackagePath
+        if ([string]::IsNullOrWhiteSpace($msix)) {
+            $candidate = Join-Path $outputRoot 'HerdDesk.Lab.msix'
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) { $msix = $candidate }
+        }
+        if ([string]::IsNullOrWhiteSpace($msix) -or -not (Test-Path -LiteralPath $msix -PathType Leaf)) {
+            throw 'Sign requires an MSIX at -PackagePath or artifacts/packaging/HerdDesk.Lab.msix. Layout-only Build is unsigned and not a release install.'
+        }
+        $signTool = Find-SignTool
+        if (-not $signTool) { throw 'signtool.exe not found. Sign failed closed.' }
+        $msixFull = (Resolve-Path -LiteralPath $msix).Path
+        Invoke-External -FilePath $signTool -ArgumentList @('sign', '/fd', 'SHA256', '/f', $certFull, $msixFull)
+        $report['package_path'] = $msixFull
+        $report['signed'] = $true
+        $report['signature'] = 'lab_cert'
+        $report['signed_msix_built'] = $false
+        $report['publisher_identity_confirmed'] = $false
+        $report['is_release_install'] = $false
+        $report['unsigned_local_build_is_release'] = $false
+        if (Test-Path -LiteralPath $layout -PathType Container) {
+            Invoke-VerifyLayout -layout $layout -report $report
+        }
+        $report['msix_sha256'] = (Get-FileHash -LiteralPath $msixFull -Algorithm SHA256).Hash.ToLowerInvariant()
+        $report['ok'] = $true
+        Write-Host 'Lab signature applied. This is not a production Publisher and not AC41/AC42.'
+        Write-ReportObject $report
+        exit 0
+    }
+    catch {
         $report['ok'] = $false
-        Write-Host $report['error']
+        $report['signed'] = $false
+        $report['signed_msix_built'] = $false
+        $report['is_release_install'] = $false
+        $report['publisher_identity_confirmed'] = $false
+        $report['ac41_passed'] = $false
+        $report['ac42_passed'] = $false
+        $report['g0_passed'] = $false
+        $report['error'] = [string]$_.Exception.Message
         Write-ReportObject $report
         exit 1
     }
-    if (-not (Test-Path -LiteralPath $CertificatePath -PathType Leaf)) {
-        throw "CertificatePath not found: $CertificatePath"
-    }
-    $certFull = (Resolve-Path -LiteralPath $CertificatePath).Path
-    if (Test-PathUnder -child $certFull -parent $layout) {
-        throw 'CertificatePath must not live inside the package layout.'
-    }
-    if (Test-PathUnder -child $certFull -parent $outputRoot) {
-        throw 'CertificatePath must not live under the packaging output root.'
-    }
-    $msix = $PackagePath
-    if ([string]::IsNullOrWhiteSpace($msix)) {
-        $candidate = Join-Path $outputRoot 'HerdDesk.Lab.msix'
-        if (Test-Path -LiteralPath $candidate -PathType Leaf) { $msix = $candidate }
-    }
-    if ([string]::IsNullOrWhiteSpace($msix) -or -not (Test-Path -LiteralPath $msix -PathType Leaf)) {
-        throw 'Sign requires an MSIX at -PackagePath or artifacts/packaging/HerdDesk.Lab.msix. Layout-only Build is unsigned and not a release install.'
-    }
-    $signTool = Find-SignTool
-    if (-not $signTool) { throw 'signtool.exe not found. Sign failed closed.' }
-    $msixFull = (Resolve-Path -LiteralPath $msix).Path
-    Invoke-External -FilePath $signTool -ArgumentList @('sign', '/fd', 'SHA256', '/f', $certFull, $msixFull)
-    $report['package_path'] = $msixFull
-    $report['signed'] = $true
-    $report['signature'] = 'lab_cert'
-    $report['signed_msix_built'] = $false
-    $report['publisher_identity_confirmed'] = $false
-    $report['is_release_install'] = $false
-    $report['unsigned_local_build_is_release'] = $false
-    if (Test-Path -LiteralPath $layout -PathType Container) {
-        Invoke-VerifyLayout -layout $layout -report $report
-    }
-    $report['msix_sha256'] = (Get-FileHash -LiteralPath $msixFull -Algorithm SHA256).Hash.ToLowerInvariant()
-    $report['ok'] = $true
-    Write-Host 'Lab signature applied. This is not a production Publisher and not AC41/AC42.'
-    Write-ReportObject $report
-    exit 0
 }
 
 $outputRoot = Resolve-OutputRoot -value $OutputRoot

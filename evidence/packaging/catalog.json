@@ -80,6 +80,7 @@
   },
   "support_matrix": "evidence/packaging/support-matrix.json",
   "l2_status": "implementation/hd-034-l2.json",
+  "lab_sign_overlay_pointer": "evidence/packaging/lab-sign-overlay-pointer.json",
   "templates": [
     "evidence/packaging/live-clean-install.template.json",
     "evidence/packaging/live-runtime-missing.template.json",
@@ -346,5 +347,5 @@
       "missing_grant": "no_authorized_signing_service"
     }
   ],
-  "note": "HD-034 L2 ships an unsigned local publish-layout overlay and lab identity. App.xaml exists. packaging_project stays false (no wapproj). Lab identity is not a Store or release Publisher. Fake publisher cannot pass AC41. Unsigned local build cannot pass release install. Copying an old EXE cannot pass rollback. Live install/sign/update/rollback stay not_run. This file is not product AC pass evidence."
+  "note": "HD-034 L2 ships an unsigned local publish-layout overlay, lab identity, and a lab cert create overlay. App.xaml exists. packaging_project stays false (no wapproj). Lab identity is not a Store or release Publisher. Lab cert overlay is not AC41. Certificate export stays gitignored. Fake publisher cannot pass AC41. Unsigned local build cannot pass release install. Copying an old EXE cannot pass rollback. Live install/sign/update/rollback stay not_run. This file is not product AC pass evidence."
 }

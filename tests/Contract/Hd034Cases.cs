@@ -100,6 +100,8 @@ internal static class Hd034Cases
         Check(File.Exists(Path.Combine(root, "packaging", "Package.appxmanifest")));
         Check(File.Exists(Path.Combine(root, "packaging", "runtime.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "package_release.ps1")));
+        Check(File.Exists(Path.Combine(root, "scripts", "new_lab_certificate.ps1")));
+        Check(File.Exists(Path.Combine(root, "evidence", "packaging", "lab-sign-overlay-pointer.json")));
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.App", "App.xaml")));
         Check(!File.Exists(Path.Combine(root, "packaging", "HerdDesk.Package.wapproj")));
         AppXamlSurface.CheckBlankContainerOnly(root);
@@ -127,6 +129,24 @@ internal static class Hd034Cases
         Check(catalog.GetProperty("herdr_executed").GetBoolean() is false);
         Check(catalog.GetProperty("integration_windows_project").GetBoolean() is false);
         Check(catalog.GetProperty("packaging_project").GetBoolean() is false);
+        Check(catalog.GetProperty("lab_sign_overlay_pointer").GetString()
+              == "evidence/packaging/lab-sign-overlay-pointer.json");
+        using var pointerDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "packaging", "lab-sign-overlay-pointer.json")));
+        var pointer = pointerDoc.RootElement;
+        Check(pointer.GetProperty("document_kind").GetString() == "hd034_lab_sign_overlay_pointer");
+        Check(pointer.GetProperty("result").GetString() == "not_run");
+        Check(pointer.GetProperty("l2_live_sign").GetString() == "UNVERIFIED");
+        Check(pointer.GetProperty("script").GetString() == "scripts/new_lab_certificate.ps1");
+        Check(pointer.GetProperty("is_release_install").GetBoolean() is false);
+        Check(pointer.GetProperty("signed_msix_built").GetBoolean() is false);
+        Check(pointer.GetProperty("publisher_identity_confirmed").GetBoolean() is false);
+        Check(pointer.GetProperty("ac41_passed").GetBoolean() is false);
+        Check(pointer.GetProperty("ac42_passed").GetBoolean() is false);
+        Check(pointer.GetProperty("g0_passed").GetBoolean() is false);
+        Check(pointer.GetProperty("pfx_in_git").GetBoolean() is false);
+        Check(pointer.GetProperty("pfx_written").GetBoolean() is false);
+        Check(pointer.GetProperty("lab_certificate_script_is_not_signed_release_msix").GetBoolean());
         Check(catalog.GetProperty("redaction").GetProperty("credential").GetString() == "omitted");
         Check(catalog.GetProperty("redaction").GetProperty("host").GetString() == "omitted");
         Check(catalog.GetProperty("publisher").ValueKind == JsonValueKind.Null);
@@ -291,6 +311,8 @@ internal static class Hd034Cases
         Check(root.GetProperty("missing").GetProperty("packaging_project").GetBoolean());
         Check(root.GetProperty("unsigned_local_build_is_release").GetBoolean() is false);
         Check(root.GetProperty("invented_publisher_identity").GetBoolean() is false);
+        Check(root.GetProperty("lab_sign_overlay_pointer").GetString()
+              == "evidence/packaging/lab-sign-overlay-pointer.json");
     }
 
     static string FindRepoRoot()

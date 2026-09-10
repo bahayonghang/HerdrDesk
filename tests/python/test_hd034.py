@@ -1,7 +1,9 @@
 from copy import deepcopy
 from pathlib import Path
 import json
+import os
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -11,6 +13,8 @@ import validate_repository as repository
 L2 = ROOT / 'implementation' / 'hd-034-l2.json'
 CATALOG = ROOT / 'evidence' / 'packaging' / 'catalog.json'
 MATRIX = ROOT / 'evidence' / 'packaging' / 'support-matrix.json'
+POINTER = ROOT / 'evidence' / 'packaging' / 'lab-sign-overlay-pointer.json'
+CERT_SCRIPT = ROOT / 'scripts' / 'new_lab_certificate.ps1'
 REQUIRED_CARDS = (
     'clean-install',
     'runtime-missing',
@@ -132,6 +136,10 @@ class Hd034ResidualTests(unittest.TestCase):
         self.assertFalse(doc['silent_admin_runtime_install'])
         self.assertFalse(doc['parallel_self_update_service'])
         self.assertFalse(doc['official_app_installer_downgrade_default'])
+        self.assertEqual(
+            doc['lab_sign_overlay_pointer'],
+            'evidence/packaging/lab-sign-overlay-pointer.json',
+        )
         missing = doc['missing']
         self.assertTrue(missing['clean_machine_install'])
         self.assertTrue(missing['publisher_identity'])
@@ -167,6 +175,10 @@ class Hd034ResidualTests(unittest.TestCase):
         self.assertTrue(catalog['exe_copy_cannot_pass_rollback'])
         self.assertEqual(catalog['redaction']['credential'], 'omitted')
         self.assertEqual(catalog['redaction']['host'], 'omitted')
+        self.assertEqual(
+            catalog['lab_sign_overlay_pointer'],
+            'evidence/packaging/lab-sign-overlay-pointer.json',
+        )
         for key in NULL_KEYS:
             self.assertIsNone(catalog[key], key)
         cards = {item['id']: item for item in catalog['execution_cards']}
@@ -518,6 +530,44 @@ class Hd034ResidualTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             repository._check_hd034_closeout(hd034, soak, matrix)
 
+        pointer = json.loads(POINTER.read_text(encoding='utf-8'))
+        repository._check_hd034_lab_sign_pointer(pointer)
+
+        bad = deepcopy(pointer)
+        bad['ac41_passed'] = True
+        with self.assertRaises(AssertionError):
+            repository._check_hd034_lab_sign_pointer(bad)
+
+        bad = deepcopy(pointer)
+        bad['is_release_install'] = True
+        with self.assertRaises(AssertionError):
+            repository._check_hd034_lab_sign_pointer(bad)
+
+        bad = deepcopy(pointer)
+        bad['result'] = 'success'
+        with self.assertRaises(AssertionError):
+            repository._check_hd034_lab_sign_pointer(bad)
+
+        bad = deepcopy(pointer)
+        bad['l2_live_sign'] = 'passed'
+        with self.assertRaises(AssertionError):
+            repository._check_hd034_lab_sign_pointer(bad)
+
+        bad = deepcopy(pointer)
+        bad['signed_msix_built'] = True
+        with self.assertRaises(AssertionError):
+            repository._check_hd034_lab_sign_pointer(bad)
+
+        bad = deepcopy(pointer)
+        bad['pfx_written'] = True
+        with self.assertRaises(AssertionError):
+            repository._check_hd034_lab_sign_pointer(bad)
+
+        bad = deepcopy(pointer)
+        bad['pfx_in_git'] = True
+        with self.assertRaises(AssertionError):
+            repository._check_hd034_lab_sign_pointer(bad)
+
 
 class Hd034PackageScriptTests(unittest.TestCase):
     def test_verify_valid_layout_uses_shipped_script(self):
@@ -581,6 +631,90 @@ class Hd034PackageScriptTests(unittest.TestCase):
     def test_helper_refuses_build_action(self):
         with self.assertRaises(AssertionError):
             repository.run_package_release('Build')
+
+
+class Hd034LabCertificateTests(unittest.TestCase):
+    def test_script_and_pointer_exist_and_stay_unverified(self):
+        self.assertTrue(CERT_SCRIPT.is_file())
+        self.assertTrue(POINTER.is_file())
+        pointer = json.loads(POINTER.read_text(encoding='utf-8'))
+        self.assertEqual(pointer['document_kind'], 'hd034_lab_sign_overlay_pointer')
+        self.assertEqual(pointer['result'], 'not_run')
+        self.assertEqual(pointer['l2_live_sign'], 'UNVERIFIED')
+        self.assertEqual(pointer['script'], 'scripts/new_lab_certificate.ps1')
+        self.assertFalse(pointer['is_release_install'])
+        self.assertFalse(pointer['signed_msix_built'])
+        self.assertFalse(pointer['publisher_identity_confirmed'])
+        self.assertFalse(pointer['ac41_passed'])
+        self.assertFalse(pointer['ac42_passed'])
+        self.assertFalse(pointer['g0_passed'])
+        self.assertFalse(pointer['pfx_in_git'])
+        self.assertFalse(pointer['pfx_written'])
+        self.assertFalse(pointer['live_sign'])
+        self.assertTrue(pointer['lab_certificate_script_is_not_signed_release_msix'])
+        self.assertTrue(pointer['fake_publisher_cannot_pass_ac41'])
+        self.assertTrue(pointer['unsigned_local_build_cannot_pass_release_install'])
+        catalog = json.loads(CATALOG.read_text(encoding='utf-8'))
+        self.assertEqual(catalog['l2_live_sign'], 'UNVERIFIED')
+        self.assertFalse(catalog['ac41_passed'])
+        live_sign = json.loads(
+            (ROOT / 'evidence' / 'packaging' / 'live-signed-update.not-run.json')
+            .read_text(encoding='utf-8')
+        )
+        self.assertEqual(live_sign['result'], 'not_run')
+        self.assertNotIn(str(live_sign['result']).lower(), SUCCESS)
+
+    def test_refuses_pfx_in_packaging_and_source_tree(self):
+        repository._check_hd034_lab_certificate_script_contract()
+
+    def test_writes_pfx_only_to_requested_temp_path(self):
+        self.assertTrue(CERT_SCRIPT.is_file())
+        if os.name != 'nt':
+            pointer = json.loads(POINTER.read_text(encoding='utf-8'))
+            self.assertEqual(pointer['result'], 'not_run')
+            self.assertEqual(pointer['l2_live_sign'], 'UNVERIFIED')
+            self.assertFalse(pointer['ac41_passed'])
+            self.assertFalse(pointer['is_release_install'])
+            return
+        with tempfile.TemporaryDirectory(prefix='herddesk-lab-cert-') as tmp:
+            pfx = Path(tmp) / 'HerdDesk.Lab.pfx'
+            code, report = repository.run_new_lab_certificate(pfx)
+            self.assertEqual(code, 0, report)
+            self.assertTrue(report['ok'])
+            self.assertEqual(report['document_kind'], 'hd034_lab_certificate')
+            self.assertEqual(report['subject'], 'CN=HerdDesk Lab (not release)')
+            self.assertTrue(report['lab_identity_not_release'])
+            self.assertTrue(report['lab_identity_not_store'])
+            self.assertFalse(report['is_release_install'])
+            self.assertFalse(report['signed_msix_built'])
+            self.assertFalse(report['publisher_identity_confirmed'])
+            self.assertFalse(report['ac41_passed'])
+            self.assertFalse(report['ac42_passed'])
+            self.assertFalse(report['g0_passed'])
+            self.assertTrue(report['pfx_written'])
+            self.assertFalse(report['pfx_in_git'])
+            self.assertTrue(pfx.is_file())
+            self.assertEqual(
+                Path(report['certificate_path']).resolve(),
+                pfx.resolve(),
+            )
+            packaging_hits = list((ROOT / 'packaging').rglob('*.pfx'))
+            fixture_hits = list((ROOT / 'tests' / 'fixtures').rglob('*.pfx'))
+            self.assertEqual(packaging_hits, [])
+            self.assertEqual(fixture_hits, [])
+            sign_code, sign_report = repository.run_package_release(
+                'Sign',
+                certificate_path=str(pfx),
+            )
+            self.assertNotEqual(sign_code, 0, sign_report)
+            self.assertIs(sign_report.get('ok'), False)
+            self.assertIs(sign_report.get('signed'), False)
+            self.assertFalse(sign_report.get('ac41_passed', False))
+            self.assertFalse(sign_report.get('ac42_passed', False))
+            self.assertFalse(sign_report.get('is_release_install', False))
+            self.assertFalse(sign_report.get('g0_passed', False))
+            self.assertFalse(sign_report.get('signed_msix_built', False))
+            self.assertFalse(sign_report.get('publisher_identity_confirmed', False))
 
 
 if __name__ == '__main__':

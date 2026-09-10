@@ -36,7 +36,8 @@ scripts/probe_herdr.py      herdr probe
 scripts/Invoke-HerdDeskDotnetSetup.ps1
 scripts/validate_repository.py
 scripts/check_capture.py
-scripts/package_release.ps1  HD-034 L2 unsigned layout Build/Verify/Sign; Sign fails closed without -CertificatePath
+scripts/package_release.ps1  HD-034 L2 unsigned layout Build/Verify/Sign; Sign fails closed without -CertificatePath; Sign with cert and no MSIX fails closed
+scripts/new_lab_certificate.ps1  HD-034 L2 lab CurrentUser cert overlay; not AC41; PFX gitignored; not a release Publisher
 scripts/collect_narrator_overlay.py  HD-033 L2 Narrator presence overlay CLI; not AC37; does not start Narrator
 scripts/audit_release_inputs.py  HD-035 L2 admitted-input auditor CLI; not a live scan; AC02/AC43/AC44 stay false
 scripts/bind_release_candidate.py  HD-036 L2 hosted-workflow pointer CLI; not a required-check; AC39/AC40/AC45/AC47/AC48 stay false
