@@ -3,7 +3,7 @@
   "name": "windows-hd-033",
   "title": "HD-033 性能、可访问性与soak",
   "description": "按统一负载测性能/资源/8h稳定性，修复关键问题",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-10",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "Product c2ce0c0: product UI --ui + Narrator.exe launch in evidence/quality/narrator-product-ui-launch.json. AC37 workflow incomplete (no live session). Overlay collector still does not start Narrator. live-narrator not_run. AC37/G0 not passed. No 8h soak. No display scale change.",
+  "notes": "Narrator product-UI launch remains (c2ce0c0). 2026-09-10 reopen to START 8h soak. Do not mark AC46 until 8 wall-clock hours elapse. Do not invent soak_hours. Do not change display scale. Parent not archived.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"
