@@ -3,7 +3,7 @@
   "name": "windows-hd-034",
   "title": "HD-034 签名、安装与更新回滚",
   "description": "MSIX/运行时依赖、签名校验、版本降级与配置迁移",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-09",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 P5 packaging catalog landed. Live install/sign/update/rollback UNVERIFIED. AC41/AC42/G0 not passed. No fake Publisher. Unsigned local build is not release install.",
+  "notes": "L1 catalog remains. 2026-09-10 reopen for unsigned/lab-signed MSIX Build/Verify. Do not invent a production Publisher. Live install/rollback stay UNVERIFIED. AC41/AC42/G0 not passed.",
   "meta": {
     "source_task": "HD-034",
     "phase": "P5"
