@@ -145,6 +145,15 @@ internal static class Hd033Cases
               == "evidence/quality/live-soak-start.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-start.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "start_eight_hour_soak.py")));
+        Check(catalog.GetProperty("soak_interruption_capture").GetString()
+              == "evidence/quality/live-soak-interrupted.json");
+        var interruptRels = catalog.GetProperty("soak_interruption_captures")
+            .EnumerateArray().Select(item => item.GetString()!).ToArray();
+        Check(interruptRels.SequenceEqual(
+        [
+            "evidence/quality/live-soak-interrupted.json",
+            "evidence/quality/live-soak-interrupted-2.json"
+        ]));
         using var pointerDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "environment-pointer.json")));
         var pointer = pointerDoc.RootElement;
@@ -279,6 +288,50 @@ internal static class Hd033Cases
         Check(soakStart.GetProperty("l4_soak").GetString() == "UNVERIFIED");
         Check(soakStart.GetProperty("herdr_executed").GetBoolean() is false);
         Check(soakStart.GetProperty("g0_passed").GetBoolean() is false);
+        Check(soakStart.GetProperty("prior_interruption_capture").GetString()
+              == "evidence/quality/live-soak-interrupted.json");
+        var startAt = soakStart.GetProperty("started_at_utc").GetString();
+        Check(!string.IsNullOrEmpty(startAt));
+        Check(string.CompareOrdinal(startAt, "2026-09-10T11:14:54Z") > 0);
+        Check(startAt != "2026-09-10T11:11:22Z");
+        Check(startAt != "2026-09-10T09:49:06Z");
+        var startPids = soakStart.GetProperty("owned_pids").EnumerateArray()
+            .Select(item => item.GetInt32()).ToHashSet();
+        Check(startPids.Count > 0);
+
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-interrupted.json")));
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-interrupted-2.json")));
+        using var interruptDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-soak-interrupted.json")));
+        var interrupt = interruptDoc.RootElement;
+        Check(interrupt.GetProperty("document_kind").GetString() == "hd033_eight_hour_soak_interruption");
+        Check(interrupt.GetProperty("started_at_utc").GetString() == "2026-09-10T09:49:06Z");
+        Check(interrupt.GetProperty("eight_hour_soak_executed").GetBoolean() is false);
+        Check(interrupt.GetProperty("soak_hours").ValueKind == JsonValueKind.Null);
+        Check(interrupt.GetProperty("crash_cause").ValueKind == JsonValueKind.Null);
+        Check(interrupt.GetProperty("ac46_passed").GetBoolean() is false);
+        var firstPids = interrupt.GetProperty("owned_pids").EnumerateArray()
+            .Select(item => item.GetInt32()).ToHashSet();
+        Check(firstPids.SetEquals([89580, 59552, 57712]));
+        Check(startPids.Overlaps(firstPids) is false);
+
+        using var interrupt2Doc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-soak-interrupted-2.json")));
+        var interrupt2 = interrupt2Doc.RootElement;
+        Check(interrupt2.GetProperty("document_kind").GetString() == "hd033_eight_hour_soak_interruption");
+        Check(interrupt2.GetProperty("started_at_utc").GetString() == "2026-09-10T11:11:22Z");
+        Check(interrupt2.GetProperty("first_heartbeat_empty_alive_at_utc").GetString()
+              == "2026-09-10T11:14:54Z");
+        Check(interrupt2.GetProperty("eight_hour_soak_executed").GetBoolean() is false);
+        Check(interrupt2.GetProperty("soak_hours").ValueKind == JsonValueKind.Null);
+        Check(interrupt2.GetProperty("crash_cause").ValueKind == JsonValueKind.Null);
+        Check(interrupt2.GetProperty("ac46_passed").GetBoolean() is false);
+        Check(interrupt2.GetProperty("g0_passed").GetBoolean() is false);
+        var secondPids = interrupt2.GetProperty("owned_pids").EnumerateArray()
+            .Select(item => item.GetInt32()).ToHashSet();
+        Check(secondPids.SetEquals([46108, 64672, 71980]));
+        Check(startPids.Overlaps(secondPids) is false);
+        Check(firstPids.Overlaps(secondPids) is false);
 
         using var pixelDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-input-pixel.not-run.json")));

@@ -41,7 +41,7 @@ scripts/new_lab_certificate.ps1  HD-034 L2 lab CurrentUser cert overlay; not AC4
 scripts/collect_narrator_overlay.py  HD-033 L2 Narrator presence overlay CLI; not AC37; does not start Narrator
 scripts/record_narrator_product_ui_launch.py  HD-033 product-UI --ui + Narrator.exe launch recorder; default validates only; --record is not CI; not AC37
 scripts/collect_dpi_overlay.py  HD-033 L2 current-system-DPI overlay CLI; not AC38; does not change display scale; not a 100/150/200 matrix
-scripts/start_eight_hour_soak.py  HD-033 product-UI --ui 8h soak START; default validates only; --record is not CI; not AC46; START is not eight_hour_soak_executed
+scripts/start_eight_hour_soak.py  HD-033 product-UI --ui 8h soak START; default validates only; --record is not CI; not AC46; launches windows TFM Release win-x64 HerdDesk.App.exe with CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS; START is not eight_hour_soak_executed; interruption captures are not 8h; later START must be a new wall-clock and must not reuse interrupted PIDs
 scripts/audit_release_inputs.py  HD-035 L2 admitted-input auditor CLI; not a live scan; AC02/AC43/AC44 stay false
 scripts/bind_release_candidate.py  HD-036 L2 hosted-workflow pointer CLI; not a required-check; AC39/AC40/AC45/AC47/AC48 stay false
 packaging/                  HD-034 L2 lab identity overlay (`Package.appxmanifest`, `runtime.json`). Not a wapproj. Not a release install.

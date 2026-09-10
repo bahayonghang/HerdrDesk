@@ -18,6 +18,7 @@ from herddesk_g0.quality import (
     collect_narrator_overlay,
     narrator_exe_path,
     system_dpi,
+    validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
 )
@@ -187,6 +188,17 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertEqual(
             catalog['soak_start_capture'],
             'evidence/quality/live-soak-start.json',
+        )
+        self.assertEqual(
+            catalog['soak_interruption_capture'],
+            'evidence/quality/live-soak-interrupted.json',
+        )
+        self.assertEqual(
+            catalog['soak_interruption_captures'],
+            [
+                'evidence/quality/live-soak-interrupted.json',
+                'evidence/quality/live-soak-interrupted-2.json',
+            ],
         )
         pointer = json.loads((ROOT / catalog['environment_manifest_pointer']).read_text(encoding='utf-8'))
         self.assertEqual(pointer['result'], 'not_run')
@@ -359,6 +371,24 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertFalse(template['eight_hour_soak_executed'])
         self.assertIsNone(template['soak_hours'])
         self.assertIsNone(template['result'])
+        interruption = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(encoding='utf-8'))
+        self.assertEqual(interruption['kind'], 'live_eight_hour_soak_interruption')
+        self.assertEqual(interruption['result'], 'not_run')
+        self.assertFalse(interruption['eight_hour_soak_executed'])
+        self.assertIsNone(interruption['soak_hours'])
+        self.assertIsNone(interruption['crash_cause'])
+        self.assertFalse(interruption['process_running_at_capture'])
+        second = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(encoding='utf-8'))
+        self.assertEqual(second['kind'], 'live_eight_hour_soak_interruption')
+        self.assertEqual(second['result'], 'not_run')
+        self.assertFalse(second['eight_hour_soak_executed'])
+        self.assertIsNone(second['soak_hours'])
+        self.assertIsNone(second['crash_cause'])
+        self.assertFalse(second['process_running_at_capture'])
+        self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        self.assertEqual(interruption['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(interruption['owned_pids'], [89580, 59552, 57712])
 
     def test_parser_consumed_is_not_visible_pixel(self):
         pixel = json.loads((ROOT / 'evidence' / 'quality' / 'live-input-pixel.not-run.json').read_text(encoding='utf-8'))
@@ -613,6 +643,16 @@ class Hd033ResidualTests(unittest.TestCase):
 
         bad = deepcopy(catalog)
         bad['soak_start_capture'] = 'evidence/quality/live-soak.not-run.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad.pop('soak_interruption_capture')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['soak_interruption_capture'] = 'evidence/quality/live-soak.not-run.json'
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
@@ -1267,7 +1307,8 @@ class Hd033DpiOverlayTests(unittest.TestCase):
 
 
 def _write_soak_start(
-    tmp: Path, *, start_overrides=None, live_overrides=None
+    tmp: Path, *, start_overrides=None, live_overrides=None,
+    interruption_overrides=None, skip_interruption=False,
 ) -> None:
     quality = tmp / 'evidence' / 'quality'
     quality.mkdir(parents=True, exist_ok=True)
@@ -1281,16 +1322,38 @@ def _write_soak_start(
             encoding='utf-8'
         )
     )
+    interruption = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+            encoding='utf-8'
+        )
+    )
     if start_overrides:
         start.update(start_overrides)
+    if 'prior_interruption_captures' not in start:
+        start['prior_interruption_captures'] = [
+            'evidence/quality/live-soak-interrupted.json',
+            'evidence/quality/live-soak-interrupted-2.json',
+        ]
     if live_overrides:
         live.update(live_overrides)
+    if interruption_overrides:
+        interruption.update(interruption_overrides)
     (quality / 'live-soak-start.json').write_text(
         json.dumps(start), encoding='utf-8'
     )
     (quality / 'live-soak.not-run.json').write_text(
         json.dumps(live), encoding='utf-8'
     )
+    if not skip_interruption:
+        (quality / 'live-soak-interrupted.json').write_text(
+            json.dumps(interruption), encoding='utf-8'
+        )
+        second_src = ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json'
+        if second_src.is_file():
+            second = json.loads(second_src.read_text(encoding='utf-8'))
+            (quality / 'live-soak-interrupted-2.json').write_text(
+                json.dumps(second), encoding='utf-8'
+            )
 
 
 class Hd033SoakStartTests(unittest.TestCase):
@@ -1333,6 +1396,58 @@ class Hd033SoakStartTests(unittest.TestCase):
         self.assertIsNone(live['soak_hours'])
         self.assertIsNone(live['disconnect_switch_count'])
         self.assertIsNone(start['disconnect_switch_count'])
+        self.assertEqual(
+            start['prior_interruption_capture'],
+            'evidence/quality/live-soak-interrupted.json',
+        )
+        self.assertEqual(
+            start['prior_interruption_captures'],
+            [
+                'evidence/quality/live-soak-interrupted.json',
+                'evidence/quality/live-soak-interrupted-2.json',
+            ],
+        )
+        self.assertIsInstance(start['started_at_utc'], str)
+        self.assertGreater(start['started_at_utc'], '2026-09-10T11:14:54Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertIsInstance(start['owned_pids'], list)
+        self.assertTrue(start['owned_pids'])
+        interruption = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        second = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(interruption['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(interruption['owned_pids'], [89580, 59552, 57712])
+        self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        self.assertEqual(
+            second['last_heartbeat_alive_at_utc'], '2026-09-10T11:13:53Z'
+        )
+        self.assertEqual(
+            second['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T11:14:54Z',
+        )
+        self.assertEqual(
+            report['prior_interruption_started_at_utc'],
+            interruption['started_at_utc'],
+        )
+        self.assertGreater(start['started_at_utc'], interruption['started_at_utc'])
+        self.assertGreater(
+            start['started_at_utc'], second['first_heartbeat_empty_alive_at_utc']
+        )
+        self.assertTrue(
+            set(start['owned_pids']).isdisjoint(interruption['owned_pids'])
+        )
+        self.assertTrue(set(start['owned_pids']).isdisjoint(second['owned_pids']))
+        self.assertNotIn('--project', argv)
+        self.assertNotIn('dotnet', argv)
 
     def test_cli_validates_without_starting_processes(self):
         script = ROOT / 'scripts' / 'start_eight_hour_soak.py'
@@ -1356,6 +1471,23 @@ class Hd033SoakStartTests(unittest.TestCase):
         self.assertIsNone(report['soak_hours'])
         self.assertEqual(report['result'], 'not_run')
         self.assertTrue(report['product_ui_started'])
+
+    def test_cli_spawns_breakaway_exe_not_dotnet_run(self):
+        src = (ROOT / 'scripts' / 'start_eight_hour_soak.py').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('CREATE_BREAKAWAY_FROM_JOB', src)
+        self.assertIn('CREATE_NEW_PROCESS_GROUP', src)
+        self.assertIn('DETACHED_PROCESS', src)
+        self.assertIn(
+            'CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS',
+            src,
+        )
+        self.assertIn('HerdDesk.App.exe', src)
+        self.assertIn('subprocess.DEVNULL', src)
+        self.assertIn("'stdin': subprocess.DEVNULL", src)
+        self.assertNotIn('taskkill', src.lower())
+        self.assertNotRegex(src, r"ui_argv = \[\s*str\(dotnet\),\s*'run'")
 
     def test_structure_contract_invokes_start_record(self):
         repository._check_hd033_soak_start()
@@ -1530,6 +1662,296 @@ class Hd033SoakStartTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 validate_eight_hour_soak_start(root)
             self.assertEqual(str(ctx.exception), 'ac46_passed')
+
+    def test_missing_interruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, skip_interruption=True)
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_wrong_interruption_pointer_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root,
+                start_overrides={
+                    'prior_interruption_capture': 'evidence/quality/live-soak.not-run.json',
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_soak_hours_one_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'soak_hours': 1})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_same_started_at_as_interruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T09:49:06Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_before_empty_heartbeat_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T10:50:00Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_empty_heartbeat_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T10:59:47Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_reused_dead_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'owned_pids': [89580, 59552, 57712]}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_reused_second_interrupt_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'owned_pids': [46108, 64672, 71980]}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_between_interruptions_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T11:12:00Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_second_empty_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T11:14:54Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_omitted_second_interruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root,
+                start_overrides={
+                    'prior_interruption_captures': [
+                        'evidence/quality/live-soak-interrupted.json',
+                    ],
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_reused_command_pid_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            start = json.loads(
+                (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            start['commands'][0]['pid'] = 89580
+            _write_soak_start(root, start_overrides=start)
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_empty_owned_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'owned_pids': []})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+
+class Hd033SoakInterruptionTests(unittest.TestCase):
+    def test_shipped_interruption_is_not_ac46(self):
+        report = validate_eight_hour_soak_interruption(ROOT)
+        self.assertEqual(report['document_kind'], 'hd033_eight_hour_soak_interruption')
+        self.assertTrue(report['product_ui_started'])
+        self.assertFalse(report['process_running_at_capture'])
+        self.assertFalse(report['eight_hour_soak_executed'])
+        self.assertIsNone(report['soak_hours'])
+        self.assertFalse(report['live_soak'])
+        self.assertFalse(report['ac46_passed'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertNotIn(str(report['result']).lower(), SUCCESS)
+        self.assertEqual(report['l4_soak'], 'UNVERIFIED')
+        self.assertFalse(report['g0_passed'])
+        self.assertIsNone(report['crash_cause'])
+        interruption = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(interruption['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(
+            interruption['last_heartbeat_alive_at_utc'], '2026-09-10T10:58:46Z'
+        )
+        self.assertEqual(
+            interruption['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T10:59:47Z',
+        )
+        self.assertEqual(interruption['owned_pids'], [89580, 59552, 57712])
+        self.assertFalse(interruption['herddesk_crash_dump_found'])
+        self.assertFalse(interruption['application_error_herddesk'])
+        self.assertTrue(interruption['xerox_print_experience_crash_unrelated'])
+        self.assertTrue(interruption['soak_stdout_empty'])
+        self.assertTrue(interruption['soak_stderr_empty'])
+        self.assertIsNone(interruption['soak_hours'])
+        self.assertIsNone(interruption['disconnect_switch_count'])
+
+    def test_shipped_second_interruption_is_not_ac46(self):
+        second = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(second['document_kind'], 'hd033_eight_hour_soak_interruption')
+        self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertEqual(
+            second['last_heartbeat_alive_at_utc'], '2026-09-10T11:13:53Z'
+        )
+        self.assertEqual(
+            second['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T11:14:54Z',
+        )
+        self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        self.assertFalse(second['eight_hour_soak_executed'])
+        self.assertIsNone(second['soak_hours'])
+        self.assertFalse(second['ac46_passed'])
+        self.assertFalse(second['live_soak'])
+        self.assertFalse(second['g0_passed'])
+        self.assertIsNone(second['crash_cause'])
+        self.assertFalse(second['herddesk_crash_dump_found'])
+        self.assertFalse(second['application_error_herddesk'])
+        self.assertFalse(second['process_running_at_capture'])
+        self.assertTrue(second['xerox_print_experience_crash_unrelated'])
+        first = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(first['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(first['owned_pids'], [89580, 59552, 57712])
+        self.assertNotEqual(first['started_at_utc'], second['started_at_utc'])
+        self.assertTrue(set(first['owned_pids']).isdisjoint(second['owned_pids']))
+
+    def test_structure_contract_invokes_interruption_record(self):
+        repository._check_hd033_soak_start()
+
+    def test_ac46_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, interruption_overrides={'ac46_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_interruption(root)
+            self.assertEqual(str(ctx.exception), 'ac46_passed')
+
+    def test_eight_hour_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, interruption_overrides={'eight_hour_soak_executed': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_interruption(root)
+            self.assertEqual(str(ctx.exception), 'eight_hour_soak_executed')
+
+    def test_soak_hours_fails_closed(self):
+        for value in (1, 8, 1.16):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_soak_start(root, interruption_overrides={'soak_hours': value})
+                with self.assertRaises(QualityError) as ctx:
+                    validate_eight_hour_soak_interruption(root)
+                self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_invented_crash_cause_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, interruption_overrides={'crash_cause': 'herddesk_crash'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_interruption(root)
+            self.assertEqual(str(ctx.exception), 'invented_crash_cause')
+
+    def test_crash_dump_claimed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, interruption_overrides={'herddesk_crash_dump_found': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_interruption(root)
+            self.assertEqual(str(ctx.exception), 'invented_crash_cause')
+
+    def test_xerox_as_cause_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root,
+                interruption_overrides={
+                    'xerox_print_experience_crash_unrelated': False,
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_interruption(root)
+            self.assertEqual(str(ctx.exception), 'invented_crash_cause')
+
+    def test_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_soak_start(root, interruption_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    validate_eight_hour_soak_interruption(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_l4_soak_pass_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, interruption_overrides={'l4_soak': 'passed'})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_interruption(root)
+            self.assertEqual(str(ctx.exception), 'l4_soak_claimed')
 
 
 if __name__ == '__main__':

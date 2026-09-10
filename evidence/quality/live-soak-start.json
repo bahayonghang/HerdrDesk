@@ -3,10 +3,10 @@
   "template": false,
   "capture_id": "hd033-live-soak-start-2026-09-10",
   "kind": "live_eight_hour_soak_start",
-  "started_at_utc": "2026-09-10T09:49:06Z",
-  "captured_at_utc": "2026-09-10T09:49:06Z",
+  "started_at_utc": "2026-09-10T11:35:26Z",
+  "captured_at_utc": "2026-09-10T11:35:26Z",
   "operator_scope": "product_ui_eight_hour_soak_started_wall_clock_incomplete",
-  "git_sha": "c388a3df926bd60975217fbcf2df593e6db103a1",
+  "git_sha": "19a436608770ad4a7462c71e1e9b098faa93a3c8",
   "platform": {
     "sys_platform": "win32",
     "system": "Windows",
@@ -33,34 +33,27 @@
   "window_seen": true,
   "process_running_at_capture": true,
   "owned_pids": [
-    89580,
-    59552,
-    57712
+    24744,
+    27844
   ],
-  "heartbeat_pid": 57712,
+  "heartbeat_pid": 27844,
   "windows": [
     {
       "title": "HerdDesk",
-      "pid": 59552
+      "pid": 24744
     }
   ],
   "commands": [
     {
       "role": "product_ui",
       "command_redacted": [
-        "dotnet",
-        "run",
-        "--project",
-        "src/HerdDesk.App",
-        "--framework",
-        "net10.0-windows10.0.19041.0",
-        "--",
+        "HerdDesk.App.exe",
         "--ui",
         "<temp-root>"
       ],
-      "pid": 89580,
+      "pid": 24744,
       "app_pids": [
-        59552
+        24744
       ],
       "exit_code": null,
       "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -71,15 +64,20 @@
   ],
   "raw_gitignored_path": "probe-results/hd033-soak-start.json",
   "committed_raw": true,
+  "prior_interruption_capture": "evidence/quality/live-soak-interrupted.json",
+  "prior_interruption_captures": [
+    "evidence/quality/live-soak-interrupted.json",
+    "evidence/quality/live-soak-interrupted-2.json"
+  ],
   "blocker": null,
   "limitations": [
     "Product UI --ui was started in observe mode on this Windows 11 desktop and left running.",
-    "This file is a soak START capture. eight_hour_soak_executed stays false until 8 wall-clock hours elapse.",
-    "soak_hours stays null. Do not invent an 8h duration.",
+    "This file is a new soak START capture after prior interruption(s). eight_hour_soak_executed stays false until 8 wall-clock hours elapse.",
+    "soak_hours stays null. Do not invent an 8h duration. A prior interruption is not 8h completion.",
     "100 disconnect/switch cycles and fault injection that require live herdr/SSH were not authorized and were not faked.",
     "Existing short idle collectors are not this soak. Narrator/DPI overlays were not rebuilt.",
     "This file is not live_soak success and does not pass AC46, L4, or G0.",
     "Hosted CI is not an interactive desktop and must not run --record.",
-    "Kill only processes this soak owns."
+    "Kill only processes this soak owns. Do not kill user daemons. Activation is per data-root hash."
   ]
 }

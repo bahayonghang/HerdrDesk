@@ -20,6 +20,7 @@ from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licens
 from herddesk_g0.quality import (
     collect_dpi_overlay,
     collect_narrator_overlay,
+    validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
 )
@@ -1108,6 +1109,38 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
     assert catalog.get('dpi_overlay_pointer') == 'evidence/quality/dpi-overlay-pointer.json'
     assert catalog.get('soak_start_capture') == 'evidence/quality/live-soak-start.json'
+    assert catalog.get('soak_interruption_capture') == 'evidence/quality/live-soak-interrupted.json'
+    assert catalog.get('soak_interruption_captures') == [
+        'evidence/quality/live-soak-interrupted.json',
+        'evidence/quality/live-soak-interrupted-2.json',
+    ]
+    interruption = json.loads(
+        (ROOT / catalog['soak_interruption_capture']).read_text(encoding='utf-8')
+    )
+    _reject_hd033_pass_claims(interruption)
+    _reject_hd033_invented_timings(interruption)
+    assert interruption.get('document_kind') == 'hd033_eight_hour_soak_interruption'
+    assert interruption.get('result') == 'not_run'
+    assert interruption.get('eight_hour_soak_executed') is False
+    assert interruption.get('soak_hours') is None
+    assert interruption.get('crash_cause') is None
+    assert interruption.get('herddesk_crash_dump_found') is False
+    second = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(second)
+    _reject_hd033_invented_timings(second)
+    assert second.get('document_kind') == 'hd033_eight_hour_soak_interruption'
+    assert second.get('result') == 'not_run'
+    assert second.get('eight_hour_soak_executed') is False
+    assert second.get('soak_hours') is None
+    assert second.get('crash_cause') is None
+    assert second.get('started_at_utc') == '2026-09-10T11:11:22Z'
+    assert second.get('owned_pids') == [46108, 64672, 71980]
+    assert interruption.get('started_at_utc') == '2026-09-10T09:49:06Z'
+    assert interruption.get('owned_pids') == [89580, 59552, 57712]
     dpi_pointer = json.loads((ROOT / catalog['dpi_overlay_pointer']).read_text(encoding='utf-8'))
     _reject_hd033_pass_claims(dpi_pointer)
     _reject_hd033_invented_timings(dpi_pointer)
@@ -1404,6 +1437,61 @@ def _check_hd033_soak_start() -> None:
     assert start.get('disconnect_switch_count') is None
     assert start.get('product_ui_started') is True
     assert start.get('l4_soak') == 'UNVERIFIED'
+    assert start.get('prior_interruption_capture') == 'evidence/quality/live-soak-interrupted.json'
+    interruption = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(interruption)
+    _reject_hd033_invented_timings(interruption)
+    interrupt_report = validate_eight_hour_soak_interruption(ROOT)
+    assert interrupt_report.get('document_kind') == 'hd033_eight_hour_soak_interruption'
+    assert interrupt_report.get('result') == 'not_run'
+    assert interrupt_report.get('eight_hour_soak_executed') is False
+    assert interrupt_report.get('soak_hours') is None
+    assert interrupt_report.get('ac46_passed') is False
+    assert interrupt_report.get('live_soak') is False
+    assert interrupt_report.get('process_running_at_capture') is False
+    assert interrupt_report.get('crash_cause') is None
+    assert interruption.get('result') == 'not_run'
+    assert interruption.get('eight_hour_soak_executed') is False
+    assert interruption.get('soak_hours') is None
+    assert interruption.get('crash_cause') is None
+    assert interruption.get('herddesk_crash_dump_found') is False
+    assert interruption.get('application_error_herddesk') is False
+    assert interruption.get('xerox_print_experience_crash_unrelated') is True
+    second = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(second)
+    _reject_hd033_invented_timings(second)
+    assert second.get('started_at_utc') == '2026-09-10T11:11:22Z'
+    assert second.get('owned_pids') == [46108, 64672, 71980]
+    assert second.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T11:14:54Z'
+    assert second.get('eight_hour_soak_executed') is False
+    assert second.get('soak_hours') is None
+    assert second.get('crash_cause') is None
+    assert start.get('prior_interruption_captures') == [
+        'evidence/quality/live-soak-interrupted.json',
+        'evidence/quality/live-soak-interrupted-2.json',
+    ]
+    assert isinstance(start.get('started_at_utc'), str)
+    assert start.get('started_at_utc') > '2026-09-10T11:14:54Z'
+    assert start.get('started_at_utc') != '2026-09-10T11:11:22Z'
+    assert start.get('started_at_utc') != '2026-09-10T09:49:06Z'
+    assert isinstance(start.get('owned_pids'), list) and start.get('owned_pids')
+    assert interruption.get('started_at_utc') == '2026-09-10T09:49:06Z'
+    assert interruption.get('owned_pids') == [89580, 59552, 57712]
+    assert start.get('started_at_utc') != interruption.get('started_at_utc')
+    assert start.get('started_at_utc') != second.get('started_at_utc')
+    assert set(start['owned_pids']).isdisjoint(set(interruption['owned_pids']))
+    assert set(start['owned_pids']).isdisjoint(set(second['owned_pids']))
+    assert report.get('prior_interruption_started_at_utc') == (
+        interruption.get('started_at_utc')
+    )
     commands = start.get('commands')
     assert isinstance(commands, list) and commands
     ui = commands[0]
@@ -1411,6 +1499,7 @@ def _check_hd033_soak_start() -> None:
     assert '--ui' in argv
     assert '--shell-smoke' not in argv
     assert '--compose-only' not in argv
+    assert '--project' not in argv
     ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
     just = (ROOT / 'justfile').read_text(encoding='utf-8')
     assert 'start_eight_hour_soak.py --record' not in ci

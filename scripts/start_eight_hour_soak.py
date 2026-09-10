@@ -29,7 +29,9 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 from herddesk_g0.quality import (
     QualityError,
+    SOAK_INTERRUPT_REL,
     SOAK_START_REL,
+    soak_interrupt_capture_rels,
     validate_eight_hour_soak_start,
 )
 
@@ -39,7 +41,13 @@ PINNED_DOTNET_ROOT = Path(r'C:\Users\lyh\AppData\Local\herddesk-dotnet')
 WINDOW_WAIT_SEC = 120
 CREATE_BREAKAWAY_FROM_JOB = 0x01000000
 CREATE_NEW_PROCESS_GROUP = 0x00000200
+DETACHED_PROCESS = 0x00000008
+SPAWN_FLAGS = (
+    CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS
+)
+SPAWN_FLAGS_NO_BREAKAWAY = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS
 HEARTBEAT_INTERVAL_SEC = 60
+UI_EXE_NAME = 'HerdDesk.App.exe'
 
 
 def _utc_now() -> str:
@@ -67,6 +75,9 @@ def _git_sha(root: Path) -> str:
 
 
 def _dotnet_exe() -> Path:
+    pin = PINNED_DOTNET_ROOT / 'dotnet.exe'
+    if pin.is_file():
+        return pin
     root = os.environ.get('DOTNET_ROOT')
     if root:
         candidate = Path(root) / ('dotnet.exe' if os.name == 'nt' else 'dotnet')
@@ -75,10 +86,23 @@ def _dotnet_exe() -> Path:
     which = shutil.which('dotnet')
     if which:
         return Path(which)
-    pin = PINNED_DOTNET_ROOT / 'dotnet.exe'
-    if pin.is_file():
-        return pin
     raise QualityError('missing_record_field')
+
+
+def _ui_exe(root: Path) -> Path:
+    exe = (
+        Path(root)
+        / 'src'
+        / 'HerdDesk.App'
+        / 'bin'
+        / 'Release'
+        / UI_FRAMEWORK
+        / 'win-x64'
+        / UI_EXE_NAME
+    )
+    if not exe.is_file():
+        raise QualityError('product_ui_not_started')
+    return exe
 
 
 def _tasklist_image(name: str) -> list[int]:
@@ -181,16 +205,17 @@ def _visible_windows() -> list[dict[str, Any]]:
 def _herddesk_windows(pids: set[int]) -> list[dict[str, Any]]:
     matches: list[dict[str, Any]] = []
     for item in _visible_windows():
-        title = str(item.get('title') or '')
         pid = item.get('pid')
-        if pid in pids or title == 'HerdDesk':
-            matches.append({'title': title, 'pid': pid, 'hwnd': item.get('hwnd')})
+        if pid not in pids:
+            continue
+        title = str(item.get('title') or '')
+        matches.append({'title': title, 'pid': pid, 'hwnd': item.get('hwnd')})
     return matches
 
 
 def _dotnet_env() -> dict[str, str]:
     env = os.environ.copy()
-    if PINNED_DOTNET_ROOT.is_dir() and not env.get('DOTNET_ROOT'):
+    if (PINNED_DOTNET_ROOT / 'dotnet.exe').is_file():
         env['DOTNET_ROOT'] = str(PINNED_DOTNET_ROOT)
         env['PATH'] = str(PINNED_DOTNET_ROOT) + os.pathsep + env.get('PATH', '')
         env['DOTNET_MULTILEVEL_LOOKUP'] = '0'
@@ -208,27 +233,44 @@ def _spawn_detached(
     stdout_handle: Any,
     stderr_handle: Any,
 ) -> subprocess.Popen[bytes]:
-    flags = CREATE_NEW_PROCESS_GROUP
+    kwargs: dict[str, Any] = {
+        'args': argv,
+        'cwd': str(cwd),
+        'env': env,
+        'stdout': stdout_handle,
+        'stderr': stderr_handle,
+        'stdin': subprocess.DEVNULL,
+        'close_fds': False,
+    }
     try:
-        return subprocess.Popen(
-            argv,
-            cwd=str(cwd),
-            env=env,
-            stdout=stdout_handle,
-            stderr=stderr_handle,
-            stdin=subprocess.DEVNULL,
-            creationflags=flags | CREATE_BREAKAWAY_FROM_JOB,
-        )
+        return subprocess.Popen(creationflags=SPAWN_FLAGS, **kwargs)
     except OSError:
         return subprocess.Popen(
-            argv,
-            cwd=str(cwd),
-            env=env,
-            stdout=stdout_handle,
-            stderr=stderr_handle,
-            stdin=subprocess.DEVNULL,
-            creationflags=flags,
+            creationflags=SPAWN_FLAGS_NO_BREAKAWAY,
+            **kwargs,
         )
+
+
+def _rotate_prior_soak_probe(probe: Path) -> None:
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    names = (
+        'hd033-soak-heartbeat.jsonl',
+        'hd033-soak-start.json',
+        'hd033-soak-pids.json',
+        'hd033-soak-stdout.txt',
+        'hd033-soak-stderr.txt',
+        'hd033-soak-heartbeat-stderr.txt',
+        'hd033-soak-temp-root.txt',
+    )
+    for name in names:
+        src = probe / name
+        if not src.is_file():
+            continue
+        dest = probe / f'{src.stem}-prior-{stamp}{src.suffix}'
+        try:
+            src.replace(dest)
+        except OSError:
+            continue
 
 
 def _write_capture(root: Path, doc: dict[str, Any]) -> Path:
@@ -316,6 +358,7 @@ def record(root: Path) -> dict[str, Any]:
     temp_root = tempfile.mkdtemp(prefix='herddesk-hd033-soak-')
     probe = root / 'probe-results'
     probe.mkdir(parents=True, exist_ok=True)
+    _rotate_prior_soak_probe(probe)
     (probe / 'hd033-soak-temp-root.txt').write_text(temp_root + '\n', encoding='utf-8')
     stdout_path = probe / 'hd033-soak-stdout.txt'
     stderr_path = probe / 'hd033-soak-stderr.txt'
@@ -343,35 +386,19 @@ def record(root: Path) -> dict[str, Any]:
         stdout_handle.close()
         stderr_handle.close()
         raise QualityError('product_ui_not_started')
-    ui_argv = [
-        str(dotnet),
-        'run',
-        '--project',
-        str(root / 'src' / 'HerdDesk.App'),
-        '--framework',
-        UI_FRAMEWORK,
-        '--configuration',
-        'Release',
-        '--',
-        '--ui',
-        temp_root,
-    ]
-    ui_command_redacted = [
-        'dotnet',
-        'run',
-        '--project',
-        'src/HerdDesk.App',
-        '--framework',
-        UI_FRAMEWORK,
-        '--',
-        '--ui',
-        '<temp-root>',
-    ]
+    try:
+        exe = _ui_exe(root)
+    except QualityError:
+        stdout_handle.close()
+        stderr_handle.close()
+        raise
+    ui_argv = [str(exe), '--ui', temp_root]
+    ui_command_redacted = [UI_EXE_NAME, '--ui', '<temp-root>']
     ui_proc: subprocess.Popen[bytes] | None = None
     try:
         ui_proc = _spawn_detached(
             ui_argv,
-            cwd=root,
+            cwd=exe.parent,
             env=env,
             stdout_handle=stdout_handle,
             stderr_handle=stderr_handle,
@@ -382,23 +409,29 @@ def record(root: Path) -> dict[str, Any]:
             if ui_proc.poll() is not None:
                 blocker = 'product_ui_exited_before_window'
                 break
-            app_pids = _tasklist_image('HerdDesk.App.exe')
-            pids = set(app_pids)
-            pids.add(ui_pid)
-            windows = _herddesk_windows(pids)
+            if _pid_running(ui_pid):
+                app_pids = [ui_pid]
+            else:
+                app_pids = []
+            windows = _herddesk_windows(set(app_pids) | {ui_pid})
             if app_pids or windows:
                 ui_started = True
-                window_seen = bool(windows)
-                if windows:
+                window_seen = any(
+                    str(item.get('title') or '') == 'HerdDesk' for item in windows
+                )
+                if window_seen:
                     break
             time.sleep(0.5)
         if ui_started and not window_seen:
             windows = _herddesk_windows(set(app_pids) | {ui_pid})
-            window_seen = bool(windows)
+            window_seen = any(
+                str(item.get('title') or '') == 'HerdDesk' for item in windows
+            )
         if not ui_started and ui_proc.poll() is None:
-            app_pids = _tasklist_image('HerdDesk.App.exe')
-            ui_started = bool(app_pids)
-            if not ui_started:
+            ui_started = _pid_running(ui_pid)
+            if ui_started:
+                app_pids = [ui_pid]
+            else:
                 blocker = blocker or 'product_ui_window_not_seen'
         if not ui_started:
             blocker = blocker or 'product_ui_not_started'
@@ -500,16 +533,18 @@ def record(root: Path) -> dict[str, Any]:
         ],
         'raw_gitignored_path': 'probe-results/hd033-soak-start.json',
         'committed_raw': True,
+        'prior_interruption_capture': SOAK_INTERRUPT_REL,
+        'prior_interruption_captures': soak_interrupt_capture_rels(root),
         'blocker': blocker,
         'limitations': [
             'Product UI --ui was started in observe mode on this Windows 11 desktop and left running.',
-            'This file is a soak START capture. eight_hour_soak_executed stays false until 8 wall-clock hours elapse.',
-            'soak_hours stays null. Do not invent an 8h duration.',
+            'This file is a new soak START capture after prior interruption(s). eight_hour_soak_executed stays false until 8 wall-clock hours elapse.',
+            'soak_hours stays null. Do not invent an 8h duration. A prior interruption is not 8h completion.',
             '100 disconnect/switch cycles and fault injection that require live herdr/SSH were not authorized and were not faked.',
             'Existing short idle collectors are not this soak. Narrator/DPI overlays were not rebuilt.',
             'This file is not live_soak success and does not pass AC46, L4, or G0.',
             'Hosted CI is not an interactive desktop and must not run --record.',
-            'Kill only processes this soak owns.',
+            'Kill only processes this soak owns. Do not kill user daemons. Activation is per data-root hash.',
         ],
     }
     _write_capture(root, doc)

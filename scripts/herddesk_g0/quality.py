@@ -1,7 +1,8 @@
-"""HD-033 Narrator overlay, product-UI launch, DPI overlay, and soak-start checks. Not AC37, AC38, or AC46."""
+"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, and soak-interruption checks. Not AC37, AC38, or AC46. Interrupted STARTs are not 8h."""
 from __future__ import annotations
 
 import ctypes
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -578,12 +579,27 @@ def validate_narrator_product_ui_launch(root: Path) -> dict[str, Any]:
 
 SOAK_START_REL = 'evidence/quality/live-soak-start.json'
 LIVE_SOAK_REL = 'evidence/quality/live-soak.not-run.json'
+SOAK_INTERRUPT_REL = 'evidence/quality/live-soak-interrupted.json'
+SOAK_INTERRUPT_2_REL = 'evidence/quality/live-soak-interrupted-2.json'
 SOAK_START_KIND = 'hd033_eight_hour_soak_start'
+SOAK_INTERRUPT_KIND = 'hd033_eight_hour_soak_interruption'
 SOAK_START_REQUIRED_KEYS = (
     'document_kind', 'result', 'live_soak', 'ac46_passed', 'l4_soak',
     'product_ui_started', 'eight_hour_soak_executed', 'soak_hours',
-    'started_at_utc', 'git_sha', 'platform', 'commands', 'herdr_executed',
-    'g0_passed', 'invented_timings', 'disconnect_switch_count',
+    'started_at_utc', 'owned_pids', 'git_sha', 'platform', 'commands',
+    'herdr_executed', 'g0_passed', 'invented_timings',
+    'disconnect_switch_count', 'prior_interruption_capture',
+    'prior_interruption_captures',
+)
+SOAK_INTERRUPT_REQUIRED_KEYS = (
+    'document_kind', 'result', 'live_soak', 'ac46_passed', 'l4_soak',
+    'product_ui_started', 'eight_hour_soak_executed', 'soak_hours',
+    'started_at_utc', 'last_heartbeat_alive_at_utc',
+    'first_heartbeat_empty_alive_at_utc', 'owned_pids', 'git_sha',
+    'herddesk_crash_dump_found', 'application_error_herddesk', 'crash_cause',
+    'herdr_executed', 'g0_passed', 'invented_timings',
+    'disconnect_switch_count', 'xerox_print_experience_crash_unrelated',
+    'process_running_at_capture',
 )
 SOAK_START_FALSE_KEYS = (
     'ac46_passed', 'live_soak', 'eight_hour_soak_executed',
@@ -622,6 +638,59 @@ def _reject_soak_invented_timings(doc: Any) -> None:
             _reject_soak_invented_timings(item)
 
 
+def _parse_utc(value: Any) -> datetime:
+    if not isinstance(value, str) or not value.strip():
+        raise QualityError('missing_record_field')
+    text = value.strip()
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError as exc:
+        raise QualityError('missing_record_field') from exc
+    if parsed.tzinfo is None:
+        raise QualityError('missing_record_field')
+    return parsed.astimezone(timezone.utc)
+
+
+def _collect_owned_pids(doc: dict[str, Any]) -> set[int]:
+    found: set[int] = set()
+    for key in (
+        'owned_pids',
+        'last_heartbeat_alive_pids',
+        'watchdog_alive_pids',
+    ):
+        value = doc.get(key)
+        if isinstance(value, list):
+            for pid in value:
+                if isinstance(pid, int) and pid > 0:
+                    found.add(pid)
+    heartbeat = doc.get('heartbeat_pid')
+    if isinstance(heartbeat, int) and heartbeat > 0:
+        found.add(heartbeat)
+    windows = doc.get('windows')
+    if isinstance(windows, list):
+        for item in windows:
+            if isinstance(item, dict):
+                pid = item.get('pid')
+                if isinstance(pid, int) and pid > 0:
+                    found.add(pid)
+    commands = doc.get('commands')
+    if isinstance(commands, list):
+        for item in commands:
+            if not isinstance(item, dict):
+                continue
+            pid = item.get('pid')
+            if isinstance(pid, int) and pid > 0:
+                found.add(pid)
+            app_pids = item.get('app_pids')
+            if isinstance(app_pids, list):
+                for pid in app_pids:
+                    if isinstance(pid, int) and pid > 0:
+                        found.add(pid)
+    return found
+
+
 def _reject_soak_pass_claims(doc: dict[str, Any]) -> None:
     if _is_success(doc.get('ac46_passed')):
         raise QualityError('ac46_passed')
@@ -658,6 +727,57 @@ def _check_ac_status(root: Path, ac_id: str, error_code: str) -> None:
         if _is_success(item.get('status')) or item.get('status') == 'passed':
             raise QualityError(error_code)
         return
+
+
+def soak_interrupt_capture_rels(root: Path) -> list[str]:
+    """Committed interruption captures. First 09:49 file stays first."""
+    rels = [SOAK_INTERRUPT_REL]
+    if (Path(root) / SOAK_INTERRUPT_2_REL).is_file():
+        rels.append(SOAK_INTERRUPT_2_REL)
+    return rels
+
+
+def _validate_interrupt_document(root: Path, doc: dict[str, Any]) -> None:
+    for key in SOAK_INTERRUPT_REQUIRED_KEYS:
+        if key not in doc:
+            raise QualityError('missing_record_field')
+    if doc.get('document_kind') != SOAK_INTERRUPT_KIND:
+        raise QualityError('missing_record_field')
+    if doc.get('result') != 'not_run' or _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if doc.get('l4_soak') != 'UNVERIFIED':
+        raise QualityError('l4_soak_claimed')
+    if doc.get('product_ui_started') is not True:
+        raise QualityError('product_ui_not_started')
+    if doc.get('process_running_at_capture') is not False:
+        raise QualityError('missing_record_field')
+    if doc.get('herddesk_crash_dump_found') is not False:
+        raise QualityError('invented_crash_cause')
+    if doc.get('application_error_herddesk') is not False:
+        raise QualityError('invented_crash_cause')
+    if doc.get('crash_cause') is not None:
+        raise QualityError('invented_crash_cause')
+    if doc.get('xerox_print_experience_crash_unrelated') is not True:
+        raise QualityError('invented_crash_cause')
+    _reject_soak_pass_claims(doc)
+    _check_ac_status(root, 'AC46', 'ac46_passed')
+    git_sha = doc.get('git_sha')
+    if not isinstance(git_sha, str) or len(git_sha) < 7:
+        raise QualityError('missing_record_field')
+    for key in (
+        'started_at_utc',
+        'last_heartbeat_alive_at_utc',
+        'first_heartbeat_empty_alive_at_utc',
+    ):
+        value = doc.get(key)
+        if not isinstance(value, str) or not value:
+            raise QualityError('missing_record_field')
+    owned = doc.get('owned_pids')
+    if not isinstance(owned, list) or not owned:
+        raise QualityError('missing_record_field')
+    for pid in owned:
+        if not isinstance(pid, int) or pid <= 0:
+            raise QualityError('missing_record_field')
 
 
 def validate_eight_hour_soak_start(root: Path) -> dict[str, Any]:
@@ -729,9 +849,39 @@ def validate_eight_hour_soak_start(root: Path) -> dict[str, Any]:
         raise QualityError('eight_hour_soak_executed')
     if live.get('soak_hours') is not None:
         raise QualityError('invented_timings')
+    owned = doc.get('owned_pids')
+    if not isinstance(owned, list) or not owned:
+        raise QualityError('missing_record_field')
+    for pid in owned:
+        if not isinstance(pid, int) or pid <= 0:
+            raise QualityError('missing_record_field')
+    pointer = doc.get('prior_interruption_capture')
+    if pointer != SOAK_INTERRUPT_REL:
+        raise QualityError('missing_record_field')
+    listed = doc.get('prior_interruption_captures')
+    committed = soak_interrupt_capture_rels(root)
+    if not isinstance(listed, list) or [str(item) for item in listed] != committed:
+        raise QualityError('missing_record_field')
+    interruption = validate_eight_hour_soak_interruption(root)
+    start_at = _parse_utc(started)
+    start_pids = _collect_owned_pids(doc)
+    interrupt_pids: set[int] = set()
+    for rel in committed:
+        interrupt_doc = _load_json(root / rel)
+        if start_at <= _parse_utc(interrupt_doc.get('started_at_utc')):
+            raise QualityError('continuation_of_interrupted_soak')
+        if start_at <= _parse_utc(
+            interrupt_doc.get('first_heartbeat_empty_alive_at_utc')
+        ):
+            raise QualityError('continuation_of_interrupted_soak')
+        interrupt_pids |= _collect_owned_pids(interrupt_doc)
+    if not start_pids or start_pids & interrupt_pids:
+        raise QualityError('continuation_of_interrupted_soak')
     return {
         'document_kind': SOAK_START_KIND,
         'soak_start_capture': SOAK_START_REL,
+        'soak_interruption_capture': SOAK_INTERRUPT_REL,
+        'soak_interruption_captures': committed,
         'live_capture': LIVE_SOAK_REL,
         'product_ui_started': True,
         'eight_hour_soak_executed': False,
@@ -746,4 +896,34 @@ def validate_eight_hour_soak_start(root: Path) -> dict[str, Any]:
         'invented_timings': False,
         'git_sha': git_sha,
         'started_at_utc': started,
+        'prior_interruption_started_at_utc': interruption.get('started_at_utc'),
+    }
+
+
+def validate_eight_hour_soak_interruption(root: Path) -> dict[str, Any]:
+    """Fail-closed check of interrupted soak START captures. Not 8h and not AC46."""
+    root = Path(root)
+    doc = _load_json(root / SOAK_INTERRUPT_REL)
+    _validate_interrupt_document(root, doc)
+    if (root / SOAK_INTERRUPT_2_REL).is_file():
+        _validate_interrupt_document(root, _load_json(root / SOAK_INTERRUPT_2_REL))
+    return {
+        'document_kind': SOAK_INTERRUPT_KIND,
+        'soak_interruption_capture': SOAK_INTERRUPT_REL,
+        'soak_interruption_captures': soak_interrupt_capture_rels(root),
+        'product_ui_started': True,
+        'process_running_at_capture': False,
+        'eight_hour_soak_executed': False,
+        'soak_hours': None,
+        'live_soak': False,
+        'ac46_passed': False,
+        'result': 'not_run',
+        'l4_soak': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'invented_timings': False,
+        'crash_cause': None,
+        'git_sha': doc.get('git_sha'),
+        'started_at_utc': doc.get('started_at_utc'),
     }

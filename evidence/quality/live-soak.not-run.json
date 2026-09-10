@@ -20,11 +20,13 @@
   "sample_count": null,
   "invented_timings": false,
   "limitations": [
-    "Product UI --ui soak START is recorded in evidence/quality/live-soak-start.json. 8 wall-clock hours have not elapsed.",
+    "Product UI --ui soak START at 2026-09-10T09:49:06Z PIDs 89580/59552/57712 was interrupted before 8 wall-clock hours. See evidence/quality/live-soak-interrupted.json.",
+    "Product UI --ui soak START at 2026-09-10T11:11:22Z PIDs 46108/64672/71980 was interrupted before 8 wall-clock hours. See evidence/quality/live-soak-interrupted-2.json.",
+    "A later product-UI --ui soak START is recorded in evidence/quality/live-soak-start.json. 8 wall-clock hours have not elapsed for that new START.",
     "eight_hour_soak_executed stays false. soak_hours stays null. This live row stays not_run.",
     "100 disconnect/switch cycles and live herdr/SSH fault injection were not authorized and were not faked.",
     "A template, L1 catalog, or short idle collector window is not soak success.",
-    "Do not invent soak_hours or a passed result.",
+    "Do not invent soak_hours or a passed result. Do not treat an interruption as 8h.",
     "Do not stop a user daemon or agent."
   ]
 }
