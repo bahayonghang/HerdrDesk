@@ -1,6 +1,6 @@
 from copy import deepcopy
 from contextlib import redirect_stderr
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -202,6 +202,11 @@ class Hd033ResidualTests(unittest.TestCase):
             catalog['soak_start_capture'],
             'evidence/quality/live-soak-start.json',
         )
+        self.assertEqual(
+            catalog['soak_elapsed_capture'],
+            'evidence/quality/live-soak-elapsed.json',
+        )
+        self.assertTrue((ROOT / catalog['soak_elapsed_capture']).is_file())
         self.assertEqual(
             catalog['soak_working_set_capture'],
             'evidence/quality/live-soak-working-set.json',
@@ -696,6 +701,16 @@ class Hd033ResidualTests(unittest.TestCase):
 
         bad = deepcopy(catalog)
         bad['soak_start_capture'] = 'evidence/quality/live-soak.not-run.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad.pop('soak_elapsed_capture')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['soak_elapsed_capture'] = 'evidence/quality/live-soak.not-run.json'
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
@@ -2277,6 +2292,37 @@ class Hd033SoakElapsedTests(unittest.TestCase):
         else:
             self.assertIsNone(report)
 
+    def test_shipped_elapsed_is_not_ac46(self):
+        start = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        elapsed = json.loads((ROOT / SOAK_ELAPSED_REL).read_text(encoding='utf-8'))
+        self.assertEqual(elapsed['document_kind'], 'hd033_eight_hour_soak_elapsed')
+        self.assertEqual(elapsed['elapsed_at_utc'], '2026-09-10T21:30:52Z')
+        self.assertEqual(elapsed['started_at_utc'], '2026-09-10T13:30:51Z')
+        self.assertEqual(elapsed['started_at_utc'], start['started_at_utc'])
+        self.assertEqual(elapsed['owned_pids'], [76508, 85848])
+        self.assertEqual(elapsed['owned_pids'], start['owned_pids'])
+        self.assertTrue(elapsed['eight_hour_soak_executed'])
+        self.assertFalse(start['eight_hour_soak_executed'])
+        self.assertIsNone(start['soak_hours'])
+        self.assertFalse(start['ac46_passed'])
+        self.assertFalse(elapsed['ac46_passed'])
+        self.assertFalse(elapsed['ac29_passed'])
+        self.assertFalse(elapsed['live_working_set'])
+        self.assertFalse(elapsed['live_soak'])
+        self.assertFalse(elapsed['g0_passed'])
+        self.assertIsNone(elapsed['soak_hours'])
+        self.assertIsNone(elapsed['disconnect_switch_count'])
+        self.assertEqual(elapsed['result'], 'not_run')
+        self.assertEqual(elapsed['l4_soak'], 'UNVERIFIED')
+        with self.assertRaises(AssertionError) as ctx:
+            repository._reject_hd033_pass_claims(elapsed)
+        self.assertIn('eight_hour_soak_executed', str(ctx.exception))
+        repository._check_hd033_soak_start()
+
     def test_cli_record_elapsed_fails_closed_before_eight_hours(self):
         live_elapsed = ROOT / SOAK_ELAPSED_REL
         live_start = ROOT / 'evidence' / 'quality' / 'live-soak-start.json'
@@ -2286,7 +2332,14 @@ class Hd033SoakElapsedTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            _write_soak_start(root)
+            recent = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+            _write_soak_start(
+                root,
+                start_overrides={
+                    'started_at_utc': recent,
+                    'captured_at_utc': recent,
+                },
+            )
             start_path = root / 'evidence' / 'quality' / 'live-soak-start.json'
             elapsed_path = root / SOAK_ELAPSED_REL
             before_start = start_path.read_text(encoding='utf-8')
@@ -2465,6 +2518,34 @@ class Hd033SoakElapsedTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 validate_eight_hour_soak_elapsed(root)
             self.assertEqual(str(ctx.exception), 'ac46_passed')
+
+    def test_elapsed_ac29_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            soak_cli.record_elapsed(
+                root,
+                now=started + timedelta(hours=8),
+                pid_running=running,
+                pid_image=image,
+                git_sha=start['git_sha'],
+            )
+            elapsed_path = root / SOAK_ELAPSED_REL
+            loaded = json.loads(elapsed_path.read_text(encoding='utf-8'))
+            loaded['ac29_passed'] = True
+            elapsed_path.write_text(json.dumps(loaded), encoding='utf-8')
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_elapsed(root)
+            self.assertEqual(str(ctx.exception), 'ac29_passed')
 
     def test_elapsed_soak_hours_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2781,13 +2862,28 @@ class Hd033SoakElapsedTests(unittest.TestCase):
             )
 
     def test_live_record_elapsed_fails_closed_before_eight_hours(self):
-        script = ROOT / 'scripts' / 'start_eight_hour_soak.py'
         live_elapsed = ROOT / SOAK_ELAPSED_REL
         live_start = ROOT / 'evidence' / 'quality' / 'live-soak-start.json'
         before_start = live_start.read_text(encoding='utf-8')
         before_elapsed = (
             live_elapsed.read_text(encoding='utf-8') if live_elapsed.is_file() else None
         )
+        after_start = json.loads(live_start.read_text(encoding='utf-8'))
+        self.assertFalse(after_start['eight_hour_soak_executed'])
+        self.assertIsNone(after_start['soak_hours'])
+        self.assertFalse(after_start['ac46_passed'])
+        self.assertFalse(after_start['live_soak'])
+        if before_elapsed is not None:
+            report = validate_eight_hour_soak_elapsed(ROOT)
+            self.assertIsNotNone(report)
+            self.assertTrue(report['eight_hour_soak_executed'])
+            self.assertFalse(report['ac46_passed'])
+            self.assertFalse(report['live_soak'])
+            self.assertIsNone(report['soak_hours'])
+            self.assertEqual(live_start.read_text(encoding='utf-8'), before_start)
+            self.assertEqual(live_elapsed.read_text(encoding='utf-8'), before_elapsed)
+            return
+        script = ROOT / 'scripts' / 'start_eight_hour_soak.py'
         completed = subprocess.run(
             [sys.executable, str(script), '--record-elapsed'],
             cwd=str(ROOT),
@@ -2800,15 +2896,7 @@ class Hd033SoakElapsedTests(unittest.TestCase):
         parsed = json.loads(completed.stderr)
         self.assertEqual(parsed['error'], 'eight_hour_wall_clock_incomplete')
         self.assertEqual(live_start.read_text(encoding='utf-8'), before_start)
-        after = json.loads(live_start.read_text(encoding='utf-8'))
-        self.assertFalse(after['eight_hour_soak_executed'])
-        self.assertIsNone(after['soak_hours'])
-        self.assertFalse(after['ac46_passed'])
-        self.assertFalse(after['live_soak'])
-        if before_elapsed is None:
-            self.assertFalse(live_elapsed.is_file())
-        else:
-            self.assertEqual(live_elapsed.read_text(encoding='utf-8'), before_elapsed)
+        self.assertFalse(live_elapsed.is_file())
 
 
 class Hd033SoakInterruptionTests(unittest.TestCase):

@@ -144,6 +144,9 @@ internal static class Hd033Cases
         Check(catalog.GetProperty("soak_start_capture").GetString()
               == "evidence/quality/live-soak-start.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-start.json")));
+        Check(catalog.GetProperty("soak_elapsed_capture").GetString()
+              == "evidence/quality/live-soak-elapsed.json");
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-elapsed.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "start_eight_hour_soak.py")));
         Check(catalog.GetProperty("soak_interruption_capture").GetString()
               == "evidence/quality/live-soak-interrupted.json");
@@ -309,6 +312,29 @@ internal static class Hd033Cases
         Check(startPids.SetEquals([21312, 22400]) is false);
         Check(startPids.SetEquals([91852, 37708]) is false);
         Check(startPids.SetEquals([69668, 73960]) is false);
+
+        using var soakElapsedDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-soak-elapsed.json")));
+        var soakElapsed = soakElapsedDoc.RootElement;
+        Check(soakElapsed.GetProperty("document_kind").GetString() == "hd033_eight_hour_soak_elapsed");
+        Check(soakElapsed.GetProperty("kind").GetString() == "live_eight_hour_soak_elapsed");
+        Check(soakElapsed.GetProperty("result").GetString() == "not_run");
+        Check(soakElapsed.GetProperty("eight_hour_soak_executed").GetBoolean());
+        Check(soakElapsed.GetProperty("soak_hours").ValueKind == JsonValueKind.Null);
+        Check(soakElapsed.GetProperty("disconnect_switch_count").ValueKind == JsonValueKind.Null);
+        Check(soakElapsed.GetProperty("live_soak").GetBoolean() is false);
+        Check(soakElapsed.GetProperty("live_working_set").GetBoolean() is false);
+        Check(soakElapsed.GetProperty("ac46_passed").GetBoolean() is false);
+        Check(soakElapsed.GetProperty("ac29_passed").GetBoolean() is false);
+        Check(soakElapsed.GetProperty("l4_soak").GetString() == "UNVERIFIED");
+        Check(soakElapsed.GetProperty("herdr_executed").GetBoolean() is false);
+        Check(soakElapsed.GetProperty("g0_passed").GetBoolean() is false);
+        Check(soakElapsed.GetProperty("started_at_utc").GetString() == startAt);
+        Check(soakElapsed.GetProperty("elapsed_at_utc").GetString() == "2026-09-10T21:30:52Z");
+        var elapsedPids = soakElapsed.GetProperty("owned_pids").EnumerateArray()
+            .Select(item => item.GetInt32()).ToArray();
+        Check(elapsedPids.SequenceEqual(
+            soakStart.GetProperty("owned_pids").EnumerateArray().Select(item => item.GetInt32())));
 
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-interrupted.json")));
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-interrupted-2.json")));

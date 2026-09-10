@@ -1116,6 +1116,7 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
     assert catalog.get('dpi_overlay_pointer') == 'evidence/quality/dpi-overlay-pointer.json'
     assert catalog.get('soak_start_capture') == 'evidence/quality/live-soak-start.json'
+    assert catalog.get('soak_elapsed_capture') == 'evidence/quality/live-soak-elapsed.json'
     assert catalog.get('soak_working_set_capture') == 'evidence/quality/live-soak-working-set.json'
     assert (ROOT / 'scripts' / 'record_soak_working_set.py').is_file()
     assert catalog.get('soak_interruption_capture') == 'evidence/quality/live-soak-interrupted.json'
@@ -1665,12 +1666,21 @@ def _check_hd033_soak_start() -> None:
         assert elapsed_report.get('live_soak') is False
         assert elapsed_report.get('soak_hours') is None
         elapsed = json.loads(elapsed_path.read_text(encoding='utf-8'))
+        # Do not call _reject_hd033_pass_claims(elapsed): eight_hour_soak_executed
+        # is true on this document by design and is not an AC46 pass.
         assert elapsed.get('ac46_passed') is False
+        assert elapsed.get('ac29_passed') is False
+        assert elapsed.get('live_working_set') is False
         assert elapsed.get('live_soak') is False
         assert elapsed.get('soak_hours') is None
         assert elapsed.get('disconnect_switch_count') is None
         assert elapsed.get('herdr_executed') is False
+        assert elapsed.get('g0_passed') is False
         assert elapsed.get('eight_hour_soak_executed') is True
+        assert elapsed.get('owned_pids') == start.get('owned_pids')
+        for key, value in elapsed.items():
+            if isinstance(key, str) and key.endswith('_passed'):
+                assert value is False, key
         assert start.get('eight_hour_soak_executed') is False
         assert start.get('soak_hours') is None
         assert start.get('ac46_passed') is False

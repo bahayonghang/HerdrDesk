@@ -609,8 +609,8 @@ SOAK_ELAPSED_REQUIRED_KEYS = (
     'disconnect_switch_count', 'start_capture',
 )
 SOAK_ELAPSED_FALSE_KEYS = (
-    'ac46_passed', 'live_soak', 'herdr_executed', 'invented_timings',
-    'g0_passed',
+    'ac46_passed', 'ac29_passed', 'live_soak', 'live_working_set',
+    'herdr_executed', 'invented_timings', 'g0_passed',
 )
 SOAK_INTERRUPT_REQUIRED_KEYS = (
     'document_kind', 'result', 'live_soak', 'ac46_passed', 'l4_soak',
@@ -995,6 +995,9 @@ def validate_eight_hour_soak_elapsed(root: Path) -> dict[str, Any] | None:
         raise QualityError('ac46_passed')
     if _is_success(doc.get('live_soak')):
         raise QualityError('live_soak_claimed')
+    for key, value in doc.items():
+        if isinstance(key, str) and key.endswith('_passed') and value is not False:
+            raise QualityError(key)
     for key in SOAK_ELAPSED_FALSE_KEYS:
         if key in doc and doc.get(key) is not False:
             raise QualityError(_soak_false_key_code(key))
