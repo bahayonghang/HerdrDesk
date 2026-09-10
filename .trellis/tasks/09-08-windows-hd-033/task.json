@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 catalog remains. 2026-09-10 reopen for collectors on this Windows 11 (IME/Narrator/DPI/soak grant). Do not mark live-*.json passed. No LAN herdr. AC27-29/37/38/46/G0 not passed. Parser-consumed is not presentation.",
+  "notes": "L2 product 05a7ea5 collectors: compose-only/shell-smoke cold-start and in-memory search p95. live-*.json stay not_run. No 8h soak, no Narrator against UI. AC27-29/37/38/46/G0 not passed.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"
