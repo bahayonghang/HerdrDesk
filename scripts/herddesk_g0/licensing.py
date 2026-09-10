@@ -1,8 +1,9 @@
-"""Licensing-register rules for HD-002.
+"""Licensing-register rules for HD-002 plus HD-035 admitted-input audit.
 
 Structural validation is not AC02 passed and never sets windows_verified.
 Admission (approved/blocked/pending) stays distinct from technical and
-security fields. Public visibility is not a license grant.
+security fields. Public visibility is not a license grant. The working-tree
+auditor is not a live advisory scan and does not pass AC02/AC43/AC44.
 """
 from __future__ import annotations
 
@@ -12,7 +13,19 @@ from pathlib import Path
 import re
 from typing import Any
 
-from herddesk_g0.project_graph import ProjectGraphError, check_lock_licensing_alignment
+from herddesk_g0.project_graph import (
+    ADMITTED_LOCK_REL,
+    ADMITTED_NPM_ID,
+    ADMITTED_NPM_LOCK_REL,
+    ADMITTED_NPM_VERSION,
+    FORBIDDEN_UNSCOPED_NPM,
+    PINNED_PACKAGE_VERSIONS,
+    ProjectGraphError,
+    UMBRELLA_PACKAGE_ID,
+    check_lock_licensing_alignment,
+    check_npm_licensing_alignment,
+    lock_nuget_packages,
+)
 
 
 class LicensingError(ValueError):
@@ -386,3 +399,147 @@ def _check_candidates(
         if doc.get('admission') == 'approved':
             approved += 1
     return approved
+
+
+def audit_admitted_release_inputs(root: Path) -> dict[str, Any]:
+    """Audit admitted working-tree lock inputs. Not a live scan or AC pass."""
+    root = Path(root)
+    nuget_lock_path = root / ADMITTED_LOCK_REL
+    npm_lock_path = root / ADMITTED_NPM_LOCK_REL
+    cargo_lock_paths = (
+        root / 'bridge' / 'Cargo.lock',
+        root / 'filebridge' / 'Cargo.lock',
+    )
+    register_path = root / REGISTER_REL
+    nuget_lock_present = nuget_lock_path.is_file()
+    npm_lock_present = npm_lock_path.is_file()
+    cargo_lock_present = all(path.is_file() for path in cargo_lock_paths)
+    if not nuget_lock_present or not npm_lock_present or not cargo_lock_present:
+        raise LicensingError('missing_record_field')
+    if not register_path.is_file():
+        raise LicensingError('missing_record_field')
+    try:
+        check_lock_licensing_alignment(root)
+        check_npm_licensing_alignment(root)
+    except ProjectGraphError as exc:
+        raise LicensingError(str(exc)) from exc
+    lock = json.loads(nuget_lock_path.read_text(encoding='utf-8'))
+    if not isinstance(lock, dict):
+        raise LicensingError('missing_record_field')
+    packages = lock_nuget_packages(lock)
+    register = json.loads(register_path.read_text(encoding='utf-8'))
+    if not isinstance(register, dict):
+        raise LicensingError('missing_record_field')
+    expected: dict[str, str] = {}
+    for unit in register.get('units') or []:
+        if not isinstance(unit, dict) or unit.get('enters_package_lock') is not True:
+            continue
+        name = unit.get('name')
+        version = unit.get('version')
+        if not isinstance(name, str) or not name:
+            raise LicensingError('missing_record_field')
+        expected[name] = version if isinstance(version, str) else ''
+    extras = sorted(name for name in packages if name not in expected)
+    missing = sorted(name for name in expected if name not in packages)
+    version_drift: list[dict[str, str]] = []
+    for name, spec in sorted(packages.items()):
+        resolved = spec.get('resolved') or ''
+        if name in expected and expected[name] and resolved != expected[name]:
+            version_drift.append({
+                'name': name, 'lock': resolved, 'expected': expected[name],
+            })
+        elif name in PINNED_PACKAGE_VERSIONS and resolved != PINNED_PACKAGE_VERSIONS[name]:
+            version_drift.append({
+                'name': name,
+                'lock': resolved,
+                'expected': PINNED_PACKAGE_VERSIONS[name],
+            })
+    npm_lock = json.loads(npm_lock_path.read_text(encoding='utf-8'))
+    if not isinstance(npm_lock, dict):
+        raise LicensingError('missing_record_field')
+    npm_packages = npm_lock.get('packages') or {}
+    if not isinstance(npm_packages, dict):
+        raise LicensingError('missing_record_field')
+    admitted_npm = npm_packages.get('node_modules/' + ADMITTED_NPM_ID)
+    xterm_scoped_version = ''
+    if isinstance(admitted_npm, dict):
+        xterm_scoped_version = str(admitted_npm.get('version') or '')
+    if xterm_scoped_version != ADMITTED_NPM_VERSION:
+        version_drift.append({
+            'name': ADMITTED_NPM_ID,
+            'lock': xterm_scoped_version,
+            'expected': ADMITTED_NPM_VERSION,
+        })
+    unscoped_xterm_admitted = False
+    for key, spec in npm_packages.items():
+        if not key or not isinstance(spec, dict) or not spec.get('version'):
+            continue
+        name = key[len('node_modules/'):] if key.startswith('node_modules/') else key
+        if name in FORBIDDEN_UNSCOPED_NPM:
+            unscoped_xterm_admitted = True
+        elif name != ADMITTED_NPM_ID:
+            extras.append(name)
+    package_json_path = npm_lock_path.with_name('package.json')
+    if package_json_path.is_file():
+        package_json = json.loads(package_json_path.read_text(encoding='utf-8'))
+        dependencies = package_json.get('dependencies') if isinstance(package_json, dict) else None
+        if isinstance(dependencies, dict):
+            if FORBIDDEN_UNSCOPED_NPM.intersection(dependencies):
+                unscoped_xterm_admitted = True
+            for name in dependencies:
+                if name != ADMITTED_NPM_ID and name not in extras:
+                    extras.append(name)
+    extras = sorted(set(extras))
+    wasdk_umbrella_in_lock = UMBRELLA_PACKAGE_ID in packages
+    if wasdk_umbrella_in_lock:
+        raise LicensingError('forbidden_package_edge')
+    if unscoped_xterm_admitted:
+        raise LicensingError('forbidden_npm_package')
+    if extras or missing or version_drift:
+        raise LicensingError('licensing_lock_mismatch')
+    herdrm_copies = find_herdrm_copies(root)
+    if herdrm_copies:
+        raise LicensingError('herdrm_copy_present')
+    webview2 = packages.get('Microsoft.Web.WebView2') or {}
+    winui = packages.get('Microsoft.WindowsAppSDK.WinUI') or {}
+    webview2_evergreen_in_lock = False
+    for unit in register.get('units') or []:
+        if not isinstance(unit, dict):
+            continue
+        if unit.get('artifact_kind') != 'runtime_download':
+            continue
+        if unit.get('enters_package_lock') is True and unit.get('name') in packages:
+            webview2_evergreen_in_lock = True
+    return {
+        'document_kind': 'hd035_admitted_release_input_audit',
+        'nuget_lock_present': nuget_lock_present,
+        'npm_lock_present': npm_lock_present,
+        'cargo_lock_present': cargo_lock_present,
+        'nuget_scan_executed': False,
+        'cargo_advisory_executed': False,
+        'npm_audit_executed': False,
+        'project_license_selected': False,
+        'herdrm_copied': False,
+        'herdrm_copies': herdrm_copies,
+        'webview2_nupkg_in_lock': (
+            webview2.get('resolved') == PINNED_PACKAGE_VERSIONS['Microsoft.Web.WebView2']
+        ),
+        'webview2_evergreen_in_lock': webview2_evergreen_in_lock,
+        'winui_direct_version': winui.get('resolved') or '',
+        'wasdk_umbrella_in_lock': wasdk_umbrella_in_lock,
+        'xterm_scoped_version': xterm_scoped_version,
+        'unscoped_xterm_admitted': unscoped_xterm_admitted,
+        'invented_scan_dates': False,
+        'invented_zero_vuln': False,
+        'ac02_passed': False,
+        'ac43_passed': False,
+        'ac44_passed': False,
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'signed_package_unpacked': False,
+        'public_visibility_is_not_license_grant': True,
+        'missing_scan_is_not_zero_vuln': True,
+        'extras': extras,
+        'missing': missing,
+        'version_drift': version_drift,
+    }

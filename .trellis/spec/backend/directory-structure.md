@@ -37,6 +37,7 @@ scripts/Invoke-HerdDeskDotnetSetup.ps1
 scripts/validate_repository.py
 scripts/check_capture.py
 scripts/package_release.ps1  HD-034 L2 unsigned layout Build/Verify/Sign; Sign fails closed without -CertificatePath
+scripts/audit_release_inputs.py  HD-035 L2 admitted-input auditor CLI; not a live scan; AC02/AC43/AC44 stay false
 packaging/                  HD-034 L2 lab identity overlay (`Package.appxmanifest`, `runtime.json`). Not a wapproj. Not a release install.
 HerdDesk.slnx
 Directory.Build.props       net10.0 default TFM, nullable, TreatWarningsAsErrors

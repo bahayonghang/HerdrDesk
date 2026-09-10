@@ -29,11 +29,11 @@
   "canary_export_sha256": null,
   "result": "not_run",
   "npm_audit_executed": false,
-  "npm_lock_present": false,
+  "npm_lock_present": true,
   "missing_scan_is_not_zero_vuln": true,
   "invented_zero_vuln": false,
   "limitations": [
-    "npm audit was not authorized. No npm lock exists.",
+    "npm audit was not authorized. web/terminal/package-lock.json exists; live audit was not run.",
     "A missing scan is uncovered, not zero vulnerabilities. A template or L1 catalog is not AC43."
   ]
 }

@@ -21,8 +21,8 @@
   "confirmed_exploitable_critical_high_must_not_be_hidden_by_exception": true,
   "inventory_is_not_final_unpacked_msix": true,
   "final_unpacked_msix": false,
-  "nuget_lock_present": false,
-  "npm_lock_present": false,
+  "nuget_lock_present": true,
+  "npm_lock_present": true,
   "cargo_lock_present": true,
   "invented_scan_dates": false,
   "invented_zero_vuln": false,
@@ -84,5 +84,5 @@
     "no_authorized_canary_diagnostic_export",
     "no_authorized_signed_package_unpack"
   ],
-  "note": "HD-035 ships an L1 P5 security and license closeout catalog that points at existing HD-002 licensing register, HD-006 ADR baseline, HD-014 renderer allowlist, HD-020/024 SSH fail-closed, HD-031 clipboard/OSC52/cache, HD-032 file-fault catalog, and HD-034 packaging catalog. Live NuGet/Cargo/npm scans, live renderer process observation, live canary export, and signed-package reverse-audit stay UNVERIFIED. A missing scan is uncovered, not zero vulnerabilities. Public visibility is not a license grant. This file is not AC pass evidence. Product AC02/AC43/AC44 stay with a later authorized audit. tests/Integration.Windows is not admitted."
+  "note": "HD-035 ships an L1 P5 security and license closeout catalog plus an L2 working-tree admitted-input auditor. Live NuGet/Cargo/npm scans, live renderer process observation, live canary export, and signed-package reverse-audit stay UNVERIFIED. A missing scan is uncovered, not zero vulnerabilities. Public visibility is not a license grant. This file is not AC pass evidence. Product AC02/AC43/AC44 stay with a later authorized audit. tests/Integration.Windows is not admitted."
 }

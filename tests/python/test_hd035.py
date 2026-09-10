@@ -1,11 +1,14 @@
 from copy import deepcopy
 from pathlib import Path
 import json
+import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
+from herddesk_g0.licensing import LicensingError, audit_admitted_release_inputs
 import validate_repository as repository
 
 L2 = ROOT / 'implementation' / 'hd-035-l2.json'
@@ -119,8 +122,8 @@ class Hd035ResidualTests(unittest.TestCase):
         self.assertFalse(doc['project_license_selected'])
         self.assertFalse(doc['herdrm_copied'])
         self.assertFalse(doc['final_unpacked_msix'])
-        self.assertFalse(doc['nuget_lock_present'])
-        self.assertFalse(doc['npm_lock_present'])
+        self.assertTrue(doc['nuget_lock_present'])
+        self.assertTrue(doc['npm_lock_present'])
         self.assertTrue(doc['cargo_lock_present'])
         self.assertTrue(doc['public_visibility_is_not_license_grant'])
         self.assertTrue(doc['missing_scan_is_not_zero_vuln'])
@@ -161,6 +164,9 @@ class Hd035ResidualTests(unittest.TestCase):
         self.assertFalse(catalog['herdrm_copied'])
         self.assertFalse(catalog['project_license_selected'])
         self.assertFalse(catalog['signed_package_unpacked'])
+        self.assertTrue(catalog['nuget_lock_present'])
+        self.assertTrue(catalog['npm_lock_present'])
+        self.assertTrue(catalog['cargo_lock_present'])
         self.assertTrue(catalog['public_visibility_is_not_license_grant'])
         self.assertTrue(catalog['missing_scan_is_not_zero_vuln'])
         self.assertEqual(catalog['redaction']['credential'], 'omitted')
@@ -290,6 +296,9 @@ class Hd035ResidualTests(unittest.TestCase):
         self.assertFalse(matrix['copy_windows_fields_onto_linux'])
         self.assertFalse(matrix['extrapolate_macos_arm64'])
         self.assertFalse(matrix['linux_msix_client'])
+        self.assertTrue(matrix['nuget_lock_present'])
+        self.assertTrue(matrix['npm_lock_present'])
+        self.assertTrue(matrix['cargo_lock_present'])
         self.assertTrue(matrix['linux_x64_is_not_windows_renderer_substitute'])
         self.assertEqual(matrix['compatible_by_default'], [])
         self.assertEqual(
@@ -380,6 +389,21 @@ class Hd035ResidualTests(unittest.TestCase):
 
         bad = deepcopy(hd035)
         bad['l3_signed_package_reverse_audit'] = 'passed'
+        with self.assertRaises(AssertionError):
+            repository._check_hd035_closeout(bad, catalog, matrix, inventory)
+
+        bad = deepcopy(hd035)
+        bad['nuget_lock_present'] = False
+        with self.assertRaises(AssertionError):
+            repository._check_hd035_closeout(bad, catalog, matrix, inventory)
+
+        bad = deepcopy(hd035)
+        bad['npm_lock_present'] = False
+        with self.assertRaises(AssertionError):
+            repository._check_hd035_closeout(bad, catalog, matrix, inventory)
+
+        bad = deepcopy(hd035)
+        bad['cargo_lock_present'] = False
         with self.assertRaises(AssertionError):
             repository._check_hd035_closeout(bad, catalog, matrix, inventory)
 
@@ -515,6 +539,144 @@ class Hd035ResidualTests(unittest.TestCase):
         soak['live_rows'][0]['status'] = 'passed'
         with self.assertRaises(AssertionError):
             repository._check_hd035_closeout(hd035, soak, matrix, inventory)
+
+
+def _write_admitted_inputs(tmp: Path, *, include_bridge_cargo: bool = True) -> None:
+    files = [
+        'src/HerdDesk.App/packages.lock.json',
+        'web/terminal/package-lock.json',
+        'web/terminal/package.json',
+        'docs/licensing/register.json',
+        'filebridge/Cargo.lock',
+    ]
+    if include_bridge_cargo:
+        files.append('bridge/Cargo.lock')
+    for rel in files:
+        dest = tmp / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes((ROOT / rel).read_bytes())
+
+
+class Hd035ReleaseInputAuditorTests(unittest.TestCase):
+    def test_shipped_function_audits_admitted_locks(self):
+        report = audit_admitted_release_inputs(ROOT)
+        self.assertEqual(report['document_kind'], 'hd035_admitted_release_input_audit')
+        self.assertTrue(report['nuget_lock_present'])
+        self.assertTrue(report['npm_lock_present'])
+        self.assertTrue(report['cargo_lock_present'])
+        self.assertFalse(report['nuget_scan_executed'])
+        self.assertFalse(report['cargo_advisory_executed'])
+        self.assertFalse(report['npm_audit_executed'])
+        self.assertFalse(report['project_license_selected'])
+        self.assertFalse(report['herdrm_copied'])
+        self.assertEqual(report['herdrm_copies'], [])
+        self.assertTrue(report['webview2_nupkg_in_lock'])
+        self.assertFalse(report['webview2_evergreen_in_lock'])
+        self.assertEqual(report['winui_direct_version'], '2.3.6')
+        self.assertFalse(report['wasdk_umbrella_in_lock'])
+        self.assertEqual(report['xterm_scoped_version'], '6.0.0')
+        self.assertFalse(report['unscoped_xterm_admitted'])
+        self.assertFalse(report['invented_scan_dates'])
+        self.assertFalse(report['invented_zero_vuln'])
+        self.assertFalse(report['ac02_passed'])
+        self.assertFalse(report['ac43_passed'])
+        self.assertFalse(report['ac44_passed'])
+        self.assertFalse(report['g0_passed'])
+        self.assertNotEqual(report['phase_gate'], 'passed')
+        self.assertFalse(report['signed_package_unpacked'])
+        self.assertTrue(report['public_visibility_is_not_license_grant'])
+        self.assertTrue(report['missing_scan_is_not_zero_vuln'])
+        self.assertEqual(report['extras'], [])
+        self.assertEqual(report['missing'], [])
+        self.assertEqual(report['version_drift'], [])
+
+    def test_cli_prints_one_json_object(self):
+        script = ROOT / 'scripts' / 'audit_release_inputs.py'
+        self.assertTrue(script.is_file())
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertIsInstance(report, dict)
+        self.assertEqual(report['document_kind'], 'hd035_admitted_release_input_audit')
+        self.assertTrue(report['nuget_lock_present'])
+        self.assertTrue(report['npm_lock_present'])
+        self.assertTrue(report['cargo_lock_present'])
+        self.assertFalse(report['nuget_scan_executed'])
+        self.assertFalse(report['cargo_advisory_executed'])
+        self.assertFalse(report['npm_audit_executed'])
+        self.assertEqual(report['herdrm_copies'], [])
+        self.assertTrue(report['webview2_nupkg_in_lock'])
+        self.assertFalse(report['webview2_evergreen_in_lock'])
+        self.assertEqual(report['winui_direct_version'], '2.3.6')
+        self.assertFalse(report['wasdk_umbrella_in_lock'])
+        self.assertEqual(report['xterm_scoped_version'], '6.0.0')
+        self.assertFalse(report['unscoped_xterm_admitted'])
+        self.assertFalse(report['ac02_passed'])
+        self.assertFalse(report['ac43_passed'])
+        self.assertFalse(report['ac44_passed'])
+        self.assertFalse(report['g0_passed'])
+        self.assertTrue(report['public_visibility_is_not_license_grant'])
+        self.assertTrue(report['missing_scan_is_not_zero_vuln'])
+        self.assertEqual(report['extras'], [])
+        self.assertEqual(report['missing'], [])
+        self.assertEqual(report['version_drift'], [])
+
+    def test_structure_contract_invokes_shipped_auditor(self):
+        repository._check_hd035_release_input_audit()
+
+    def test_missing_lock_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(LicensingError) as ctx:
+                audit_admitted_release_inputs(Path(tmp))
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_missing_cargo_lock_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_admitted_inputs(root, include_bridge_cargo=False)
+            with self.assertRaises(LicensingError) as ctx:
+                audit_admitted_release_inputs(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_unscoped_xterm_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_admitted_inputs(root)
+            package_path = root / 'web' / 'terminal' / 'package.json'
+            package = json.loads(package_path.read_text(encoding='utf-8'))
+            package['dependencies']['xterm'] = '5.0.0'
+            package_path.write_text(json.dumps(package), encoding='utf-8')
+            with self.assertRaises(LicensingError) as ctx:
+                audit_admitted_release_inputs(root)
+            self.assertEqual(str(ctx.exception), 'forbidden_npm_package')
+
+    def test_extra_npm_package_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_admitted_inputs(root)
+            lock_path = root / 'web' / 'terminal' / 'package-lock.json'
+            lock = json.loads(lock_path.read_text(encoding='utf-8'))
+            lock['packages']['node_modules/left-pad'] = {'version': '1.0.0'}
+            lock_path.write_text(json.dumps(lock), encoding='utf-8')
+            with self.assertRaises(LicensingError) as ctx:
+                audit_admitted_release_inputs(root)
+            self.assertEqual(str(ctx.exception), 'licensing_lock_mismatch')
+
+    def test_herdrm_copy_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_admitted_inputs(root)
+            (root / 'herdrm.swift').write_bytes(b'')
+            with self.assertRaises(LicensingError) as ctx:
+                audit_admitted_release_inputs(root)
+            self.assertEqual(str(ctx.exception), 'herdrm_copy_present')
 
 
 if __name__ == '__main__':

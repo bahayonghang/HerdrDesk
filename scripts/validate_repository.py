@@ -16,8 +16,8 @@ from herddesk_g0.adr import validate_adr_baseline
 from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
-from herddesk_g0.licensing import validate_licensing
-from herddesk_g0.project_graph import ADMITTED_LOCK_REL, validate_project_graph
+from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
+from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
 import run_windows_desktop_gate as desktop_gate
 from herddesk_g0.renderer import validate_renderer_matrix
 
@@ -1848,7 +1848,7 @@ _HD035_FALSE_KEYS = (
     'signed_package_unpacked', 'project_license_selected', 'herdrm_copied',
     'invented_scan_dates', 'invented_zero_vuln', 'invented_package_hashes',
     'invented_publisher_identity', 'scan_failure_overwritten',
-    'final_unpacked_msix', 'nuget_lock_present', 'npm_lock_present',
+    'final_unpacked_msix',
     'linux_msix_client', 'signed_msix_built', 'publisher_identity_confirmed',
     'winui_admitted', 'herdr_executed', 'copy_windows_fields_onto_linux',
     'extrapolate_macos_arm64', 'integration_ssh_project',
@@ -1861,6 +1861,8 @@ _HD035_TRUE_KEYS = (
     'confirmed_exploitable_critical_high_must_not_be_hidden_by_exception',
     'inventory_is_not_final_unpacked_msix',
     'cargo_lock_present',
+    'nuget_lock_present',
+    'npm_lock_present',
     'linux_x64_is_not_windows_renderer_substitute',
 )
 _HD035_NULL_KEYS = (
@@ -2016,6 +2018,52 @@ def _check_hd035_inventory(inventory: dict) -> None:
     assert (ROOT / 'LICENSE-STATUS.md').is_file()
 
 
+def _check_hd035_release_input_audit() -> None:
+    """Invoke shipped auditor. Do not reimplement lock or herdrm checks."""
+    assert (ROOT / 'scripts' / 'audit_release_inputs.py').is_file()
+    report = audit_admitted_release_inputs(ROOT)
+    assert report.get('document_kind') == 'hd035_admitted_release_input_audit'
+    assert report.get('nuget_lock_present') is True
+    assert report.get('npm_lock_present') is True
+    assert report.get('cargo_lock_present') is True
+    assert report.get('nuget_scan_executed') is False
+    assert report.get('cargo_advisory_executed') is False
+    assert report.get('npm_audit_executed') is False
+    assert report.get('project_license_selected') is False
+    assert report.get('herdrm_copied') is False
+    assert report.get('herdrm_copies') == []
+    assert report.get('webview2_nupkg_in_lock') is True
+    assert report.get('webview2_evergreen_in_lock') is False
+    assert report.get('winui_direct_version') == '2.3.6'
+    assert report.get('wasdk_umbrella_in_lock') is False
+    assert report.get('xterm_scoped_version') == '6.0.0'
+    assert report.get('unscoped_xterm_admitted') is False
+    assert report.get('invented_scan_dates') is False
+    assert report.get('invented_zero_vuln') is False
+    assert report.get('ac02_passed') is False
+    assert report.get('ac43_passed') is False
+    assert report.get('ac44_passed') is False
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('signed_package_unpacked') is False
+    assert report.get('public_visibility_is_not_license_grant') is True
+    assert report.get('missing_scan_is_not_zero_vuln') is True
+    assert report.get('extras') == []
+    assert report.get('missing') == []
+    assert report.get('version_drift') == []
+    nuget_lock = (ROOT / ADMITTED_LOCK_REL).is_file()
+    npm_lock = (ROOT / ADMITTED_NPM_LOCK_REL).is_file()
+    cargo_lock = (
+        (ROOT / 'bridge' / 'Cargo.lock').is_file()
+        and (ROOT / 'filebridge' / 'Cargo.lock').is_file()
+    )
+    assert nuget_lock and npm_lock and cargo_lock
+    assert report.get('nuget_lock_present') is nuget_lock
+    assert report.get('npm_lock_present') is npm_lock
+    assert report.get('cargo_lock_present') is cargo_lock
+    assert not (ROOT / 'packages.lock.json').exists()
+
+
 def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: dict) -> None:
     assert hd035.get('document_kind') == 'hd035_l2_status'
     assert catalog.get('document_kind') == 'hd035_security_release_catalog'
@@ -2146,7 +2194,7 @@ def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: d
         assert loaded.get('result') == 'not_run'
         if row['id'] == 'live-nuget-scan':
             assert loaded.get('nuget_scan_executed') is False
-            assert loaded.get('nuget_lock_present') is False
+            assert loaded.get('nuget_lock_present') is True
             assert loaded.get('missing_scan_is_not_zero_vuln') is True
         if row['id'] == 'live-cargo-scan':
             assert loaded.get('cargo_advisory_executed') is False
@@ -2154,7 +2202,7 @@ def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: d
             assert loaded.get('missing_scan_is_not_zero_vuln') is True
         if row['id'] == 'live-npm-scan':
             assert loaded.get('npm_audit_executed') is False
-            assert loaded.get('npm_lock_present') is False
+            assert loaded.get('npm_lock_present') is True
         if row['id'] == 'live-renderer-boundary':
             assert loaded.get('live_renderer_process_observed') is False
         if row['id'] == 'live-diagnostic-canary':
@@ -2188,13 +2236,14 @@ def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: d
         assert 'stdout' not in doc and 'stderr' not in doc
         if 'nuget-scan' in rel:
             assert doc.get('nuget_scan_executed') is False
+            assert doc.get('nuget_lock_present') is True
             assert doc.get('missing_scan_is_not_zero_vuln') is True
         if 'cargo-scan' in rel:
             assert doc.get('cargo_advisory_executed') is False
             assert doc.get('cargo_lock_present') is True
         if 'npm-scan' in rel:
             assert doc.get('npm_audit_executed') is False
-            assert doc.get('npm_lock_present') is False
+            assert doc.get('npm_lock_present') is True
         if 'renderer-boundary' in rel:
             assert doc.get('live_renderer_process_observed') is False
         if 'diagnostic-canary' in rel:
@@ -2279,8 +2328,9 @@ def _check_hd035_closeout(hd035: dict, catalog: dict, matrix: dict, inventory: d
     assert matrix.get('compatible_by_default') == []
     assert catalog.get('linux_msix_client') is False
     assert catalog.get('cargo_lock_present') is True
-    assert catalog.get('nuget_lock_present') is False
-    assert catalog.get('npm_lock_present') is False
+    assert catalog.get('nuget_lock_present') is True
+    assert catalog.get('npm_lock_present') is True
+    assert (ROOT / ADMITTED_LOCK_REL).is_file()
     _check_hd035_inventory(inventory)
     criteria = json.loads((ROOT / 'planning' / 'acceptance.json').read_text(encoding='utf-8'))['criteria']
     acs = {item['id']: item for item in criteria}
@@ -3016,6 +3066,7 @@ def validate() -> dict:
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd034_package_script_contract()
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)
+    _check_hd035_release_input_audit()
     _check_hd036_closeout(hd036, release_catalog, release_matrix, release_index)
     assert not (ROOT/'tests/Integration.Ssh').exists()
     check_integration_windows_layout(ROOT)

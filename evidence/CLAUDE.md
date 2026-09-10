@@ -71,7 +71,7 @@ HD-034 L2 P5 签名/安装/更新回滚收口目录，外加未签名 lab layout
 
 ## `security-release/`
 
-HD-035 L1 P5 安全与许可收口目录。`catalog.json` 列出 license inventory / herdrm-not-copied / nuget-scan / cargo-scan / npm-scan / renderer-boundary / diagnostic-canary / signed-package-reverse-audit 执行卡，指向已有 HD-002 许可台账、HD-006 ADR 基线、HD-014 renderer allowlist、HD-020/024 SSH fail-closed、HD-031 clipboard/OSC52/cache、HD-032 文件故障目录、HD-034 包装目录。`inventory.json` 指向 `docs/licensing/register.json`；所列单元保持 pending/blocked。缺扫描不是零漏洞。公开可见不是许可授予。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端，行为 `not_run`。Linux x64 是远端 OS，不能替代 Windows renderer/进程观察。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/扫描日期/工具版本，不是成功运行。产品 AC02/AC43/AC44 仍未通过。
+HD-035 L1 P5 安全与许可收口目录加 L2 工作树 admitted-input auditor。`catalog.json` 列出 license inventory / herdrm-not-copied / nuget-scan / cargo-scan / npm-scan / renderer-boundary / diagnostic-canary / signed-package-reverse-audit 执行卡，指向已有 HD-002 许可台账、HD-006 ADR 基线、HD-014 renderer allowlist、HD-020/024 SSH fail-closed、HD-031 clipboard/OSC52/cache、HD-032 文件故障目录、HD-034 包装目录。L2 auditor overlay 不是 live 扫描；AC02/AC43/AC44 仍未通过。`inventory.json` 指向 `docs/licensing/register.json`；所列单元保持 pending/blocked。缺扫描不是零漏洞。公开可见不是许可授予。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端，行为 `not_run`。Linux x64 是远端 OS，不能替代 Windows renderer/进程观察。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/扫描日期/工具版本，不是成功运行。产品 AC02/AC43/AC44 仍未通过。
 
 ## `releases/`
 

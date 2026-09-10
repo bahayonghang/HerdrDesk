@@ -29,11 +29,11 @@
   "canary_export_sha256": null,
   "result": "not_run",
   "nuget_scan_executed": false,
-  "nuget_lock_present": false,
+  "nuget_lock_present": true,
   "missing_scan_is_not_zero_vuln": true,
   "invented_zero_vuln": false,
   "limitations": [
-    "NuGet advisory scan was not authorized. No PackageReference lock exists.",
+    "NuGet advisory scan was not authorized. src/HerdDesk.App/packages.lock.json exists; live advisory was not run.",
     "A missing scan is uncovered, not zero vulnerabilities. A template or L1 catalog is not AC43."
   ]
 }

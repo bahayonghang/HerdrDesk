@@ -1,6 +1,6 @@
 # HD-035 安全与许可审查证据索引
 
-L1 收口目录。指向已交付的 HD-002 许可台账、HD-006 ADR 基线、HD-014 renderer allowlist、HD-020/024 SSH fail-closed、HD-031 clipboard/OSC52/cache、HD-032 文件故障目录、HD-034 包装目录。不是产品 AC02/AC43/AC44 通过，也不是 live 依赖扫描、renderer 进程观察、canary 导出或已签名包反向审计证明。
+L1 收口目录加 L2 工作树 admitted-input auditor（`scripts/audit_release_inputs.py`）。指向已交付的 HD-002 许可台账、HD-006 ADR 基线、HD-014 renderer allowlist、HD-020/024 SSH fail-closed、HD-031 clipboard/OSC52/cache、HD-032 文件故障目录、HD-034 包装目录。不是产品 AC02/AC43/AC44 通过，也不是 live 依赖扫描、renderer 进程观察、canary 导出或已签名包反向审计证明。
 
 权威机器文件：
 
@@ -19,9 +19,9 @@ L1 收口目录。指向已交付的 HD-002 许可台账、HD-006 ADR 基线、H
 |---|---|---|---|---|
 | license inventory | AC02 | HD-002 | `docs/licensing/register.json` | `not_run` |
 | herdrm not copied | AC02 | HD-002, HD-006 | ADR-001 / register herdrm `blocked` | `not_run` |
-| nuget scan | AC43 | HD-007 | 无 PackageReference lock；扫描未覆盖 | `not_run` |
+| nuget scan | AC43 | HD-007 | `src/HerdDesk.App/packages.lock.json` 存在；live advisory 未跑 | `not_run` |
 | cargo scan | AC43 | HD-008, HD-027 | `bridge/` 与 `filebridge/` lock 存在；live advisory 未跑 | `not_run` |
-| npm scan | AC43 | HD-014 | 无 npm lock | `not_run` |
+| npm scan | AC43 | HD-014 | `web/terminal/package-lock.json` 存在；live audit 未跑 | `not_run` |
 | renderer boundary | AC44 | HD-014, HD-020, HD-024 | L1 allowlist / SSH fail-closed；不是 live 进程观察 | `not_run` |
 | diagnostic canary | R4 | HD-031 | L1 脱敏；不是 live canary 导出 | `not_run` |
 | signed package reverse audit | R5 | HD-032, HD-034 | HD-034 无已签名 MSIX | `not_run` |

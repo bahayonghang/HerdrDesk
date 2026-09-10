@@ -101,6 +101,7 @@ internal static class Hd035Cases
 
         var root = FindRepoRoot();
         AppXamlSurface.CheckIntegrationWindowsProject(root);
+        Check(File.Exists(Path.Combine(root, "scripts", "audit_release_inputs.py")));
         Check(File.Exists(Path.Combine(root, "web", "terminal", "package-lock.json")));
         Check(!File.Exists(Path.Combine(root, "packages.lock.json")));
         Check(File.Exists(Path.Combine(root, "bridge", "Cargo.lock")));
@@ -122,6 +123,9 @@ internal static class Hd035Cases
         Check(catalog.GetProperty("signed_package_unpacked").GetBoolean() is false);
         Check(catalog.GetProperty("project_license_selected").GetBoolean() is false);
         Check(catalog.GetProperty("herdrm_copied").GetBoolean() is false);
+        Check(catalog.GetProperty("nuget_lock_present").GetBoolean());
+        Check(catalog.GetProperty("npm_lock_present").GetBoolean());
+        Check(catalog.GetProperty("cargo_lock_present").GetBoolean());
         Check(catalog.GetProperty("public_visibility_is_not_license_grant").GetBoolean());
         Check(catalog.GetProperty("missing_scan_is_not_zero_vuln").GetBoolean());
         Check(catalog.GetProperty("confirmed_exploitable_critical_high_must_not_be_hidden_by_exception").GetBoolean());
@@ -232,6 +236,9 @@ internal static class Hd035Cases
         Check(matrix.GetProperty("copy_windows_fields_onto_linux").GetBoolean() is false);
         Check(matrix.GetProperty("extrapolate_macos_arm64").GetBoolean() is false);
         Check(matrix.GetProperty("linux_msix_client").GetBoolean() is false);
+        Check(matrix.GetProperty("nuget_lock_present").GetBoolean());
+        Check(matrix.GetProperty("npm_lock_present").GetBoolean());
+        Check(matrix.GetProperty("cargo_lock_present").GetBoolean());
         Check(matrix.GetProperty("linux_x64_is_not_windows_renderer_substitute").GetBoolean());
         foreach (var key in PassKeys)
             Check(matrix.GetProperty(key).GetBoolean() is false);
@@ -295,6 +302,9 @@ internal static class Hd035Cases
         Check(root.GetProperty("signed_package_unpacked").GetBoolean() is false);
         Check(root.GetProperty("project_license_selected").GetBoolean() is false);
         Check(root.GetProperty("herdrm_copied").GetBoolean() is false);
+        Check(root.GetProperty("nuget_lock_present").GetBoolean());
+        Check(root.GetProperty("npm_lock_present").GetBoolean());
+        Check(root.GetProperty("cargo_lock_present").GetBoolean());
         Check(root.GetProperty("winui_admitted").GetBoolean() is false);
         Check(root.GetProperty("integration_windows_project").GetBoolean() is false);
         Check(root.GetProperty("herdr_executed").GetBoolean() is false);
