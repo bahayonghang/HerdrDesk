@@ -3,7 +3,7 @@
   "name": "windows-hd-034",
   "title": "HD-034 签名、安装与更新回滚",
   "description": "MSIX/运行时依赖、签名校验、版本降级与配置迁移",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-10",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L2 product dc1c398: package_release.ps1 Build/Verify, lab identity HerdDesk.Lab. Unsigned local layout is not a release install. Live install/sign/update/rollback UNVERIFIED. AC41/AC42/G0 not passed.",
+  "notes": "L2 Build/Verify remain. 2026-09-10 reopen for lab-certificate Sign overlay. Lab identity is not a release Publisher. Do not commit PFX. Do not mark AC41. Do not install. Parent not archived.",
   "meta": {
     "source_task": "HD-034",
     "phase": "P5"
