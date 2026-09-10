@@ -17,7 +17,12 @@ from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
-from herddesk_g0.quality import collect_dpi_overlay, collect_narrator_overlay, validate_narrator_product_ui_launch
+from herddesk_g0.quality import (
+    collect_dpi_overlay,
+    collect_narrator_overlay,
+    validate_eight_hour_soak_start,
+    validate_narrator_product_ui_launch,
+)
 from herddesk_g0.release import bind_release_candidate
 from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
 import run_windows_desktop_gate as desktop_gate
@@ -880,7 +885,7 @@ _HD033_CARD_GRANTS = {
     'hide-show-100': 'no_authorized_pane_hide_show_handle_lab',
     'narrator': 'ac37_workflow_incomplete_no_live_session',
     'dpi-100-150-200': 'no_authorized_dpi_theme_monitor_matrix',
-    'eight-hour-soak': 'no_authorized_eight_hour_soak',
+    'eight-hour-soak': 'eight_hour_wall_clock_incomplete_no_live_herdr_fault_injection',
 }
 _HD033_LIVE_IDS = (
     'live-cold-start', 'live-input-pixel', 'live-search-p95',
@@ -895,7 +900,7 @@ _HD033_LIVE_GRANTS = {
     'live-handle-reclaim': 'no_authorized_pane_hide_show_handle_lab',
     'live-narrator': 'ac37_workflow_incomplete_no_live_session',
     'live-dpi': 'no_authorized_dpi_theme_monitor_matrix',
-    'live-soak': 'no_authorized_eight_hour_soak',
+    'live-soak': 'eight_hour_wall_clock_incomplete_no_live_herdr_fault_injection',
 }
 _HD033_L3_L4_KEYS = (
     'l3_ime', 'l3_narrator', 'l3_dpi', 'l4_soak',
@@ -1102,6 +1107,7 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert overlay_pointer.get('complete_1_0_claimed') is not True
     assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
     assert catalog.get('dpi_overlay_pointer') == 'evidence/quality/dpi-overlay-pointer.json'
+    assert catalog.get('soak_start_capture') == 'evidence/quality/live-soak-start.json'
     dpi_pointer = json.loads((ROOT / catalog['dpi_overlay_pointer']).read_text(encoding='utf-8'))
     _reject_hd033_pass_claims(dpi_pointer)
     _reject_hd033_invented_timings(dpi_pointer)
@@ -1363,6 +1369,52 @@ def _check_hd033_dpi_overlay() -> None:
     assert live.get('result') == 'not_run'
     assert not _is_hd033_success(live.get('result'))
     assert live.get('live_dpi') is False
+
+
+def _check_hd033_soak_start() -> None:
+    """Validate soak START record. Do not claim AC46 or 8h elapsed."""
+    assert (ROOT / 'scripts' / 'start_eight_hour_soak.py').is_file()
+    assert (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').is_file()
+    report = validate_eight_hour_soak_start(ROOT)
+    assert report.get('document_kind') == 'hd033_eight_hour_soak_start'
+    assert report.get('product_ui_started') is True
+    assert report.get('eight_hour_soak_executed') is False
+    assert report.get('soak_hours') is None
+    assert report.get('live_soak') is False
+    assert report.get('ac46_passed') is False
+    assert report.get('result') == 'not_run'
+    assert not _is_hd033_success(report.get('result'))
+    assert report.get('l4_soak') == 'UNVERIFIED'
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('herdr_executed') is False
+    assert report.get('invented_timings') is False
+    start = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(start)
+    _reject_hd033_invented_timings(start)
+    assert start.get('result') == 'not_run'
+    assert start.get('live_soak') is False
+    assert start.get('ac46_passed') is False
+    assert start.get('eight_hour_soak_executed') is False
+    assert start.get('soak_hours') is None
+    assert start.get('disconnect_switch_count') is None
+    assert start.get('product_ui_started') is True
+    assert start.get('l4_soak') == 'UNVERIFIED'
+    commands = start.get('commands')
+    assert isinstance(commands, list) and commands
+    ui = commands[0]
+    argv = [str(part) for part in ui.get('command_redacted') or []]
+    assert '--ui' in argv
+    assert '--shell-smoke' not in argv
+    assert '--compose-only' not in argv
+    ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    just = (ROOT / 'justfile').read_text(encoding='utf-8')
+    assert 'start_eight_hour_soak.py --record' not in ci
+    assert 'start_eight_hour_soak.py --record' not in just
 
 
 _HD034_PASS_KEYS = (
@@ -3401,6 +3453,7 @@ def validate() -> dict:
     _check_hd033_narrator_overlay()
     _check_hd033_narrator_product_ui_launch()
     _check_hd033_dpi_overlay()
+    _check_hd033_soak_start()
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd034_package_script_contract()
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)

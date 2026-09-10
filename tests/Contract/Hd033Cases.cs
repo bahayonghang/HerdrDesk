@@ -64,7 +64,7 @@ internal static class Hd033Cases
         ["hide-show-100"] = "no_authorized_pane_hide_show_handle_lab",
         ["narrator"] = "ac37_workflow_incomplete_no_live_session",
         ["dpi-100-150-200"] = "no_authorized_dpi_theme_monitor_matrix",
-        ["eight-hour-soak"] = "no_authorized_eight_hour_soak"
+        ["eight-hour-soak"] = "eight_hour_wall_clock_incomplete_no_live_herdr_fault_injection"
     };
 
     static readonly Dictionary<string, string> LiveGrants = new()
@@ -76,7 +76,7 @@ internal static class Hd033Cases
         ["live-handle-reclaim"] = "no_authorized_pane_hide_show_handle_lab",
         ["live-narrator"] = "ac37_workflow_incomplete_no_live_session",
         ["live-dpi"] = "no_authorized_dpi_theme_monitor_matrix",
-        ["live-soak"] = "no_authorized_eight_hour_soak"
+        ["live-soak"] = "eight_hour_wall_clock_incomplete_no_live_herdr_fault_injection"
     };
 
     static void Check(bool condition)
@@ -141,6 +141,10 @@ internal static class Hd033Cases
               == "evidence/quality/dpi-overlay-pointer.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "collect_dpi_overlay.py")));
+        Check(catalog.GetProperty("soak_start_capture").GetString()
+              == "evidence/quality/live-soak-start.json");
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-start.json")));
+        Check(File.Exists(Path.Combine(root, "scripts", "start_eight_hour_soak.py")));
         using var pointerDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "environment-pointer.json")));
         var pointer = pointerDoc.RootElement;
@@ -257,7 +261,24 @@ internal static class Hd033Cases
         Check(soak.GetProperty("result").GetString() == "not_run");
         Check(soak.GetProperty("eight_hour_soak_executed").GetBoolean() is false);
         Check(soak.GetProperty("soak_hours").ValueKind == JsonValueKind.Null);
+        Check(soak.GetProperty("disconnect_switch_count").ValueKind == JsonValueKind.Null);
         Check(soak.GetProperty("invented_timings").GetBoolean() is false);
+
+        using var soakStartDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-soak-start.json")));
+        var soakStart = soakStartDoc.RootElement;
+        Check(soakStart.GetProperty("document_kind").GetString() == "hd033_eight_hour_soak_start");
+        Check(soakStart.GetProperty("kind").GetString() == "live_eight_hour_soak_start");
+        Check(soakStart.GetProperty("result").GetString() == "not_run");
+        Check(soakStart.GetProperty("eight_hour_soak_executed").GetBoolean() is false);
+        Check(soakStart.GetProperty("soak_hours").ValueKind == JsonValueKind.Null);
+        Check(soakStart.GetProperty("disconnect_switch_count").ValueKind == JsonValueKind.Null);
+        Check(soakStart.GetProperty("live_soak").GetBoolean() is false);
+        Check(soakStart.GetProperty("ac46_passed").GetBoolean() is false);
+        Check(soakStart.GetProperty("product_ui_started").GetBoolean());
+        Check(soakStart.GetProperty("l4_soak").GetString() == "UNVERIFIED");
+        Check(soakStart.GetProperty("herdr_executed").GetBoolean() is false);
+        Check(soakStart.GetProperty("g0_passed").GetBoolean() is false);
 
         using var pixelDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-input-pixel.not-run.json")));

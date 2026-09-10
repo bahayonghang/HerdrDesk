@@ -4,7 +4,7 @@
   "capture_id": "hd033-live-soak-2026-09-09-not-run",
   "kind": "live_eight_hour_soak",
   "captured_at_utc": "2026-09-09T12:00:00Z",
-  "operator_scope": "winui_in_tree_eight_hour_soak_not_started",
+  "operator_scope": "product_ui_soak_started_eight_hour_wall_clock_incomplete",
   "host_fingerprint_redacted": null,
   "command_redacted": null,
   "exit_code": null,
@@ -20,7 +20,9 @@
   "sample_count": null,
   "invented_timings": false,
   "limitations": [
-    "WinUI four-zone Shell XAML is in tree. 8h product soak was not started.",
+    "Product UI --ui soak START is recorded in evidence/quality/live-soak-start.json. 8 wall-clock hours have not elapsed.",
+    "eight_hour_soak_executed stays false. soak_hours stays null. This live row stays not_run.",
+    "100 disconnect/switch cycles and live herdr/SSH fault injection were not authorized and were not faked.",
     "A template, L1 catalog, or short idle collector window is not soak success.",
     "Do not invent soak_hours or a passed result.",
     "Do not stop a user daemon or agent."

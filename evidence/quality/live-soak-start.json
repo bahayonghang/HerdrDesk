@@ -1,0 +1,85 @@
+{
+  "document_kind": "hd033_eight_hour_soak_start",
+  "template": false,
+  "capture_id": "hd033-live-soak-start-2026-09-10",
+  "kind": "live_eight_hour_soak_start",
+  "started_at_utc": "2026-09-10T09:49:06Z",
+  "captured_at_utc": "2026-09-10T09:49:06Z",
+  "operator_scope": "product_ui_eight_hour_soak_started_wall_clock_incomplete",
+  "git_sha": "c388a3df926bd60975217fbcf2df593e6db103a1",
+  "platform": {
+    "sys_platform": "win32",
+    "system": "Windows",
+    "release": "11",
+    "version": "10.0.26200",
+    "machine": "AMD64",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "result": "not_run",
+  "evidence_level": "start_recorded",
+  "live_soak": false,
+  "eight_hour_soak_executed": false,
+  "soak_hours": null,
+  "disconnect_switch_count": null,
+  "sample_count": null,
+  "ac46_passed": false,
+  "l4_soak": "UNVERIFIED",
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "herdr_executed": false,
+  "winui_admitted": false,
+  "invented_timings": false,
+  "product_ui_started": true,
+  "window_seen": true,
+  "process_running_at_capture": true,
+  "owned_pids": [
+    89580,
+    59552,
+    57712
+  ],
+  "heartbeat_pid": 57712,
+  "windows": [
+    {
+      "title": "HerdDesk",
+      "pid": 59552
+    }
+  ],
+  "commands": [
+    {
+      "role": "product_ui",
+      "command_redacted": [
+        "dotnet",
+        "run",
+        "--project",
+        "src/HerdDesk.App",
+        "--framework",
+        "net10.0-windows10.0.19041.0",
+        "--",
+        "--ui",
+        "<temp-root>"
+      ],
+      "pid": 89580,
+      "app_pids": [
+        59552
+      ],
+      "exit_code": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_gitignored_path": "probe-results/hd033-soak-stdout.txt",
+      "stderr_gitignored_path": "probe-results/hd033-soak-stderr.txt"
+    }
+  ],
+  "raw_gitignored_path": "probe-results/hd033-soak-start.json",
+  "committed_raw": true,
+  "blocker": null,
+  "limitations": [
+    "Product UI --ui was started in observe mode on this Windows 11 desktop and left running.",
+    "This file is a soak START capture. eight_hour_soak_executed stays false until 8 wall-clock hours elapse.",
+    "soak_hours stays null. Do not invent an 8h duration.",
+    "100 disconnect/switch cycles and fault injection that require live herdr/SSH were not authorized and were not faked.",
+    "Existing short idle collectors are not this soak. Narrator/DPI overlays were not rebuilt.",
+    "This file is not live_soak success and does not pass AC46, L4, or G0.",
+    "Hosted CI is not an interactive desktop and must not run --record.",
+    "Kill only processes this soak owns."
+  ]
+}

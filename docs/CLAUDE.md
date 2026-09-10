@@ -20,7 +20,7 @@
 | [plan/](plan/CLAUDE.md) | 12 专题档案。 |
 | [testing/multi-device-mvp.md](testing/multi-device-mvp.md) | HD-026 L1 收口说明。各 AC 为 `not_run`。不是 live SSH/WinUI 通过。 |
 | [testing/file-fault-security.md](testing/file-fault-security.md) | HD-032 L1 收口说明。AC31–AC35 为 `not_run`。不是 live FS/SSH/TOCTOU/attack/UI 通过。 |
-| [testing/performance-soak.md](testing/performance-soak.md) | HD-033 L1 收口说明加 L2 Narrator overlay、产品 UI `--ui` + Narrator.exe 启动记录，与 L2 当前系统 DPI overlay。AC27/28/29/37/38/46 为 `not_run`。Narrator overlay 不是 AC37。启动记录不是 AC37。DPI overlay 不是 AC38，也不是 100/150/200 矩阵。不是 live soak / 输入到像素 / DPI / Narrator 通过。 |
+| [testing/performance-soak.md](testing/performance-soak.md) | HD-033 L1 收口说明加 L2 Narrator overlay、产品 UI `--ui` + Narrator.exe 启动记录、L2 当前系统 DPI overlay，与产品 UI `--ui` soak START。AC27/28/29/37/38/46 为 `not_run`。Narrator overlay 不是 AC37。启动记录不是 AC37。DPI overlay 不是 AC38，也不是 100/150/200 矩阵。soak START 不是 AC46。不是 live soak / 输入到像素 / DPI / Narrator 通过。 |
 | [testing/packaging-manual.md](testing/packaging-manual.md) | HD-034 L2 未签名 lab layout 与 lab 证书 overlay。AC41/AC42 为 `not_run`。overlay 不是 AC41。PFX gitignored。不是 live 安装/签名/更新/回滚 通过。 |
 | [testing/security-release.md](testing/security-release.md) | HD-035 L1 收口说明加 L2 auditor overlay。AC02/AC43/AC44 为 `not_run`。不是 live 扫描/renderer 进程/canary/已签名包反向审计 通过。 |
 | [testing/release-checklist.md](testing/release-checklist.md) | HD-036 后续独立用户步骤。L2 hosted-workflow pointer 不是 required-check。本 L1 目录不是 AC45。不是完整 1.0。 |

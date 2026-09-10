@@ -1,4 +1,4 @@
-"""HD-033 Narrator presence overlay, product-UI launch record check, and DPI overlay. Not AC37 or AC38."""
+"""HD-033 Narrator overlay, product-UI launch, DPI overlay, and soak-start checks. Not AC37, AC38, or AC46."""
 from __future__ import annotations
 
 import ctypes
@@ -412,8 +412,14 @@ def _reject_keyboard_chrome(doc: dict[str, Any]) -> None:
         raise QualityError('ac37_workflow_claimed')
 
 
-def _check_launch_hashes(root: Path, item: dict[str, Any]) -> None:
-    """Empty SHA is valid only when the gitignored capture file is empty."""
+def _check_launch_hashes(
+    root: Path, item: dict[str, Any], *, compare_files: bool = True
+) -> None:
+    """Empty SHA is valid only when the gitignored capture file is empty.
+
+    Soak START logs may keep growing after capture. Pass compare_files=False
+    so a still-running soak does not fail closed as invented_hash.
+    """
     for key, path_key in (
         ('stdout_sha256', 'stdout_gitignored_path'),
         ('stderr_sha256', 'stderr_gitignored_path'),
@@ -427,6 +433,8 @@ def _check_launch_hashes(root: Path, item: dict[str, Any]) -> None:
             int(value, 16)
         except ValueError as exc:
             raise QualityError('missing_record_field') from exc
+        if not compare_files:
+            continue
         digest = value.lower()
         rel = item.get(path_key)
         if not isinstance(rel, str) or not rel:
@@ -565,4 +573,177 @@ def validate_narrator_product_ui_launch(root: Path) -> dict[str, Any]:
         'herdr_executed': False,
         'invented_timings': False,
         'git_sha': git_sha,
+    }
+
+
+SOAK_START_REL = 'evidence/quality/live-soak-start.json'
+LIVE_SOAK_REL = 'evidence/quality/live-soak.not-run.json'
+SOAK_START_KIND = 'hd033_eight_hour_soak_start'
+SOAK_START_REQUIRED_KEYS = (
+    'document_kind', 'result', 'live_soak', 'ac46_passed', 'l4_soak',
+    'product_ui_started', 'eight_hour_soak_executed', 'soak_hours',
+    'started_at_utc', 'git_sha', 'platform', 'commands', 'herdr_executed',
+    'g0_passed', 'invented_timings', 'disconnect_switch_count',
+)
+SOAK_START_FALSE_KEYS = (
+    'ac46_passed', 'live_soak', 'eight_hour_soak_executed',
+    'herdr_executed', 'invented_timings', 'g0_passed',
+)
+SOAK_TIMING_KEYS = (
+    'soak_hours', 'sample_count', 'disconnect_switch_count',
+    'p95_ms', 'visible_pixel_ms', 'parser_consumed_ms',
+    'working_set_bytes', 'private_bytes', 'handle_count', 'process_count',
+    'q_p_bytes', 'cycle_count', 'resize_rate',
+)
+
+
+def _soak_false_key_code(key: str) -> str:
+    if key in {'ac46_passed', 'g0_passed', 'eight_hour_soak_executed'}:
+        return key
+    if key == 'live_soak':
+        return 'live_soak_claimed'
+    return key
+
+
+def _reject_soak_false_keys(doc: dict[str, Any]) -> None:
+    for key in SOAK_START_FALSE_KEYS:
+        if key in doc and doc.get(key) is not False:
+            raise QualityError(_soak_false_key_code(key))
+
+
+def _reject_soak_invented_timings(doc: Any) -> None:
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if key in SOAK_TIMING_KEYS and value is not None:
+                raise QualityError('invented_timings')
+            _reject_soak_invented_timings(value)
+    elif isinstance(doc, list):
+        for item in doc:
+            _reject_soak_invented_timings(item)
+
+
+def _reject_soak_pass_claims(doc: dict[str, Any]) -> None:
+    if _is_success(doc.get('ac46_passed')):
+        raise QualityError('ac46_passed')
+    if _is_success(doc.get('g0_passed')):
+        raise QualityError('g0_passed')
+    if _is_success(doc.get('phase_gate')) or doc.get('phase_gate') == 'passed':
+        raise QualityError('ac46_passed')
+    if _is_success(doc.get('live_soak')):
+        raise QualityError('live_soak_claimed')
+    if _is_success(doc.get('eight_hour_soak_executed')):
+        raise QualityError('eight_hour_soak_executed')
+    if _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if 'l4_soak' in doc and doc.get('l4_soak') != 'UNVERIFIED':
+        raise QualityError('l4_soak_claimed')
+    _reject_soak_false_keys(doc)
+    _reject_soak_invented_timings(doc)
+
+
+def _check_ac_status(root: Path, ac_id: str, error_code: str) -> None:
+    path = root / 'planning' / 'acceptance.json'
+    if not path.is_file():
+        return
+    try:
+        loaded = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise QualityError('missing_record_field') from exc
+    criteria = loaded.get('criteria') if isinstance(loaded, dict) else None
+    if not isinstance(criteria, list):
+        return
+    for item in criteria:
+        if not isinstance(item, dict) or item.get('id') != ac_id:
+            continue
+        if _is_success(item.get('status')) or item.get('status') == 'passed':
+            raise QualityError(error_code)
+        return
+
+
+def validate_eight_hour_soak_start(root: Path) -> dict[str, Any]:
+    """Fail-closed check of a product-UI soak START record. Not AC46."""
+    root = Path(root)
+    doc = _load_json(root / SOAK_START_REL)
+    for key in SOAK_START_REQUIRED_KEYS:
+        if key not in doc:
+            raise QualityError('missing_record_field')
+    if doc.get('document_kind') != SOAK_START_KIND:
+        raise QualityError('missing_record_field')
+    if doc.get('result') != 'not_run' or _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if doc.get('l4_soak') != 'UNVERIFIED':
+        raise QualityError('l4_soak_claimed')
+    if doc.get('product_ui_started') is not True:
+        raise QualityError('product_ui_not_started')
+    _reject_soak_pass_claims(doc)
+    _check_ac_status(root, 'AC46', 'ac46_passed')
+    git_sha = doc.get('git_sha')
+    if not isinstance(git_sha, str) or len(git_sha) < 7:
+        raise QualityError('missing_record_field')
+    started = doc.get('started_at_utc')
+    if not isinstance(started, str) or not started:
+        raise QualityError('missing_record_field')
+    platform = doc.get('platform')
+    if not isinstance(platform, dict):
+        raise QualityError('missing_record_field')
+    commands = doc.get('commands')
+    if not isinstance(commands, list) or not commands:
+        raise QualityError('missing_record_field')
+    roles: dict[str, Any] = {}
+    for item in commands:
+        if not isinstance(item, dict):
+            raise QualityError('missing_record_field')
+        role = item.get('role')
+        if not isinstance(role, str):
+            raise QualityError('missing_record_field')
+        roles[role] = item
+        command = item.get('command_redacted')
+        if not isinstance(command, list) or not command:
+            raise QualityError('missing_record_field')
+        if item.get('pid') is not None and (
+            not isinstance(item.get('pid'), int) or item.get('pid') <= 0
+        ):
+            raise QualityError('missing_record_field')
+        _check_launch_hashes(root, item, compare_files=False)
+        argv = [str(part) for part in command]
+        joined = ' '.join(argv)
+        if '--shell-smoke' in argv or '--compose-only' in argv:
+            raise QualityError('not_product_ui')
+        if role == 'product_ui' and '--ui' not in argv and '--ui' not in joined:
+            raise QualityError('not_product_ui')
+    ui = roles.get('product_ui')
+    if not isinstance(ui, dict) or not isinstance(ui.get('pid'), int):
+        raise QualityError('missing_record_field')
+    app_pids = ui.get('app_pids')
+    if app_pids is not None:
+        if not isinstance(app_pids, list) or not app_pids:
+            raise QualityError('missing_record_field')
+        for pid in app_pids:
+            if not isinstance(pid, int) or pid <= 0:
+                raise QualityError('missing_record_field')
+    live = _load_json(root / LIVE_SOAK_REL)
+    _reject_soak_pass_claims(live)
+    if live.get('result') != 'not_run':
+        raise QualityError('live_success_claimed')
+    if live.get('eight_hour_soak_executed') is not False:
+        raise QualityError('eight_hour_soak_executed')
+    if live.get('soak_hours') is not None:
+        raise QualityError('invented_timings')
+    return {
+        'document_kind': SOAK_START_KIND,
+        'soak_start_capture': SOAK_START_REL,
+        'live_capture': LIVE_SOAK_REL,
+        'product_ui_started': True,
+        'eight_hour_soak_executed': False,
+        'soak_hours': None,
+        'live_soak': False,
+        'ac46_passed': False,
+        'result': 'not_run',
+        'l4_soak': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'invented_timings': False,
+        'git_sha': git_sha,
+        'started_at_utc': started,
     }

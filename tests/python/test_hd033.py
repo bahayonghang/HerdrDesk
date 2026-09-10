@@ -18,6 +18,7 @@ from herddesk_g0.quality import (
     collect_narrator_overlay,
     narrator_exe_path,
     system_dpi,
+    validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
 )
 import validate_repository as repository
@@ -73,7 +74,7 @@ CARD_GRANTS = {
     'hide-show-100': 'no_authorized_pane_hide_show_handle_lab',
     'narrator': 'ac37_workflow_incomplete_no_live_session',
     'dpi-100-150-200': 'no_authorized_dpi_theme_monitor_matrix',
-    'eight-hour-soak': 'no_authorized_eight_hour_soak',
+    'eight-hour-soak': 'eight_hour_wall_clock_incomplete_no_live_herdr_fault_injection',
 }
 LIVE_GRANTS = {
     'live-cold-start': 'no_authorized_interactive_desktop_cold_start',
@@ -83,7 +84,7 @@ LIVE_GRANTS = {
     'live-handle-reclaim': 'no_authorized_pane_hide_show_handle_lab',
     'live-narrator': 'ac37_workflow_incomplete_no_live_session',
     'live-dpi': 'no_authorized_dpi_theme_monitor_matrix',
-    'live-soak': 'no_authorized_eight_hour_soak',
+    'live-soak': 'eight_hour_wall_clock_incomplete_no_live_herdr_fault_injection',
 }
 AC_FLAGS = (
     'ac27_passed', 'ac28_passed', 'ac29_passed', 'ac37_passed',
@@ -183,6 +184,10 @@ class Hd033ResidualTests(unittest.TestCase):
             catalog['dpi_overlay_pointer'],
             'evidence/quality/dpi-overlay-pointer.json',
         )
+        self.assertEqual(
+            catalog['soak_start_capture'],
+            'evidence/quality/live-soak-start.json',
+        )
         pointer = json.loads((ROOT / catalog['environment_manifest_pointer']).read_text(encoding='utf-8'))
         self.assertEqual(pointer['result'], 'not_run')
         self.assertEqual(pointer['live_status'], 'UNVERIFIED')
@@ -247,6 +252,20 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertTrue(dpi_overlay_pointer['l2_collectors_are_not_live_pass'])
         self.assertIsNot(dpi_overlay_pointer.get('complete_1_0_claimed'), True)
         self.assertTrue((ROOT / 'scripts' / 'collect_dpi_overlay.py').is_file())
+        self.assertTrue((ROOT / 'scripts' / 'start_eight_hour_soak.py').is_file())
+        start = json.loads(
+            (ROOT / catalog['soak_start_capture']).read_text(encoding='utf-8')
+        )
+        self.assertEqual(start['document_kind'], 'hd033_eight_hour_soak_start')
+        self.assertEqual(start['result'], 'not_run')
+        self.assertFalse(start['live_soak'])
+        self.assertFalse(start['ac46_passed'])
+        self.assertFalse(start['eight_hour_soak_executed'])
+        self.assertIsNone(start['soak_hours'])
+        self.assertEqual(start['l4_soak'], 'UNVERIFIED')
+        self.assertTrue(start['product_ui_started'])
+        self.assertFalse(start['herdr_executed'])
+        self.assertFalse(start['g0_passed'])
         cards = {item['id']: item for item in catalog['execution_cards']}
         self.assertEqual(tuple(cards), REQUIRED_CARDS)
         seen = set()
@@ -327,6 +346,14 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertIsNone(soak['soak_hours'])
         self.assertIsNone(soak['sample_count'])
         self.assertFalse(soak['invented_timings'])
+        start = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(encoding='utf-8'))
+        self.assertEqual(start['kind'], 'live_eight_hour_soak_start')
+        self.assertEqual(start['result'], 'not_run')
+        self.assertFalse(start['eight_hour_soak_executed'])
+        self.assertIsNone(start['soak_hours'])
+        self.assertFalse(start['live_soak'])
+        self.assertFalse(start['ac46_passed'])
+        self.assertTrue(start['product_ui_started'])
         template = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak.template.json').read_text(encoding='utf-8'))
         self.assertTrue(template['template'])
         self.assertFalse(template['eight_hour_soak_executed'])
@@ -576,6 +603,16 @@ class Hd033ResidualTests(unittest.TestCase):
 
         bad = deepcopy(catalog)
         bad['dpi_overlay_pointer'] = 'evidence/quality/environment-pointer.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad.pop('soak_start_capture')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['soak_start_capture'] = 'evidence/quality/live-soak.not-run.json'
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
@@ -1227,6 +1264,272 @@ class Hd033DpiOverlayTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 collect_dpi_overlay(root)
             self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+
+def _write_soak_start(
+    tmp: Path, *, start_overrides=None, live_overrides=None
+) -> None:
+    quality = tmp / 'evidence' / 'quality'
+    quality.mkdir(parents=True, exist_ok=True)
+    start = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    live = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak.not-run.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    if start_overrides:
+        start.update(start_overrides)
+    if live_overrides:
+        live.update(live_overrides)
+    (quality / 'live-soak-start.json').write_text(
+        json.dumps(start), encoding='utf-8'
+    )
+    (quality / 'live-soak.not-run.json').write_text(
+        json.dumps(live), encoding='utf-8'
+    )
+
+
+class Hd033SoakStartTests(unittest.TestCase):
+    def test_shipped_start_record_is_not_ac46(self):
+        report = validate_eight_hour_soak_start(ROOT)
+        self.assertEqual(report['document_kind'], 'hd033_eight_hour_soak_start')
+        self.assertTrue(report['product_ui_started'])
+        self.assertFalse(report['eight_hour_soak_executed'])
+        self.assertIsNone(report['soak_hours'])
+        self.assertFalse(report['live_soak'])
+        self.assertFalse(report['ac46_passed'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertNotIn(str(report['result']).lower(), SUCCESS)
+        self.assertEqual(report['l4_soak'], 'UNVERIFIED')
+        self.assertFalse(report['g0_passed'])
+        start = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertTrue(start['window_seen'])
+        self.assertIsInstance(start['started_at_utc'], str)
+        self.assertGreaterEqual(len(start['git_sha']), 7)
+        ui = next(
+            item for item in start['commands'] if item.get('role') == 'product_ui'
+        )
+        argv = [str(part) for part in ui.get('command_redacted') or []]
+        self.assertIn('--ui', argv)
+        self.assertNotIn('--shell-smoke', argv)
+        self.assertNotIn('--compose-only', argv)
+        self.assertIsInstance(ui['pid'], int)
+        self.assertGreater(ui['pid'], 0)
+        live = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak.not-run.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(live['result'], 'not_run')
+        self.assertFalse(live['eight_hour_soak_executed'])
+        self.assertIsNone(live['soak_hours'])
+        self.assertIsNone(live['disconnect_switch_count'])
+        self.assertIsNone(start['disconnect_switch_count'])
+
+    def test_cli_validates_without_starting_processes(self):
+        script = ROOT / 'scripts' / 'start_eight_hour_soak.py'
+        self.assertTrue(script.is_file())
+        src = script.read_text(encoding='utf-8')
+        self.assertIn('--record', src)
+        self.assertIn('--ui', src)
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertFalse(report['ac46_passed'])
+        self.assertFalse(report['live_soak'])
+        self.assertFalse(report['eight_hour_soak_executed'])
+        self.assertIsNone(report['soak_hours'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertTrue(report['product_ui_started'])
+
+    def test_structure_contract_invokes_start_record(self):
+        repository._check_hd033_soak_start()
+
+    def test_missing_start_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(Path(tmp))
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_ac46_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'ac46_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'ac46_passed')
+
+    def test_live_soak_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'live_soak': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'live_soak_claimed')
+
+    def test_eight_hour_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'eight_hour_soak_executed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'eight_hour_soak_executed')
+
+    def test_soak_hours_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'soak_hours': 8})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_soak_start(root, start_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    validate_eight_hour_soak_start(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_l4_soak_pass_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'l4_soak': 'passed'})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'l4_soak_claimed')
+
+    def test_shell_smoke_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            start = json.loads(
+                (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            start['commands'][0]['command_redacted'] = [
+                'dotnet', 'run', '--', '--shell-smoke'
+            ]
+            _write_soak_start(root, start_overrides=start)
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'not_product_ui')
+
+    def test_compose_only_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            start = json.loads(
+                (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            start['commands'][0]['command_redacted'] = [
+                'dotnet', 'run', '--', '--compose-only', '<temp-root>'
+            ]
+            _write_soak_start(root, start_overrides=start)
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'not_product_ui')
+
+    def test_product_ui_not_started_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'product_ui_started': False})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'product_ui_not_started')
+
+    def test_live_row_success_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, live_overrides={'result': 'success'})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_g0_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'g0_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'g0_passed')
+
+    def test_acceptance_ac46_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            planning = root / 'planning'
+            planning.mkdir()
+            (planning / 'acceptance.json').write_text(
+                json.dumps({'criteria': [{'id': 'AC46', 'status': 'passed'}]}),
+                encoding='utf-8',
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'ac46_passed')
+
+    def test_disconnect_switch_count_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'disconnect_switch_count': 100})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_live_eight_hour_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, live_overrides={'eight_hour_soak_executed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'eight_hour_soak_executed')
+
+    def test_live_soak_hours_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, live_overrides={'soak_hours': 8})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_growing_soak_logs_are_not_invented_hash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            probe = root / 'probe-results'
+            probe.mkdir(parents=True, exist_ok=True)
+            (probe / 'hd033-soak-stdout.txt').write_bytes(b'later-log')
+            (probe / 'hd033-soak-stderr.txt').write_bytes(b'later-err')
+            report = validate_eight_hour_soak_start(root)
+            self.assertFalse(report['eight_hour_soak_executed'])
+            self.assertIsNone(report['soak_hours'])
+            self.assertFalse(report['ac46_passed'])
+            self.assertEqual(report['result'], 'not_run')
+
+    def test_phase_gate_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root, start_overrides={'phase_gate': 'passed'})
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'ac46_passed')
 
 
 if __name__ == '__main__':
