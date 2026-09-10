@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "DPI overlay remains. 2026-09-10 reopen to launch Narrator against product UI. Do not mark AC37. Do not complete 8h soak. Do not change display scale. live-narrator stays not_run until real capture. Parent not archived.",
+  "notes": "Product c2ce0c0: product UI --ui + Narrator.exe launch in evidence/quality/narrator-product-ui-launch.json. AC37 workflow incomplete (no live session). Overlay collector still does not start Narrator. live-narrator not_run. AC37/G0 not passed. No 8h soak. No display scale change.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"
