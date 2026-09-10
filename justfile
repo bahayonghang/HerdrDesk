@@ -121,6 +121,8 @@ filebridge-test:
 # Offline gate used by GitHub Actions. G0 BCL/Python/Rust on every OS.
 # Windows desktop restore runs locked App windows TFM restore/build when admitted.
 # Job success is not GitHub required-check proof and is not live WinUI.
+# HD-034 Verify-on-fixture runs in test-python and structure (pwsh).
+# Ubuntu must not publish the App windows TFM.
 [group('web')]
 terminal-web:
     npm --prefix web/terminal ci

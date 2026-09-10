@@ -20,6 +20,8 @@
 | `renderer-cases.json` | HD-005 十八行 renderer L1 模拟。`simulation=true`，`runtime_pass=false`，`ac08_passed=false`，`ac09_passed=false`。不是 WinUI/WebView2/IME 真机证据 |
 | `rpc-schema-v1/` | HD-009 合成 snapshot/event。钉 v0.9.0 protocol 22 / schema_version 1 源码 schema 字段。`runtime_schema_sha256=UNVERIFIED`。不是 daemon 抓包，不能把 AC04/AC11 标通过 |
 | `real-terminal-v082/` | 真机 capture 占位。`index.json` 的 `captures=[]`，`herdr_executed=false`。禁止把合成帧标成 runtime pass |
+| `packaging/layout-valid/` | HD-034 lab identity `AppxManifest.xml` fixture。`package_release.ps1 -Action Verify` 须退出 0。不是发行安装 |
+| `packaging/layout-store-identity/` | HD-034 Store/Contoso 身份负例。Verify 须非零 |
 | `README.md` | 生成说明与门禁边界 |
 
 ## 入口

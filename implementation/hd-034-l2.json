@@ -80,5 +80,5 @@
     "no_authorized_file_job_defer_during_update",
     "no_authorized_signing_service"
   ],
-  "note": "HD-034 ships an L1 P5 packaging closeout catalog that points at existing HD-007 config/host, HD-011 settings ViewModels, HD-021 helper trust, and HD-028 TransferCoordinator artifacts. Fake publisher cannot pass AC41. Unsigned local build cannot pass release install. Copying an old EXE cannot pass rollback. Live install, sign, update, and rollback stay UNVERIFIED. This file is not AC pass evidence. Product AC41/AC42 stay with a later authorized clean-machine matrix. packaging/ and tests/Integration.Windows are not admitted."
+  "note": "HD-034 L2 ships an unsigned local publish-layout overlay and lab identity. App.xaml exists. packaging_project stays false (no wapproj). Lab identity is not a Store or release Publisher. Fake publisher cannot pass AC41. Unsigned local build cannot pass release install. Copying an old EXE cannot pass rollback. Live install, sign, update, and rollback stay UNVERIFIED. This file is not AC pass evidence. Product AC41/AC42 stay with a later authorized clean-machine matrix. tests/Integration.Windows remains a net10.0 console runner; the catalog token stays false."
 }

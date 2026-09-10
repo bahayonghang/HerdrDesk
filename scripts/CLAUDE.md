@@ -78,6 +78,7 @@ argv：`herdr [--session S] terminal session {observe|control} TARGET --cols --r
 | `run_windows_desktop_gate.py` | WinUI 未准入时跳过 desktop restore；跳过不是全应用绿色 |
 | `publish_github.py` | 历史 `PUBLICATION_MANIFEST.json` 审计（`kind=historical_bundle_audit`）。默认 dry-run，漂移退出码 2。日常门禁是 `just ci`。`--publish` 仅历史空仓建仓，已有仓库拒绝 |
 | `Invoke-HerdDeskPreflight.ps1` | pwsh 7 包装 `preflight`；仓库内无 Windows 执行证据 |
+| `package_release.ps1` | HD-034 L2 unsigned layout：`-Action Verify` 对 fixture 在 Ubuntu/Windows 运行；`-Action Build` 仅 Windows；无证书则 Sign 失败。未签名本地构建不是发行安装。AC41/AC42 仍为 false |
 
 ## 测试
 

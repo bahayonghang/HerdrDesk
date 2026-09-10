@@ -96,7 +96,12 @@ internal static class Hd034Cases
 
         var root = FindRepoRoot();
         AppXamlSurface.CheckIntegrationWindowsProject(root);
-        Check(!Directory.Exists(Path.Combine(root, "packaging")));
+        Check(Directory.Exists(Path.Combine(root, "packaging")));
+        Check(File.Exists(Path.Combine(root, "packaging", "Package.appxmanifest")));
+        Check(File.Exists(Path.Combine(root, "packaging", "runtime.json")));
+        Check(File.Exists(Path.Combine(root, "scripts", "package_release.ps1")));
+        Check(File.Exists(Path.Combine(root, "src", "HerdDesk.App", "App.xaml")));
+        Check(!File.Exists(Path.Combine(root, "packaging", "HerdDesk.Package.wapproj")));
         AppXamlSurface.CheckBlankContainerOnly(root);
 
         using var catalogDoc = JsonDocument.Parse(
@@ -283,6 +288,9 @@ internal static class Hd034Cases
         Check(root.GetProperty("missing").GetProperty("clean_machine_install").GetBoolean());
         Check(root.GetProperty("missing").GetProperty("publisher_identity").GetBoolean());
         Check(root.GetProperty("missing").GetProperty("signing_service").GetBoolean());
+        Check(root.GetProperty("missing").GetProperty("packaging_project").GetBoolean());
+        Check(root.GetProperty("unsigned_local_build_is_release").GetBoolean() is false);
+        Check(root.GetProperty("invented_publisher_identity").GetBoolean() is false);
     }
 
     static string FindRepoRoot()

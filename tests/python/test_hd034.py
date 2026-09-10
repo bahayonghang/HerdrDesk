@@ -138,7 +138,10 @@ class Hd034ResidualTests(unittest.TestCase):
         self.assertTrue(missing['signing_service'])
         self.assertTrue(missing['packaging_project'])
         repository.check_integration_windows_layout(ROOT)
-        self.assertFalse((ROOT / 'packaging').exists())
+        self.assertTrue((ROOT / 'packaging').is_dir())
+        self.assertTrue((ROOT / 'packaging' / 'Package.appxmanifest').is_file())
+        self.assertTrue((ROOT / 'src' / 'HerdDesk.App' / 'App.xaml').is_file())
+        self.assertFalse((ROOT / 'packaging' / 'HerdDesk.Package.wapproj').exists())
         result = repository.validate()
         self.assertEqual(result['structural_validation'], 'passed')
         self.assertFalse(result['g0_passed'])
@@ -514,6 +517,70 @@ class Hd034ResidualTests(unittest.TestCase):
         soak['live_rows'][0]['status'] = 'passed'
         with self.assertRaises(AssertionError):
             repository._check_hd034_closeout(hd034, soak, matrix)
+
+
+class Hd034PackageScriptTests(unittest.TestCase):
+    def test_verify_valid_layout_uses_shipped_script(self):
+        code, report = repository.run_package_release(
+            'Verify',
+            layout_path='tests/fixtures/packaging/layout-valid',
+        )
+        self.assertEqual(code, 0)
+        self.assertTrue(report['ok'])
+        self.assertEqual(report['action'], 'Verify')
+        self.assertEqual(report['identity_name'], 'HerdDesk.Lab')
+        self.assertEqual(report['publisher'], 'CN=HerdDesk Lab (not release)')
+        self.assertFalse(report['private_key_found'])
+        self.assertFalse(report['unsigned_local_build_is_release'])
+        self.assertFalse(report['signed'])
+        self.assertFalse(report['is_release_install'])
+        self.assertFalse(report['ac41_passed'])
+        self.assertFalse(report['ac42_passed'])
+        self.assertFalse(report['g0_passed'])
+
+    def test_verify_store_identity_uses_shipped_script(self):
+        code, report = repository.run_package_release(
+            'Verify',
+            layout_path='tests/fixtures/packaging/layout-store-identity',
+        )
+        self.assertNotEqual(code, 0)
+        self.assertIsNot(report.get('ok'), True)
+        self.assertFalse(report.get('ac41_passed', False))
+        self.assertFalse(report.get('unsigned_local_build_is_release', False))
+
+    def test_verify_source_manifest_uses_shipped_script(self):
+        code, report = repository.run_package_release(
+            'Verify',
+            layout_path='packaging',
+        )
+        self.assertEqual(code, 0)
+        self.assertTrue(report['ok'])
+        self.assertEqual(report['identity_name'], 'HerdDesk.Lab')
+        self.assertEqual(report['publisher'], 'CN=HerdDesk Lab (not release)')
+        self.assertEqual(report['processor_architecture'], 'x64')
+        self.assertFalse(report['unsigned_local_build_is_release'])
+        self.assertFalse(report['is_release_install'])
+        self.assertFalse(report['signed'])
+        self.assertFalse(report['ac41_passed'])
+        self.assertFalse(report['ac42_passed'])
+        self.assertFalse(report['g0_passed'])
+
+    def test_sign_without_certificate_uses_shipped_script(self):
+        code, report = repository.run_package_release('Sign')
+        self.assertNotEqual(code, 0)
+        self.assertIsNot(report.get('ok'), True)
+        self.assertIsNot(report.get('signed'), True)
+        self.assertFalse(report.get('ac41_passed', False))
+        self.assertFalse(report.get('ac42_passed', False))
+
+    def test_structure_contract_invokes_shipped_script(self):
+        repository._HD034_SCRIPT_CONTRACT_OK = False
+        repository._check_hd034_package_script_contract()
+        self.assertTrue(repository._HD034_SCRIPT_CONTRACT_OK)
+
+    def test_helper_refuses_build_action(self):
+        with self.assertRaises(AssertionError):
+            repository.run_package_release('Build')
 
 
 if __name__ == '__main__':

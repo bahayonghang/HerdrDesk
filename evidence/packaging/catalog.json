@@ -108,6 +108,7 @@
       "owner_children": ["HD-007", "HD-011"],
       "l1_artifacts": [
         "src/HerdDesk.App/Program.cs",
+        "src/HerdDesk.App/App.xaml",
         "src/HerdDesk.Infrastructure/Configuration/AppDataPaths.cs",
         "src/HerdDesk.App/ViewModels/ShellViewModel.cs",
         "src/HerdDesk.App/ViewModels/SettingsViewModel.cs",
@@ -240,8 +241,12 @@
       "l1_artifacts": [
         "implementation/hd-007-packages.json",
         "src/HerdDesk.App/Program.cs",
+        "src/HerdDesk.App/App.xaml",
         "global.json",
-        "HerdDesk.slnx"
+        "HerdDesk.slnx",
+        "scripts/package_release.ps1",
+        "packaging/Package.appxmanifest",
+        "packaging/runtime.json"
       ],
       "l1_status": "shipped",
       "live_status": "UNVERIFIED",
@@ -341,5 +346,5 @@
       "missing_grant": "no_authorized_signing_service"
     }
   ],
-  "note": "HD-034 L1 closeout catalog. L1 paths are existing HD-007 config/host, HD-011 settings ViewModels, HD-021 helper trust, and HD-028 TransferCoordinator artifacts. Fake publisher cannot pass AC41. Unsigned local build cannot pass release install. Copying an old EXE cannot pass rollback. Live install/sign/update/rollback stay not_run. This file is not product AC pass evidence."
+  "note": "HD-034 L2 ships an unsigned local publish-layout overlay and lab identity. App.xaml exists. packaging_project stays false (no wapproj). Lab identity is not a Store or release Publisher. Fake publisher cannot pass AC41. Unsigned local build cannot pass release install. Copying an old EXE cannot pass rollback. Live install/sign/update/rollback stay not_run. This file is not product AC pass evidence."
 }

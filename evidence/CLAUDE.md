@@ -67,7 +67,7 @@ HD-033 L1 P5 性能/可访问性/soak 收口目录，外加 L2 采集器指针�
 
 ## `packaging/`
 
-HD-034 L1 P5 签名/安装/更新回滚收口目录。`catalog.json` 列出 clean install / runtime missing / signed update / bad publisher-or-tamper / signed rollback / config backup-restore / file-job defer / unsigned local build 执行卡，指向已有 HD-007 配置/宿主、HD-011 设置 ViewModel、HD-021 helper 信任清单、HD-028 `TransferCoordinator` 产物。假 Publisher 不能让 AC41 通过。未签名本地构建不能当发行安装。复制旧 EXE 不能当回滚。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端，行为 `not_run`。Linux x64 是远端 OS，不是 MSIX 客户端。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码/Publisher，不是成功运行。产品 AC41/AC42 仍未通过。
+HD-034 L2 P5 签名/安装/更新回滚收口目录，外加未签名 lab layout 叠加。`catalog.json` 列出 clean install / runtime missing / signed update / bad publisher-or-tamper / signed rollback / config backup-restore / file-job defer / unsigned local build 执行卡。`App.xaml` 已存在。`packaging/` 是 lab identity 未签名 layout，不是 WAP 工程，不是发行 Publisher。假 Publisher 不能让 AC41 通过。未签名本地构建不能当发行安装。复制旧 EXE 不能当回滚。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`support-matrix.json` 承诺 Windows 11 x64 客户端，行为 `not_run`。Linux x64 是远端 OS，不是 MSIX 客户端。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码/Publisher，不是成功运行。产品 AC41/AC42 仍未通过。
 
 ## `security-release/`
 

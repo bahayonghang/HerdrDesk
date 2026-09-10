@@ -29,7 +29,7 @@
   "invented_publisher_identity": false,
   "fake_publisher_cannot_pass_ac41": true,
   "limitations": [
-    "2026-09-09: packaging was authorized. No Publisher identity, certificate, wapproj, or MSIX exists in tree. Clean-machine install was not executed.",
+    "2026-09-10: packaging/ ships a lab-identity unsigned layout overlay. App.xaml exists. Lab identity is not a production Publisher. No certificate, wapproj, or signed MSIX. Clean-machine install was not executed.",
     "A template or L1 catalog is not AC41.",
     "Do not invent package hashes or Publisher identity."
   ]

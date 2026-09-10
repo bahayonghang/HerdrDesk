@@ -24,7 +24,7 @@
 11. `working-directory: bridge`：`rustup show`，`cargo fmt --check`，`clippy -D warnings`，`cargo test --locked`
 12. `working-directory: filebridge`：同样的 fmt/clippy/test。无 `main.rs`。L2 FS/SSH 仍 UNVERIFIED。
 
-另有 `windows-desktop` job：只跑 `scripts/run_windows_desktop_gate.py`。WinUI 未准入时跳过 restore。Job 成功不是 merge-blocking 证据（`github_required_check=UNVERIFIED`）。
+另有 `windows-desktop` job：`scripts/run_windows_desktop_gate.py`、windows TFM `--shell-smoke`，以及 `package_release.ps1 -Action Build`（MakeAppx 缺失则为 layout-only）。不是 AC41。不 Sign、不安装。Job 成功不是 merge-blocking 证据（`github_required_check=UNVERIFIED`）。矩阵 job 的 python tests 与 `validate_repository.py` 在 Ubuntu/Windows 上跑 HD-034 Verify-on-fixture。矩阵 job 不得 publish windows TFM。
 
 注释写明：本 job 不含 daemon 安装、SSH、takeover、发布、UI 验收或凭据。Linux 不编译 WinUI。
 

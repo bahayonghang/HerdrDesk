@@ -2,7 +2,10 @@
 """Structural validation only; this does not compile C# or pass any live gate."""
 from pathlib import Path
 import json
+import shutil
+import subprocess
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -1332,6 +1335,155 @@ _HD034_SCENARIOS = (
     'bad_publisher_or_tamper', 'signed_rollback', 'config_backup_restore',
     'file_job_defer', 'unsigned_local_build',
 )
+_HD034_LAB_NAME = 'HerdDesk.Lab'
+_HD034_LAB_PUBLISHER = 'CN=HerdDesk Lab (not release)'
+_HD034_SCRIPT = ROOT / 'scripts' / 'package_release.ps1'
+_HD034_VALID_LAYOUT = 'tests/fixtures/packaging/layout-valid'
+_HD034_STORE_LAYOUT = 'tests/fixtures/packaging/layout-store-identity'
+_HD034_PRIVATE_KEY_SUFFIXES = ('.pfx', '.p12', '.pem', '.key', '.snk')
+_HD034_SCRIPT_CONTRACT_OK = False
+
+
+def find_pwsh() -> str:
+    pwsh = shutil.which('pwsh')
+    if not pwsh:
+        raise AssertionError('pwsh is missing; HD-034 Verify-on-fixture requires PowerShell 7')
+    return pwsh
+
+
+def run_package_release(
+    action: str,
+    *,
+    layout_path: str | None = None,
+    certificate_path: str | None = None,
+    output_root: Path | None = None,
+    timeout: int = 120,
+) -> tuple[int, dict]:
+    """Invoke shipped scripts/package_release.ps1. Do not reimplement identity checks."""
+    assert action in {'Build', 'Verify', 'Sign'}, action
+    if action == 'Build':
+        raise AssertionError('HD-034 structure/python tests must not run -Action Build')
+    out = Path(output_root) if output_root is not None else Path(
+        tempfile.mkdtemp(prefix='herddesk-packaging-')
+    )
+    out.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        find_pwsh(), '-NoLogo', '-NoProfile', '-NonInteractive',
+        '-File', str(_HD034_SCRIPT),
+        '-Action', action,
+        '-OutputRoot', str(out),
+    ]
+    if layout_path:
+        cmd += ['-LayoutPath', layout_path]
+    if certificate_path:
+        cmd += ['-CertificatePath', certificate_path]
+    completed = subprocess.run(
+        cmd,
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    report_path = out / 'package-report.json'
+    report: dict = {}
+    if report_path.is_file():
+        report = json.loads(report_path.read_text(encoding='utf-8'))
+    code = completed.returncode if completed.returncode is not None else 1
+    return code, report
+
+
+def _reject_hd034_private_key_files(root: Path) -> None:
+    if not root.exists():
+        return
+    for path in root.rglob('*'):
+        if not path.is_file():
+            continue
+        name = path.name.lower()
+        if name.endswith(_HD034_PRIVATE_KEY_SUFFIXES) or name.startswith(('id_rsa', 'id_ed25519')):
+            raise AssertionError(f'private key material is not allowed in git: {path}')
+
+
+def _check_hd034_package_files() -> None:
+    packaging = ROOT / 'packaging'
+    assert packaging.is_dir()
+    assert (packaging / 'Package.appxmanifest').is_file()
+    assert (packaging / 'runtime.json').is_file()
+    assert (packaging / 'CLAUDE.md').is_file()
+    assert (packaging / 'Assets' / 'StoreLogo.png').is_file()
+    assert (packaging / 'Assets' / 'Square44x44Logo.png').is_file()
+    assert (packaging / 'Assets' / 'Square150x150Logo.png').is_file()
+    assert _HD034_SCRIPT.is_file()
+    assert (ROOT / _HD034_VALID_LAYOUT / 'AppxManifest.xml').is_file()
+    assert (ROOT / _HD034_STORE_LAYOUT / 'AppxManifest.xml').is_file()
+    assert not (packaging / 'HerdDesk.Package.wapproj').exists()
+    assert not list(packaging.rglob('*.wapproj'))
+    _reject_hd034_private_key_files(packaging)
+    _reject_hd034_private_key_files(ROOT / 'tests' / 'fixtures' / 'packaging')
+    runtime = json.loads((packaging / 'runtime.json').read_text(encoding='utf-8'))
+    assert runtime.get('document_kind') == 'hd034_packaging_method'
+    assert runtime.get('script') == 'scripts/package_release.ps1'
+    assert runtime.get('method') == 'dotnet_publish_layout'
+    assert runtime.get('packaging_project') is False
+    assert runtime.get('wapproj') is False
+    assert runtime.get('windows_package_type') == 'None'
+    assert runtime.get('enable_msix_tooling') is False
+    assert runtime.get('unsigned_local_build_is_release') is False
+    assert runtime.get('publisher_identity_confirmed') is False
+    assert runtime.get('signed_msix_built') is False
+    assert runtime.get('ac41_passed') is False
+    assert runtime.get('ac42_passed') is False
+    assert runtime.get('g0_passed') is False
+    assert runtime.get('phase_gate') != 'passed'
+    assert (ROOT / 'src' / 'HerdDesk.App' / 'App.xaml').is_file()
+    ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    validation_job, sep, desktop_job = ci.partition('windows-desktop:')
+    assert sep, 'windows-desktop job missing'
+    assert '-Action Build' not in validation_job
+    assert '--ui' not in ci
+    just = (ROOT / 'justfile').read_text(encoding='utf-8')
+    assert '-Action Build' not in just
+    assert '--ui' not in just
+
+
+def _check_hd034_package_script_contract() -> None:
+    global _HD034_SCRIPT_CONTRACT_OK
+    _check_hd034_package_files()
+    if _HD034_SCRIPT_CONTRACT_OK:
+        return
+    code, report = run_package_release('Verify', layout_path=_HD034_VALID_LAYOUT)
+    assert code == 0, report
+    assert report.get('ok') is True
+    assert report.get('action') == 'Verify'
+    assert report.get('identity_name') == _HD034_LAB_NAME
+    assert report.get('publisher') == _HD034_LAB_PUBLISHER
+    assert report.get('private_key_found') is False
+    assert report.get('unsigned_local_build_is_release') is False
+    assert report.get('signed') is False
+    assert report.get('is_release_install') is False
+    assert report.get('ac41_passed') is False
+    assert report.get('ac42_passed') is False
+    assert report.get('g0_passed') is False
+    store_code, store_report = run_package_release('Verify', layout_path=_HD034_STORE_LAYOUT)
+    assert store_code != 0, store_report
+    assert store_report.get('ok') is not True
+    src_code, src_report = run_package_release('Verify', layout_path='packaging')
+    assert src_code == 0, src_report
+    assert src_report.get('ok') is True
+    assert src_report.get('identity_name') == _HD034_LAB_NAME
+    assert src_report.get('publisher') == _HD034_LAB_PUBLISHER
+    assert src_report.get('processor_architecture') == 'x64'
+    assert src_report.get('unsigned_local_build_is_release') is False
+    assert src_report.get('is_release_install') is False
+    assert src_report.get('signed') is False
+    assert src_report.get('ac41_passed') is False
+    assert src_report.get('ac42_passed') is False
+    assert src_report.get('g0_passed') is False
+    sign_code, sign_report = run_package_release('Sign')
+    assert sign_code != 0, sign_report
+    assert sign_report.get('ok') is not True
+    assert sign_report.get('signed') is not True
+    _HD034_SCRIPT_CONTRACT_OK = True
 
 
 def _hd034_token(value):
@@ -1626,10 +1778,9 @@ def _check_hd034_closeout(hd034: dict, catalog: dict, matrix: dict) -> None:
     assert acs['AC42']['status'] != 'passed'
     assert acs['AC41']['status'] == 'not_run'
     assert acs['AC42']['status'] == 'not_run'
-    assert not (ROOT / 'packaging').exists()
+    _check_hd034_package_files()
     check_integration_windows_layout(ROOT)
     assert not (ROOT / 'packaging' / 'HerdDesk.Package.wapproj').exists()
-    assert not (ROOT / 'packaging' / 'Package.appxmanifest').exists()
 
 
 _HD035_PASS_KEYS = (
@@ -2659,7 +2810,7 @@ def validate() -> dict:
     files=list(ROOT.rglob('*.json'))
     count=0
     for path in files:
-        if any(part in {'.git','obj','bin','target','probe-results','.test-results','node_modules'} for part in path.parts):continue
+        if any(part in {'.git','obj','bin','target','probe-results','.test-results','node_modules','artifacts'} for part in path.parts):continue
         json.loads(path.read_text(encoding='utf-8'));count+=1
     graph=validate_project_graph(ROOT)
     projects=list((ROOT/'src').rglob('*.csproj'))+list((ROOT/'tests').rglob('*.csproj'))
@@ -2863,6 +3014,7 @@ def validate() -> dict:
     _check_hd032_closeout(hd032, files_catalog, files_matrix)
     _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
+    _check_hd034_package_script_contract()
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)
     _check_hd036_closeout(hd036, release_catalog, release_matrix, release_index)
     assert not (ROOT/'tests/Integration.Ssh').exists()

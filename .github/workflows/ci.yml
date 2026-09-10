@@ -96,6 +96,8 @@ jobs:
       # No daemon installation, SSH access, terminal takeover, release publishing,
       # UI acceptance or credentials belong to this offline G0 job.
       # Linux must not compile WinUI. This job is not full-application green.
+      # HD-034 Verify-on-fixture runs in python tests and validate_repository.py.
+      # This matrix job must not publish the App windows TFM.
 
   windows-desktop:
     runs-on: windows-latest
@@ -114,5 +116,9 @@ jobs:
         run: python scripts/run_windows_desktop_gate.py
       - name: Windows TFM shell-smoke without message loop
         run: dotnet run --project src/HerdDesk.App --configuration Release --framework net10.0-windows10.0.19041.0 --no-restore -- --shell-smoke
+      - name: Unsigned local packaging layout
+        run: pwsh -NoLogo -NoProfile -NonInteractive -File scripts/package_release.ps1 -Action Build -Restore -OutputRoot artifacts/packaging
+      # Layout-only if MakeAppx is absent. Unsigned local layout is not a release install.
       # Job success is not merge-blocking proof. GitHub required-check remains UNVERIFIED.
       # Admitted path restores and builds the App windows TFM. It does not launch a WinUI window or live herdr.
+      # HD-034 Build here is not AC41/AC42. Do not sign or install.

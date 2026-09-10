@@ -59,7 +59,7 @@
 | `hd-031-l2.json` | L2 live clipboard/IME = `UNVERIFIED`。无 Integration.Windows。WinUI 未准入。无 watcher。OSC 52 默认 deny。AC36/G0 false。 |
 | `hd-032-l2.json` | L2 live FS/SSH/TOCTOU/attack = `UNVERIFIED`。L1 P4 收口目录不能关闭产品 AC31/32/33/34/35。`phase_gate=not_passed`。 |
 | `hd-033-l2.json` | L2/L3/L4 = `UNVERIFIED`。`github_required_check=UNVERIFIED`。L2 采集器不是 live 通过。L1 P5 收口目录不能关闭产品 AC27/28/29/37/38/46。parser consumed 不是呈现。`phase_gate=not_passed`。 |
-| `hd-034-l2.json` | L2/L3 live 安装/签名/更新/回滚 = `UNVERIFIED`。L1 P5 收口目录不能关闭产品 AC41/AC42。假 Publisher 不能通过 AC41。`phase_gate=not_passed`。 |
+| `hd-034-l2.json` | L2/L3 live 安装/签名/更新/回滚 = `UNVERIFIED`。L2 未签名 lab layout 叠加不能关闭产品 AC41/AC42。假 Publisher 不能通过 AC41。`App.xaml` 已存在。`packaging_project` 仍为 false。`phase_gate=not_passed`。 |
 | `hd-035-l2.json` | L2/L3 live 扫描/renderer/canary/已签名包反向审计 = `UNVERIFIED`。L1 P5 收口目录不能关闭产品 AC02/AC43/AC44。缺扫描不是零漏洞。`phase_gate=not_passed`。 |
 | `hd-036-l2.json` | L2/L3/L4 live 走查/矩阵/SHA 绑定/干净还原/required-check/图重跑/发布/签名 hash = `UNVERIFIED`。L1 P5 收口目录不能关闭产品 AC39/AC40/AC45/AC47/AC48。未发布。不是完整 1.0。`phase_gate=not_passed`。 |
 

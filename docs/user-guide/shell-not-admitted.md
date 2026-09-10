@@ -6,7 +6,7 @@ This page does not invent screenshots or an install wizard.
 
 ## Install
 
-No signed MSIX, App Installer channel, or Publisher identity is admitted. `packaging/` is absent. HD-034 records live install/sign/update/rollback as `not_run`. Do not copy an unsigned local `dotnet` output and call it a release install.
+No signed MSIX, App Installer channel, or production Publisher identity is admitted. `packaging/` ships a lab-identity unsigned layout overlay. Lab identity is not a Store identity and is not a release Publisher. `App.xaml` exists. HD-034 records live install/sign/update/rollback as `not_run`. Do not copy an unsigned local `dotnet` output and call it a release install.
 
 `just setup` is a developer SDK check. It is not an end-user installer.
 

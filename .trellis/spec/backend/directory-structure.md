@@ -36,6 +36,8 @@ scripts/probe_herdr.py      herdr probe
 scripts/Invoke-HerdDeskDotnetSetup.ps1
 scripts/validate_repository.py
 scripts/check_capture.py
+scripts/package_release.ps1  HD-034 L2 unsigned layout Build/Verify/Sign; Sign fails closed without -CertificatePath
+packaging/                  HD-034 L2 lab identity overlay (`Package.appxmanifest`, `runtime.json`). Not a wapproj. Not a release install.
 HerdDesk.slnx
 Directory.Build.props       net10.0 default TFM, nullable, TreatWarningsAsErrors
 Directory.Packages.props    admitted Microsoft.WindowsAppSDK.WinUI 2.3.6
