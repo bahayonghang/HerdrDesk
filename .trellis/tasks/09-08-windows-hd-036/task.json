@@ -3,7 +3,7 @@
   "name": "windows-hd-036",
   "title": "HD-036 发布文档与追踪归档",
   "description": "支持矩阵、用户手册、诊断、测试证据和hash归档",
-  "status": "completed",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-09-08",
-  "completedAt": "2026-09-09",
+  "completedAt": null,
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 P5 release-docs catalog landed. Unpublished. 1.0 not claimed. Hosted required-check UNVERIFIED. AC39/40/45/47/48/G0 not passed.",
+  "notes": "L1 catalog remains. 2026-09-10 reopen for SHA/hosted-workflow pointer overlay. A workflow run is not a GitHub required-check ruleset. Do not publish. Do not claim 1.0. AC39/40/45/47/48/G0 not passed.",
   "meta": {
     "source_task": "HD-036",
     "phase": "P5"
