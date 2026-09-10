@@ -6,8 +6,13 @@ Pass --record on an interactive Windows desktop to launch --ui and leave it
 running as a detached owned process. Pass --record-elapsed only after 8
 wall-clock hours with the START PIDs still alive; too early, a dead App PID,
 or a PID/image mismatch fails closed and writes no elapsed JSON.
-CI and justfile must not invoke --record or --record-elapsed.
-Do not set soak_hours=8. Wall-clock idle --ui is not AC46.
+Pass --watch-elapsed to spawn a detached python that polls until
+started_at + 8h, then calls record_elapsed. The watcher PID is not added to
+START owned_pids. If the App PID dies before due, the watcher exits without
+writing elapsed and does not restart soak. If live-soak-elapsed.json already
+exists, --watch-elapsed exits 0 without rewriting. Before due, never write
+elapsed. CI and justfile must not invoke --record, --record-elapsed, or
+--watch-elapsed. Do not set soak_hours=8. Wall-clock idle --ui is not AC46.
 --shell-smoke / --compose-only are not soak.
 """
 from __future__ import annotations
@@ -57,7 +62,10 @@ SPAWN_FLAGS = (
 )
 SPAWN_FLAGS_NO_BREAKAWAY = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS
 HEARTBEAT_INTERVAL_SEC = 60
+WATCH_POLL_SEC = 60
 UI_EXE_NAME = 'HerdDesk.App.exe'
+HEARTBEAT_JSONL = 'probe-results/hd033-soak-heartbeat.jsonl'
+RESOURCES_JSONL = 'probe-results/hd033-soak-resources.jsonl'
 
 
 def _utc_now() -> str:
@@ -690,6 +698,53 @@ def _write_elapsed_capture(root: Path, doc: dict[str, Any]) -> Path:
     return dest
 
 
+def _last_jsonl_row(path: Path) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return None
+    if not raw:
+        return None
+    text = raw.decode('utf-8', errors='replace')
+    for line in reversed(text.splitlines()):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict):
+            return row
+    return None
+
+
+def _probe_summaries(root: Path) -> dict[str, Any]:
+    heartbeat = _last_jsonl_row(Path(root) / HEARTBEAT_JSONL)
+    resources = _last_jsonl_row(Path(root) / RESOURCES_JSONL)
+    hb_obs = None
+    if heartbeat is not None:
+        value = heartbeat.get('observed_at_utc')
+        if isinstance(value, str) and value.strip():
+            hb_obs = value
+    res_obs = None
+    working = None
+    if resources is not None:
+        value = resources.get('observed_at_utc')
+        if isinstance(value, str) and value.strip():
+            res_obs = value
+        ws_val = resources.get('working_set_bytes')
+        if isinstance(ws_val, int) and ws_val > 0:
+            working = ws_val
+    return {
+        'last_heartbeat_observed_at_utc': hb_obs,
+        'last_resources_observed_at_utc': res_obs,
+        'last_working_set_bytes': working,
+    }
+
+
 def record_elapsed(
     root: Path,
     *,
@@ -733,6 +788,7 @@ def record_elapsed(
     elapsed_at = _utc_stamp(observed)
     sha = git_sha if git_sha is not None else _git_sha(root)
     heartbeat = start.get('heartbeat_pid')
+    summaries = _probe_summaries(root)
     doc: dict[str, Any] = {
         'document_kind': SOAK_ELAPSED_KIND,
         'template': False,
@@ -765,6 +821,11 @@ def record_elapsed(
         'process_running_at_capture': True,
         'owned_pids': owned,
         'heartbeat_pid': heartbeat if isinstance(heartbeat, int) else None,
+        'last_heartbeat_observed_at_utc': summaries['last_heartbeat_observed_at_utc'],
+        'last_resources_observed_at_utc': summaries['last_resources_observed_at_utc'],
+        'last_working_set_bytes': summaries['last_working_set_bytes'],
+        'ac29_passed': False,
+        'live_working_set': False,
         'raw_gitignored_path': 'probe-results/hd033-soak-elapsed.json',
         'committed_raw': True,
         'blocker': None,
@@ -774,8 +835,9 @@ def record_elapsed(
             'soak_hours stays null. Do not invent an 8h representative load.',
             '100 disconnect/switch cycles and live herdr/SSH fault injection were not authorized and were not faked.',
             'live_soak stays false. This file does not overwrite live-soak-start.json.',
+            'Optional last heartbeat/resources jsonl summaries are not AC29. Missing gitignored files stay null.',
             'This file is not live_soak success and does not pass AC46, L4, or G0.',
-            'Hosted CI is not an interactive desktop and must not run --record-elapsed.',
+            'Hosted CI is not an interactive desktop and must not run --record-elapsed or --watch-elapsed.',
         ],
     }
     _write_elapsed_capture(root, doc)
@@ -783,6 +845,186 @@ def record_elapsed(
     if report is None:
         raise QualityError('missing_record_field')
     return doc
+
+
+def _now_fn(now: Any) -> Any:
+    if callable(now):
+        return now
+
+    def frozen() -> datetime:
+        if now is None:
+            value = datetime.now(timezone.utc)
+        else:
+            value = now
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
+    return frozen
+
+
+def run_elapsed_watch(
+    root: Path,
+    *,
+    now: Any = None,
+    sleep: Any = None,
+    pid_running: Any = None,
+    pid_image: Any = None,
+    interval_sec: int = WATCH_POLL_SEC,
+    max_polls: int | None = None,
+    record_fn: Any = None,
+) -> int:
+    """Poll until due, then record_elapsed. Never writes elapsed before due.
+
+    If the App PID dies before due, exit without writing and without restarting
+    soak. If elapsed JSON already exists, exit 0 without rewriting. Not AC46.
+    """
+    root = Path(root)
+    elapsed_path = root / SOAK_ELAPSED_REL
+    if elapsed_path.is_file():
+        return 0
+    validate_eight_hour_soak_start(root)
+    start_path = root / SOAK_START_REL
+    start = json.loads(start_path.read_text(encoding='utf-8'))
+    if not isinstance(start, dict):
+        raise QualityError('missing_record_field')
+    started = _parse_utc(start.get('started_at_utc'))
+    due = started + SOAK_WALL_CLOCK
+    now_fn = _now_fn(now)
+    sleep_fn = sleep if sleep is not None else time.sleep
+    running = pid_running if pid_running is not None else _pid_running
+    image = pid_image if pid_image is not None else _pid_image
+    write_elapsed = record_fn if record_fn is not None else record_elapsed
+    try:
+        app_pid = _start_app_pid(start)
+    except QualityError:
+        return 0
+    polls = 0
+    while True:
+        if elapsed_path.is_file():
+            return 0
+        observed = now_fn()
+        if observed.tzinfo is None:
+            observed = observed.replace(tzinfo=timezone.utc)
+        else:
+            observed = observed.astimezone(timezone.utc)
+        if not running(app_pid) or not _app_image(image(app_pid) or ''):
+            return 0
+        if observed < due:
+            remaining = (due - observed).total_seconds()
+            delay = float(interval_sec)
+            if remaining > 0:
+                delay = min(delay, remaining)
+            sleep_fn(delay)
+            polls += 1
+            if max_polls is not None and polls >= max_polls:
+                return 0
+            continue
+        if elapsed_path.is_file():
+            return 0
+        try:
+            write_elapsed(
+                root,
+                now=observed,
+                pid_running=running,
+                pid_image=image,
+                git_sha=start.get('git_sha')
+                if isinstance(start.get('git_sha'), str)
+                else None,
+            )
+        except QualityError:
+            return 0
+        return 0
+
+
+def _start_elapsed_watch(root: Path) -> int | None:
+    if os.name != 'nt':
+        return None
+    probe = Path(root) / 'probe-results'
+    probe.mkdir(parents=True, exist_ok=True)
+    python = sys.executable
+    argv = [
+        python,
+        str(SCRIPTS / 'start_eight_hour_soak.py'),
+        '--elapsed-watch',
+    ]
+    log_path = probe / 'hd033-soak-elapsed-watch-stderr.txt'
+    handle = log_path.open('ab')
+    try:
+        proc = _spawn_detached(
+            argv,
+            cwd=root,
+            env=_dotnet_env(),
+            stdout_handle=handle,
+            stderr_handle=handle,
+        )
+    except OSError:
+        handle.close()
+        return None
+    handle.close()
+    return proc.pid
+
+
+def _watch_elapsed_report(
+    *,
+    spawned: bool,
+    already_present: bool,
+    pid: int | None,
+    due_at: str,
+) -> dict[str, Any]:
+    return {
+        'elapsed_watcher_spawned': spawned,
+        'elapsed_already_present': already_present,
+        'elapsed_watcher_pid': pid,
+        'elapsed_watcher_added_to_start_owned_pids': False,
+        'due_at_utc': due_at,
+        'ac46_passed': False,
+        'live_soak': False,
+        'eight_hour_soak_executed': False,
+        'soak_hours': None,
+        'ac29_passed': False,
+        'live_working_set': False,
+    }
+
+
+def watch_elapsed(
+    root: Path,
+    *,
+    start_watch: Any = None,
+) -> dict[str, Any]:
+    """Spawn a detached elapsed watcher. Do not edit START owned_pids."""
+    root = Path(root)
+    validate_eight_hour_soak_start(root)
+    start_path = root / SOAK_START_REL
+    before = start_path.read_text(encoding='utf-8')
+    start = json.loads(before)
+    if not isinstance(start, dict):
+        raise QualityError('missing_record_field')
+    started = _parse_utc(start.get('started_at_utc'))
+    due_at = _utc_stamp(started + SOAK_WALL_CLOCK)
+    elapsed_path = root / SOAK_ELAPSED_REL
+    if elapsed_path.is_file():
+        after = start_path.read_text(encoding='utf-8')
+        if after != before:
+            raise QualityError('missing_record_field')
+        return _watch_elapsed_report(
+            spawned=False,
+            already_present=True,
+            pid=None,
+            due_at=due_at,
+        )
+    spawn = start_watch if start_watch is not None else _start_elapsed_watch
+    pid = spawn(root)
+    after = start_path.read_text(encoding='utf-8')
+    if after != before:
+        raise QualityError('missing_record_field')
+    spawned = isinstance(pid, int) and pid > 0
+    return _watch_elapsed_report(
+        spawned=spawned,
+        already_present=False,
+        pid=pid if spawned else None,
+        due_at=due_at,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -799,7 +1041,13 @@ def main(argv: list[str] | None = None) -> int:
         action='store_true',
         help='Write elapsed JSON after 8h if START PIDs still match. Do not use from CI.',
     )
+    parser.add_argument(
+        '--watch-elapsed',
+        action='store_true',
+        help='Spawn a detached watcher that records elapsed after 8h. Do not use from CI.',
+    )
     parser.add_argument('--heartbeat', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--elapsed-watch', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--owned-pids', default='', help=argparse.SUPPRESS)
     parser.add_argument('--heartbeat-path', default='', help=argparse.SUPPRESS)
     parser.add_argument('--started-at-utc', default='', help=argparse.SUPPRESS)
@@ -815,13 +1063,22 @@ def main(argv: list[str] | None = None) -> int:
             if not pids or not args.heartbeat_path or not args.started_at_utc:
                 raise QualityError('missing_record_field')
             return run_heartbeat(pids, Path(args.heartbeat_path), args.started_at_utc)
-        if args.record and args.record_elapsed:
+        if args.elapsed_watch:
+            return run_elapsed_watch(ROOT)
+        exclusive = [args.record, args.record_elapsed, args.watch_elapsed]
+        if sum(1 for flag in exclusive if flag) > 1:
             raise QualityError('missing_record_field')
+        watcher_report = None
         if args.record:
             record(ROOT)
         elif args.record_elapsed:
             record_elapsed(ROOT)
+        elif args.watch_elapsed:
+            watcher_report = watch_elapsed(ROOT)
         report = validate_eight_hour_soak_start(ROOT)
+        if watcher_report is not None:
+            report = dict(report)
+            report.update(watcher_report)
     except QualityError as exc:
         print(json.dumps({'error': str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2

@@ -1670,6 +1670,7 @@ class Hd033SoakStartTests(unittest.TestCase):
         src = script.read_text(encoding='utf-8')
         self.assertIn('--record', src)
         self.assertIn('--record-elapsed', src)
+        self.assertIn('--watch-elapsed', src)
         self.assertIn('--ui', src)
         elapsed_path = ROOT / SOAK_ELAPSED_REL
         before_elapsed = (
@@ -1720,12 +1721,17 @@ class Hd033SoakStartTests(unittest.TestCase):
             src.find('def _start_heartbeat'):src.find('def run_heartbeat')
         ]
         self.assertIn('def record_elapsed', src)
+        self.assertIn('def run_elapsed_watch', src)
+        self.assertIn('def watch_elapsed', src)
+        self.assertIn('--watch-elapsed', src)
         self.assertIn('eight_hour_wall_clock_incomplete', src)
         self.assertIn('env=_dotnet_env()', start_heartbeat_src)
         self.assertNotIn('HERDDESK_SOAK_MINIMIZED', start_heartbeat_src)
         self.assertIn('subprocess.DEVNULL', src)
         self.assertIn("'stdin': subprocess.DEVNULL", src)
         self.assertNotIn('taskkill', src.lower())
+        self.assertNotIn('76508', src)
+        self.assertNotIn('85848', src)
         self.assertNotRegex(src, r"ui_argv = \[\s*str\(dotnet\),\s*'run'")
         policy = (
             ROOT / 'src' / 'HerdDesk.App' / 'Quality' / 'SoakLaunchPolicy.cs'
@@ -2407,6 +2413,11 @@ class Hd033SoakElapsedTests(unittest.TestCase):
             self.assertIsNone(doc['soak_hours'])
             self.assertIsNone(doc['disconnect_switch_count'])
             self.assertFalse(doc['herdr_executed'])
+            self.assertFalse(doc['ac29_passed'])
+            self.assertFalse(doc['live_working_set'])
+            self.assertIsNone(doc['last_heartbeat_observed_at_utc'])
+            self.assertIsNone(doc['last_resources_observed_at_utc'])
+            self.assertIsNone(doc['last_working_set_bytes'])
             self.assertEqual(doc['result'], 'not_run')
             self.assertEqual(doc['l4_soak'], 'UNVERIFIED')
             self.assertEqual(doc['owned_pids'], start['owned_pids'])
@@ -2482,6 +2493,322 @@ class Hd033SoakElapsedTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 validate_eight_hour_soak_elapsed(root)
             self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_record_elapsed_probe_summaries_from_jsonl(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            probe = root / 'probe-results'
+            probe.mkdir(parents=True, exist_ok=True)
+            (probe / 'hd033-soak-heartbeat.jsonl').write_text(
+                json.dumps(
+                    {
+                        'observed_at_utc': '2026-09-10T20:00:00Z',
+                        'alive_pids': start['owned_pids'][:1],
+                    }
+                )
+                + '\n',
+                encoding='utf-8',
+            )
+            (probe / 'hd033-soak-resources.jsonl').write_text(
+                json.dumps(
+                    {
+                        'observed_at_utc': '2026-09-10T20:01:00Z',
+                        'working_set_bytes': 131072,
+                        'ac29_passed': False,
+                    }
+                )
+                + '\n',
+                encoding='utf-8',
+            )
+            running, image = _elapsed_images(start)
+            doc = soak_cli.record_elapsed(
+                root,
+                now=started + timedelta(hours=8),
+                pid_running=running,
+                pid_image=image,
+                git_sha=start['git_sha'],
+            )
+            self.assertEqual(doc['last_heartbeat_observed_at_utc'], '2026-09-10T20:00:00Z')
+            self.assertEqual(doc['last_resources_observed_at_utc'], '2026-09-10T20:01:00Z')
+            self.assertEqual(doc['last_working_set_bytes'], 131072)
+            self.assertFalse(doc['ac29_passed'])
+            self.assertFalse(doc['ac46_passed'])
+            self.assertFalse(doc['live_working_set'])
+            self.assertIsNone(doc['soak_hours'])
+
+    def test_run_elapsed_watch_before_due_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            slept = []
+            code = soak_cli.run_elapsed_watch(
+                root,
+                now=started + timedelta(hours=7, minutes=59),
+                sleep=slept.append,
+                pid_running=running,
+                pid_image=image,
+                interval_sec=60,
+                max_polls=1,
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(slept, [60])
+            self.assertFalse((root / SOAK_ELAPSED_REL).is_file())
+            after = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            self.assertFalse(after['eight_hour_soak_executed'])
+            self.assertIsNone(after['soak_hours'])
+            self.assertFalse(after['ac46_passed'])
+            self.assertEqual(after['owned_pids'], start['owned_pids'])
+
+    def test_run_elapsed_watch_dead_app_pid_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            code = soak_cli.run_elapsed_watch(
+                root,
+                now=started + timedelta(hours=1),
+                sleep=lambda _sec: None,
+                pid_running=lambda _pid: False,
+                pid_image=lambda _pid: None,
+                max_polls=1,
+            )
+            self.assertEqual(code, 0)
+            self.assertFalse((root / SOAK_ELAPSED_REL).is_file())
+
+    def test_run_elapsed_watch_existing_elapsed_not_rewritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            soak_cli.record_elapsed(
+                root,
+                now=started + timedelta(hours=8),
+                pid_running=running,
+                pid_image=image,
+                git_sha=start['git_sha'],
+            )
+            elapsed_path = root / SOAK_ELAPSED_REL
+            before = elapsed_path.read_text(encoding='utf-8')
+            code = soak_cli.run_elapsed_watch(
+                root,
+                now=started + timedelta(hours=9),
+                sleep=lambda _sec: None,
+                pid_running=running,
+                pid_image=image,
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(elapsed_path.read_text(encoding='utf-8'), before)
+            loaded = json.loads(before)
+            self.assertFalse(loaded['ac46_passed'])
+            self.assertFalse(loaded['live_soak'])
+            self.assertIsNone(loaded['soak_hours'])
+
+    def test_run_elapsed_watch_success_path_is_not_ac46(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            code = soak_cli.run_elapsed_watch(
+                root,
+                now=started + timedelta(hours=8),
+                sleep=lambda _sec: None,
+                pid_running=running,
+                pid_image=image,
+            )
+            self.assertEqual(code, 0)
+            report = validate_eight_hour_soak_elapsed(root)
+            self.assertIsNotNone(report)
+            self.assertTrue(report['eight_hour_soak_executed'])
+            self.assertFalse(report['ac46_passed'])
+            self.assertFalse(report['live_soak'])
+            self.assertIsNone(report['soak_hours'])
+            after_start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            self.assertFalse(after_start['eight_hour_soak_executed'])
+            self.assertEqual(after_start['owned_pids'], start['owned_pids'])
+            elapsed = json.loads(
+                (root / SOAK_ELAPSED_REL).read_text(encoding='utf-8')
+            )
+            self.assertFalse(elapsed['ac29_passed'])
+            self.assertIsNone(elapsed['disconnect_switch_count'])
+
+    def test_watch_elapsed_does_not_add_pid_to_start_owned(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start_path = root / 'evidence' / 'quality' / 'live-soak-start.json'
+            before = start_path.read_text(encoding='utf-8')
+            start = json.loads(before)
+            spawned = []
+
+            def fake_spawn(watch_root):
+                spawned.append(watch_root)
+                return 424242
+
+            report = soak_cli.watch_elapsed(root, start_watch=fake_spawn)
+            self.assertEqual(spawned, [root])
+            self.assertTrue(report['elapsed_watcher_spawned'])
+            self.assertEqual(report['elapsed_watcher_pid'], 424242)
+            self.assertFalse(report['elapsed_already_present'])
+            self.assertFalse(report['elapsed_watcher_added_to_start_owned_pids'])
+            self.assertFalse(report['ac46_passed'])
+            self.assertFalse(report['eight_hour_soak_executed'])
+            self.assertIsNone(report['soak_hours'])
+            self.assertFalse(report['ac29_passed'])
+            after = json.loads(start_path.read_text(encoding='utf-8'))
+            self.assertEqual(start_path.read_text(encoding='utf-8'), before)
+            self.assertEqual(after['owned_pids'], start['owned_pids'])
+            self.assertNotIn(424242, after['owned_pids'])
+            self.assertFalse((root / SOAK_ELAPSED_REL).is_file())
+
+    def test_watch_elapsed_existing_does_not_spawn_or_rewrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            soak_cli.record_elapsed(
+                root,
+                now=started + timedelta(hours=8),
+                pid_running=running,
+                pid_image=image,
+                git_sha=start['git_sha'],
+            )
+            elapsed_path = root / SOAK_ELAPSED_REL
+            before = elapsed_path.read_text(encoding='utf-8')
+            start_path = root / 'evidence' / 'quality' / 'live-soak-start.json'
+            before_start = start_path.read_text(encoding='utf-8')
+
+            def boom(_root):
+                raise AssertionError('must not spawn when elapsed exists')
+
+            report = soak_cli.watch_elapsed(root, start_watch=boom)
+            self.assertFalse(report['elapsed_watcher_spawned'])
+            self.assertTrue(report['elapsed_already_present'])
+            self.assertIsNone(report['elapsed_watcher_pid'])
+            self.assertFalse(report['ac46_passed'])
+            self.assertFalse(report['eight_hour_soak_executed'])
+            self.assertEqual(elapsed_path.read_text(encoding='utf-8'), before)
+            self.assertEqual(start_path.read_text(encoding='utf-8'), before_start)
+
+    def test_cli_watch_elapsed_does_not_write_before_due(self):
+        live_elapsed = ROOT / SOAK_ELAPSED_REL
+        live_start = ROOT / 'evidence' / 'quality' / 'live-soak-start.json'
+        before_live_start = live_start.read_text(encoding='utf-8')
+        before_live_elapsed = (
+            live_elapsed.read_text(encoding='utf-8') if live_elapsed.is_file() else None
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start_path = root / 'evidence' / 'quality' / 'live-soak-start.json'
+            elapsed_path = root / SOAK_ELAPSED_REL
+            before_start = start_path.read_text(encoding='utf-8')
+            fake_pid = 424242
+            with patch.object(soak_cli, 'ROOT', root), patch.object(
+                soak_cli, '_start_elapsed_watch', lambda _root: fake_pid
+            ):
+                code = soak_cli.main(['--watch-elapsed'])
+            self.assertEqual(code, 0)
+            self.assertEqual(start_path.read_text(encoding='utf-8'), before_start)
+            self.assertFalse(elapsed_path.is_file())
+            after = json.loads(start_path.read_text(encoding='utf-8'))
+            self.assertFalse(after['eight_hour_soak_executed'])
+            self.assertIsNone(after['soak_hours'])
+            self.assertFalse(after['ac46_passed'])
+            self.assertNotIn(fake_pid, after['owned_pids'])
+        self.assertEqual(live_start.read_text(encoding='utf-8'), before_live_start)
+        if before_live_elapsed is None:
+            self.assertFalse(live_elapsed.is_file())
+        else:
+            self.assertEqual(
+                live_elapsed.read_text(encoding='utf-8'), before_live_elapsed
+            )
+
+    def test_live_record_elapsed_fails_closed_before_eight_hours(self):
+        script = ROOT / 'scripts' / 'start_eight_hour_soak.py'
+        live_elapsed = ROOT / SOAK_ELAPSED_REL
+        live_start = ROOT / 'evidence' / 'quality' / 'live-soak-start.json'
+        before_start = live_start.read_text(encoding='utf-8')
+        before_elapsed = (
+            live_elapsed.read_text(encoding='utf-8') if live_elapsed.is_file() else None
+        )
+        completed = subprocess.run(
+            [sys.executable, str(script), '--record-elapsed'],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 2, completed.stderr)
+        parsed = json.loads(completed.stderr)
+        self.assertEqual(parsed['error'], 'eight_hour_wall_clock_incomplete')
+        self.assertEqual(live_start.read_text(encoding='utf-8'), before_start)
+        after = json.loads(live_start.read_text(encoding='utf-8'))
+        self.assertFalse(after['eight_hour_soak_executed'])
+        self.assertIsNone(after['soak_hours'])
+        self.assertFalse(after['ac46_passed'])
+        self.assertFalse(after['live_soak'])
+        if before_elapsed is None:
+            self.assertFalse(live_elapsed.is_file())
+        else:
+            self.assertEqual(live_elapsed.read_text(encoding='utf-8'), before_elapsed)
 
 
 class Hd033SoakInterruptionTests(unittest.TestCase):

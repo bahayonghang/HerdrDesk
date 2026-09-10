@@ -1507,6 +1507,9 @@ def _check_hd033_soak_start() -> None:
     ]
     assert 'def record_elapsed' in spawn_src
     assert '--record-elapsed' in spawn_src
+    assert 'def run_elapsed_watch' in spawn_src
+    assert 'def watch_elapsed' in spawn_src
+    assert '--watch-elapsed' in spawn_src
     assert 'eight_hour_wall_clock_incomplete' in spawn_src
     assert 'env=_dotnet_env()' in start_heartbeat_src
     assert 'HERDDESK_SOAK_MINIMIZED' not in start_heartbeat_src
@@ -1652,6 +1655,8 @@ def _check_hd033_soak_start() -> None:
     assert 'start_eight_hour_soak.py --record' not in just
     assert 'start_eight_hour_soak.py --record-elapsed' not in ci
     assert 'start_eight_hour_soak.py --record-elapsed' not in just
+    assert 'start_eight_hour_soak.py --watch-elapsed' not in ci
+    assert 'start_eight_hour_soak.py --watch-elapsed' not in just
     elapsed_path = ROOT / SOAK_ELAPSED_REL
     elapsed_report = validate_eight_hour_soak_elapsed(ROOT)
     if elapsed_path.is_file():
