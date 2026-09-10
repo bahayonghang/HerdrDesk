@@ -17,7 +17,7 @@ from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
-from herddesk_g0.quality import collect_narrator_overlay
+from herddesk_g0.quality import collect_dpi_overlay, collect_narrator_overlay
 from herddesk_g0.release import bind_release_candidate
 from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
 import run_windows_desktop_gate as desktop_gate
@@ -1100,6 +1100,25 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert overlay_pointer.get('l2_collectors_are_not_live_pass') is True
     assert overlay_pointer.get('complete_1_0_claimed') is not True
     assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
+    assert catalog.get('dpi_overlay_pointer') == 'evidence/quality/dpi-overlay-pointer.json'
+    dpi_pointer = json.loads((ROOT / catalog['dpi_overlay_pointer']).read_text(encoding='utf-8'))
+    _reject_hd033_pass_claims(dpi_pointer)
+    _reject_hd033_invented_timings(dpi_pointer)
+    assert dpi_pointer.get('document_kind') == 'hd033_dpi_overlay_pointer'
+    assert dpi_pointer.get('result') == 'not_run'
+    assert dpi_pointer.get('live_status') == 'UNVERIFIED'
+    assert dpi_pointer.get('live_dpi') is False
+    assert dpi_pointer.get('ac38_passed') is False
+    assert dpi_pointer.get('l3_dpi') == 'UNVERIFIED'
+    assert dpi_pointer.get('dpi_matrix_100_150_200_executed') is False
+    assert dpi_pointer.get('display_scale_changed_by_collector') is False
+    assert dpi_pointer.get('single_dpi_sample_is_not_matrix') is True
+    assert dpi_pointer.get('invented_timings') is False
+    assert dpi_pointer.get('committed_raw') is False
+    assert dpi_pointer.get('github_required_check') == 'UNVERIFIED'
+    assert dpi_pointer.get('l2_collectors_are_not_live_pass') is True
+    assert dpi_pointer.get('complete_1_0_claimed') is not True
+    assert (ROOT / 'scripts' / 'collect_dpi_overlay.py').is_file()
     redaction = catalog.get('redaction') or {}
     for key in ('host', 'user', 'path', 'credential', 'terminal_body'):
         assert redaction.get(key) == 'omitted', key
@@ -1265,6 +1284,38 @@ def _check_hd033_narrator_overlay() -> None:
     assert live.get('result') == 'not_run'
     assert not _is_hd033_success(live.get('result'))
     assert live.get('live_narrator') is False
+
+
+def _check_hd033_dpi_overlay() -> None:
+    """Invoke shipped overlay. Do not change display scale or pass AC38."""
+    assert (ROOT / 'scripts' / 'collect_dpi_overlay.py').is_file()
+    assert (ROOT / 'evidence' / 'quality' / 'dpi-overlay-pointer.json').is_file()
+    report = collect_dpi_overlay(ROOT)
+    assert report.get('document_kind') == 'hd033_dpi_overlay'
+    dpi = report.get('system_dpi')
+    if sys.platform == 'win32':
+        assert isinstance(dpi, int)
+        assert dpi > 0
+    else:
+        assert dpi is None
+    assert report.get('single_dpi_sample_is_not_matrix') is True
+    assert report.get('display_scale_changed_by_collector') is False
+    assert report.get('dpi_matrix_100_150_200_executed') is False
+    assert report.get('ac38_passed') is False
+    assert report.get('live_dpi') is False
+    assert report.get('result') == 'not_run'
+    assert not _is_hd033_success(report.get('result'))
+    assert report.get('l3_dpi') == 'UNVERIFIED'
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('herdr_executed') is False
+    assert report.get('invented_timings') is False
+    assert report.get('pointer') == 'evidence/quality/dpi-overlay-pointer.json'
+    assert report.get('live_capture') == 'evidence/quality/live-dpi.not-run.json'
+    live = json.loads((ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(encoding='utf-8'))
+    assert live.get('result') == 'not_run'
+    assert not _is_hd033_success(live.get('result'))
+    assert live.get('live_dpi') is False
 
 
 _HD034_PASS_KEYS = (
@@ -3301,6 +3352,7 @@ def validate() -> dict:
     _check_hd032_closeout(hd032, files_catalog, files_matrix)
     _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
     _check_hd033_narrator_overlay()
+    _check_hd033_dpi_overlay()
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd034_package_script_contract()
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)

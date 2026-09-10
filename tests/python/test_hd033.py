@@ -9,7 +9,13 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from herddesk_g0.quality import QualityError, collect_narrator_overlay, narrator_exe_path
+from herddesk_g0.quality import (
+    QualityError,
+    collect_dpi_overlay,
+    collect_narrator_overlay,
+    narrator_exe_path,
+    system_dpi,
+)
 import validate_repository as repository
 
 L2 = ROOT / 'implementation' / 'hd-033-l2.json'
@@ -165,6 +171,10 @@ class Hd033ResidualTests(unittest.TestCase):
             catalog['narrator_overlay_pointer'],
             'evidence/quality/narrator-overlay-pointer.json',
         )
+        self.assertEqual(
+            catalog['dpi_overlay_pointer'],
+            'evidence/quality/dpi-overlay-pointer.json',
+        )
         pointer = json.loads((ROOT / catalog['environment_manifest_pointer']).read_text(encoding='utf-8'))
         self.assertEqual(pointer['result'], 'not_run')
         self.assertEqual(pointer['live_status'], 'UNVERIFIED')
@@ -192,6 +202,24 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertTrue(overlay_pointer['l2_collectors_are_not_live_pass'])
         self.assertIsNot(overlay_pointer.get('complete_1_0_claimed'), True)
         self.assertTrue((ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file())
+        dpi_overlay_pointer = json.loads(
+            (ROOT / catalog['dpi_overlay_pointer']).read_text(encoding='utf-8')
+        )
+        self.assertEqual(dpi_overlay_pointer['document_kind'], 'hd033_dpi_overlay_pointer')
+        self.assertEqual(dpi_overlay_pointer['result'], 'not_run')
+        self.assertEqual(dpi_overlay_pointer['live_status'], 'UNVERIFIED')
+        self.assertFalse(dpi_overlay_pointer['live_dpi'])
+        self.assertFalse(dpi_overlay_pointer['ac38_passed'])
+        self.assertEqual(dpi_overlay_pointer['l3_dpi'], 'UNVERIFIED')
+        self.assertFalse(dpi_overlay_pointer['dpi_matrix_100_150_200_executed'])
+        self.assertFalse(dpi_overlay_pointer['display_scale_changed_by_collector'])
+        self.assertTrue(dpi_overlay_pointer['single_dpi_sample_is_not_matrix'])
+        self.assertFalse(dpi_overlay_pointer['invented_timings'])
+        self.assertFalse(dpi_overlay_pointer['committed_raw'])
+        self.assertEqual(dpi_overlay_pointer['github_required_check'], 'UNVERIFIED')
+        self.assertTrue(dpi_overlay_pointer['l2_collectors_are_not_live_pass'])
+        self.assertIsNot(dpi_overlay_pointer.get('complete_1_0_claimed'), True)
+        self.assertTrue((ROOT / 'scripts' / 'collect_dpi_overlay.py').is_file())
         cards = {item['id']: item for item in catalog['execution_cards']}
         self.assertEqual(tuple(cards), REQUIRED_CARDS)
         seen = set()
@@ -509,6 +537,16 @@ class Hd033ResidualTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
+        bad = deepcopy(catalog)
+        bad.pop('dpi_overlay_pointer')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['dpi_overlay_pointer'] = 'evidence/quality/environment-pointer.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
 
 def _write_overlay(tmp: Path, *, pointer_overrides=None, live_overrides=None) -> None:
     quality = tmp / 'evidence' / 'quality'
@@ -710,6 +748,230 @@ class Hd033NarratorOverlayTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 collect_narrator_overlay(root)
             self.assertEqual(str(ctx.exception), 'ac37_passed')
+
+
+def _write_dpi_overlay(tmp: Path, *, pointer_overrides=None, live_overrides=None) -> None:
+    quality = tmp / 'evidence' / 'quality'
+    quality.mkdir(parents=True, exist_ok=True)
+    pointer = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'dpi-overlay-pointer.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    live = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    if pointer_overrides:
+        pointer.update(pointer_overrides)
+    if live_overrides:
+        live.update(live_overrides)
+    (quality / 'dpi-overlay-pointer.json').write_text(
+        json.dumps(pointer), encoding='utf-8'
+    )
+    (quality / 'live-dpi.not-run.json').write_text(
+        json.dumps(live), encoding='utf-8'
+    )
+
+
+class Hd033DpiOverlayTests(unittest.TestCase):
+    def test_shipped_function_records_current_dpi_not_ac38(self):
+        report = collect_dpi_overlay(ROOT)
+        self.assertEqual(report['document_kind'], 'hd033_dpi_overlay')
+        collector = (
+            ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Quality'
+            / 'EnvironmentManifestCollector.cs'
+        ).read_text(encoding='utf-8')
+        quality_src = (ROOT / 'scripts' / 'herddesk_g0' / 'quality.py').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('GetDpiForSystem', collector)
+        self.assertIn('system_dpi', collector)
+        self.assertIn('GetDpiForSystem', quality_src)
+        dpi = system_dpi()
+        if os.name == 'nt':
+            self.assertIsInstance(dpi, int)
+            self.assertGreater(dpi, 0)
+            self.assertEqual(report['system_dpi'], dpi)
+        else:
+            self.assertIsNone(dpi)
+            self.assertIsNone(report['system_dpi'])
+        self.assertTrue(report['single_dpi_sample_is_not_matrix'])
+        self.assertFalse(report['display_scale_changed_by_collector'])
+        self.assertFalse(report['dpi_matrix_100_150_200_executed'])
+        self.assertFalse(report['ac38_passed'])
+        self.assertFalse(report['live_dpi'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertNotIn(str(report['result']).lower(), SUCCESS)
+        self.assertEqual(report['l3_dpi'], 'UNVERIFIED')
+        self.assertFalse(report['g0_passed'])
+        self.assertNotEqual(report['phase_gate'], 'passed')
+        self.assertFalse(report['herdr_executed'])
+        self.assertFalse(report['invented_timings'])
+        self.assertNotIn('resize_rate', report)
+        self.assertEqual(report['pointer'], 'evidence/quality/dpi-overlay-pointer.json')
+        self.assertEqual(
+            report['live_capture'], 'evidence/quality/live-dpi.not-run.json'
+        )
+        live = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(live['result'], 'not_run')
+        self.assertFalse(live['live_dpi'])
+        self.assertIsNone(live['resize_rate'])
+
+    def test_cli_prints_one_json_object(self):
+        script = ROOT / 'scripts' / 'collect_dpi_overlay.py'
+        self.assertTrue(script.is_file())
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertIsInstance(report, dict)
+        self.assertEqual(report['document_kind'], 'hd033_dpi_overlay')
+        self.assertFalse(report['ac38_passed'])
+        self.assertFalse(report['live_dpi'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertEqual(report['l3_dpi'], 'UNVERIFIED')
+        self.assertTrue(report['single_dpi_sample_is_not_matrix'])
+        self.assertFalse(report['display_scale_changed_by_collector'])
+        self.assertFalse(report['dpi_matrix_100_150_200_executed'])
+        self.assertFalse(report['g0_passed'])
+        if os.name == 'nt':
+            self.assertIsInstance(report['system_dpi'], int)
+            self.assertGreater(report['system_dpi'], 0)
+        else:
+            self.assertIsNone(report['system_dpi'])
+
+    def test_structure_contract_invokes_shipped_overlay(self):
+        repository._check_hd033_dpi_overlay()
+
+    def test_missing_pointer_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(Path(tmp))
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(root, pointer_overrides={'ac38_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+    def test_live_dpi_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(root, live_overrides={'live_dpi': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'live_dpi_claimed')
+
+    def test_live_dpi_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_dpi_overlay(root, live_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_dpi_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_pointer_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_dpi_overlay(root, pointer_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_dpi_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_l3_dpi_pass_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(root, pointer_overrides={'l3_dpi': 'passed'})
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'l3_dpi_claimed')
+
+    def test_collector_changed_display_scale_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(
+                root, pointer_overrides={'display_scale_changed_by_collector': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'collector_changed_display_scale')
+
+    def test_dpi_matrix_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(
+                root, pointer_overrides={'dpi_matrix_100_150_200_executed': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'dpi_matrix_claimed')
+
+    def test_single_sample_claimed_as_matrix_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(
+                root,
+                pointer_overrides={'single_dpi_sample_is_not_matrix': False},
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'single_sample_claimed_as_matrix')
+
+    def test_g0_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(root, pointer_overrides={'g0_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'g0_passed')
+
+    def test_live_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(root, live_overrides={'ac38_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+    def test_live_dpi_success_token_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass'):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_dpi_overlay(root, live_overrides={'live_dpi': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_dpi_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_dpi_claimed')
+
+    def test_acceptance_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_overlay(root)
+            planning = root / 'planning'
+            planning.mkdir()
+            (planning / 'acceptance.json').write_text(
+                json.dumps({'criteria': [{'id': 'AC38', 'status': 'passed'}]}),
+                encoding='utf-8',
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
 
 
 if __name__ == '__main__':

@@ -133,6 +133,10 @@ internal static class Hd033Cases
               == "evidence/quality/narrator-overlay-pointer.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "narrator-overlay-pointer.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "collect_narrator_overlay.py")));
+        Check(catalog.GetProperty("dpi_overlay_pointer").GetString()
+              == "evidence/quality/dpi-overlay-pointer.json");
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
+        Check(File.Exists(Path.Combine(root, "scripts", "collect_dpi_overlay.py")));
         using var pointerDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "environment-pointer.json")));
         var pointer = pointerDoc.RootElement;
@@ -156,6 +160,19 @@ internal static class Hd033Cases
         Check(overlay.GetProperty("automation_names_are_not_screen_reader_evidence").GetBoolean());
         Check(overlay.GetProperty("narrator_started_by_collector").GetBoolean() is false);
         Check(overlay.GetProperty("invented_timings").GetBoolean() is false);
+        using var dpiOverlayDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
+        var dpiOverlay = dpiOverlayDoc.RootElement;
+        Check(dpiOverlay.GetProperty("document_kind").GetString() == "hd033_dpi_overlay_pointer");
+        Check(dpiOverlay.GetProperty("result").GetString() == "not_run");
+        Check(dpiOverlay.GetProperty("live_status").GetString() == "UNVERIFIED");
+        Check(dpiOverlay.GetProperty("live_dpi").GetBoolean() is false);
+        Check(dpiOverlay.GetProperty("ac38_passed").GetBoolean() is false);
+        Check(dpiOverlay.GetProperty("l3_dpi").GetString() == "UNVERIFIED");
+        Check(dpiOverlay.GetProperty("dpi_matrix_100_150_200_executed").GetBoolean() is false);
+        Check(dpiOverlay.GetProperty("display_scale_changed_by_collector").GetBoolean() is false);
+        Check(dpiOverlay.GetProperty("single_dpi_sample_is_not_matrix").GetBoolean());
+        Check(dpiOverlay.GetProperty("invented_timings").GetBoolean() is false);
         Check(catalog.GetProperty("redaction").GetProperty("credential").GetString() == "omitted");
         Check(catalog.GetProperty("redaction").GetProperty("host").GetString() == "omitted");
         foreach (var key in PassKeys)
