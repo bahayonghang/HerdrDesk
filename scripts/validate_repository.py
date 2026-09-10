@@ -18,9 +18,11 @@ from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
 from herddesk_g0.quality import (
+    SOAK_ELAPSED_REL,
     collect_dpi_overlay,
     collect_narrator_overlay,
     soak_interrupt_capture_rels,
+    validate_eight_hour_soak_elapsed,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
@@ -1486,7 +1488,7 @@ def _check_hd033_soak_start() -> None:
         in spawn_src
     )
     heartbeat_src = spawn_src[
-        spawn_src.find('def run_heartbeat'):spawn_src.find('def record')
+        spawn_src.find('def run_heartbeat'):spawn_src.find('def record(')
     ]
     assert '_show_min_no_active' in heartbeat_src
     assert 'if not alive:' in heartbeat_src
@@ -1494,6 +1496,9 @@ def _check_hd033_soak_start() -> None:
     start_heartbeat_src = spawn_src[
         spawn_src.find('def _start_heartbeat'):spawn_src.find('def run_heartbeat')
     ]
+    assert 'def record_elapsed' in spawn_src
+    assert '--record-elapsed' in spawn_src
+    assert 'eight_hour_wall_clock_incomplete' in spawn_src
     assert 'env=_dotnet_env()' in start_heartbeat_src
     assert 'HERDDESK_SOAK_MINIMIZED' not in start_heartbeat_src
     policy_src = (
@@ -1636,6 +1641,27 @@ def _check_hd033_soak_start() -> None:
     just = (ROOT / 'justfile').read_text(encoding='utf-8')
     assert 'start_eight_hour_soak.py --record' not in ci
     assert 'start_eight_hour_soak.py --record' not in just
+    assert 'start_eight_hour_soak.py --record-elapsed' not in ci
+    assert 'start_eight_hour_soak.py --record-elapsed' not in just
+    elapsed_path = ROOT / SOAK_ELAPSED_REL
+    elapsed_report = validate_eight_hour_soak_elapsed(ROOT)
+    if elapsed_path.is_file():
+        assert elapsed_report is not None
+        assert elapsed_report.get('ac46_passed') is False
+        assert elapsed_report.get('live_soak') is False
+        assert elapsed_report.get('soak_hours') is None
+        elapsed = json.loads(elapsed_path.read_text(encoding='utf-8'))
+        assert elapsed.get('ac46_passed') is False
+        assert elapsed.get('live_soak') is False
+        assert elapsed.get('soak_hours') is None
+        assert elapsed.get('disconnect_switch_count') is None
+        assert elapsed.get('herdr_executed') is False
+        assert elapsed.get('eight_hour_soak_executed') is True
+        assert start.get('eight_hour_soak_executed') is False
+        assert start.get('soak_hours') is None
+        assert start.get('ac46_passed') is False
+    else:
+        assert elapsed_report is None
     assert start.get('prior_interruption_captures') == committed
     assert start.get('prior_interruption_captures') == [
         'evidence/quality/live-soak-interrupted.json',

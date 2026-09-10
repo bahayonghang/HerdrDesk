@@ -3,9 +3,12 @@
 
 Default CLI validates the committed start JSON and does not start processes.
 Pass --record on an interactive Windows desktop to launch --ui and leave it
-running as a detached owned process. CI and justfile must not invoke --record.
-Do not set eight_hour_soak_executed or soak_hours=8 until 8 wall-clock hours
-elapse. --shell-smoke / --compose-only are not soak.
+running as a detached owned process. Pass --record-elapsed only after 8
+wall-clock hours with the START PIDs still alive; too early, a dead App PID,
+or a PID/image mismatch fails closed and writes no elapsed JSON.
+CI and justfile must not invoke --record or --record-elapsed.
+Do not set soak_hours=8. Wall-clock idle --ui is not AC46.
+--shell-smoke / --compose-only are not soak.
 """
 from __future__ import annotations
 
@@ -29,10 +32,15 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 from herddesk_g0.quality import (
     QualityError,
+    SOAK_ELAPSED_KIND,
+    SOAK_ELAPSED_REL,
     SOAK_INTERRUPT_REL,
     SOAK_START_REL,
+    SOAK_WALL_CLOCK,
     soak_interrupt_capture_rels,
+    validate_eight_hour_soak_elapsed,
     validate_eight_hour_soak_start,
+    _parse_utc,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -143,9 +151,9 @@ def _tasklist_image(name: str) -> list[int]:
     return pids
 
 
-def _pid_running(pid: int) -> bool:
+def _tasklist_row(pid: int) -> tuple[str, int] | None:
     if os.name != 'nt' or pid <= 0:
-        return False
+        return None
     startupinfo = None
     creationflags = 0
     if hasattr(subprocess, 'STARTUPINFO'):
@@ -164,17 +172,100 @@ def _pid_running(pid: int) -> bool:
         creationflags=creationflags,
     )
     if completed.returncode != 0:
-        return False
+        return None
     for line in (completed.stdout or '').splitlines():
         parts = [item.strip().strip('"') for item in line.split(',')]
         if len(parts) < 2:
             continue
         try:
-            if int(parts[1]) == pid:
-                return True
+            found = int(parts[1])
         except ValueError:
             continue
-    return False
+        if found == pid:
+            return (parts[0], found)
+    return None
+
+
+def _pid_running(pid: int) -> bool:
+    return _tasklist_row(pid) is not None
+
+
+def _pid_image(pid: int) -> str | None:
+    row = _tasklist_row(pid)
+    if row is None:
+        return None
+    return row[0]
+
+
+def _app_image(name: str) -> bool:
+    return Path(name).name.lower() == UI_EXE_NAME.lower()
+
+
+def _python_image(name: str) -> bool:
+    stem = Path(name).name.lower()
+    if stem.endswith('.exe'):
+        stem = stem[:-4]
+    return stem == 'python' or stem.startswith('python')
+
+
+def _start_app_pid(doc: dict[str, Any]) -> int:
+    commands = doc.get('commands')
+    if not isinstance(commands, list):
+        raise QualityError('missing_record_field')
+    for item in commands:
+        if not isinstance(item, dict) or item.get('role') != 'product_ui':
+            continue
+        pid = item.get('pid')
+        if isinstance(pid, int) and pid > 0:
+            return pid
+    raise QualityError('missing_record_field')
+
+
+def _utc_stamp(value: datetime) -> str:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def _start_pids_match_live(
+    doc: dict[str, Any],
+    *,
+    pid_running: Any,
+    pid_image: Any,
+) -> bool:
+    owned = doc.get('owned_pids')
+    if not isinstance(owned, list) or not owned:
+        return False
+    try:
+        app_pid = _start_app_pid(doc)
+    except QualityError:
+        return False
+    if app_pid not in owned:
+        return False
+    if not pid_running(app_pid):
+        return False
+    if not _app_image(pid_image(app_pid) or ''):
+        return False
+    for pid in owned:
+        if not isinstance(pid, int) or pid <= 0:
+            return False
+        if not pid_running(pid):
+            return False
+        image = pid_image(pid) or ''
+        if pid == app_pid:
+            if not _app_image(image):
+                return False
+        elif not _python_image(image):
+            return False
+    heartbeat = doc.get('heartbeat_pid')
+    if isinstance(heartbeat, int) and heartbeat > 0:
+        if heartbeat not in owned:
+            return False
+        if not pid_running(heartbeat):
+            return False
+        if not _python_image(pid_image(heartbeat) or ''):
+            return False
+    return True
 
 
 def _visible_windows() -> list[dict[str, Any]]:
@@ -588,6 +679,112 @@ def record(root: Path) -> dict[str, Any]:
     return doc
 
 
+def _write_elapsed_capture(root: Path, doc: dict[str, Any]) -> Path:
+    dest = root / SOAK_ELAPSED_REL
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(doc, ensure_ascii=False, indent=2) + '\n'
+    dest.write_text(text, encoding='utf-8')
+    probe = root / 'probe-results'
+    probe.mkdir(parents=True, exist_ok=True)
+    (probe / 'hd033-soak-elapsed.json').write_text(text, encoding='utf-8')
+    return dest
+
+
+def record_elapsed(
+    root: Path,
+    *,
+    now: datetime | None = None,
+    pid_running: Any = None,
+    pid_image: Any = None,
+    git_sha: str | None = None,
+) -> dict[str, Any]:
+    """Write live-soak-elapsed.json after 8h with START PIDs still alive.
+
+    Fail closed before due time, if the App PID is not running, or if START
+    PIDs do not match live process images. Does not overwrite START. Not AC46.
+    """
+    root = Path(root)
+    validate_eight_hour_soak_start(root)
+    start_path = root / SOAK_START_REL
+    start = json.loads(start_path.read_text(encoding='utf-8'))
+    if not isinstance(start, dict):
+        raise QualityError('missing_record_field')
+    started = _parse_utc(start.get('started_at_utc'))
+    observed = now if now is not None else datetime.now(timezone.utc)
+    if observed.tzinfo is None:
+        observed = observed.replace(tzinfo=timezone.utc)
+    else:
+        observed = observed.astimezone(timezone.utc)
+    running = pid_running if pid_running is not None else _pid_running
+    image = pid_image if pid_image is not None else _pid_image
+    if observed < started + SOAK_WALL_CLOCK:
+        raise QualityError('eight_hour_wall_clock_incomplete')
+    try:
+        app_pid = _start_app_pid(start)
+    except QualityError:
+        raise QualityError('eight_hour_wall_clock_incomplete') from None
+    if not running(app_pid) or not _app_image(image(app_pid) or ''):
+        raise QualityError('eight_hour_wall_clock_incomplete')
+    if not _start_pids_match_live(
+        start, pid_running=running, pid_image=image
+    ):
+        raise QualityError('eight_hour_wall_clock_incomplete')
+    owned = [pid for pid in (start.get('owned_pids') or []) if isinstance(pid, int)]
+    elapsed_at = _utc_stamp(observed)
+    sha = git_sha if git_sha is not None else _git_sha(root)
+    heartbeat = start.get('heartbeat_pid')
+    doc: dict[str, Any] = {
+        'document_kind': SOAK_ELAPSED_KIND,
+        'template': False,
+        'capture_id': f'hd033-live-soak-elapsed-{elapsed_at[:10]}',
+        'kind': 'live_eight_hour_soak_elapsed',
+        'started_at_utc': start.get('started_at_utc'),
+        'elapsed_at_utc': elapsed_at,
+        'captured_at_utc': elapsed_at,
+        'due_at_utc': _utc_stamp(started + SOAK_WALL_CLOCK),
+        'operator_scope': 'product_ui_eight_hour_wall_clock_elapsed_not_ac46',
+        'git_sha': sha,
+        'start_git_sha': start.get('git_sha'),
+        'start_capture': SOAK_START_REL,
+        'platform': start.get('platform'),
+        'result': 'not_run',
+        'evidence_level': 'wall_clock_elapsed',
+        'live_soak': False,
+        'eight_hour_soak_executed': True,
+        'soak_hours': None,
+        'disconnect_switch_count': None,
+        'sample_count': None,
+        'ac46_passed': False,
+        'l4_soak': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'winui_admitted': False,
+        'invented_timings': False,
+        'product_ui_started': True,
+        'process_running_at_capture': True,
+        'owned_pids': owned,
+        'heartbeat_pid': heartbeat if isinstance(heartbeat, int) else None,
+        'raw_gitignored_path': 'probe-results/hd033-soak-elapsed.json',
+        'committed_raw': True,
+        'blocker': None,
+        'limitations': [
+            'Wall-clock 8h idle product UI --ui elapsed with START PIDs still alive.',
+            'eight_hour_soak_executed is wall-clock plus matching START PIDs. It is not AC46.',
+            'soak_hours stays null. Do not invent an 8h representative load.',
+            '100 disconnect/switch cycles and live herdr/SSH fault injection were not authorized and were not faked.',
+            'live_soak stays false. This file does not overwrite live-soak-start.json.',
+            'This file is not live_soak success and does not pass AC46, L4, or G0.',
+            'Hosted CI is not an interactive desktop and must not run --record-elapsed.',
+        ],
+    }
+    _write_elapsed_capture(root, doc)
+    report = validate_eight_hour_soak_elapsed(root)
+    if report is None:
+        raise QualityError('missing_record_field')
+    return doc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description='Validate or start a product-UI 8h soak. Not AC46.',
@@ -596,6 +793,11 @@ def main(argv: list[str] | None = None) -> int:
         '--record',
         action='store_true',
         help='Launch --ui and leave it running. Do not use from CI.',
+    )
+    parser.add_argument(
+        '--record-elapsed',
+        action='store_true',
+        help='Write elapsed JSON after 8h if START PIDs still match. Do not use from CI.',
     )
     parser.add_argument('--heartbeat', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--owned-pids', default='', help=argparse.SUPPRESS)
@@ -613,8 +815,12 @@ def main(argv: list[str] | None = None) -> int:
             if not pids or not args.heartbeat_path or not args.started_at_utc:
                 raise QualityError('missing_record_field')
             return run_heartbeat(pids, Path(args.heartbeat_path), args.started_at_utc)
+        if args.record and args.record_elapsed:
+            raise QualityError('missing_record_field')
         if args.record:
             record(ROOT)
+        elif args.record_elapsed:
+            record_elapsed(ROOT)
         report = validate_eight_hour_soak_start(ROOT)
     except QualityError as exc:
         print(json.dumps({'error': str(exc)}, ensure_ascii=False), file=sys.stderr)

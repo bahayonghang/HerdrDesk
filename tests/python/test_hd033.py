@@ -1,5 +1,9 @@
 from copy import deepcopy
+from contextlib import redirect_stderr
+from datetime import datetime, timedelta
+from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 import hashlib
 import json
 import os
@@ -14,15 +18,18 @@ from herddesk_g0.quality import (
     AC37_STEP_KEYS,
     EMPTY_SHA256,
     QualityError,
+    SOAK_ELAPSED_REL,
     collect_dpi_overlay,
     collect_narrator_overlay,
     narrator_exe_path,
     soak_interrupt_capture_rels,
     system_dpi,
+    validate_eight_hour_soak_elapsed,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
 )
+import start_eight_hour_soak as soak_cli
 import validate_repository as repository
 
 L2 = ROOT / 'implementation' / 'hd-033-l2.json'
@@ -1640,7 +1647,12 @@ class Hd033SoakStartTests(unittest.TestCase):
         self.assertTrue(script.is_file())
         src = script.read_text(encoding='utf-8')
         self.assertIn('--record', src)
+        self.assertIn('--record-elapsed', src)
         self.assertIn('--ui', src)
+        elapsed_path = ROOT / SOAK_ELAPSED_REL
+        before_elapsed = (
+            elapsed_path.read_text(encoding='utf-8') if elapsed_path.is_file() else None
+        )
         completed = subprocess.run(
             [sys.executable, str(script)],
             cwd=str(ROOT),
@@ -1657,6 +1669,10 @@ class Hd033SoakStartTests(unittest.TestCase):
         self.assertIsNone(report['soak_hours'])
         self.assertEqual(report['result'], 'not_run')
         self.assertTrue(report['product_ui_started'])
+        if before_elapsed is None:
+            self.assertFalse(elapsed_path.is_file())
+        else:
+            self.assertEqual(elapsed_path.read_text(encoding='utf-8'), before_elapsed)
 
     def test_cli_spawns_breakaway_exe_not_dotnet_run(self):
         src = (ROOT / 'scripts' / 'start_eight_hour_soak.py').read_text(
@@ -1673,7 +1689,7 @@ class Hd033SoakStartTests(unittest.TestCase):
         self.assertIn('SW_SHOWMINNOACTIVE = 7', src)
         self.assertIn('HerdDesk.App.exe', src)
         self.assertIn("ui_env['HERDDESK_SOAK_MINIMIZED'] = '1'", src)
-        heartbeat_src = src[src.find('def run_heartbeat'):src.find('def record')]
+        heartbeat_src = src[src.find('def run_heartbeat'):src.find('def record(')]
         self.assertIn('_show_min_no_active', heartbeat_src)
         self.assertIn('_herddesk_windows', heartbeat_src)
         self.assertIn('if not alive:', heartbeat_src)
@@ -1681,6 +1697,8 @@ class Hd033SoakStartTests(unittest.TestCase):
         start_heartbeat_src = src[
             src.find('def _start_heartbeat'):src.find('def run_heartbeat')
         ]
+        self.assertIn('def record_elapsed', src)
+        self.assertIn('eight_hour_wall_clock_incomplete', src)
         self.assertIn('env=_dotnet_env()', start_heartbeat_src)
         self.assertNotIn('HERDDESK_SOAK_MINIMIZED', start_heartbeat_src)
         self.assertIn('subprocess.DEVNULL', src)
@@ -2202,6 +2220,246 @@ class Hd033SoakStartTests(unittest.TestCase):
             with self.assertRaises(QualityError) as ctx:
                 validate_eight_hour_soak_start(root)
             self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+
+def _elapsed_images(start):
+    app_pid = start['commands'][0]['pid']
+    owned = list(start['owned_pids'])
+
+    def pid_running(pid):
+        return pid in owned
+
+    def pid_image(pid):
+        if pid == app_pid:
+            return 'HerdDesk.App.exe'
+        return 'python.exe'
+
+    return pid_running, pid_image
+
+
+class Hd033SoakElapsedTests(unittest.TestCase):
+    def test_elapsed_file_is_optional(self):
+        elapsed_path = ROOT / SOAK_ELAPSED_REL
+        report = validate_eight_hour_soak_elapsed(ROOT)
+        if elapsed_path.is_file():
+            self.assertIsNotNone(report)
+            self.assertFalse(report['ac46_passed'])
+            self.assertFalse(report['live_soak'])
+            self.assertIsNone(report['soak_hours'])
+        else:
+            self.assertIsNone(report)
+
+    def test_cli_record_elapsed_fails_closed_before_eight_hours(self):
+        live_elapsed = ROOT / SOAK_ELAPSED_REL
+        live_start = ROOT / 'evidence' / 'quality' / 'live-soak-start.json'
+        before_live_start = live_start.read_text(encoding='utf-8')
+        before_live_elapsed = (
+            live_elapsed.read_text(encoding='utf-8') if live_elapsed.is_file() else None
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start_path = root / 'evidence' / 'quality' / 'live-soak-start.json'
+            elapsed_path = root / SOAK_ELAPSED_REL
+            before_start = start_path.read_text(encoding='utf-8')
+            err = StringIO()
+            with patch.object(soak_cli, 'ROOT', root), redirect_stderr(err):
+                code = soak_cli.main(['--record-elapsed'])
+            self.assertEqual(code, 2, err.getvalue())
+            parsed = json.loads(err.getvalue())
+            self.assertEqual(parsed['error'], 'eight_hour_wall_clock_incomplete')
+            self.assertEqual(start_path.read_text(encoding='utf-8'), before_start)
+            after = json.loads(start_path.read_text(encoding='utf-8'))
+            self.assertFalse(after['eight_hour_soak_executed'])
+            self.assertIsNone(after['soak_hours'])
+            self.assertFalse(after['ac46_passed'])
+            self.assertFalse(after['live_soak'])
+            self.assertFalse(elapsed_path.is_file())
+        self.assertEqual(live_start.read_text(encoding='utf-8'), before_live_start)
+        if before_live_elapsed is None:
+            self.assertFalse(live_elapsed.is_file())
+        else:
+            self.assertEqual(
+                live_elapsed.read_text(encoding='utf-8'), before_live_elapsed
+            )
+
+    def test_record_elapsed_too_early_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            with self.assertRaises(QualityError) as ctx:
+                soak_cli.record_elapsed(
+                    root,
+                    now=started + timedelta(hours=7, minutes=59),
+                    pid_running=running,
+                    pid_image=image,
+                    git_sha=start['git_sha'],
+                )
+            self.assertEqual(str(ctx.exception), 'eight_hour_wall_clock_incomplete')
+            self.assertFalse((root / SOAK_ELAPSED_REL).is_file())
+            after = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            self.assertFalse(after['eight_hour_soak_executed'])
+            self.assertIsNone(after['soak_hours'])
+
+    def test_record_elapsed_dead_app_pid_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            with self.assertRaises(QualityError) as ctx:
+                soak_cli.record_elapsed(
+                    root,
+                    now=started + timedelta(hours=8),
+                    pid_running=lambda _pid: False,
+                    pid_image=lambda _pid: None,
+                )
+            self.assertEqual(str(ctx.exception), 'eight_hour_wall_clock_incomplete')
+            self.assertFalse((root / SOAK_ELAPSED_REL).is_file())
+
+    def test_record_elapsed_pid_image_mismatch_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            owned = list(start['owned_pids'])
+            with self.assertRaises(QualityError) as ctx:
+                soak_cli.record_elapsed(
+                    root,
+                    now=started + timedelta(hours=8),
+                    pid_running=lambda pid: pid in owned,
+                    pid_image=lambda _pid: 'notepad.exe',
+                )
+            self.assertEqual(str(ctx.exception), 'eight_hour_wall_clock_incomplete')
+            self.assertFalse((root / SOAK_ELAPSED_REL).is_file())
+
+    def test_record_elapsed_success_path_is_not_ac46(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            doc = soak_cli.record_elapsed(
+                root,
+                now=started + timedelta(hours=8),
+                pid_running=running,
+                pid_image=image,
+                git_sha=start['git_sha'],
+            )
+            self.assertTrue(doc['eight_hour_soak_executed'])
+            self.assertFalse(doc['ac46_passed'])
+            self.assertFalse(doc['live_soak'])
+            self.assertIsNone(doc['soak_hours'])
+            self.assertIsNone(doc['disconnect_switch_count'])
+            self.assertFalse(doc['herdr_executed'])
+            self.assertEqual(doc['result'], 'not_run')
+            self.assertEqual(doc['l4_soak'], 'UNVERIFIED')
+            self.assertEqual(doc['owned_pids'], start['owned_pids'])
+            self.assertEqual(doc['started_at_utc'], start['started_at_utc'])
+            self.assertEqual(doc['start_capture'], 'evidence/quality/live-soak-start.json')
+            after_start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            self.assertFalse(after_start['eight_hour_soak_executed'])
+            self.assertIsNone(after_start['soak_hours'])
+            self.assertFalse(after_start['ac46_passed'])
+            report = validate_eight_hour_soak_elapsed(root)
+            self.assertIsNotNone(report)
+            self.assertTrue(report['eight_hour_soak_executed'])
+            self.assertFalse(report['ac46_passed'])
+            self.assertFalse(report['live_soak'])
+            self.assertIsNone(report['soak_hours'])
+
+    def test_elapsed_ac46_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            soak_cli.record_elapsed(
+                root,
+                now=started + timedelta(hours=8),
+                pid_running=running,
+                pid_image=image,
+                git_sha=start['git_sha'],
+            )
+            elapsed_path = root / SOAK_ELAPSED_REL
+            loaded = json.loads(elapsed_path.read_text(encoding='utf-8'))
+            loaded['ac46_passed'] = True
+            elapsed_path.write_text(json.dumps(loaded), encoding='utf-8')
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_elapsed(root)
+            self.assertEqual(str(ctx.exception), 'ac46_passed')
+
+    def test_elapsed_soak_hours_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(root)
+            start = json.loads(
+                (root / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
+                    encoding='utf-8'
+                )
+            )
+            started = datetime.fromisoformat(
+                str(start['started_at_utc']).replace('Z', '+00:00')
+            )
+            running, image = _elapsed_images(start)
+            soak_cli.record_elapsed(
+                root,
+                now=started + timedelta(hours=8),
+                pid_running=running,
+                pid_image=image,
+                git_sha=start['git_sha'],
+            )
+            elapsed_path = root / SOAK_ELAPSED_REL
+            loaded = json.loads(elapsed_path.read_text(encoding='utf-8'))
+            loaded['soak_hours'] = 8
+            elapsed_path.write_text(json.dumps(loaded), encoding='utf-8')
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_elapsed(root)
+            self.assertEqual(str(ctx.exception), 'invented_timings')
 
 
 class Hd033SoakInterruptionTests(unittest.TestCase):

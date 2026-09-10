@@ -1,8 +1,8 @@
-"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, and soak-interruption checks. Not AC37, AC38, or AC46. Interrupted STARTs are not 8h."""
+"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, soak-interruption, and optional soak-elapsed checks. Not AC37, AC38, or AC46. Interrupted STARTs are not 8h. Wall-clock elapsed is not AC46."""
 from __future__ import annotations
 
 import ctypes
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import os
@@ -585,8 +585,11 @@ SOAK_INTERRUPT_3_REL = 'evidence/quality/live-soak-interrupted-3.json'
 SOAK_INTERRUPT_4_REL = 'evidence/quality/live-soak-interrupted-4.json'
 SOAK_INTERRUPT_5_REL = 'evidence/quality/live-soak-interrupted-5.json'
 SOAK_INTERRUPT_6_REL = 'evidence/quality/live-soak-interrupted-6.json'
+SOAK_ELAPSED_REL = 'evidence/quality/live-soak-elapsed.json'
 SOAK_START_KIND = 'hd033_eight_hour_soak_start'
 SOAK_INTERRUPT_KIND = 'hd033_eight_hour_soak_interruption'
+SOAK_ELAPSED_KIND = 'hd033_eight_hour_soak_elapsed'
+SOAK_WALL_CLOCK = timedelta(hours=8)
 SOAK_START_REQUIRED_KEYS = (
     'document_kind', 'result', 'live_soak', 'ac46_passed', 'l4_soak',
     'product_ui_started', 'eight_hour_soak_executed', 'soak_hours',
@@ -594,6 +597,17 @@ SOAK_START_REQUIRED_KEYS = (
     'herdr_executed', 'g0_passed', 'invented_timings',
     'disconnect_switch_count', 'prior_interruption_capture',
     'prior_interruption_captures',
+)
+SOAK_ELAPSED_REQUIRED_KEYS = (
+    'document_kind', 'result', 'live_soak', 'ac46_passed', 'l4_soak',
+    'product_ui_started', 'eight_hour_soak_executed', 'soak_hours',
+    'started_at_utc', 'elapsed_at_utc', 'owned_pids', 'git_sha',
+    'herdr_executed', 'g0_passed', 'invented_timings',
+    'disconnect_switch_count', 'start_capture',
+)
+SOAK_ELAPSED_FALSE_KEYS = (
+    'ac46_passed', 'live_soak', 'herdr_executed', 'invented_timings',
+    'g0_passed',
 )
 SOAK_INTERRUPT_REQUIRED_KEYS = (
     'document_kind', 'result', 'live_soak', 'ac46_passed', 'l4_soak',
@@ -945,4 +959,79 @@ def validate_eight_hour_soak_interruption(root: Path) -> dict[str, Any]:
         'crash_cause': None,
         'git_sha': doc.get('git_sha'),
         'started_at_utc': doc.get('started_at_utc'),
+    }
+
+
+def validate_eight_hour_soak_elapsed(root: Path) -> dict[str, Any] | None:
+    """Optional elapsed capture. Missing is allowed. Not AC46."""
+    root = Path(root)
+    path = root / SOAK_ELAPSED_REL
+    if not path.is_file():
+        return None
+    doc = _load_json(path)
+    for key in SOAK_ELAPSED_REQUIRED_KEYS:
+        if key not in doc:
+            raise QualityError('missing_record_field')
+    if doc.get('document_kind') != SOAK_ELAPSED_KIND:
+        raise QualityError('missing_record_field')
+    if doc.get('result') != 'not_run' or _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if doc.get('l4_soak') != 'UNVERIFIED':
+        raise QualityError('l4_soak_claimed')
+    if doc.get('product_ui_started') is not True:
+        raise QualityError('product_ui_not_started')
+    if doc.get('eight_hour_soak_executed') is not True:
+        raise QualityError('eight_hour_wall_clock_incomplete')
+    if doc.get('start_capture') != SOAK_START_REL:
+        raise QualityError('missing_record_field')
+    if _is_success(doc.get('ac46_passed')):
+        raise QualityError('ac46_passed')
+    if _is_success(doc.get('g0_passed')):
+        raise QualityError('g0_passed')
+    if _is_success(doc.get('phase_gate')) or doc.get('phase_gate') == 'passed':
+        raise QualityError('ac46_passed')
+    if _is_success(doc.get('live_soak')):
+        raise QualityError('live_soak_claimed')
+    for key in SOAK_ELAPSED_FALSE_KEYS:
+        if key in doc and doc.get(key) is not False:
+            raise QualityError(_soak_false_key_code(key))
+    _reject_soak_invented_timings(doc)
+    _check_ac_status(root, 'AC46', 'ac46_passed')
+    git_sha = doc.get('git_sha')
+    if not isinstance(git_sha, str) or len(git_sha) < 7:
+        raise QualityError('missing_record_field')
+    started = _parse_utc(doc.get('started_at_utc'))
+    elapsed_at = _parse_utc(doc.get('elapsed_at_utc'))
+    if elapsed_at < started + SOAK_WALL_CLOCK:
+        raise QualityError('eight_hour_wall_clock_incomplete')
+    start = _load_json(root / SOAK_START_REL)
+    if doc.get('started_at_utc') != start.get('started_at_utc'):
+        raise QualityError('missing_record_field')
+    owned = doc.get('owned_pids')
+    start_owned = start.get('owned_pids')
+    if not isinstance(owned, list) or not owned:
+        raise QualityError('missing_record_field')
+    if not isinstance(start_owned, list) or list(owned) != list(start_owned):
+        raise QualityError('eight_hour_wall_clock_incomplete')
+    for pid in owned:
+        if not isinstance(pid, int) or pid <= 0:
+            raise QualityError('missing_record_field')
+    return {
+        'document_kind': SOAK_ELAPSED_KIND,
+        'soak_elapsed_capture': SOAK_ELAPSED_REL,
+        'soak_start_capture': SOAK_START_REL,
+        'product_ui_started': True,
+        'eight_hour_soak_executed': True,
+        'soak_hours': None,
+        'live_soak': False,
+        'ac46_passed': False,
+        'result': 'not_run',
+        'l4_soak': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'invented_timings': False,
+        'git_sha': git_sha,
+        'started_at_utc': doc.get('started_at_utc'),
+        'elapsed_at_utc': doc.get('elapsed_at_utc'),
     }
