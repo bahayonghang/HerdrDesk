@@ -63,7 +63,7 @@ HD-032 L1 P4 文件故障与安全收口目录。`catalog.json` 列出 payload /
 
 ## `quality/`
 
-HD-033 L1 P5 性能/可访问性/soak 收口目录，外加 L2 采集器指针。`catalog.json` 列出 cold start / input-to-visible-pixel / search p95 / working set 1/4 pane / 100 hide-show / Narrator / DPI 100-150-200 / 8h soak 执行卡。`environment-pointer.json` 指向 gitignored `probe-results/` 原始环境清单，live 仍 `not_run`。parser consumed 不是 GPU 或可见像素呈现。不得从 `Q_p` 推导进程工作集。MiB = 1,048,576 bytes。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`github_required_check` 为 `UNVERIFIED`。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码，不是成功运行。不得发明 timings。hosted CI 不是交互桌面。产品 AC27/AC28/AC29/AC37/AC38/AC46 仍未通过。
+HD-033 L1 P5 性能/可访问性/soak 收口目录，外加 L2 采集器指针。`catalog.json` 列出 cold start / input-to-visible-pixel / search p95 / working set 1/4 pane / 100 hide-show / Narrator / DPI 100-150-200 / 8h soak 执行卡。`environment-pointer.json` 指向 gitignored `probe-results/` 原始环境清单，live 仍 `not_run`。`narrator-overlay-pointer.json` 只记录 Narrator.exe 存在与否；不是 AC37，已交付 AutomationProperties 名称不是屏幕阅读器证据。parser consumed 不是 GPU 或可见像素呈现。不得从 `Q_p` 推导进程工作集。MiB = 1,048,576 bytes。每个 live 行 `status=UNVERIFIED`、`result=not_run`。`github_required_check` 为 `UNVERIFIED`。`support-matrix.json` 承诺 Windows 11 x64 客户端 + Linux x64 远端，两行均为 `not_run`。macOS/ARM64 为 `unsupported` 或 `experimental`。模板 `template=true`，空 hash/退出码，不是成功运行。不得发明 timings。hosted CI 不是交互桌面。产品 AC27/AC28/AC29/AC37/AC38/AC46 仍未通过。
 
 ## `packaging/`
 

@@ -129,6 +129,10 @@ internal static class Hd033Cases
         Check(catalog.GetProperty("l2_collectors").GetString() != "passed");
         Check(catalog.GetProperty("environment_manifest_pointer").GetString()
               == "evidence/quality/environment-pointer.json");
+        Check(catalog.GetProperty("narrator_overlay_pointer").GetString()
+              == "evidence/quality/narrator-overlay-pointer.json");
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "narrator-overlay-pointer.json")));
+        Check(File.Exists(Path.Combine(root, "scripts", "collect_narrator_overlay.py")));
         using var pointerDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "environment-pointer.json")));
         var pointer = pointerDoc.RootElement;
@@ -140,6 +144,18 @@ internal static class Hd033Cases
         Check(pointer.GetProperty("eight_hour_soak_executed").GetBoolean() is false);
         Check(pointer.GetProperty("github_required_check").GetString() == "UNVERIFIED");
         Check(pointer.GetProperty("l2_collectors_are_not_live_pass").GetBoolean());
+        using var overlayDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "narrator-overlay-pointer.json")));
+        var overlay = overlayDoc.RootElement;
+        Check(overlay.GetProperty("document_kind").GetString() == "hd033_narrator_overlay_pointer");
+        Check(overlay.GetProperty("result").GetString() == "not_run");
+        Check(overlay.GetProperty("live_status").GetString() == "UNVERIFIED");
+        Check(overlay.GetProperty("live_narrator").GetBoolean() is false);
+        Check(overlay.GetProperty("ac37_passed").GetBoolean() is false);
+        Check(overlay.GetProperty("l3_narrator").GetString() == "UNVERIFIED");
+        Check(overlay.GetProperty("automation_names_are_not_screen_reader_evidence").GetBoolean());
+        Check(overlay.GetProperty("narrator_started_by_collector").GetBoolean() is false);
+        Check(overlay.GetProperty("invented_timings").GetBoolean() is false);
         Check(catalog.GetProperty("redaction").GetProperty("credential").GetString() == "omitted");
         Check(catalog.GetProperty("redaction").GetProperty("host").GetString() == "omitted");
         foreach (var key in PassKeys)

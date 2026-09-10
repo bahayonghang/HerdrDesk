@@ -1,0 +1,27 @@
+{
+  "document_kind": "hd033_narrator_overlay_pointer",
+  "template": false,
+  "live_status": "UNVERIFIED",
+  "result": "not_run",
+  "raw_gitignored_path": "probe-results/hd033-narrator-overlay.json",
+  "committed_raw": false,
+  "herdr_executed": false,
+  "live_narrator": false,
+  "ac37_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l3_narrator": "UNVERIFIED",
+  "automation_names_are_not_screen_reader_evidence": true,
+  "narrator_started_by_collector": false,
+  "invented_timings": false,
+  "github_required_check": "UNVERIFIED",
+  "l2_collectors": "shipped",
+  "l2_collectors_are_not_live_pass": true,
+  "limitations": [
+    "Narrator.exe presence is recorded by the overlay. Tests and CI do not start Narrator.exe.",
+    "Shipped AutomationProperties names are not screen-reader evidence.",
+    "This pointer is not live AC37 evidence.",
+    "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
+    "Hosted CI is not an interactive desktop."
+  ]
+}

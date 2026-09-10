@@ -1,11 +1,15 @@
 from copy import deepcopy
 from pathlib import Path
 import json
+import os
+import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
+from herddesk_g0.quality import QualityError, collect_narrator_overlay, narrator_exe_path
 import validate_repository as repository
 
 L2 = ROOT / 'implementation' / 'hd-033-l2.json'
@@ -157,6 +161,10 @@ class Hd033ResidualTests(unittest.TestCase):
             catalog['environment_manifest_pointer'],
             'evidence/quality/environment-pointer.json',
         )
+        self.assertEqual(
+            catalog['narrator_overlay_pointer'],
+            'evidence/quality/narrator-overlay-pointer.json',
+        )
         pointer = json.loads((ROOT / catalog['environment_manifest_pointer']).read_text(encoding='utf-8'))
         self.assertEqual(pointer['result'], 'not_run')
         self.assertEqual(pointer['live_status'], 'UNVERIFIED')
@@ -167,6 +175,23 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertEqual(pointer['github_required_check'], 'UNVERIFIED')
         self.assertTrue(pointer['l2_collectors_are_not_live_pass'])
         self.assertIsNot(pointer.get('complete_1_0_claimed'), True)
+        overlay_pointer = json.loads(
+            (ROOT / catalog['narrator_overlay_pointer']).read_text(encoding='utf-8')
+        )
+        self.assertEqual(overlay_pointer['document_kind'], 'hd033_narrator_overlay_pointer')
+        self.assertEqual(overlay_pointer['result'], 'not_run')
+        self.assertEqual(overlay_pointer['live_status'], 'UNVERIFIED')
+        self.assertFalse(overlay_pointer['live_narrator'])
+        self.assertFalse(overlay_pointer['ac37_passed'])
+        self.assertEqual(overlay_pointer['l3_narrator'], 'UNVERIFIED')
+        self.assertTrue(overlay_pointer['automation_names_are_not_screen_reader_evidence'])
+        self.assertFalse(overlay_pointer['narrator_started_by_collector'])
+        self.assertFalse(overlay_pointer['invented_timings'])
+        self.assertFalse(overlay_pointer['committed_raw'])
+        self.assertEqual(overlay_pointer['github_required_check'], 'UNVERIFIED')
+        self.assertTrue(overlay_pointer['l2_collectors_are_not_live_pass'])
+        self.assertIsNot(overlay_pointer.get('complete_1_0_claimed'), True)
+        self.assertTrue((ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file())
         cards = {item['id']: item for item in catalog['execution_cards']}
         self.assertEqual(tuple(cards), REQUIRED_CARDS)
         seen = set()
@@ -473,6 +498,218 @@ class Hd033ResidualTests(unittest.TestCase):
         soak['live_rows'][7]['status'] = 'passed'
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, soak, matrix)
+
+        bad = deepcopy(catalog)
+        bad.pop('narrator_overlay_pointer')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['narrator_overlay_pointer'] = 'evidence/quality/environment-pointer.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+
+def _write_overlay(tmp: Path, *, pointer_overrides=None, live_overrides=None) -> None:
+    quality = tmp / 'evidence' / 'quality'
+    quality.mkdir(parents=True, exist_ok=True)
+    pointer = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'narrator-overlay-pointer.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    live = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-narrator.not-run.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    if pointer_overrides:
+        pointer.update(pointer_overrides)
+    if live_overrides:
+        live.update(live_overrides)
+    (quality / 'narrator-overlay-pointer.json').write_text(
+        json.dumps(pointer), encoding='utf-8'
+    )
+    (quality / 'live-narrator.not-run.json').write_text(
+        json.dumps(live), encoding='utf-8'
+    )
+
+
+class Hd033NarratorOverlayTests(unittest.TestCase):
+    def test_shipped_function_records_presence_not_ac37(self):
+        report = collect_narrator_overlay(ROOT)
+        self.assertEqual(report['document_kind'], 'hd033_narrator_overlay')
+        exe = Path(
+            os.environ.get('SystemRoot') or os.environ.get('WINDIR') or r'C:\Windows'
+        ) / 'System32' / 'Narrator.exe'
+        self.assertEqual(narrator_exe_path(), exe)
+        self.assertEqual(narrator_exe_path().name, 'Narrator.exe')
+        self.assertEqual(narrator_exe_path().parent.name, 'System32')
+        collector = (
+            ROOT / 'src' / 'HerdDesk.Infrastructure' / 'Quality'
+            / 'EnvironmentManifestCollector.cs'
+        ).read_text(encoding='utf-8')
+        self.assertIn('SpecialFolder.System', collector)
+        self.assertIn('Narrator.exe', collector)
+        self.assertIn('NarratorStartedByCollector', collector)
+        self.assertEqual(report['narrator_exe_present'], exe.is_file())
+        self.assertIsInstance(report['narrator_launched'], bool)
+        self.assertFalse(report['narrator_started_by_collector'])
+        self.assertTrue(report['automation_names_are_not_screen_reader_evidence'])
+        self.assertFalse(report['ac37_passed'])
+        self.assertFalse(report['live_narrator'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertNotIn(str(report['result']).lower(), SUCCESS)
+        self.assertEqual(report['l3_narrator'], 'UNVERIFIED')
+        self.assertFalse(report['g0_passed'])
+        self.assertNotEqual(report['phase_gate'], 'passed')
+        self.assertFalse(report['herdr_executed'])
+        self.assertFalse(report['invented_timings'])
+        self.assertEqual(report['pointer'], 'evidence/quality/narrator-overlay-pointer.json')
+        self.assertEqual(
+            report['live_capture'], 'evidence/quality/live-narrator.not-run.json'
+        )
+        live = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-narrator.not-run.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(live['result'], 'not_run')
+        self.assertFalse(live['live_narrator'])
+
+    def test_cli_prints_one_json_object(self):
+        script = ROOT / 'scripts' / 'collect_narrator_overlay.py'
+        self.assertTrue(script.is_file())
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertIsInstance(report, dict)
+        self.assertEqual(report['document_kind'], 'hd033_narrator_overlay')
+        self.assertFalse(report['ac37_passed'])
+        self.assertFalse(report['live_narrator'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertEqual(report['l3_narrator'], 'UNVERIFIED')
+        self.assertTrue(report['automation_names_are_not_screen_reader_evidence'])
+        self.assertFalse(report['narrator_started_by_collector'])
+        self.assertFalse(report['g0_passed'])
+
+    def test_structure_contract_invokes_shipped_overlay(self):
+        repository._check_hd033_narrator_overlay()
+
+    def test_missing_pointer_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(Path(tmp))
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_ac37_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(root, pointer_overrides={'ac37_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac37_passed')
+
+    def test_live_narrator_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(root, live_overrides={'live_narrator': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'live_narrator_claimed')
+
+    def test_live_narrator_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_overlay(root, live_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_narrator_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_pointer_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_overlay(root, pointer_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_narrator_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_l3_narrator_pass_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(root, pointer_overrides={'l3_narrator': 'passed'})
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'l3_narrator_claimed')
+
+    def test_collector_started_narrator_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(root, pointer_overrides={'narrator_started_by_collector': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'collector_started_narrator')
+
+    def test_automation_names_as_evidence_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(
+                root,
+                pointer_overrides={
+                    'automation_names_are_not_screen_reader_evidence': False,
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'automation_names_claimed_as_evidence')
+
+    def test_g0_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(root, pointer_overrides={'g0_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'g0_passed')
+
+    def test_live_ac37_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(root, live_overrides={'ac37_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac37_passed')
+
+    def test_live_narrator_success_token_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass'):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_overlay(root, live_overrides={'live_narrator': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_narrator_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_narrator_claimed')
+
+    def test_acceptance_ac37_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_overlay(root)
+            planning = root / 'planning'
+            planning.mkdir()
+            (planning / 'acceptance.json').write_text(
+                json.dumps({'criteria': [{'id': 'AC37', 'status': 'passed'}]}),
+                encoding='utf-8',
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_narrator_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac37_passed')
 
 
 if __name__ == '__main__':

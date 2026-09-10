@@ -17,6 +17,7 @@ from herddesk_g0.evidence import validate_evidence
 from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
+from herddesk_g0.quality import collect_narrator_overlay
 from herddesk_g0.release import bind_release_candidate
 from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
 import run_windows_desktop_gate as desktop_gate
@@ -1081,6 +1082,24 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert pointer.get('github_required_check') == 'UNVERIFIED'
     assert pointer.get('l2_collectors_are_not_live_pass') is True
     assert pointer.get('complete_1_0_claimed') is not True
+    assert catalog.get('narrator_overlay_pointer') == 'evidence/quality/narrator-overlay-pointer.json'
+    overlay_pointer = json.loads((ROOT / catalog['narrator_overlay_pointer']).read_text(encoding='utf-8'))
+    _reject_hd033_pass_claims(overlay_pointer)
+    _reject_hd033_invented_timings(overlay_pointer)
+    assert overlay_pointer.get('document_kind') == 'hd033_narrator_overlay_pointer'
+    assert overlay_pointer.get('result') == 'not_run'
+    assert overlay_pointer.get('live_status') == 'UNVERIFIED'
+    assert overlay_pointer.get('live_narrator') is False
+    assert overlay_pointer.get('ac37_passed') is False
+    assert overlay_pointer.get('l3_narrator') == 'UNVERIFIED'
+    assert overlay_pointer.get('automation_names_are_not_screen_reader_evidence') is True
+    assert overlay_pointer.get('narrator_started_by_collector') is False
+    assert overlay_pointer.get('invented_timings') is False
+    assert overlay_pointer.get('committed_raw') is False
+    assert overlay_pointer.get('github_required_check') == 'UNVERIFIED'
+    assert overlay_pointer.get('l2_collectors_are_not_live_pass') is True
+    assert overlay_pointer.get('complete_1_0_claimed') is not True
+    assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
     redaction = catalog.get('redaction') or {}
     for key in ('host', 'user', 'path', 'credential', 'terminal_body'):
         assert redaction.get(key) == 'omitted', key
@@ -1219,6 +1238,33 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert catalog.get('eight_hour_soak_executed') is False
     assert not (ROOT / 'tests' / 'Integration.Ssh').exists()
     check_integration_windows_layout(ROOT)
+
+
+def _check_hd033_narrator_overlay() -> None:
+    """Invoke shipped overlay. Do not start Narrator.exe or pass AC37."""
+    assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
+    assert (ROOT / 'evidence' / 'quality' / 'narrator-overlay-pointer.json').is_file()
+    report = collect_narrator_overlay(ROOT)
+    assert report.get('document_kind') == 'hd033_narrator_overlay'
+    assert isinstance(report.get('narrator_exe_present'), bool)
+    assert isinstance(report.get('narrator_launched'), bool)
+    assert report.get('narrator_started_by_collector') is False
+    assert report.get('automation_names_are_not_screen_reader_evidence') is True
+    assert report.get('ac37_passed') is False
+    assert report.get('live_narrator') is False
+    assert report.get('result') == 'not_run'
+    assert not _is_hd033_success(report.get('result'))
+    assert report.get('l3_narrator') == 'UNVERIFIED'
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('herdr_executed') is False
+    assert report.get('invented_timings') is False
+    assert report.get('pointer') == 'evidence/quality/narrator-overlay-pointer.json'
+    assert report.get('live_capture') == 'evidence/quality/live-narrator.not-run.json'
+    live = json.loads((ROOT / 'evidence' / 'quality' / 'live-narrator.not-run.json').read_text(encoding='utf-8'))
+    assert live.get('result') == 'not_run'
+    assert not _is_hd033_success(live.get('result'))
+    assert live.get('live_narrator') is False
 
 
 _HD034_PASS_KEYS = (
@@ -3129,6 +3175,7 @@ def validate() -> dict:
     _check_hd031(hd031)
     _check_hd032_closeout(hd032, files_catalog, files_matrix)
     _check_hd033_closeout(hd033, quality_catalog, quality_matrix)
+    _check_hd033_narrator_overlay()
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd034_package_script_contract()
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)

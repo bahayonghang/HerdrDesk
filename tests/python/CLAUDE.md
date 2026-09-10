@@ -39,7 +39,7 @@ python -m unittest discover -s tests/python -v
 | `test_hd030.py` | `Hd030ResidualTests` | `implementation/hd-030-l2.json` 保持 L2 live agent/IME/SSH UNVERIFIED；AC35/AC31/AC32/AC36/G0 恒为 false；投入页无 WinUI XAML；无 auto-submit；`integration_windows_project` catalog token 恒为 false |
 | `test_hd031.py` | `Hd031ResidualTests` | `implementation/hd-031-l2.json` 保持 L2 live clipboard/IME UNVERIFIED；AC36/G0 恒为 false；粘贴预览无 WinUI XAML；无 clipboard watcher；OSC 52 默认 deny；`integration_windows_project` catalog token 恒为 false |
 | `test_hd032.py` | `Hd032ResidualTests` | `implementation/hd-032-l2.json` 与 `evidence/files/` 保持 L2 live FS/SSH/TOCTOU/attack UNVERIFIED；AC31/32/33/34/35/G0 恒为 false；模板不是成功运行；无 `tests/Integration.Ssh`；`integration_windows_project` catalog token 恒为 false |
-| `test_hd033.py` | `Hd033ResidualTests` | `implementation/hd-033-l2.json` 与 `evidence/quality/` 保持 L3 IME/Narrator/DPI 与 L4 soak UNVERIFIED；AC27/28/29/37/38/46/G0 恒为 false；拒绝假 soak 与发明 timings；parser consumed 不是呈现；`integration_windows_project` catalog token 恒为 false |
+| `test_hd033.py` | `Hd033ResidualTests`, `Hd033NarratorOverlayTests` | `implementation/hd-033-l2.json` 与 `evidence/quality/` 保持 L3 IME/Narrator/DPI 与 L4 soak UNVERIFIED；调用已交付 `collect_narrator_overlay` / `scripts/collect_narrator_overlay.py`；overlay 不是 AC37；AC27/28/29/37/38/46/G0 恒为 false；拒绝假 soak 与发明 timings；parser consumed 不是呈现；`integration_windows_project` catalog token 恒为 false |
 | `test_hd034.py` | `Hd034ResidualTests`, `Hd034PackageScriptTests` | `implementation/hd-034-l2.json` 与 `evidence/packaging/` 保持 L2/L3 live 安装/签名/更新/回滚 UNVERIFIED；调用已交付 `scripts/package_release.ps1` 的 Verify/Sign 参数契约；AC41/AC42/G0 恒为 false；拒绝假 Publisher、未签名构建当发行安装、EXE 复制当回滚、发明包 hash；`integration_windows_project` catalog token 恒为 false |
 | `test_hd035.py` | `Hd035ResidualTests`, `Hd035ReleaseInputAuditorTests` | `implementation/hd-035-l2.json` 与 `evidence/security-release/` 保持 L2/L3 live 扫描/renderer/canary/已签名包反向审计 UNVERIFIED；调用已交付 `audit_admitted_release_inputs` / `scripts/audit_release_inputs.py`；AC02/AC43/AC44/G0 恒为 false；拒绝假零漏洞扫描、公开可见当许可、herdrm 拷贝、发明扫描日期当成功；`integration_windows_project` catalog token 恒为 false |
 | `test_hd036.py` | `Hd036ResidualTests`, `Hd036ReleaseCandidateBindTests` | `implementation/hd-036-l2.json` 与 `evidence/releases/` 保持 L2/L3/L4 live 走查/矩阵/SHA 绑定/干净还原/required-check/图重跑/发布/签名 hash UNVERIFIED；调用已交付 `bind_release_candidate` / `scripts/bind_release_candidate.py`；hosted workflow 不是 required-check；AC39/AC40/AC45/AC47/AC48/G0 恒为 false；拒绝 published、完整 1.0 宣称、发明 hosted-check、截图当证据、not_run→passed；`integration_windows_project` catalog token 恒为 false |
@@ -56,7 +56,7 @@ python -m unittest discover -s tests/python -v
 
 ## 依赖
 
-- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`release.py`、`endpoint.py`、`lease.py`、`renderer.py`、`adr.py`、`project_graph.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`、`audit_release_inputs.py`、`bind_release_candidate.py`。
+- 代码：`scripts/herddesk_g0`（含 `evidence.py`、`licensing.py`、`quality.py`、`release.py`、`endpoint.py`、`lease.py`、`renderer.py`、`adr.py`、`project_graph.py`）、`probe_herdr.py`、`publish_github.py`、`validate_repository.py`、`collect_narrator_overlay.py`、`audit_release_inputs.py`、`bind_release_candidate.py`。
 - 数据：[../fixtures](../fixtures/CLAUDE.md)。
 
 与 C# smoke、probe selftest 分开报告，不合并为覆盖率。hosted SHA `629bb01` 为 Python 73 / C# smoke 22 / probe 23。

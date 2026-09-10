@@ -17,7 +17,7 @@
   "winui_admitted": false,
   "invented_timings": false,
   "limitations": [
-    "Narrator.exe presence is recorded by the environment collector. Narrator was not launched against product UI.",
+    "Narrator.exe presence is recorded by the environment collector and the Narrator overlay. Narrator was not launched against product UI.",
     "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
     "Shipped AutomationProperties names are not screen-reader evidence.",
     "Hosted CI is not an interactive desktop."

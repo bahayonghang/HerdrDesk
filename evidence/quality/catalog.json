@@ -38,6 +38,7 @@
   "l2_collectors": "shipped",
   "l2_collectors_are_not_live_pass": true,
   "environment_manifest_pointer": "evidence/quality/environment-pointer.json",
+  "narrator_overlay_pointer": "evidence/quality/narrator-overlay-pointer.json",
   "copy_windows_fields_onto_linux": false,
   "extrapolate_macos_arm64": false,
   "redaction": {
@@ -329,5 +330,5 @@
       "missing_grant": "no_authorized_eight_hour_soak"
     }
   ],
-  "note": "HD-033 L1 closeout catalog plus L2 collectors. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. L2 collectors write gitignored probe-results and do not close live rows. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator, and working-set stay not_run. github_required_check stays UNVERIFIED. This file is not product AC pass evidence."
+  "note": "HD-033 L1 closeout catalog plus L2 collectors and a Narrator presence overlay. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. L2 collectors write gitignored probe-results and do not close live rows. The Narrator overlay is not AC37. Shipped AutomationProperties names are not screen-reader evidence. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator, and working-set stay not_run. github_required_check stays UNVERIFIED. This file is not product AC pass evidence."
 }
