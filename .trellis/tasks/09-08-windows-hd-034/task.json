@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 catalog remains. 2026-09-10 reopen for unsigned/lab-signed MSIX Build/Verify. Do not invent a production Publisher. Live install/rollback stay UNVERIFIED. AC41/AC42/G0 not passed.",
+  "notes": "L2 product dc1c398: package_release.ps1 Build/Verify, lab identity HerdDesk.Lab. Unsigned local layout is not a release install. Live install/sign/update/rollback UNVERIFIED. AC41/AC42/G0 not passed.",
   "meta": {
     "source_task": "HD-034",
     "phase": "P5"
