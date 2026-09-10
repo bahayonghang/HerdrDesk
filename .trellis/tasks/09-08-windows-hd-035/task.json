@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L1 catalog remains. 2026-09-10 reopen for reverse-audit of admitted release inputs (WinUI 2.3.6, xterm 6.0.0, WebView2 Evergreen as runtime not nupkg, Cargo locks, no herdrm copy). Live scans/renderer/canary/signed-package stay UNVERIFIED. AC02/43/44/G0 not passed.",
+  "notes": "L2 product 1866228: audit_release_inputs.py working-tree reverse-audit of admitted locks. Live scans/renderer/canary/signed-package UNVERIFIED. AC02/43/44/G0 not passed.",
   "meta": {
     "source_task": "HD-035",
     "phase": "P5"
