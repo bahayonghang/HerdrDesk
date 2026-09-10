@@ -29,7 +29,8 @@ cases =
     .. AttachToAgentViewModelTests.All,
     .. PastePreviewViewModelTests.All,
     .. TerminalHostSessionTests.All,
-    .. Hd033CollectorTests.All
+    .. Hd033CollectorTests.All,
+    .. SoakLaunchPolicyTests.All
 ];
 
 var failed = 0;

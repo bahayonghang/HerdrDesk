@@ -45,7 +45,11 @@
   "soak_interruption_capture": "evidence/quality/live-soak-interrupted.json",
   "soak_interruption_captures": [
     "evidence/quality/live-soak-interrupted.json",
-    "evidence/quality/live-soak-interrupted-2.json"
+    "evidence/quality/live-soak-interrupted-2.json",
+    "evidence/quality/live-soak-interrupted-3.json",
+    "evidence/quality/live-soak-interrupted-4.json",
+    "evidence/quality/live-soak-interrupted-5.json",
+    "evidence/quality/live-soak-interrupted-6.json"
   ],
   "copy_windows_fields_onto_linux": false,
   "extrapolate_macos_arm64": false,
@@ -338,5 +342,5 @@
       "missing_grant": "eight_hour_wall_clock_incomplete_no_live_herdr_fault_injection"
     }
   ],
-  "note": "HD-033 L1 closeout catalog plus L2 collectors, a Narrator presence overlay, a product-UI + Narrator.exe launch record, a product-UI 8h soak START record, and soak START interruption records. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. L2 collectors write gitignored probe-results and do not close live rows. The Narrator overlay is not AC37 and does not start Narrator. The product-UI launch record is not live_narrator success and does not pass AC37. The soak START record is not eight_hour_soak_executed, not soak_hours=8, not live_soak success, and does not pass AC46 or L4. Interrupted STARTs are not 8h completion. Shipped AutomationProperties names are not screen-reader evidence. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator AC37 workflow, and working-set stay not_run. github_required_check stays UNVERIFIED. This file is not product AC pass evidence."
+  "note": "HD-033 L1 closeout catalog plus L2 collectors, a Narrator presence overlay, a product-UI + Narrator.exe launch record, a product-UI 8h soak START record, and soak START interruption records. L1 paths are existing HD-023 search p95 unit, HD-025 queue/admission, and HD-011 ViewModel artifacts. L2 collectors write gitignored probe-results and do not close live rows. The Narrator overlay is not AC37 and does not start Narrator. The product-UI launch record is not live_narrator success and does not pass AC37. The soak START record is not eight_hour_soak_executed, not soak_hours=8, not live_soak success, and does not pass AC46 or L4. Interrupted STARTs are not 8h completion. The 2026-09-10T12:49:43Z START PIDs 69668/73960 is interruption 6, not the current START identity. Shipped AutomationProperties names are not screen-reader evidence. Parser consumed is not GPU or visible-pixel presentation. Do not derive process memory from Q_p. MiB is 1,048,576 bytes. Live soak, input-to-pixel, DPI/theme, Narrator AC37 workflow, and working-set stay not_run. github_required_check stays UNVERIFIED. This file is not product AC pass evidence."
 }

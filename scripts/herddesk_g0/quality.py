@@ -581,6 +581,10 @@ SOAK_START_REL = 'evidence/quality/live-soak-start.json'
 LIVE_SOAK_REL = 'evidence/quality/live-soak.not-run.json'
 SOAK_INTERRUPT_REL = 'evidence/quality/live-soak-interrupted.json'
 SOAK_INTERRUPT_2_REL = 'evidence/quality/live-soak-interrupted-2.json'
+SOAK_INTERRUPT_3_REL = 'evidence/quality/live-soak-interrupted-3.json'
+SOAK_INTERRUPT_4_REL = 'evidence/quality/live-soak-interrupted-4.json'
+SOAK_INTERRUPT_5_REL = 'evidence/quality/live-soak-interrupted-5.json'
+SOAK_INTERRUPT_6_REL = 'evidence/quality/live-soak-interrupted-6.json'
 SOAK_START_KIND = 'hd033_eight_hour_soak_start'
 SOAK_INTERRUPT_KIND = 'hd033_eight_hour_soak_interruption'
 SOAK_START_REQUIRED_KEYS = (
@@ -732,8 +736,15 @@ def _check_ac_status(root: Path, ac_id: str, error_code: str) -> None:
 def soak_interrupt_capture_rels(root: Path) -> list[str]:
     """Committed interruption captures. First 09:49 file stays first."""
     rels = [SOAK_INTERRUPT_REL]
-    if (Path(root) / SOAK_INTERRUPT_2_REL).is_file():
-        rels.append(SOAK_INTERRUPT_2_REL)
+    for rel in (
+        SOAK_INTERRUPT_2_REL,
+        SOAK_INTERRUPT_3_REL,
+        SOAK_INTERRUPT_4_REL,
+        SOAK_INTERRUPT_5_REL,
+        SOAK_INTERRUPT_6_REL,
+    ):
+        if (Path(root) / rel).is_file():
+            rels.append(rel)
     return rels
 
 
@@ -907,6 +918,14 @@ def validate_eight_hour_soak_interruption(root: Path) -> dict[str, Any]:
     _validate_interrupt_document(root, doc)
     if (root / SOAK_INTERRUPT_2_REL).is_file():
         _validate_interrupt_document(root, _load_json(root / SOAK_INTERRUPT_2_REL))
+    if (root / SOAK_INTERRUPT_3_REL).is_file():
+        _validate_interrupt_document(root, _load_json(root / SOAK_INTERRUPT_3_REL))
+    if (root / SOAK_INTERRUPT_4_REL).is_file():
+        _validate_interrupt_document(root, _load_json(root / SOAK_INTERRUPT_4_REL))
+    if (root / SOAK_INTERRUPT_5_REL).is_file():
+        _validate_interrupt_document(root, _load_json(root / SOAK_INTERRUPT_5_REL))
+    if (root / SOAK_INTERRUPT_6_REL).is_file():
+        _validate_interrupt_document(root, _load_json(root / SOAK_INTERRUPT_6_REL))
     return {
         'document_kind': SOAK_INTERRUPT_KIND,
         'soak_interruption_capture': SOAK_INTERRUPT_REL,

@@ -1,5 +1,7 @@
 using HerdDesk.App.Composition;
+using HerdDesk.App.Quality;
 using HerdDesk.Infrastructure.Configuration;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 
@@ -11,6 +13,8 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         Title = ProductInfo.Name;
+        if (SoakLaunchPolicy.SuppressWindowClose())
+            AppWindow.Closing += OnSoakAppWindowClosing;
         TryApplyBackdrop();
         Closed += OnClosed;
         if (App.DataRoot is { } root)
@@ -58,6 +62,12 @@ public sealed partial class MainWindow : Window
             return;
         Shell.ReceiveActivation(intent);
         RootShell.Refresh();
+    }
+
+    private static void OnSoakAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        _ = sender;
+        args.Cancel = true;
     }
 
     private async void OnClosed(object sender, WindowEventArgs args)

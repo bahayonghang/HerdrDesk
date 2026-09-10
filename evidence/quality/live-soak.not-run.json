@@ -22,6 +22,10 @@
   "limitations": [
     "Product UI --ui soak START at 2026-09-10T09:49:06Z PIDs 89580/59552/57712 was interrupted before 8 wall-clock hours. See evidence/quality/live-soak-interrupted.json.",
     "Product UI --ui soak START at 2026-09-10T11:11:22Z PIDs 46108/64672/71980 was interrupted before 8 wall-clock hours. See evidence/quality/live-soak-interrupted-2.json.",
+    "Product UI --ui soak START at 2026-09-10T11:35:26Z PIDs 24744/27844 was interrupted before 8 wall-clock hours. HerdDesk.App.exe PID 24744 died. Heartbeat last alive 2026-09-10T11:46:44Z, alive_pids=[] at 2026-09-10T11:47:45Z. Heartbeat python 27844 was leftover. crash_cause stays null. See evidence/quality/live-soak-interrupted-3.json.",
+    "Product UI --ui soak START at 2026-09-10T11:56:07Z PIDs 21312/22400 was interrupted before 8 wall-clock hours. Heartbeat last alive 2026-09-10T11:57:20Z, alive_pids=[] at 2026-09-10T11:58:21Z. crash_cause stays null. soak_hours stays null. See evidence/quality/live-soak-interrupted-4.json.",
+    "Product UI --ui soak START at 2026-09-10T12:19:50Z PIDs 91852/37708 was interrupted before 8 wall-clock hours. Heartbeat last alive 2026-09-10T12:20:04Z, alive_pids=[] at 2026-09-10T12:21:05Z. crash_cause stays null. soak_hours stays null. See evidence/quality/live-soak-interrupted-5.json.",
+    "Product UI --ui soak START at 2026-09-10T12:49:43Z PIDs 69668/73960 was interrupted before 8 wall-clock hours. Heartbeat last alive 2026-09-10T13:05:06Z, alive_pids=[] at 2026-09-10T13:06:07Z. crash_cause stays null. soak_hours stays null. See evidence/quality/live-soak-interrupted-6.json.",
     "A later product-UI --ui soak START is recorded in evidence/quality/live-soak-start.json. 8 wall-clock hours have not elapsed for that new START.",
     "eight_hour_soak_executed stays false. soak_hours stays null. This live row stays not_run.",
     "100 disconnect/switch cycles and live herdr/SSH fault injection were not authorized and were not faked.",

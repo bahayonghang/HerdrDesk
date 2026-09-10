@@ -20,6 +20,7 @@ from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licens
 from herddesk_g0.quality import (
     collect_dpi_overlay,
     collect_narrator_overlay,
+    soak_interrupt_capture_rels,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
@@ -1113,6 +1114,10 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert catalog.get('soak_interruption_captures') == [
         'evidence/quality/live-soak-interrupted.json',
         'evidence/quality/live-soak-interrupted-2.json',
+        'evidence/quality/live-soak-interrupted-3.json',
+        'evidence/quality/live-soak-interrupted-4.json',
+        'evidence/quality/live-soak-interrupted-5.json',
+        'evidence/quality/live-soak-interrupted-6.json',
     ]
     interruption = json.loads(
         (ROOT / catalog['soak_interruption_capture']).read_text(encoding='utf-8')
@@ -1139,6 +1144,70 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert second.get('crash_cause') is None
     assert second.get('started_at_utc') == '2026-09-10T11:11:22Z'
     assert second.get('owned_pids') == [46108, 64672, 71980]
+    third = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(third)
+    _reject_hd033_invented_timings(third)
+    assert third.get('document_kind') == 'hd033_eight_hour_soak_interruption'
+    assert third.get('result') == 'not_run'
+    assert third.get('eight_hour_soak_executed') is False
+    assert third.get('soak_hours') is None
+    assert third.get('crash_cause') is None
+    assert third.get('started_at_utc') == '2026-09-10T11:35:26Z'
+    assert third.get('owned_pids') == [24744, 27844]
+    assert third.get('last_heartbeat_alive_at_utc') == '2026-09-10T11:46:44Z'
+    assert third.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T11:47:45Z'
+    fourth = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-4.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(fourth)
+    _reject_hd033_invented_timings(fourth)
+    assert fourth.get('document_kind') == 'hd033_eight_hour_soak_interruption'
+    assert fourth.get('result') == 'not_run'
+    assert fourth.get('eight_hour_soak_executed') is False
+    assert fourth.get('soak_hours') is None
+    assert fourth.get('crash_cause') is None
+    assert fourth.get('started_at_utc') == '2026-09-10T11:56:07Z'
+    assert fourth.get('owned_pids') == [21312, 22400]
+    assert fourth.get('last_heartbeat_alive_at_utc') == '2026-09-10T11:57:20Z'
+    assert fourth.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T11:58:21Z'
+    fifth = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-5.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(fifth)
+    _reject_hd033_invented_timings(fifth)
+    assert fifth.get('document_kind') == 'hd033_eight_hour_soak_interruption'
+    assert fifth.get('result') == 'not_run'
+    assert fifth.get('eight_hour_soak_executed') is False
+    assert fifth.get('soak_hours') is None
+    assert fifth.get('crash_cause') is None
+    assert fifth.get('started_at_utc') == '2026-09-10T12:19:50Z'
+    assert fifth.get('owned_pids') == [91852, 37708]
+    assert fifth.get('last_heartbeat_alive_at_utc') == '2026-09-10T12:20:04Z'
+    assert fifth.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T12:21:05Z'
+    sixth = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-6.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(sixth)
+    _reject_hd033_invented_timings(sixth)
+    assert sixth.get('document_kind') == 'hd033_eight_hour_soak_interruption'
+    assert sixth.get('result') == 'not_run'
+    assert sixth.get('eight_hour_soak_executed') is False
+    assert sixth.get('soak_hours') is None
+    assert sixth.get('crash_cause') is None
+    assert sixth.get('started_at_utc') == '2026-09-10T12:49:43Z'
+    assert sixth.get('owned_pids') == [69668, 73960]
+    assert sixth.get('last_heartbeat_alive_at_utc') == '2026-09-10T13:05:06Z'
+    assert sixth.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T13:06:07Z'
     assert interruption.get('started_at_utc') == '2026-09-10T09:49:06Z'
     assert interruption.get('owned_pids') == [89580, 59552, 57712]
     dpi_pointer = json.loads((ROOT / catalog['dpi_overlay_pointer']).read_text(encoding='utf-8'))
@@ -1408,20 +1477,36 @@ def _check_hd033_soak_start() -> None:
     """Validate soak START record. Do not claim AC46 or 8h elapsed."""
     assert (ROOT / 'scripts' / 'start_eight_hour_soak.py').is_file()
     assert (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').is_file()
-    report = validate_eight_hour_soak_start(ROOT)
-    assert report.get('document_kind') == 'hd033_eight_hour_soak_start'
-    assert report.get('product_ui_started') is True
-    assert report.get('eight_hour_soak_executed') is False
-    assert report.get('soak_hours') is None
-    assert report.get('live_soak') is False
-    assert report.get('ac46_passed') is False
-    assert report.get('result') == 'not_run'
-    assert not _is_hd033_success(report.get('result'))
-    assert report.get('l4_soak') == 'UNVERIFIED'
-    assert report.get('g0_passed') is False
-    assert report.get('phase_gate') != 'passed'
-    assert report.get('herdr_executed') is False
-    assert report.get('invented_timings') is False
+    spawn_src = (ROOT / 'scripts' / 'start_eight_hour_soak.py').read_text(encoding='utf-8')
+    assert 'STARTF_USESHOWWINDOW' in spawn_src
+    assert 'SW_SHOWMINNOACTIVE = 7' in spawn_src
+    assert "ui_env['HERDDESK_SOAK_MINIMIZED'] = '1'" in spawn_src
+    assert (
+        'CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS'
+        in spawn_src
+    )
+    heartbeat_src = spawn_src[
+        spawn_src.find('def run_heartbeat'):spawn_src.find('def record')
+    ]
+    assert '_show_min_no_active' in heartbeat_src
+    assert 'if not alive:' in heartbeat_src
+    assert 'return 0' in heartbeat_src
+    start_heartbeat_src = spawn_src[
+        spawn_src.find('def _start_heartbeat'):spawn_src.find('def run_heartbeat')
+    ]
+    assert 'env=_dotnet_env()' in start_heartbeat_src
+    assert 'HERDDESK_SOAK_MINIMIZED' not in start_heartbeat_src
+    policy_src = (
+        ROOT / 'src' / 'HerdDesk.App' / 'Quality' / 'SoakLaunchPolicy.cs'
+    ).read_text(encoding='utf-8')
+    assert 'HERDDESK_SOAK_MINIMIZED' in policy_src
+    assert 'MinimizedEnabledValue = "1"' in policy_src
+    window_src = (ROOT / 'src' / 'HerdDesk.App' / 'MainWindow.xaml.cs').read_text(
+        encoding='utf-8'
+    )
+    assert 'if (SoakLaunchPolicy.SuppressWindowClose())' in window_src
+    assert 'AppWindow.Closing += OnSoakAppWindowClosing' in window_src
+    assert 'args.Cancel = true' in window_src
     start = json.loads(
         (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
             encoding='utf-8'
@@ -1474,24 +1559,71 @@ def _check_hd033_soak_start() -> None:
     assert second.get('eight_hour_soak_executed') is False
     assert second.get('soak_hours') is None
     assert second.get('crash_cause') is None
-    assert start.get('prior_interruption_captures') == [
-        'evidence/quality/live-soak-interrupted.json',
-        'evidence/quality/live-soak-interrupted-2.json',
-    ]
-    assert isinstance(start.get('started_at_utc'), str)
-    assert start.get('started_at_utc') > '2026-09-10T11:14:54Z'
-    assert start.get('started_at_utc') != '2026-09-10T11:11:22Z'
-    assert start.get('started_at_utc') != '2026-09-10T09:49:06Z'
-    assert isinstance(start.get('owned_pids'), list) and start.get('owned_pids')
+    third = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(third)
+    _reject_hd033_invented_timings(third)
+    assert third.get('started_at_utc') == '2026-09-10T11:35:26Z'
+    assert third.get('owned_pids') == [24744, 27844]
+    assert third.get('last_heartbeat_alive_at_utc') == '2026-09-10T11:46:44Z'
+    assert third.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T11:47:45Z'
+    assert third.get('eight_hour_soak_executed') is False
+    assert third.get('soak_hours') is None
+    assert third.get('crash_cause') is None
+    fourth = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-4.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(fourth)
+    _reject_hd033_invented_timings(fourth)
+    assert fourth.get('started_at_utc') == '2026-09-10T11:56:07Z'
+    assert fourth.get('owned_pids') == [21312, 22400]
+    assert fourth.get('last_heartbeat_alive_at_utc') == '2026-09-10T11:57:20Z'
+    assert fourth.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T11:58:21Z'
+    assert fourth.get('eight_hour_soak_executed') is False
+    assert fourth.get('soak_hours') is None
+    assert fourth.get('crash_cause') is None
+    fifth = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-5.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(fifth)
+    _reject_hd033_invented_timings(fifth)
+    assert fifth.get('started_at_utc') == '2026-09-10T12:19:50Z'
+    assert fifth.get('owned_pids') == [91852, 37708]
+    assert fifth.get('heartbeat_pid') == 37708
+    assert fifth.get('last_heartbeat_alive_at_utc') == '2026-09-10T12:20:04Z'
+    assert fifth.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T12:21:05Z'
+    assert fifth.get('eight_hour_soak_executed') is False
+    assert fifth.get('soak_hours') is None
+    assert fifth.get('crash_cause') is None
+    assert fifth.get('ac46_passed') is False
+    assert fifth.get('process_running_at_capture') is False
+    sixth = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-6.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(sixth)
+    _reject_hd033_invented_timings(sixth)
+    assert sixth.get('started_at_utc') == '2026-09-10T12:49:43Z'
+    assert sixth.get('owned_pids') == [69668, 73960]
+    assert sixth.get('heartbeat_pid') == 73960
+    assert sixth.get('last_heartbeat_alive_at_utc') == '2026-09-10T13:05:06Z'
+    assert sixth.get('first_heartbeat_empty_alive_at_utc') == '2026-09-10T13:06:07Z'
+    assert sixth.get('eight_hour_soak_executed') is False
+    assert sixth.get('soak_hours') is None
+    assert sixth.get('crash_cause') is None
+    assert sixth.get('ac46_passed') is False
+    assert sixth.get('process_running_at_capture') is False
+    committed = soak_interrupt_capture_rels(ROOT)
     assert interruption.get('started_at_utc') == '2026-09-10T09:49:06Z'
     assert interruption.get('owned_pids') == [89580, 59552, 57712]
-    assert start.get('started_at_utc') != interruption.get('started_at_utc')
-    assert start.get('started_at_utc') != second.get('started_at_utc')
-    assert set(start['owned_pids']).isdisjoint(set(interruption['owned_pids']))
-    assert set(start['owned_pids']).isdisjoint(set(second['owned_pids']))
-    assert report.get('prior_interruption_started_at_utc') == (
-        interruption.get('started_at_utc')
-    )
     commands = start.get('commands')
     assert isinstance(commands, list) and commands
     ui = commands[0]
@@ -1504,6 +1636,56 @@ def _check_hd033_soak_start() -> None:
     just = (ROOT / 'justfile').read_text(encoding='utf-8')
     assert 'start_eight_hour_soak.py --record' not in ci
     assert 'start_eight_hour_soak.py --record' not in just
+    assert start.get('prior_interruption_captures') == committed
+    assert start.get('prior_interruption_captures') == [
+        'evidence/quality/live-soak-interrupted.json',
+        'evidence/quality/live-soak-interrupted-2.json',
+        'evidence/quality/live-soak-interrupted-3.json',
+        'evidence/quality/live-soak-interrupted-4.json',
+        'evidence/quality/live-soak-interrupted-5.json',
+        'evidence/quality/live-soak-interrupted-6.json',
+    ]
+    report = validate_eight_hour_soak_start(ROOT)
+    assert report.get('document_kind') == 'hd033_eight_hour_soak_start'
+    assert report.get('product_ui_started') is True
+    assert report.get('eight_hour_soak_executed') is False
+    assert report.get('soak_hours') is None
+    assert report.get('live_soak') is False
+    assert report.get('ac46_passed') is False
+    assert report.get('result') == 'not_run'
+    assert not _is_hd033_success(report.get('result'))
+    assert report.get('l4_soak') == 'UNVERIFIED'
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('herdr_executed') is False
+    assert report.get('invented_timings') is False
+    assert isinstance(start.get('started_at_utc'), str)
+    assert start.get('started_at_utc') > '2026-09-10T13:06:07Z'
+    assert start.get('started_at_utc') != '2026-09-10T12:49:43Z'
+    assert start.get('started_at_utc') != '2026-09-10T12:19:50Z'
+    assert start.get('started_at_utc') != '2026-09-10T11:56:07Z'
+    assert start.get('started_at_utc') != '2026-09-10T11:35:26Z'
+    assert start.get('started_at_utc') != '2026-09-10T11:11:22Z'
+    assert start.get('started_at_utc') != '2026-09-10T09:49:06Z'
+    assert isinstance(start.get('owned_pids'), list) and start.get('owned_pids')
+    assert start.get('owned_pids') != [69668, 73960]
+    assert start.get('owned_pids') != [91852, 37708]
+    assert start.get('owned_pids') != [21312, 22400]
+    assert start.get('started_at_utc') != interruption.get('started_at_utc')
+    assert start.get('started_at_utc') != second.get('started_at_utc')
+    assert start.get('started_at_utc') != third.get('started_at_utc')
+    assert start.get('started_at_utc') != fourth.get('started_at_utc')
+    assert start.get('started_at_utc') != fifth.get('started_at_utc')
+    assert start.get('started_at_utc') != sixth.get('started_at_utc')
+    assert set(start['owned_pids']).isdisjoint(set(interruption['owned_pids']))
+    assert set(start['owned_pids']).isdisjoint(set(second['owned_pids']))
+    assert set(start['owned_pids']).isdisjoint(set(third['owned_pids']))
+    assert set(start['owned_pids']).isdisjoint(set(fourth['owned_pids']))
+    assert set(start['owned_pids']).isdisjoint(set(fifth['owned_pids']))
+    assert set(start['owned_pids']).isdisjoint(set(sixth['owned_pids']))
+    assert report.get('prior_interruption_started_at_utc') == (
+        interruption.get('started_at_utc')
+    )
 
 
 _HD034_PASS_KEYS = (

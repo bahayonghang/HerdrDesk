@@ -17,6 +17,7 @@ from herddesk_g0.quality import (
     collect_dpi_overlay,
     collect_narrator_overlay,
     narrator_exe_path,
+    soak_interrupt_capture_rels,
     system_dpi,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
@@ -195,10 +196,7 @@ class Hd033ResidualTests(unittest.TestCase):
         )
         self.assertEqual(
             catalog['soak_interruption_captures'],
-            [
-                'evidence/quality/live-soak-interrupted.json',
-                'evidence/quality/live-soak-interrupted-2.json',
-            ],
+            SOAK_INTERRUPT_CAPTURES,
         )
         pointer = json.loads((ROOT / catalog['environment_manifest_pointer']).read_text(encoding='utf-8'))
         self.assertEqual(pointer['result'], 'not_run')
@@ -387,6 +385,42 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertFalse(second['process_running_at_capture'])
         self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
         self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        third = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(encoding='utf-8'))
+        self.assertEqual(third['kind'], 'live_eight_hour_soak_interruption')
+        self.assertEqual(third['result'], 'not_run')
+        self.assertFalse(third['eight_hour_soak_executed'])
+        self.assertIsNone(third['soak_hours'])
+        self.assertIsNone(third['crash_cause'])
+        self.assertFalse(third['process_running_at_capture'])
+        self.assertEqual(third['started_at_utc'], '2026-09-10T11:35:26Z')
+        self.assertEqual(third['owned_pids'], [24744, 27844])
+        fourth = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-4.json').read_text(encoding='utf-8'))
+        self.assertEqual(fourth['kind'], 'live_eight_hour_soak_interruption')
+        self.assertEqual(fourth['result'], 'not_run')
+        self.assertFalse(fourth['eight_hour_soak_executed'])
+        self.assertIsNone(fourth['soak_hours'])
+        self.assertIsNone(fourth['crash_cause'])
+        self.assertFalse(fourth['process_running_at_capture'])
+        self.assertEqual(fourth['started_at_utc'], '2026-09-10T11:56:07Z')
+        self.assertEqual(fourth['owned_pids'], [21312, 22400])
+        fifth = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-5.json').read_text(encoding='utf-8'))
+        self.assertEqual(fifth['kind'], 'live_eight_hour_soak_interruption')
+        self.assertEqual(fifth['result'], 'not_run')
+        self.assertFalse(fifth['eight_hour_soak_executed'])
+        self.assertIsNone(fifth['soak_hours'])
+        self.assertIsNone(fifth['crash_cause'])
+        self.assertFalse(fifth['process_running_at_capture'])
+        self.assertEqual(fifth['started_at_utc'], '2026-09-10T12:19:50Z')
+        self.assertEqual(fifth['owned_pids'], [91852, 37708])
+        sixth = json.loads((ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-6.json').read_text(encoding='utf-8'))
+        self.assertEqual(sixth['kind'], 'live_eight_hour_soak_interruption')
+        self.assertEqual(sixth['result'], 'not_run')
+        self.assertFalse(sixth['eight_hour_soak_executed'])
+        self.assertIsNone(sixth['soak_hours'])
+        self.assertIsNone(sixth['crash_cause'])
+        self.assertFalse(sixth['process_running_at_capture'])
+        self.assertEqual(sixth['started_at_utc'], '2026-09-10T12:49:43Z')
+        self.assertEqual(sixth['owned_pids'], [69668, 73960])
         self.assertEqual(interruption['started_at_utc'], '2026-09-10T09:49:06Z')
         self.assertEqual(interruption['owned_pids'], [89580, 59552, 57712])
 
@@ -1306,6 +1340,64 @@ class Hd033DpiOverlayTests(unittest.TestCase):
             self.assertEqual(str(ctx.exception), 'ac38_passed')
 
 
+SOAK_INTERRUPT_CAPTURES = [
+    'evidence/quality/live-soak-interrupted.json',
+    'evidence/quality/live-soak-interrupted-2.json',
+    'evidence/quality/live-soak-interrupted-3.json',
+    'evidence/quality/live-soak-interrupted-4.json',
+    'evidence/quality/live-soak-interrupted-5.json',
+    'evidence/quality/live-soak-interrupted-6.json',
+]
+# Fixture START after interruption 6. Do not freeze live-soak-start.json to 69668/73960.
+_SOAK_START_AFTER_INTERRUPT6_UTC = '2026-09-10T13:07:00Z'
+_SOAK_START_AFTER_INTERRUPT6_PIDS = [99021, 99022]
+
+
+def _collect_interrupt_bounds(docs):
+    pids = set()
+    latest = ''
+    for doc in docs:
+        for key in ('owned_pids', 'last_heartbeat_alive_pids'):
+            value = doc.get(key)
+            if isinstance(value, list):
+                pids.update(pid for pid in value if isinstance(pid, int) and pid > 0)
+        heartbeat = doc.get('heartbeat_pid')
+        if isinstance(heartbeat, int) and heartbeat > 0:
+            pids.add(heartbeat)
+        for key in ('started_at_utc', 'first_heartbeat_empty_alive_at_utc'):
+            value = doc.get(key)
+            if isinstance(value, str) and value > latest:
+                latest = value
+    return pids, latest
+
+
+def _rebase_start_after_interrupts(start, interrupts):
+    """Drop an inherited START that is itself an interruption (e.g. 69668/73960)."""
+    interrupt_pids, latest = _collect_interrupt_bounds(interrupts)
+    start_at = start.get('started_at_utc')
+    start_pids = {
+        pid for pid in (start.get('owned_pids') or [])
+        if isinstance(pid, int) and pid > 0
+    }
+    if not (
+        (isinstance(start_at, str) and latest and start_at <= latest)
+        or (start_pids & interrupt_pids)
+    ):
+        return
+    start['started_at_utc'] = _SOAK_START_AFTER_INTERRUPT6_UTC
+    start['captured_at_utc'] = _SOAK_START_AFTER_INTERRUPT6_UTC
+    start['owned_pids'] = list(_SOAK_START_AFTER_INTERRUPT6_PIDS)
+    start['heartbeat_pid'] = _SOAK_START_AFTER_INTERRUPT6_PIDS[1]
+    windows = start.get('windows')
+    if isinstance(windows, list) and windows and isinstance(windows[0], dict):
+        windows[0]['pid'] = _SOAK_START_AFTER_INTERRUPT6_PIDS[0]
+    commands = start.get('commands')
+    if isinstance(commands, list) and commands and isinstance(commands[0], dict):
+        commands[0]['pid'] = _SOAK_START_AFTER_INTERRUPT6_PIDS[0]
+        commands[0]['app_pids'] = [_SOAK_START_AFTER_INTERRUPT6_PIDS[0]]
+    start['prior_interruption_captures'] = list(SOAK_INTERRUPT_CAPTURES)
+
+
 def _write_soak_start(
     tmp: Path, *, start_overrides=None, live_overrides=None,
     interruption_overrides=None, skip_interruption=False,
@@ -1327,20 +1419,11 @@ def _write_soak_start(
             encoding='utf-8'
         )
     )
-    if start_overrides:
-        start.update(start_overrides)
-    if 'prior_interruption_captures' not in start:
-        start['prior_interruption_captures'] = [
-            'evidence/quality/live-soak-interrupted.json',
-            'evidence/quality/live-soak-interrupted-2.json',
-        ]
+    interrupt_docs = [interruption]
     if live_overrides:
         live.update(live_overrides)
     if interruption_overrides:
         interruption.update(interruption_overrides)
-    (quality / 'live-soak-start.json').write_text(
-        json.dumps(start), encoding='utf-8'
-    )
     (quality / 'live-soak.not-run.json').write_text(
         json.dumps(live), encoding='utf-8'
     )
@@ -1348,27 +1431,30 @@ def _write_soak_start(
         (quality / 'live-soak-interrupted.json').write_text(
             json.dumps(interruption), encoding='utf-8'
         )
-        second_src = ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json'
-        if second_src.is_file():
-            second = json.loads(second_src.read_text(encoding='utf-8'))
-            (quality / 'live-soak-interrupted-2.json').write_text(
-                json.dumps(second), encoding='utf-8'
-            )
+        for name in (
+            'live-soak-interrupted-2.json',
+            'live-soak-interrupted-3.json',
+            'live-soak-interrupted-4.json',
+            'live-soak-interrupted-5.json',
+            'live-soak-interrupted-6.json',
+        ):
+            src = ROOT / 'evidence' / 'quality' / name
+            if src.is_file():
+                copied = json.loads(src.read_text(encoding='utf-8'))
+                interrupt_docs.append(copied)
+                (quality / name).write_text(json.dumps(copied), encoding='utf-8')
+    _rebase_start_after_interrupts(start, interrupt_docs)
+    if start_overrides:
+        start.update(start_overrides)
+    if 'prior_interruption_captures' not in start:
+        start['prior_interruption_captures'] = list(SOAK_INTERRUPT_CAPTURES)
+    (quality / 'live-soak-start.json').write_text(
+        json.dumps(start), encoding='utf-8'
+    )
 
 
 class Hd033SoakStartTests(unittest.TestCase):
     def test_shipped_start_record_is_not_ac46(self):
-        report = validate_eight_hour_soak_start(ROOT)
-        self.assertEqual(report['document_kind'], 'hd033_eight_hour_soak_start')
-        self.assertTrue(report['product_ui_started'])
-        self.assertFalse(report['eight_hour_soak_executed'])
-        self.assertIsNone(report['soak_hours'])
-        self.assertFalse(report['live_soak'])
-        self.assertFalse(report['ac46_passed'])
-        self.assertEqual(report['result'], 'not_run')
-        self.assertNotIn(str(report['result']).lower(), SUCCESS)
-        self.assertEqual(report['l4_soak'], 'UNVERIFIED')
-        self.assertFalse(report['g0_passed'])
         start = json.loads(
             (ROOT / 'evidence' / 'quality' / 'live-soak-start.json').read_text(
                 encoding='utf-8'
@@ -1400,19 +1486,6 @@ class Hd033SoakStartTests(unittest.TestCase):
             start['prior_interruption_capture'],
             'evidence/quality/live-soak-interrupted.json',
         )
-        self.assertEqual(
-            start['prior_interruption_captures'],
-            [
-                'evidence/quality/live-soak-interrupted.json',
-                'evidence/quality/live-soak-interrupted-2.json',
-            ],
-        )
-        self.assertIsInstance(start['started_at_utc'], str)
-        self.assertGreater(start['started_at_utc'], '2026-09-10T11:14:54Z')
-        self.assertNotEqual(start['started_at_utc'], '2026-09-10T11:11:22Z')
-        self.assertNotEqual(start['started_at_utc'], '2026-09-10T09:49:06Z')
-        self.assertIsInstance(start['owned_pids'], list)
-        self.assertTrue(start['owned_pids'])
         interruption = json.loads(
             (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
                 encoding='utf-8'
@@ -1420,6 +1493,26 @@ class Hd033SoakStartTests(unittest.TestCase):
         )
         second = json.loads(
             (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        third = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        fourth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-4.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        fifth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-5.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        sixth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-6.json').read_text(
                 encoding='utf-8'
             )
         )
@@ -1434,6 +1527,84 @@ class Hd033SoakStartTests(unittest.TestCase):
             second['first_heartbeat_empty_alive_at_utc'],
             '2026-09-10T11:14:54Z',
         )
+        self.assertEqual(third['started_at_utc'], '2026-09-10T11:35:26Z')
+        self.assertEqual(third['owned_pids'], [24744, 27844])
+        self.assertEqual(
+            third['last_heartbeat_alive_at_utc'], '2026-09-10T11:46:44Z'
+        )
+        self.assertEqual(
+            third['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T11:47:45Z',
+        )
+        self.assertEqual(fourth['started_at_utc'], '2026-09-10T11:56:07Z')
+        self.assertEqual(fourth['owned_pids'], [21312, 22400])
+        self.assertEqual(fourth['heartbeat_pid'], 22400)
+        self.assertEqual(
+            fourth['last_heartbeat_alive_at_utc'], '2026-09-10T11:57:20Z'
+        )
+        self.assertEqual(
+            fourth['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T11:58:21Z',
+        )
+        self.assertEqual(fifth['started_at_utc'], '2026-09-10T12:19:50Z')
+        self.assertEqual(fifth['owned_pids'], [91852, 37708])
+        self.assertEqual(fifth['heartbeat_pid'], 37708)
+        self.assertEqual(
+            fifth['last_heartbeat_alive_at_utc'], '2026-09-10T12:20:04Z'
+        )
+        self.assertEqual(
+            fifth['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T12:21:05Z',
+        )
+        self.assertEqual(sixth['started_at_utc'], '2026-09-10T12:49:43Z')
+        self.assertEqual(sixth['owned_pids'], [69668, 73960])
+        self.assertEqual(sixth['heartbeat_pid'], 73960)
+        self.assertEqual(
+            sixth['last_heartbeat_alive_at_utc'], '2026-09-10T13:05:06Z'
+        )
+        self.assertEqual(
+            sixth['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T13:06:07Z',
+        )
+        self.assertFalse(sixth['eight_hour_soak_executed'])
+        self.assertIsNone(sixth['soak_hours'])
+        self.assertIsNone(sixth['crash_cause'])
+        self.assertFalse(fifth['eight_hour_soak_executed'])
+        self.assertIsNone(fifth['soak_hours'])
+        self.assertIsNone(fifth['crash_cause'])
+        self.assertFalse(start['eight_hour_soak_executed'])
+        self.assertIsNone(start['soak_hours'])
+        self.assertFalse(start['ac46_passed'])
+        self.assertNotIn('--project', argv)
+        self.assertNotIn('dotnet', argv)
+        self.assertEqual(
+            start['prior_interruption_captures'],
+            soak_interrupt_capture_rels(ROOT),
+        )
+        self.assertEqual(start['prior_interruption_captures'], SOAK_INTERRUPT_CAPTURES)
+        report = validate_eight_hour_soak_start(ROOT)
+        self.assertEqual(report['document_kind'], 'hd033_eight_hour_soak_start')
+        self.assertTrue(report['product_ui_started'])
+        self.assertFalse(report['eight_hour_soak_executed'])
+        self.assertIsNone(report['soak_hours'])
+        self.assertFalse(report['live_soak'])
+        self.assertFalse(report['ac46_passed'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertNotIn(str(report['result']).lower(), SUCCESS)
+        self.assertEqual(report['l4_soak'], 'UNVERIFIED')
+        self.assertFalse(report['g0_passed'])
+        self.assertGreater(start['started_at_utc'], '2026-09-10T13:06:07Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T12:49:43Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T12:19:50Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T11:56:07Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T11:35:26Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertNotEqual(start['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertIsInstance(start['owned_pids'], list)
+        self.assertTrue(start['owned_pids'])
+        self.assertNotEqual(start['owned_pids'], [69668, 73960])
+        self.assertNotEqual(start['owned_pids'], [91852, 37708])
+        self.assertNotEqual(start['owned_pids'], [21312, 22400])
         self.assertEqual(
             report['prior_interruption_started_at_utc'],
             interruption['started_at_utc'],
@@ -1442,12 +1613,27 @@ class Hd033SoakStartTests(unittest.TestCase):
         self.assertGreater(
             start['started_at_utc'], second['first_heartbeat_empty_alive_at_utc']
         )
+        self.assertGreater(
+            start['started_at_utc'], third['first_heartbeat_empty_alive_at_utc']
+        )
+        self.assertGreater(
+            start['started_at_utc'], fourth['first_heartbeat_empty_alive_at_utc']
+        )
+        self.assertGreater(
+            start['started_at_utc'], fifth['first_heartbeat_empty_alive_at_utc']
+        )
+        self.assertGreater(
+            start['started_at_utc'], sixth['first_heartbeat_empty_alive_at_utc']
+        )
         self.assertTrue(
             set(start['owned_pids']).isdisjoint(interruption['owned_pids'])
         )
         self.assertTrue(set(start['owned_pids']).isdisjoint(second['owned_pids']))
-        self.assertNotIn('--project', argv)
-        self.assertNotIn('dotnet', argv)
+        self.assertTrue(set(start['owned_pids']).isdisjoint(third['owned_pids']))
+        self.assertTrue(set(start['owned_pids']).isdisjoint(fourth['owned_pids']))
+        self.assertTrue(set(start['owned_pids']).isdisjoint(fifth['owned_pids']))
+        self.assertTrue(set(start['owned_pids']).isdisjoint(sixth['owned_pids']))
+        self.assertNotEqual(start['owned_pids'], [24744, 27844])
 
     def test_cli_validates_without_starting_processes(self):
         script = ROOT / 'scripts' / 'start_eight_hour_soak.py'
@@ -1483,11 +1669,39 @@ class Hd033SoakStartTests(unittest.TestCase):
             'CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS',
             src,
         )
+        self.assertIn('STARTF_USESHOWWINDOW', src)
+        self.assertIn('SW_SHOWMINNOACTIVE = 7', src)
         self.assertIn('HerdDesk.App.exe', src)
+        self.assertIn("ui_env['HERDDESK_SOAK_MINIMIZED'] = '1'", src)
+        heartbeat_src = src[src.find('def run_heartbeat'):src.find('def record')]
+        self.assertIn('_show_min_no_active', heartbeat_src)
+        self.assertIn('_herddesk_windows', heartbeat_src)
+        self.assertIn('if not alive:', heartbeat_src)
+        self.assertIn('return 0', heartbeat_src)
+        start_heartbeat_src = src[
+            src.find('def _start_heartbeat'):src.find('def run_heartbeat')
+        ]
+        self.assertIn('env=_dotnet_env()', start_heartbeat_src)
+        self.assertNotIn('HERDDESK_SOAK_MINIMIZED', start_heartbeat_src)
         self.assertIn('subprocess.DEVNULL', src)
         self.assertIn("'stdin': subprocess.DEVNULL", src)
         self.assertNotIn('taskkill', src.lower())
         self.assertNotRegex(src, r"ui_argv = \[\s*str\(dotnet\),\s*'run'")
+        policy = (
+            ROOT / 'src' / 'HerdDesk.App' / 'Quality' / 'SoakLaunchPolicy.cs'
+        ).read_text(encoding='utf-8')
+        self.assertIn('HERDDESK_SOAK_MINIMIZED', policy)
+        self.assertIn('MinimizedEnabledValue = "1"', policy)
+        window = (ROOT / 'src' / 'HerdDesk.App' / 'MainWindow.xaml.cs').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn(
+            'if (SoakLaunchPolicy.SuppressWindowClose())', window
+        )
+        self.assertIn(
+            'AppWindow.Closing += OnSoakAppWindowClosing', window
+        )
+        self.assertIn('args.Cancel = true', window)
 
     def test_structure_contract_invokes_start_record(self):
         repository._check_hd033_soak_start()
@@ -1742,6 +1956,46 @@ class Hd033SoakStartTests(unittest.TestCase):
                 validate_eight_hour_soak_start(root)
             self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
 
+    def test_reused_third_interrupt_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'owned_pids': [24744, 27844]}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_reused_fourth_interrupt_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'owned_pids': [21312, 22400]}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_reused_fifth_interrupt_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'owned_pids': [91852, 37708]}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_reused_sixth_interrupt_pids_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'owned_pids': [69668, 73960]}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
     def test_started_at_between_interruptions_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1762,6 +2016,86 @@ class Hd033SoakStartTests(unittest.TestCase):
                 validate_eight_hour_soak_start(root)
             self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
 
+    def test_started_at_equal_third_empty_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T11:47:45Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_third_start_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T11:35:26Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_fourth_empty_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T11:58:21Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_fourth_start_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T11:56:07Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_fifth_empty_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T12:21:05Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_fifth_start_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T12:19:50Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_sixth_empty_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T13:06:07Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
+    def test_started_at_equal_sixth_start_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root, start_overrides={'started_at_utc': '2026-09-10T12:49:43Z'}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'continuation_of_interrupted_soak')
+
     def test_omitted_second_interruption_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1770,6 +2104,76 @@ class Hd033SoakStartTests(unittest.TestCase):
                 start_overrides={
                     'prior_interruption_captures': [
                         'evidence/quality/live-soak-interrupted.json',
+                    ],
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_omitted_third_interruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root,
+                start_overrides={
+                    'prior_interruption_captures': [
+                        'evidence/quality/live-soak-interrupted.json',
+                        'evidence/quality/live-soak-interrupted-2.json',
+                    ],
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_omitted_fourth_interruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root,
+                start_overrides={
+                    'prior_interruption_captures': [
+                        'evidence/quality/live-soak-interrupted.json',
+                        'evidence/quality/live-soak-interrupted-2.json',
+                        'evidence/quality/live-soak-interrupted-3.json',
+                    ],
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_omitted_fifth_interruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root,
+                start_overrides={
+                    'prior_interruption_captures': [
+                        'evidence/quality/live-soak-interrupted.json',
+                        'evidence/quality/live-soak-interrupted-2.json',
+                        'evidence/quality/live-soak-interrupted-3.json',
+                        'evidence/quality/live-soak-interrupted-4.json',
+                    ],
+                },
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_eight_hour_soak_start(root)
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_omitted_sixth_interruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_soak_start(
+                root,
+                start_overrides={
+                    'prior_interruption_captures': [
+                        'evidence/quality/live-soak-interrupted.json',
+                        'evidence/quality/live-soak-interrupted-2.json',
+                        'evidence/quality/live-soak-interrupted-3.json',
+                        'evidence/quality/live-soak-interrupted-4.json',
+                        'evidence/quality/live-soak-interrupted-5.json',
                     ],
                 },
             )
@@ -1872,6 +2276,244 @@ class Hd033SoakInterruptionTests(unittest.TestCase):
         self.assertEqual(first['owned_pids'], [89580, 59552, 57712])
         self.assertNotEqual(first['started_at_utc'], second['started_at_utc'])
         self.assertTrue(set(first['owned_pids']).isdisjoint(second['owned_pids']))
+
+    def test_shipped_third_interruption_is_not_ac46(self):
+        third = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(third['document_kind'], 'hd033_eight_hour_soak_interruption')
+        self.assertEqual(third['started_at_utc'], '2026-09-10T11:35:26Z')
+        self.assertEqual(
+            third['last_heartbeat_alive_at_utc'], '2026-09-10T11:46:44Z'
+        )
+        self.assertEqual(
+            third['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T11:47:45Z',
+        )
+        self.assertEqual(third['owned_pids'], [24744, 27844])
+        self.assertEqual(third['heartbeat_pid'], 27844)
+        self.assertFalse(third['eight_hour_soak_executed'])
+        self.assertIsNone(third['soak_hours'])
+        self.assertFalse(third['ac46_passed'])
+        self.assertFalse(third['live_soak'])
+        self.assertFalse(third['g0_passed'])
+        self.assertIsNone(third['crash_cause'])
+        self.assertFalse(third['herddesk_crash_dump_found'])
+        self.assertFalse(third['application_error_herddesk'])
+        self.assertFalse(third['process_running_at_capture'])
+        self.assertTrue(third['xerox_print_experience_crash_unrelated'])
+        first = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        second = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(first['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(first['owned_pids'], [89580, 59552, 57712])
+        self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        self.assertNotEqual(first['started_at_utc'], third['started_at_utc'])
+        self.assertNotEqual(second['started_at_utc'], third['started_at_utc'])
+        self.assertTrue(set(first['owned_pids']).isdisjoint(third['owned_pids']))
+        self.assertTrue(set(second['owned_pids']).isdisjoint(third['owned_pids']))
+
+    def test_shipped_fourth_interruption_is_not_ac46(self):
+        fourth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-4.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(fourth['document_kind'], 'hd033_eight_hour_soak_interruption')
+        self.assertEqual(fourth['started_at_utc'], '2026-09-10T11:56:07Z')
+        self.assertEqual(
+            fourth['last_heartbeat_alive_at_utc'], '2026-09-10T11:57:20Z'
+        )
+        self.assertEqual(
+            fourth['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T11:58:21Z',
+        )
+        self.assertEqual(fourth['owned_pids'], [21312, 22400])
+        self.assertEqual(fourth['heartbeat_pid'], 22400)
+        self.assertFalse(fourth['eight_hour_soak_executed'])
+        self.assertIsNone(fourth['soak_hours'])
+        self.assertFalse(fourth['ac46_passed'])
+        self.assertFalse(fourth['live_soak'])
+        self.assertFalse(fourth['g0_passed'])
+        self.assertIsNone(fourth['crash_cause'])
+        self.assertFalse(fourth['herddesk_crash_dump_found'])
+        self.assertFalse(fourth['application_error_herddesk'])
+        self.assertFalse(fourth['process_running_at_capture'])
+        self.assertTrue(fourth['xerox_print_experience_crash_unrelated'])
+        first = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        second = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        third = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(first['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(first['owned_pids'], [89580, 59552, 57712])
+        self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        self.assertEqual(third['started_at_utc'], '2026-09-10T11:35:26Z')
+        self.assertEqual(third['owned_pids'], [24744, 27844])
+        self.assertNotEqual(first['started_at_utc'], fourth['started_at_utc'])
+        self.assertNotEqual(second['started_at_utc'], fourth['started_at_utc'])
+        self.assertNotEqual(third['started_at_utc'], fourth['started_at_utc'])
+        self.assertTrue(set(first['owned_pids']).isdisjoint(fourth['owned_pids']))
+        self.assertTrue(set(second['owned_pids']).isdisjoint(fourth['owned_pids']))
+        self.assertTrue(set(third['owned_pids']).isdisjoint(fourth['owned_pids']))
+
+    def test_shipped_fifth_interruption_is_not_ac46(self):
+        fifth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-5.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(fifth['document_kind'], 'hd033_eight_hour_soak_interruption')
+        self.assertEqual(fifth['started_at_utc'], '2026-09-10T12:19:50Z')
+        self.assertEqual(
+            fifth['last_heartbeat_alive_at_utc'], '2026-09-10T12:20:04Z'
+        )
+        self.assertEqual(
+            fifth['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T12:21:05Z',
+        )
+        self.assertEqual(fifth['owned_pids'], [91852, 37708])
+        self.assertEqual(fifth['heartbeat_pid'], 37708)
+        self.assertFalse(fifth['eight_hour_soak_executed'])
+        self.assertIsNone(fifth['soak_hours'])
+        self.assertFalse(fifth['ac46_passed'])
+        self.assertFalse(fifth['live_soak'])
+        self.assertFalse(fifth['g0_passed'])
+        self.assertIsNone(fifth['crash_cause'])
+        self.assertFalse(fifth['herddesk_crash_dump_found'])
+        self.assertFalse(fifth['application_error_herddesk'])
+        self.assertFalse(fifth['process_running_at_capture'])
+        self.assertTrue(fifth['xerox_print_experience_crash_unrelated'])
+        first = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        second = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        third = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        fourth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-4.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(first['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(first['owned_pids'], [89580, 59552, 57712])
+        self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        self.assertEqual(third['started_at_utc'], '2026-09-10T11:35:26Z')
+        self.assertEqual(third['owned_pids'], [24744, 27844])
+        self.assertEqual(fourth['started_at_utc'], '2026-09-10T11:56:07Z')
+        self.assertEqual(fourth['owned_pids'], [21312, 22400])
+        self.assertNotEqual(first['started_at_utc'], fifth['started_at_utc'])
+        self.assertNotEqual(second['started_at_utc'], fifth['started_at_utc'])
+        self.assertNotEqual(third['started_at_utc'], fifth['started_at_utc'])
+        self.assertNotEqual(fourth['started_at_utc'], fifth['started_at_utc'])
+        self.assertTrue(set(first['owned_pids']).isdisjoint(fifth['owned_pids']))
+        self.assertTrue(set(second['owned_pids']).isdisjoint(fifth['owned_pids']))
+        self.assertTrue(set(third['owned_pids']).isdisjoint(fifth['owned_pids']))
+        self.assertTrue(set(fourth['owned_pids']).isdisjoint(fifth['owned_pids']))
+
+    def test_shipped_sixth_interruption_is_not_ac46(self):
+        sixth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-6.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(sixth['document_kind'], 'hd033_eight_hour_soak_interruption')
+        self.assertEqual(sixth['started_at_utc'], '2026-09-10T12:49:43Z')
+        self.assertEqual(
+            sixth['last_heartbeat_alive_at_utc'], '2026-09-10T13:05:06Z'
+        )
+        self.assertEqual(
+            sixth['first_heartbeat_empty_alive_at_utc'],
+            '2026-09-10T13:06:07Z',
+        )
+        self.assertEqual(sixth['owned_pids'], [69668, 73960])
+        self.assertEqual(sixth['heartbeat_pid'], 73960)
+        self.assertFalse(sixth['eight_hour_soak_executed'])
+        self.assertIsNone(sixth['soak_hours'])
+        self.assertFalse(sixth['ac46_passed'])
+        self.assertFalse(sixth['live_soak'])
+        self.assertFalse(sixth['g0_passed'])
+        self.assertIsNone(sixth['crash_cause'])
+        self.assertFalse(sixth['herddesk_crash_dump_found'])
+        self.assertFalse(sixth['application_error_herddesk'])
+        self.assertFalse(sixth['process_running_at_capture'])
+        self.assertTrue(sixth['xerox_print_experience_crash_unrelated'])
+        first = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        second = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-2.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        third = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-3.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        fourth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-4.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        fifth = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-soak-interrupted-5.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(first['started_at_utc'], '2026-09-10T09:49:06Z')
+        self.assertEqual(first['owned_pids'], [89580, 59552, 57712])
+        self.assertEqual(second['started_at_utc'], '2026-09-10T11:11:22Z')
+        self.assertEqual(second['owned_pids'], [46108, 64672, 71980])
+        self.assertEqual(third['started_at_utc'], '2026-09-10T11:35:26Z')
+        self.assertEqual(third['owned_pids'], [24744, 27844])
+        self.assertEqual(fourth['started_at_utc'], '2026-09-10T11:56:07Z')
+        self.assertEqual(fourth['owned_pids'], [21312, 22400])
+        self.assertEqual(fifth['started_at_utc'], '2026-09-10T12:19:50Z')
+        self.assertEqual(fifth['owned_pids'], [91852, 37708])
+        self.assertNotEqual(first['started_at_utc'], sixth['started_at_utc'])
+        self.assertNotEqual(second['started_at_utc'], sixth['started_at_utc'])
+        self.assertNotEqual(third['started_at_utc'], sixth['started_at_utc'])
+        self.assertNotEqual(fourth['started_at_utc'], sixth['started_at_utc'])
+        self.assertNotEqual(fifth['started_at_utc'], sixth['started_at_utc'])
+        self.assertTrue(set(first['owned_pids']).isdisjoint(sixth['owned_pids']))
+        self.assertTrue(set(second['owned_pids']).isdisjoint(sixth['owned_pids']))
+        self.assertTrue(set(third['owned_pids']).isdisjoint(sixth['owned_pids']))
+        self.assertTrue(set(fourth['owned_pids']).isdisjoint(sixth['owned_pids']))
+        self.assertTrue(set(fifth['owned_pids']).isdisjoint(sixth['owned_pids']))
 
     def test_structure_contract_invokes_interruption_record(self):
         repository._check_hd033_soak_start()

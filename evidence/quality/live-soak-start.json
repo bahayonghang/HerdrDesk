@@ -3,10 +3,10 @@
   "template": false,
   "capture_id": "hd033-live-soak-start-2026-09-10",
   "kind": "live_eight_hour_soak_start",
-  "started_at_utc": "2026-09-10T11:35:26Z",
-  "captured_at_utc": "2026-09-10T11:35:26Z",
+  "started_at_utc": "2026-09-10T13:30:51Z",
+  "captured_at_utc": "2026-09-10T13:30:51Z",
   "operator_scope": "product_ui_eight_hour_soak_started_wall_clock_incomplete",
-  "git_sha": "19a436608770ad4a7462c71e1e9b098faa93a3c8",
+  "git_sha": "98cdb292ea8618800b5c488d1ec87766f29855e8",
   "platform": {
     "sys_platform": "win32",
     "system": "Windows",
@@ -33,14 +33,14 @@
   "window_seen": true,
   "process_running_at_capture": true,
   "owned_pids": [
-    24744,
-    27844
+    76508,
+    85848
   ],
-  "heartbeat_pid": 27844,
+  "heartbeat_pid": 85848,
   "windows": [
     {
       "title": "HerdDesk",
-      "pid": 24744
+      "pid": 76508
     }
   ],
   "commands": [
@@ -51,9 +51,9 @@
         "--ui",
         "<temp-root>"
       ],
-      "pid": 24744,
+      "pid": 76508,
       "app_pids": [
-        24744
+        76508
       ],
       "exit_code": null,
       "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -67,7 +67,11 @@
   "prior_interruption_capture": "evidence/quality/live-soak-interrupted.json",
   "prior_interruption_captures": [
     "evidence/quality/live-soak-interrupted.json",
-    "evidence/quality/live-soak-interrupted-2.json"
+    "evidence/quality/live-soak-interrupted-2.json",
+    "evidence/quality/live-soak-interrupted-3.json",
+    "evidence/quality/live-soak-interrupted-4.json",
+    "evidence/quality/live-soak-interrupted-5.json",
+    "evidence/quality/live-soak-interrupted-6.json"
   ],
   "blocker": null,
   "limitations": [

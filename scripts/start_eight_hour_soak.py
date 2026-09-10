@@ -42,6 +42,8 @@ WINDOW_WAIT_SEC = 120
 CREATE_BREAKAWAY_FROM_JOB = 0x01000000
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
+STARTF_USESHOWWINDOW = getattr(subprocess, 'STARTF_USESHOWWINDOW', 0x00000001)
+SW_SHOWMINNOACTIVE = 7
 SPAWN_FLAGS = (
     CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS
 )
@@ -184,7 +186,9 @@ def _visible_windows() -> list[dict[str, Any]]:
         found: list[dict[str, Any]] = []
 
         def callback(hwnd, _lparam):
-            if not user32.IsWindowVisible(hwnd):
+            visible = bool(user32.IsWindowVisible(hwnd))
+            iconic = bool(user32.IsIconic(hwnd))
+            if not visible and not iconic:
                 return True
             length = user32.GetWindowTextLengthW(hwnd)
             buf = ctypes.create_unicode_buffer(length + 1)
@@ -225,6 +229,25 @@ def _dotnet_env() -> dict[str, str]:
     return env
 
 
+def _spawn_startupinfo() -> Any:
+    if not hasattr(subprocess, 'STARTUPINFO'):
+        return None
+    info = subprocess.STARTUPINFO()
+    info.dwFlags |= STARTF_USESHOWWINDOW
+    info.wShowWindow = SW_SHOWMINNOACTIVE
+    return info
+
+
+def _show_min_no_active(hwnd: Any) -> None:
+    if os.name != 'nt' or not hwnd:
+        return
+    try:
+        user32 = ctypes.WinDLL('user32', use_last_error=True)
+        user32.ShowWindow(int(hwnd), SW_SHOWMINNOACTIVE)
+    except (OSError, TypeError, ValueError):
+        return
+
+
 def _spawn_detached(
     argv: list[str],
     *,
@@ -242,6 +265,9 @@ def _spawn_detached(
         'stdin': subprocess.DEVNULL,
         'close_fds': False,
     }
+    startupinfo = _spawn_startupinfo()
+    if startupinfo is not None:
+        kwargs['startupinfo'] = startupinfo
     try:
         return subprocess.Popen(creationflags=SPAWN_FLAGS, **kwargs)
     except OSError:
@@ -335,6 +361,8 @@ def run_heartbeat(pids: list[int], path: Path, started_at: str) -> int:
             'ac46_passed': False,
             'invented_timings': False,
         }
+        for item in _herddesk_windows(set(alive)):
+            _show_min_no_active(item.get('hwnd'))
         with path.open('a', encoding='utf-8') as handle:
             handle.write(json.dumps(row, ensure_ascii=False) + '\n')
         if not alive:
@@ -365,6 +393,8 @@ def record(root: Path) -> dict[str, Any]:
     stdout_handle = stdout_path.open('wb')
     stderr_handle = stderr_path.open('wb')
     env = _dotnet_env()
+    ui_env = dict(env)
+    ui_env['HERDDESK_SOAK_MINIMIZED'] = '1'
     dotnet = _dotnet_exe()
     build = subprocess.run(
         [
@@ -399,7 +429,7 @@ def record(root: Path) -> dict[str, Any]:
         ui_proc = _spawn_detached(
             ui_argv,
             cwd=exe.parent,
-            env=env,
+            env=ui_env,
             stdout_handle=stdout_handle,
             stderr_handle=stderr_handle,
         )
@@ -420,6 +450,8 @@ def record(root: Path) -> dict[str, Any]:
                     str(item.get('title') or '') == 'HerdDesk' for item in windows
                 )
                 if window_seen:
+                    for item in windows:
+                        _show_min_no_active(item.get('hwnd'))
                     break
             time.sleep(0.5)
         if ui_started and not window_seen:
@@ -427,6 +459,9 @@ def record(root: Path) -> dict[str, Any]:
             window_seen = any(
                 str(item.get('title') or '') == 'HerdDesk' for item in windows
             )
+        if window_seen:
+            for item in windows:
+                _show_min_no_active(item.get('hwnd'))
         if not ui_started and ui_proc.poll() is None:
             ui_started = _pid_running(ui_pid)
             if ui_started:

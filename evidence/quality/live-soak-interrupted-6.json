@@ -1,0 +1,74 @@
+{
+  "document_kind": "hd033_eight_hour_soak_interruption",
+  "template": false,
+  "capture_id": "hd033-live-soak-interrupted-6-2026-09-10",
+  "kind": "live_eight_hour_soak_interruption",
+  "started_at_utc": "2026-09-10T12:49:43Z",
+  "last_heartbeat_alive_at_utc": "2026-09-10T13:05:06Z",
+  "last_heartbeat_alive_pids": [
+    69668
+  ],
+  "first_heartbeat_empty_alive_at_utc": "2026-09-10T13:06:07Z",
+  "first_heartbeat_empty_alive_pids": [],
+  "captured_at_utc": "2026-09-10T13:14:12Z",
+  "operator_scope": "product_ui_eight_hour_soak_interrupted_wall_clock_incomplete",
+  "git_sha": "98cdb292ea8618800b5c488d1ec87766f29855e8",
+  "platform": {
+    "sys_platform": "win32",
+    "system": "Windows",
+    "release": "11",
+    "version": "10.0.26200",
+    "machine": "AMD64",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "result": "not_run",
+  "evidence_level": "interrupted",
+  "live_soak": false,
+  "eight_hour_soak_executed": false,
+  "soak_hours": null,
+  "disconnect_switch_count": null,
+  "sample_count": null,
+  "ac46_passed": false,
+  "l4_soak": "UNVERIFIED",
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "herdr_executed": false,
+  "winui_admitted": false,
+  "invented_timings": false,
+  "product_ui_started": true,
+  "window_seen": true,
+  "process_running_at_capture": false,
+  "owned_pids": [
+    69668,
+    73960
+  ],
+  "heartbeat_pid": 73960,
+  "windows": [
+    {
+      "title": "HerdDesk",
+      "pid": 69668
+    }
+  ],
+  "herddesk_crash_dump_found": false,
+  "application_error_herddesk": false,
+  "crash_cause": null,
+  "soak_stdout_empty": true,
+  "soak_stderr_empty": true,
+  "soak_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "soak_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "xerox_print_experience_crash_unrelated": true,
+  "heartbeat_gitignored_path": "probe-results/hd033-soak-heartbeat.jsonl",
+  "committed_raw": true,
+  "prior_interruption_capture": "evidence/quality/live-soak-interrupted.json",
+  "blocker": "owned_pids_exited_before_eight_hours",
+  "limitations": [
+    "Product UI --ui soak START at 2026-09-10T12:49:43Z owned_pids 69668/73960 exited before 8 wall-clock hours.",
+    "Heartbeat last wrote alive_pids=[69668] at 2026-09-10T13:05:06Z and alive_pids=[] at 2026-09-10T13:06:07Z.",
+    "Both owned PIDs were not running at capture. Diagnostic PID 12632 was also dead. No HerdDesk crash dump was found. soak stdout/stderr were empty. crash_cause stays null. Do not invent a crash cause.",
+    "Wall-clock elapsed is under 8 hours. soak_hours stays null. Do not write soak_hours from a few minutes or round up to 8.",
+    "eight_hour_soak_executed stays false. This file is not live_soak success and does not pass AC46, L4, or G0.",
+    "This capture does not overwrite evidence/quality/live-soak-interrupted.json (2026-09-10T09:49:06Z PIDs 89580/59552/57712) or evidence/quality/live-soak-interrupted-2.json (2026-09-10T11:11:22Z PIDs 46108/64672/71980) or evidence/quality/live-soak-interrupted-3.json (2026-09-10T11:35:26Z PIDs 24744/27844) or evidence/quality/live-soak-interrupted-4.json (2026-09-10T11:56:07Z PIDs 21312/22400) or evidence/quality/live-soak-interrupted-5.json (2026-09-10T12:19:50Z PIDs 91852/37708).",
+    "100 disconnect/switch cycles and live herdr/SSH fault injection were not authorized and were not faked.",
+    "A later product-UI --ui soak START is a new capture in evidence/quality/live-soak-start.json, not completion of this run."
+  ]
+}
