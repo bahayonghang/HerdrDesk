@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "L2 product 6f37324: new_lab_certificate.ps1 CurrentUser lab cert. PFX gitignored. Sign without MSIX fail-closed. Live sign/install UNVERIFIED. AC41/AC42/G0 not passed.",
+  "notes": "Lab MSIX overlay product d653d31: live-lab-msix.json MakeAppx pack + SignTool on this desktop; lab_msix_packed/lab_signature_applied true on that file only. signed_msix_built/live_sign/live_install stay false. PFX/MSIX gitignored. AC41/AC42/G0 not passed.",
   "meta": {
     "source_task": "HD-034",
     "phase": "P5"

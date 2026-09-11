@@ -38,6 +38,7 @@ scripts/validate_repository.py
 scripts/check_capture.py
 scripts/package_release.ps1  HD-034 L2 unsigned layout Build/Verify/Sign; Sign fails closed without -CertificatePath; Sign with cert and no MSIX fails closed
 scripts/new_lab_certificate.ps1  HD-034 L2 lab CurrentUser cert overlay; not AC41; PFX gitignored; not a release Publisher
+scripts/record_lab_msix.py  HD-034 optional lab MakeAppx/SignTool overlay; default validates only; `--record` is not CI; may set lab_msix_packed / lab_signature_applied true on live-lab-msix.json only; not AC41; not live install; not a production Publisher
 scripts/collect_narrator_overlay.py  HD-033 L2 Narrator presence overlay CLI; not AC37; does not start Narrator
 scripts/record_narrator_product_ui_launch.py  HD-033 product-UI --ui + Narrator.exe launch recorder; default validates only; --record is not CI; not AC37
 scripts/collect_dpi_overlay.py  HD-033 L2 current-system-DPI overlay CLI; not AC38; does not change display scale; not a 100/150/200 matrix

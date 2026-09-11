@@ -8,7 +8,7 @@ L1 收口目录。指向已交付的 HD-007 配置/宿主、HD-011 设置 ViewMo
 - `evidence/packaging/support-matrix.json`
 - `implementation/hd-034-l2.json`
 
-`phase_gate=not_passed`。`g0_passed=false`。`ac41_passed` / `ac42_passed` 为 false。模板文件 `template=true`，空 hash / 退出码 / Publisher，不是一次成功运行。假 Publisher 不能让 AC41 通过。未签名本地构建不能当发行安装证据。复制旧 EXE 不能当回滚。`packaging/` 为 lab identity 未签名 layout 叠加，不是 WAP 工程，不是发行 Publisher。`scripts/new_lab_certificate.ps1` 是 lab CurrentUser 证书 overlay，不是 AC41；PFX 只写 gitignored 路径。`evidence/packaging/lab-sign-overlay-pointer.json` 不是 live 签名成功行。`App.xaml` 已存在。`tests/Integration.Windows` 是 `net10.0` 控制台 runner，catalog token 仍为 false。
+`phase_gate=not_passed`。`g0_passed=false`。`ac41_passed` / `ac42_passed` 为 false。模板文件 `template=true`，空 hash / 退出码 / Publisher，不是一次成功运行。假 Publisher 不能让 AC41 通过。未签名本地构建不能当发行安装证据。复制旧 EXE 不能当回滚。`packaging/` 为 lab identity 未签名 layout 叠加，不是 WAP 工程，不是发行 Publisher。`scripts/new_lab_certificate.ps1` 是 lab CurrentUser 证书 overlay，不是 AC41；PFX 只写 gitignored 路径。`scripts/record_lab_msix.py` 是可选 lab MakeAppx/SignTool overlay，不是 AC41；默认不 `--record`。`evidence/packaging/lab-sign-overlay-pointer.json` 不是 live 签名成功行。`App.xaml` 已存在。`tests/Integration.Windows` 是 `net10.0` 控制台 runner，catalog token 仍为 false。
 
 ## 执行卡
 
