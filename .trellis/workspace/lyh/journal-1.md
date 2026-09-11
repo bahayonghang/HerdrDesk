@@ -40,3 +40,32 @@
 ### Next Steps
 
 - Parent remains planning; live AC37/38/46 still need grants.
+
+
+## Session 2: Fill WinUI frontend spec
+
+**Date**: 2026-09-11
+**Task**: Fill WinUI frontend spec
+**Branch**: `main`
+
+### Summary
+
+HD-033 archived; frontend specs rewritten from App WinUI/XAML; bootstrap stays in_progress.
+
+### Main Changes
+
+- Filled .trellis/spec/frontend from src/HerdDesk.App; updated AGENTS/CLAUDE/harness-workflows; parent notes record 36/36 L2 overlay closeout.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2bc49ce` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Do not archive bootstrap until developer confirms. Do not start parent 09-08-windows-desktop-full. No new HD-037 without consent. No live AC37/38/46.
