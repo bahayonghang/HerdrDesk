@@ -18,6 +18,7 @@
   "invented_timings": false,
   "limitations": [
     "A product-UI --ui + Narrator.exe launch was recorded in evidence/quality/narrator-product-ui-launch.json. That launch is not AC37 and does not set live_narrator success.",
+    "Keyboard chrome retry is not AC37 workflow completion; search/request-control/release/close-confirm stay not_completed.",
     "AC37 search / request-control / release / close-confirm was not completed; no live session; herdr writes remain forbidden.",
     "The L2 Narrator overlay still records presence versus launched and does not start Narrator.exe.",
     "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",

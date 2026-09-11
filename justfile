@@ -1,5 +1,6 @@
-# Local G0 recipes. Same steps as .github/workflows/ci.yml.
-# No live herdr, SSH, WinUI, takeover, or github publish.
+# Local G0 recipes. just ci matches .github/workflows/ci.yml.
+# just ci does not launch live herdr, SSH, WinUI, takeover, or github publish.
+# just dev is Windows-only opt-in product UI. It is not part of ci and is not AC/G0 pass.
 
 set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
 set dotenv-load := false
@@ -10,6 +11,9 @@ configuration := env_var_or_default("CONFIGURATION", "Release")
 solution := "HerdDesk.slnx"
 smoke_project := "tests/HerdDesk.Core.SmokeTests"
 capture_file := "tests/fixtures/terminal-valid.ndjson"
+app_project := "src/HerdDesk.App"
+ui_framework := "net10.0-windows10.0.19041.0"
+dev_root := env_var_or_default("HERDDESK_DEV_ROOT", "probe-results/dev-ui")
 
 export DOTNET_NOLOGO := "1"
 export DOTNET_CLI_TELEMETRY_OPTOUT := "1"
@@ -43,6 +47,17 @@ sdk:
 build:
     {{dotnet}} restore {{solution}}
     {{dotnet}} build {{solution}} --configuration {{configuration}} -p:HerdDeskBclOnly=true --no-restore
+
+# Windows product UI. Not just ci. Writes probe-results/dev-ui (gitignored), not user AppData.
+[windows]
+[group('app')]
+dev:
+    {{dotnet}} run --project {{app_project}} --configuration {{configuration}} --framework {{ui_framework}} -- --ui {{dev_root}}
+
+[unix]
+[group('app')]
+dev:
+    {{python}} -c "raise SystemExit('just dev starts the Windows product UI')"
 
 [group('dotnet')]
 smoke: build

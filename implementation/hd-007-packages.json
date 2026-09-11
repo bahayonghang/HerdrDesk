@@ -3,7 +3,7 @@
   "document_kind": "hd007_package_probe",
   "sdk": {
     "global_json": "10.0.400",
-    "roll_forward": "disable",
+    "roll_forward": "latestMinor",
     "dotnet_version_observed": "10.0.400"
   },
   "nuget_config_product": "nuget.org_https_mapped",

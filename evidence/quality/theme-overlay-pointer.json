@@ -1,0 +1,31 @@
+{
+  "document_kind": "hd033_theme_overlay_pointer",
+  "template": false,
+  "live_status": "UNVERIFIED",
+  "result": "not_run",
+  "raw_gitignored_path": "probe-results/hd033-theme-overlay.json",
+  "committed_raw": false,
+  "herdr_executed": false,
+  "live_dpi": false,
+  "ac38_passed": false,
+  "g0_passed": false,
+  "phase_gate": "not_passed",
+  "l3_dpi": "UNVERIFIED",
+  "theme_matrix_executed": false,
+  "high_contrast_executed": false,
+  "multi_monitor_executed": false,
+  "apps_use_light_theme_changed_by_collector": false,
+  "high_contrast_changed_by_collector": false,
+  "single_theme_sample_is_not_matrix": true,
+  "invented_timings": false,
+  "github_required_check": "UNVERIFIED",
+  "l2_collectors": "shipped",
+  "l2_collectors_are_not_live_pass": true,
+  "limitations": [
+    "Current AppsUseLightTheme, SystemUsesLightTheme, HighContrast, and monitor count are recorded by the overlay. Tests and CI do not change theme, high-contrast, or display topology.",
+    "A single theme/high-contrast/monitor sample is not a light/dark/high-contrast x monitor matrix.",
+    "This pointer is not live AC38 evidence.",
+    "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
+    "Hosted CI is not an interactive desktop."
+  ]
+}

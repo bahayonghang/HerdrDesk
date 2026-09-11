@@ -1,11 +1,11 @@
 {
   "document_kind": "hd033_narrator_product_ui_launch",
   "template": false,
-  "capture_id": "hd033-narrator-product-ui-launch-2026-09-10",
+  "capture_id": "hd033-narrator-product-ui-launch-2026-09-11",
   "kind": "narrator_product_ui_launch",
-  "captured_at_utc": "2026-09-10T09:18:20Z",
+  "captured_at_utc": "2026-09-11T02:35:35Z",
   "operator_scope": "product_ui_and_narrator_launch_ac37_workflow_incomplete",
-  "git_sha": "20c64e8a866289e3cf042a6afce135c7779da2ea",
+  "git_sha": "b94470b38f68664e5fae93990b8d13823c795292",
   "platform": {
     "sys_platform": "win32",
     "system": "Windows",
@@ -38,47 +38,44 @@
     "release": "not_completed",
     "close_confirm": "not_completed"
   },
-  "keyboard_chrome": "set_foreground_failed",
-  "uia_chrome_names_found": [
-    "连接状态",
-    "设置",
-    "诊断",
-    "关于",
-    "设备与会话",
-    "设备与会话",
-    "添加设备",
-    "诊断"
+  "keyboard_chrome": "ctrl_k_sent",
+  "keyboard_chrome_attempts": [
+    "hwnd=0x1e31770",
+    "input_sizeof=40",
+    "show_restore_ok",
+    "allow_set_foreground_false",
+    "lock_set_foreground_unlock_false",
+    "attach_fg_1_ok",
+    "attach_hwnd_1_ok",
+    "set_foreground_1_ok",
+    "foreground_match_1_ok",
+    "send_input_ctrl_k_ok"
   ],
+  "search_palette_name_seen": false,
+  "uia_chrome_names_found": [],
   "uia": {
     "ok": true,
     "error": null,
-    "name_count": 14
+    "name_count": 14,
+    "names_sample": []
   },
   "windows": [
     {
       "title": "HerdDesk",
-      "pid": 52564
+      "pid": 19952
     }
   ],
   "commands": [
     {
       "role": "product_ui",
       "command_redacted": [
-        "dotnet",
-        "run",
-        "--project",
-        "src/HerdDesk.App",
-        "--framework",
-        "net10.0-windows10.0.19041.0",
-        "--configuration",
-        "Release",
-        "--",
+        "HerdDesk.App.exe",
         "--ui",
         "<temp-root>"
       ],
-      "pid": 78280,
+      "pid": 19952,
       "app_pids": [
-        52564
+        19952
       ],
       "exit_code": 1,
       "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -92,7 +89,7 @@
         "Narrator.exe"
       ],
       "start_method": "shellexecute",
-      "pid": 83824,
+      "pid": 45264,
       "exit_code": 255,
       "stdout_sha256": null,
       "stderr_sha256": null
@@ -104,6 +101,8 @@
   "limitations": [
     "Product UI --ui and Narrator.exe were launched on this Windows desktop.",
     "AC37 search / request-control / release / close-confirm was not completed; no live session; herdr writes remain forbidden.",
+    "Keyboard chrome retry is not AC37 workflow completion. AutomationProperties names after Ctrl+K are not screen-reader evidence.",
+    "UIA names_sample is omitted; UTF-16 control names were not preserved as Unicode in this capture. name_count is kept.",
     "RequestControl was not invoked. Overlay collector did not start Narrator.",
     "Shipped AutomationProperties names are not screen-reader evidence.",
     "This file is not live_narrator success and does not pass AC37 or G0.",

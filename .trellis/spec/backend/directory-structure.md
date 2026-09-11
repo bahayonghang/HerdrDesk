@@ -40,8 +40,9 @@ scripts/package_release.ps1  HD-034 L2 unsigned layout Build/Verify/Sign; Sign f
 scripts/new_lab_certificate.ps1  HD-034 L2 lab CurrentUser cert overlay; not AC41; PFX gitignored; not a release Publisher
 scripts/record_lab_msix.py  HD-034 optional lab MakeAppx/SignTool overlay; default validates only; `--record` is not CI; may set lab_msix_packed / lab_signature_applied true on live-lab-msix.json only; not AC41; not live install; not a production Publisher
 scripts/collect_narrator_overlay.py  HD-033 L2 Narrator presence overlay CLI; not AC37; does not start Narrator
-scripts/record_narrator_product_ui_launch.py  HD-033 product-UI --ui + Narrator.exe launch recorder; default validates only; --record is not CI; not AC37
+scripts/record_narrator_product_ui_launch.py  HD-033 product-UI --ui + Narrator.exe launch recorder; default validates only; --record is not CI; foreground+Ctrl+K retry is not AC37 workflow completion; not AC37
 scripts/collect_dpi_overlay.py  HD-033 L2 current-system-DPI overlay CLI; not AC38; does not change display scale; not a 100/150/200 matrix
+scripts/collect_theme_overlay.py  HD-033 L2 current-system theme overlay CLI; not AC38; does not change theme, high-contrast, or display topology; not a light/dark/high-contrast x monitor matrix
 scripts/record_dpi_matrix.py  HD-033 scale-only 100/150/200 DisplayConfig overlay; default validates only; `--record` is not CI; may set dpi_matrix_100_150_200_executed true on live-dpi-matrix.json only; not AC38; not theme/monitor/high-contrast; pointer overlay stays matrix-false
 scripts/start_eight_hour_soak.py  HD-033 product-UI --ui 8h soak START; default validates only; --record is not CI; --record-elapsed fails closed before 8 wall-clock hours or when START PIDs do not match live processes; --watch-elapsed spawns a detached due-watcher and does not add its PID to START owned_pids; live-soak-elapsed.json may be present; eight_hour_soak_executed may be true on that file only and is not AC46; launches windows TFM Release win-x64 HerdDesk.App.exe with CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS and STARTF_USESHOWWINDOW + SW_SHOWMINNOACTIVE=7; START is not eight_hour_soak_executed; interruption captures are not 8h; later START must be a new wall-clock and must not reuse interrupted PIDs
 scripts/record_soak_working_set.py  HD-033 soak-process working-set overlay; default validates only; --record samples the running START App PID and does not launch --ui; not CI; live-soak-working-set.json is optional until recorded and is not AC29/AC46; not 1/4 pane; not 100 open/close; sampler PID is not added to START owned_pids; live-working-set.not-run.json stays the 1/4-pane lab not_run row
@@ -51,7 +52,7 @@ packaging/                  HD-034 L2 lab identity overlay (`Package.appxmanifes
 HerdDesk.slnx
 Directory.Build.props       net10.0 default TFM, nullable, TreatWarningsAsErrors
 Directory.Packages.props    admitted Microsoft.WindowsAppSDK.WinUI 2.3.6
-global.json                 SDK 10.0.400, rollForward=disable
+global.json                 SDK 10.0.400 floor, rollForward=latestMinor
 NuGet.Config                nuget.org mapped to Microsoft.WindowsAppSDK.*, Microsoft.Web.WebView2, Microsoft.Windows.SDK.BuildTools, Microsoft.Windows.SDK.BuildTools.MSIX
 ```
 

@@ -4,10 +4,14 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
+import validate_repository as repository
+
 SETUP_SCRIPT = ROOT / 'scripts' / 'Invoke-HerdDeskDotnetSetup.ps1'
 GLOBAL_JSON = ROOT / 'global.json'
 
@@ -84,6 +88,15 @@ def _pinned_sdk():
     return json.loads(GLOBAL_JSON.read_text(encoding='utf-8'))['sdk']['version']
 
 
+def _sdk_pin():
+    return json.loads(GLOBAL_JSON.read_text(encoding='utf-8'))['sdk']
+
+
+def _bump_patch(version, delta):
+    major, minor, patch = version.split('.')
+    return f'{major}.{minor}.{int(patch) + delta}'
+
+
 class SetupScriptContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -91,11 +104,16 @@ class SetupScriptContractTests(unittest.TestCase):
         cls.pinned = _pinned_sdk()
 
     def test_global_json_is_only_sdk_pin(self):
+        pin = _sdk_pin()
+        self.assertEqual(pin['rollForward'], 'latestMinor')
+        self.assertIs(pin['allowPrerelease'], False)
         self.assertNotRegex(self.source, r"ExpectedSdk\s*=\s*'10\.0\.400'")
         self.assertNotRegex(self.source, r"ExpectedSdk\s*=\s*\"10\.0\.400\"")
+        self.assertNotRegex(self.source, r'\$version -ne \$sdkVersion')
+        self.assertIn('rollForward', self.source)
         self.assertIn("Get-Content -LiteralPath $path -Raw -Encoding utf8", self.source)
         self.assertIn('global.json', self.source)
-        self.assertIn(self.pinned, json.dumps(json.loads(GLOBAL_JSON.read_text(encoding='utf-8'))))
+        self.assertIn(self.pinned, json.dumps(pin))
 
     def test_winget_only_in_install_sink(self):
         install = _function_body(self.source, 'Install-PinnedSdk')
@@ -149,6 +167,13 @@ class SetupScriptContractTests(unittest.TestCase):
         self.assertNotRegex(just, r"ExpectedSdk\s*=\s*'10\.0\.400'")
         self.assertNotIn('10.0.400', just)
 
+    def test_justfile_dev_is_opt_in_not_ci(self):
+        just = (ROOT / 'justfile').read_text(encoding='utf-8')
+        repository.assert_justfile_ui_is_opt_in_dev(just)
+        self.assertIn('net10.0-windows10.0.19041.0', just)
+        self.assertIn('probe-results/dev-ui', just)
+        self.assertIn('src/HerdDesk.App', just.split('dev:', 1)[1])
+
 
 class SetupFlowTests(unittest.TestCase):
     @classmethod
@@ -168,10 +193,11 @@ class SetupFlowTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.tmpdir.cleanup()
 
-    def make_host(self, *, sdk=True, version=None):
+    def make_host(self, *, sdk=True, version=None, sdk_dir_version=None):
         host = Path(tempfile.mkdtemp(prefix='herddesk-dotnet-host-', dir=self.tmpdir.name))
         if sdk:
-            (host / 'sdk' / self.pinned).mkdir(parents=True)
+            folder = self.pinned if sdk_dir_version is None else sdk_dir_version
+            (host / 'sdk' / folder).mkdir(parents=True)
         if version is not None:
             (host / 'dotnet.cmd').write_text(
                 f'@echo off\r\necho {version}\r\nexit /b 0\r\n',
@@ -242,6 +268,26 @@ class SetupFlowTests(unittest.TestCase):
         self.assertIn('User environment was not written', result['stdout'])
         self.assertIn('do not return to the parent shell', result['stdout'])
         self.assertIn('just build', result['stdout'])
+
+    def test_newer_patch_does_not_use_sinks(self):
+        newer = _bump_patch(self.pinned, 1)
+        host = self.make_host(sdk=True, version=newer, sdk_dir_version=newer)
+        result = self.run_flow(host)
+        self.assertEqual(result['exit_code'], 0, result['error'] or result['stderr'])
+        self.assertEqual(result['returncode'], 0)
+        self.assert_sinks_unused(result)
+        self.assertIn('Read-only check complete', result['stdout'])
+
+    def test_older_patch_exits_nonzero_without_sinks(self):
+        older = _bump_patch(self.pinned, -1)
+        host = self.make_host(sdk=True, version=older, sdk_dir_version=older)
+        result = self.run_flow(host)
+        self.assertNotEqual(result['exit_code'], 0)
+        self.assertNotEqual(result['returncode'], 0)
+        self.assert_sinks_unused(result)
+        self.assertIn('missing', result['error'].lower())
+        self.assertIn(self.pinned, result['error'])
+        self.assertIn('-InstallPinnedSdk', result['error'])
 
     def test_missing_sdk_default_exits_nonzero_without_sinks(self):
         host = self.make_host(sdk=False)

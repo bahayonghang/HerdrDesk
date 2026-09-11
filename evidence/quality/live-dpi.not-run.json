@@ -22,6 +22,7 @@
   "limitations": [
     "2026-09-10 lab: Windows 11 x64. Product DPI theme/monitor/high-contrast matrix not run.",
     "A scale-only 100/150/200 overlay may exist in evidence/quality/live-dpi-matrix.json. That overlay is not this live_dpi_theme row, not AC38, and does not pass live_dpi.",
+    "A current-system theme overlay may exist in evidence/quality/theme-overlay-pointer.json. That overlay is not this live_dpi_theme row, not a light/dark/high-contrast x monitor matrix, not AC38, and does not pass live_dpi.",
     "WinUI four-zone Shell XAML is in tree. tests/Integration.Windows is a net10.0 console runner and does not launch a window.",
     "HD-011 L3 IME/screen-reader/DPI and HD-014 L3 DPI/theme/focus stay UNVERIFIED.",
     "Hosted CI is not an interactive desktop."

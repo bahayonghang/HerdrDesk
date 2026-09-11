@@ -1,4 +1,4 @@
-"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, soak-interruption, optional soak-elapsed, optional soak-process working-set overlay, and optional scale-only DPI matrix overlay checks. Not AC37, AC38, AC29, or AC46. Interrupted STARTs are not 8h. Wall-clock elapsed is not AC46. A soak-process sample is not 1/4 pane, not 100 open/close, and not live_working_set. A scale-only 100/150/200 overlay is not AC38, not theme/monitor/high-contrast, and not L3."""
+"""HD-033 Narrator overlay, product-UI launch, DPI overlay, current-system theme overlay, soak-start, soak-interruption, optional soak-elapsed, optional soak-process working-set overlay, and optional scale-only DPI matrix overlay checks. Not AC37, AC38, AC29, or AC46. Interrupted STARTs are not 8h. Wall-clock elapsed is not AC46. A soak-process sample is not 1/4 pane, not 100 open/close, and not live_working_set. A scale-only 100/150/200 overlay is not AC38, not theme/monitor/high-contrast, and not L3. A current-system theme sample is not a light/dark/high-contrast x monitor matrix and does not pass AC38."""
 from __future__ import annotations
 
 import ctypes
@@ -9,6 +9,11 @@ import os
 from pathlib import Path
 import subprocess
 from typing import Any
+
+try:
+    import winreg
+except ImportError:
+    winreg = None
 
 
 class QualityError(ValueError):
@@ -375,6 +380,207 @@ def collect_dpi_overlay(root: Path) -> dict[str, Any]:
         'single_dpi_sample_is_not_matrix': True,
         'display_scale_changed_by_collector': False,
         'dpi_matrix_100_150_200_executed': False,
+        'ac38_passed': False,
+        'live_dpi': False,
+        'result': 'not_run',
+        'l3_dpi': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'invented_timings': False,
+    }
+
+
+THEME_POINTER_REL = 'evidence/quality/theme-overlay-pointer.json'
+THEME_DOCUMENT_KIND = 'hd033_theme_overlay_pointer'
+THEME_REPORT_KIND = 'hd033_theme_overlay'
+THEME_REQUIRED_KEYS = (
+    'document_kind', 'result', 'live_dpi', 'ac38_passed', 'l3_dpi',
+    'theme_matrix_executed', 'high_contrast_executed', 'multi_monitor_executed',
+    'apps_use_light_theme_changed_by_collector',
+    'high_contrast_changed_by_collector',
+    'single_theme_sample_is_not_matrix',
+)
+THEME_FALSE_KEYS = (
+    'ac38_passed', 'live_dpi', 'theme_matrix_executed',
+    'high_contrast_executed', 'multi_monitor_executed',
+    'apps_use_light_theme_changed_by_collector',
+    'high_contrast_changed_by_collector', 'herdr_executed',
+    'invented_timings', 'g0_passed',
+)
+THEME_TRUE_KEYS = ('single_theme_sample_is_not_matrix',)
+_SPI_GETHIGHCONTRAST = 66
+_HCF_HIGHCONTRASTON = 0x0001
+_SM_CMONITORS = 80
+_PERSONALIZE = r'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+
+
+class HIGHCONTRASTW(ctypes.Structure):
+    _fields_ = (
+        ('cbSize', ctypes.c_uint),
+        ('dwFlags', ctypes.c_uint),
+        ('lpszDefaultScheme', ctypes.c_wchar_p),
+    )
+
+
+def _theme_false_key_code(key: str) -> str:
+    if key in {'ac38_passed', 'g0_passed'}:
+        return key
+    if key == 'live_dpi':
+        return 'live_dpi_claimed'
+    if key == 'theme_matrix_executed':
+        return 'theme_matrix_claimed'
+    if key == 'high_contrast_executed':
+        return 'high_contrast_claimed'
+    if key == 'multi_monitor_executed':
+        return 'multi_monitor_claimed'
+    if key == 'apps_use_light_theme_changed_by_collector':
+        return 'collector_changed_theme'
+    if key == 'high_contrast_changed_by_collector':
+        return 'collector_changed_high_contrast'
+    return key
+
+
+def _reject_theme_false_keys(doc: dict[str, Any]) -> None:
+    for key in THEME_FALSE_KEYS:
+        if key in doc and doc.get(key) is not False:
+            raise QualityError(_theme_false_key_code(key))
+
+
+def _reject_theme_pass_claims(doc: dict[str, Any]) -> None:
+    if _is_success(doc.get('ac38_passed')):
+        raise QualityError('ac38_passed')
+    if _is_success(doc.get('g0_passed')):
+        raise QualityError('g0_passed')
+    if _is_success(doc.get('phase_gate')) or doc.get('phase_gate') == 'passed':
+        raise QualityError('ac38_passed')
+    if _is_success(doc.get('live_dpi')):
+        raise QualityError('live_dpi_claimed')
+    if _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if 'l3_dpi' in doc and doc.get('l3_dpi') != 'UNVERIFIED':
+        raise QualityError('l3_dpi_claimed')
+    if _is_success(doc.get('theme_matrix_executed')):
+        raise QualityError('theme_matrix_claimed')
+    if _is_success(doc.get('high_contrast_executed')):
+        raise QualityError('high_contrast_claimed')
+    if _is_success(doc.get('multi_monitor_executed')):
+        raise QualityError('multi_monitor_claimed')
+    if _is_success(doc.get('apps_use_light_theme_changed_by_collector')):
+        raise QualityError('collector_changed_theme')
+    if _is_success(doc.get('high_contrast_changed_by_collector')):
+        raise QualityError('collector_changed_high_contrast')
+    if (
+        'single_theme_sample_is_not_matrix' in doc
+        and doc.get('single_theme_sample_is_not_matrix') is not True
+    ):
+        raise QualityError('single_sample_claimed_as_matrix')
+    _reject_theme_false_keys(doc)
+
+
+def _dword_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and value in (0, 1):
+        return value == 1
+    return None
+
+
+def current_theme_sample() -> dict[str, Any]:
+    """Read current AppsUseLightTheme, HighContrast, and monitor count.
+
+    Does not change theme, high-contrast, or display topology. Not AC38.
+    """
+    sample = {
+        'apps_use_light_theme': None,
+        'system_uses_light_theme': None,
+        'high_contrast': None,
+        'monitor_count': None,
+    }
+    if os.name != 'nt' or winreg is None:
+        return sample
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _PERSONALIZE) as key:
+            try:
+                apps, _ = winreg.QueryValueEx(key, 'AppsUseLightTheme')
+                sample['apps_use_light_theme'] = _dword_bool(apps)
+            except OSError:
+                pass
+            try:
+                system, _ = winreg.QueryValueEx(key, 'SystemUsesLightTheme')
+                sample['system_uses_light_theme'] = _dword_bool(system)
+            except OSError:
+                pass
+    except (ImportError, OSError, ValueError):
+        pass
+    try:
+        user32 = ctypes.WinDLL('user32')
+        get_metrics = user32.GetSystemMetrics
+        get_metrics.restype = ctypes.c_int
+        get_metrics.argtypes = [ctypes.c_int]
+        count = int(get_metrics(_SM_CMONITORS))
+        if count >= 1:
+            sample['monitor_count'] = count
+        get_spi = user32.SystemParametersInfoW
+        get_spi.restype = ctypes.c_int
+        get_spi.argtypes = [
+            ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p, ctypes.c_uint,
+        ]
+        hc = HIGHCONTRASTW()
+        hc.cbSize = ctypes.sizeof(HIGHCONTRASTW)
+        if int(get_spi(_SPI_GETHIGHCONTRAST, hc.cbSize, ctypes.byref(hc), 0)):
+            sample['high_contrast'] = bool(hc.dwFlags & _HCF_HIGHCONTRASTON)
+    except (AttributeError, OSError, ValueError):
+        pass
+    return sample
+
+
+def collect_theme_overlay(root: Path) -> dict[str, Any]:
+    """Record current theme/high-contrast/monitor count. Not AC38 or a matrix."""
+    root = Path(root)
+    pointer = _load_json(root / THEME_POINTER_REL)
+    live = _load_json(root / LIVE_DPI_REL)
+    for key in THEME_REQUIRED_KEYS:
+        if key not in pointer:
+            raise QualityError('missing_record_field')
+    if pointer.get('document_kind') != THEME_DOCUMENT_KIND:
+        raise QualityError('missing_record_field')
+    if pointer.get('result') != 'not_run' or _is_success(pointer.get('result')):
+        raise QualityError('live_success_claimed')
+    if pointer.get('l3_dpi') != 'UNVERIFIED':
+        raise QualityError('l3_dpi_claimed')
+    _reject_theme_false_keys(pointer)
+    for key in THEME_TRUE_KEYS:
+        if pointer.get(key) is not True:
+            raise QualityError('single_sample_claimed_as_matrix')
+    _reject_theme_pass_claims(pointer)
+    _reject_theme_pass_claims(live)
+    _reject_dpi_pass_claims(live)
+    if live.get('result') != 'not_run' or _is_success(live.get('result')):
+        raise QualityError('live_success_claimed')
+    if live.get('kind') not in (None, 'live_dpi', 'live_dpi_theme'):
+        raise QualityError('live_success_claimed')
+    _check_dpi_acceptance(root)
+    sample = current_theme_sample()
+    if os.name == 'nt' and (
+        sample.get('monitor_count') is None
+        or sample.get('high_contrast') not in (True, False)
+    ):
+        raise QualityError('missing_record_field')
+    return {
+        'document_kind': THEME_REPORT_KIND,
+        'pointer': THEME_POINTER_REL,
+        'live_capture': LIVE_DPI_REL,
+        'apps_use_light_theme': sample.get('apps_use_light_theme'),
+        'system_uses_light_theme': sample.get('system_uses_light_theme'),
+        'high_contrast': sample.get('high_contrast'),
+        'monitor_count': sample.get('monitor_count'),
+        'single_theme_sample_is_not_matrix': True,
+        'theme_matrix_executed': False,
+        'high_contrast_executed': False,
+        'multi_monitor_executed': False,
+        'apps_use_light_theme_changed_by_collector': False,
+        'high_contrast_changed_by_collector': False,
         'ac38_passed': False,
         'live_dpi': False,
         'result': 'not_run',

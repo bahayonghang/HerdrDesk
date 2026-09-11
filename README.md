@@ -27,7 +27,7 @@ Independent Windows client for herdr. **G0 实施中；尚不是可运行的桌�
 
 ## 获取与检查
 
-Windows 本机：`just setup` 核对 Python 3.10+ 与 `global.json` 固定的 SDK 10.0.400。默认只读：不调用 winget，不写 User `DOTNET_ROOT` / `DOTNET_MULTILEVEL_LOOKUP`。子进程 PATH 变更不会回到父 shell。显式 opt-in：
+Windows 本机：`just setup` 核对 Python 3.10+ 与 `global.json` 的 SDK 下限 10.0.400（`rollForward=latestMinor`，允许同主版本向上滚动）。默认只读：不调用 winget，不写 User `DOTNET_ROOT` / `DOTNET_MULTILEVEL_LOOKUP`。子进程 PATH 变更不会回到父 shell。显式 opt-in：
 
 ```powershell
 pwsh -NoLogo -File scripts/Invoke-HerdDeskDotnetSetup.ps1 -InstallPinnedSdk
@@ -54,7 +54,7 @@ dotnet build HerdDesk.slnx --configuration Release
 dotnet run --project tests/HerdDesk.Core.SmokeTests --configuration Release --no-build
 ```
 
-Python 3.10+，仅标准库；C# 使用 SDK 10.0.400。smoke runner 是 console 测试程序，使用 `dotnet run`，不是 xUnit/`dotnet test` 项目。
+Python 3.10+，仅标准库；C# 使用 `global.json` 下限 SDK 10.0.400，允许 10.x 向上滚动。smoke runner 是 console 测试程序，使用 `dotnet run`，不是 xUnit/`dotnet test` 项目。
 
 ## 开发入口
 

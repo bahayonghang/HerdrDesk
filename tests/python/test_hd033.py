@@ -25,6 +25,8 @@ from herddesk_g0.quality import (
     SOAK_WORKING_SET_REL,
     collect_dpi_overlay,
     collect_narrator_overlay,
+    collect_theme_overlay,
+    current_theme_sample,
     narrator_exe_path,
     soak_interrupt_capture_rels,
     soak_start_app_pid,
@@ -38,6 +40,7 @@ from herddesk_g0.quality import (
     _reject_dpi_pass_claims,
 )
 import record_dpi_matrix as dpi_matrix_cli
+import record_narrator_product_ui_launch as narrator_launch_cli
 import record_soak_working_set as working_set_cli
 import start_eight_hour_soak as soak_cli
 import validate_repository as repository
@@ -204,6 +207,10 @@ class Hd033ResidualTests(unittest.TestCase):
             'evidence/quality/dpi-overlay-pointer.json',
         )
         self.assertEqual(
+            catalog['theme_overlay_pointer'],
+            'evidence/quality/theme-overlay-pointer.json',
+        )
+        self.assertEqual(
             catalog['soak_start_capture'],
             'evidence/quality/live-soak-start.json',
         )
@@ -273,9 +280,15 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertFalse(launch['herdr_executed'])
         self.assertFalse(launch['g0_passed'])
         self.assertTrue(launch['automation_names_are_not_screen_reader_evidence'])
-        self.assertEqual(launch['keyboard_chrome'], 'set_foreground_failed')
+        self.assertIn(launch['keyboard_chrome'], {'ctrl_k_sent', 'set_foreground_failed'})
+        self.assertNotIn(str(launch['keyboard_chrome']).lower(), {'success', 'passed', 'ok', 'completed'})
+        self.assertIn('keyboard-chrome foreground retry', catalog['note'])
+        self.assertIn('not AC37 workflow completion', catalog['note'])
         for key in AC37_STEP_KEYS:
             self.assertEqual(launch['ac37_steps'][key], 'not_completed', key)
+        self.assertEqual(launch['uia']['names_sample'], [])
+        self.assertIsInstance(launch['uia']['name_count'], int)
+        self.assertGreaterEqual(launch['uia']['name_count'], 0)
         dpi_overlay_pointer = json.loads(
             (ROOT / catalog['dpi_overlay_pointer']).read_text(encoding='utf-8')
         )
@@ -301,6 +314,29 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertTrue(dpi_overlay_pointer['l2_collectors_are_not_live_pass'])
         self.assertIsNot(dpi_overlay_pointer.get('complete_1_0_claimed'), True)
         self.assertTrue((ROOT / 'scripts' / 'collect_dpi_overlay.py').is_file())
+        theme_overlay_pointer = json.loads(
+            (ROOT / catalog['theme_overlay_pointer']).read_text(encoding='utf-8')
+        )
+        self.assertEqual(theme_overlay_pointer['document_kind'], 'hd033_theme_overlay_pointer')
+        self.assertEqual(theme_overlay_pointer['result'], 'not_run')
+        self.assertEqual(theme_overlay_pointer['live_status'], 'UNVERIFIED')
+        self.assertFalse(theme_overlay_pointer['live_dpi'])
+        self.assertFalse(theme_overlay_pointer['ac38_passed'])
+        self.assertEqual(theme_overlay_pointer['l3_dpi'], 'UNVERIFIED')
+        self.assertFalse(theme_overlay_pointer['theme_matrix_executed'])
+        self.assertFalse(theme_overlay_pointer['high_contrast_executed'])
+        self.assertFalse(theme_overlay_pointer['multi_monitor_executed'])
+        self.assertFalse(theme_overlay_pointer['apps_use_light_theme_changed_by_collector'])
+        self.assertFalse(theme_overlay_pointer['high_contrast_changed_by_collector'])
+        self.assertTrue(theme_overlay_pointer['single_theme_sample_is_not_matrix'])
+        self.assertFalse(theme_overlay_pointer['invented_timings'])
+        self.assertFalse(theme_overlay_pointer['committed_raw'])
+        self.assertEqual(theme_overlay_pointer['github_required_check'], 'UNVERIFIED')
+        self.assertTrue(theme_overlay_pointer['l2_collectors_are_not_live_pass'])
+        self.assertIsNot(theme_overlay_pointer.get('complete_1_0_claimed'), True)
+        self.assertTrue((ROOT / 'scripts' / 'collect_theme_overlay.py').is_file())
+        self.assertIn('current-system theme overlay', catalog['note'])
+        self.assertIn('not a light/dark/high-contrast x monitor matrix', catalog['note'])
         self.assertTrue((ROOT / 'scripts' / 'start_eight_hour_soak.py').is_file())
         start = json.loads(
             (ROOT / catalog['soak_start_capture']).read_text(encoding='utf-8')
@@ -712,6 +748,16 @@ class Hd033ResidualTests(unittest.TestCase):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
         bad = deepcopy(catalog)
+        bad.pop('theme_overlay_pointer')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['theme_overlay_pointer'] = 'evidence/quality/environment-pointer.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
         bad.pop('soak_start_capture')
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
@@ -1027,9 +1073,12 @@ class Hd033NarratorProductUiLaunchTests(unittest.TestCase):
                 encoding='utf-8'
             )
         )
-        self.assertEqual(launch['keyboard_chrome'], 'set_foreground_failed')
+        self.assertIn(launch['keyboard_chrome'], {'ctrl_k_sent', 'set_foreground_failed'})
+        self.assertNotIn(str(launch['keyboard_chrome']).lower(), {'success', 'passed', 'ok', 'completed'})
         for key in AC37_STEP_KEYS:
             self.assertEqual(launch['ac37_steps'][key], 'not_completed', key)
+        self.assertEqual(launch['uia']['names_sample'], [])
+        self.assertIsInstance(launch['uia']['name_count'], int)
         overlay = collect_narrator_overlay(ROOT)
         self.assertFalse(overlay['ac37_passed'])
         self.assertFalse(overlay['live_narrator'])
@@ -1173,6 +1222,34 @@ class Hd033NarratorProductUiLaunchTests(unittest.TestCase):
                 with self.assertRaises(QualityError) as ctx:
                     validate_narrator_product_ui_launch(root)
                 self.assertEqual(str(ctx.exception), 'ac37_workflow_claimed')
+
+    def test_keyboard_chrome_ctrl_k_sent_is_not_ac37(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_launch(root, launch_overrides={'keyboard_chrome': 'ctrl_k_sent'})
+            report = validate_narrator_product_ui_launch(root)
+            self.assertFalse(report['ac37_passed'])
+            self.assertFalse(report['ac37_workflow_completed'])
+            self.assertFalse(report['live_narrator'])
+            self.assertEqual(report['result'], 'not_run')
+            self.assertEqual(report['l3_narrator'], 'UNVERIFIED')
+
+    def test_recorder_source_uses_attach_sendinput_and_pid_kill(self):
+        src = (ROOT / 'scripts' / 'record_narrator_product_ui_launch.py').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('AttachThreadInput', src)
+        self.assertIn('AllowSetForegroundWindow', src)
+        self.assertIn('SendInput', src)
+        self.assertIn('SW_RESTORE', src)
+        self.assertNotIn('keybd_event', src)
+        self.assertNotIn('IMAGENAME eq HerdDesk.App.exe', src)
+        self.assertIn("['taskkill', '/PID'", src)
+        self.assertIn('win-x64', src)
+        self.assertIn(narrator_launch_cli.UI_EXE_NAME, src)
+        skipped, attempts = narrator_launch_cli._foreground_and_ctrl_k(0)
+        self.assertEqual(skipped, 'skipped_non_windows')
+        self.assertEqual(attempts, [])
 
     def test_empty_stdout_sha_rejected_when_file_nonempty(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1413,6 +1490,275 @@ class Hd033DpiOverlayTests(unittest.TestCase):
             self.assertEqual(str(ctx.exception), 'ac38_passed')
 
 
+def _write_theme_overlay(tmp: Path, *, pointer_overrides=None, live_overrides=None) -> None:
+    quality = tmp / 'evidence' / 'quality'
+    quality.mkdir(parents=True, exist_ok=True)
+    pointer = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'theme-overlay-pointer.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    live = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    if pointer_overrides:
+        pointer.update(pointer_overrides)
+    if live_overrides:
+        live.update(live_overrides)
+    (quality / 'theme-overlay-pointer.json').write_text(
+        json.dumps(pointer), encoding='utf-8'
+    )
+    (quality / 'live-dpi.not-run.json').write_text(
+        json.dumps(live), encoding='utf-8'
+    )
+
+
+class Hd033ThemeOverlayTests(unittest.TestCase):
+    def test_shipped_function_records_current_theme_not_ac38(self):
+        report = collect_theme_overlay(ROOT)
+        self.assertEqual(report['document_kind'], 'hd033_theme_overlay')
+        quality_src = (ROOT / 'scripts' / 'herddesk_g0' / 'quality.py').read_text(
+            encoding='utf-8'
+        )
+        cli = (ROOT / 'scripts' / 'collect_theme_overlay.py').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('SPI_GETHIGHCONTRAST', quality_src)
+        self.assertIn('GetSystemMetrics', quality_src)
+        self.assertIn('AppsUseLightTheme', quality_src)
+        self.assertNotIn('SPI_SETHIGHCONTRAST', quality_src)
+        self.assertNotIn('SPI_SETHIGHCONTRAST', cli)
+        self.assertNotIn('SetValueEx', quality_src)
+        self.assertNotIn('DISPLAYCONFIG_DEVICE_INFO_SET_DPI_SCALE', quality_src)
+        sample = current_theme_sample()
+        if os.name == 'nt':
+            self.assertIsInstance(report['monitor_count'], int)
+            self.assertGreaterEqual(report['monitor_count'], 1)
+            self.assertIn(report['high_contrast'], (True, False))
+            self.assertEqual(report['monitor_count'], sample['monitor_count'])
+            self.assertEqual(report['high_contrast'], sample['high_contrast'])
+        else:
+            self.assertIsNone(sample['monitor_count'])
+            self.assertIsNone(report['monitor_count'])
+            self.assertIsNone(report['apps_use_light_theme'])
+            self.assertIsNone(report['system_uses_light_theme'])
+            self.assertIsNone(report['high_contrast'])
+        self.assertTrue(report['single_theme_sample_is_not_matrix'])
+        self.assertFalse(report['theme_matrix_executed'])
+        self.assertFalse(report['high_contrast_executed'])
+        self.assertFalse(report['multi_monitor_executed'])
+        self.assertFalse(report['apps_use_light_theme_changed_by_collector'])
+        self.assertFalse(report['high_contrast_changed_by_collector'])
+        self.assertFalse(report['ac38_passed'])
+        self.assertFalse(report['live_dpi'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertNotIn(str(report['result']).lower(), SUCCESS)
+        self.assertEqual(report['l3_dpi'], 'UNVERIFIED')
+        self.assertFalse(report['g0_passed'])
+        self.assertNotEqual(report['phase_gate'], 'passed')
+        self.assertFalse(report['herdr_executed'])
+        self.assertFalse(report['invented_timings'])
+        self.assertEqual(report['pointer'], 'evidence/quality/theme-overlay-pointer.json')
+        self.assertEqual(
+            report['live_capture'], 'evidence/quality/live-dpi.not-run.json'
+        )
+        live = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertEqual(live['result'], 'not_run')
+        self.assertFalse(live['live_dpi'])
+
+    def test_cli_prints_one_json_object(self):
+        script = ROOT / 'scripts' / 'collect_theme_overlay.py'
+        self.assertTrue(script.is_file())
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertIsInstance(report, dict)
+        self.assertEqual(report['document_kind'], 'hd033_theme_overlay')
+        self.assertFalse(report['ac38_passed'])
+        self.assertFalse(report['live_dpi'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertEqual(report['l3_dpi'], 'UNVERIFIED')
+        self.assertTrue(report['single_theme_sample_is_not_matrix'])
+        self.assertFalse(report['theme_matrix_executed'])
+        self.assertFalse(report['high_contrast_executed'])
+        self.assertFalse(report['multi_monitor_executed'])
+        self.assertFalse(report['apps_use_light_theme_changed_by_collector'])
+        self.assertFalse(report['high_contrast_changed_by_collector'])
+        self.assertFalse(report['g0_passed'])
+        if os.name == 'nt':
+            self.assertIsInstance(report['monitor_count'], int)
+            self.assertGreaterEqual(report['monitor_count'], 1)
+            self.assertIn(report['high_contrast'], (True, False))
+        else:
+            self.assertIsNone(report['monitor_count'])
+            self.assertIsNone(report['high_contrast'])
+
+    def test_structure_contract_invokes_shipped_overlay(self):
+        repository._check_hd033_theme_overlay()
+
+    def test_missing_pointer_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(Path(tmp))
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+
+    def test_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(root, pointer_overrides={'ac38_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+    def test_live_dpi_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(root, live_overrides={'live_dpi': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'live_dpi_claimed')
+
+    def test_live_dpi_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_theme_overlay(root, live_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_theme_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_pointer_result_success_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass', True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_theme_overlay(root, pointer_overrides={'result': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_theme_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_success_claimed')
+
+    def test_l3_dpi_pass_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(root, pointer_overrides={'l3_dpi': 'passed'})
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'l3_dpi_claimed')
+
+    def test_collector_changed_theme_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(
+                root,
+                pointer_overrides={'apps_use_light_theme_changed_by_collector': True},
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'collector_changed_theme')
+
+    def test_collector_changed_high_contrast_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(
+                root, pointer_overrides={'high_contrast_changed_by_collector': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'collector_changed_high_contrast')
+
+    def test_theme_matrix_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(
+                root, pointer_overrides={'theme_matrix_executed': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'theme_matrix_claimed')
+
+    def test_high_contrast_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(
+                root, pointer_overrides={'high_contrast_executed': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'high_contrast_claimed')
+
+    def test_multi_monitor_executed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(
+                root, pointer_overrides={'multi_monitor_executed': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'multi_monitor_claimed')
+
+    def test_single_sample_claimed_as_matrix_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(
+                root,
+                pointer_overrides={'single_theme_sample_is_not_matrix': False},
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'single_sample_claimed_as_matrix')
+
+    def test_g0_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(root, pointer_overrides={'g0_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'g0_passed')
+
+    def test_live_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(root, live_overrides={'ac38_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+    def test_live_dpi_success_token_fails_closed(self):
+        for value in ('success', 'passed', 'verified', 'ok', 'pass'):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_theme_overlay(root, live_overrides={'live_dpi': value})
+                with self.assertRaises(QualityError) as ctx:
+                    collect_theme_overlay(root)
+                self.assertEqual(str(ctx.exception), 'live_dpi_claimed')
+
+    def test_acceptance_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_theme_overlay(root)
+            planning = root / 'planning'
+            planning.mkdir()
+            (planning / 'acceptance.json').write_text(
+                json.dumps({'criteria': [{'id': 'AC38', 'status': 'passed'}]}),
+                encoding='utf-8',
+            )
+            with self.assertRaises(QualityError) as ctx:
+                collect_theme_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+
 class _FakeDpiDisplay:
     def __init__(self, *, original=100, available=(100, 150, 200), restore_ok=True):
         self.percent = original
@@ -1612,6 +1958,19 @@ class Hd033DpiMatrixTests(unittest.TestCase):
         )
         self.assertIn('not AC38', catalog['note'])
         self.assertIn('not theme/monitor/high-contrast', catalog['note'])
+        self.assertEqual(
+            catalog['theme_overlay_pointer'],
+            'evidence/quality/theme-overlay-pointer.json',
+        )
+        theme_pointer = json.loads(
+            (ROOT / catalog['theme_overlay_pointer']).read_text(encoding='utf-8')
+        )
+        self.assertFalse(theme_pointer['theme_matrix_executed'])
+        self.assertFalse(theme_pointer['high_contrast_executed'])
+        self.assertFalse(theme_pointer['multi_monitor_executed'])
+        self.assertFalse(theme_pointer['ac38_passed'])
+        self.assertFalse(theme_pointer['live_dpi'])
+        self.assertTrue(theme_pointer['single_theme_sample_is_not_matrix'])
 
     def test_structure_contract_invokes_dpi_matrix(self):
         repository._check_hd033_dpi_matrix()

@@ -1,7 +1,8 @@
 #requires -Version 7.0
 <# Verify this Windows session against global.json.
 
-   Default is read-only: Python 3.10+, the SDK version in global.json, and the
+   Default is read-only: Python 3.10+, an SDK that satisfies the
+   global.json floor version and rollForward policy, and the
    resolved host. Does not install the SDK or write User environment.
 
    Opt-in: -InstallPinnedSdk uses winget. -PersistUserEnvironment writes User
@@ -32,17 +33,105 @@ function Assert-Python {
     Write-Host "Python: $(& $python.Source --version 2>&1)"
 }
 
-function Get-PinnedSdkVersion([string]$RepoRoot) {
+function ConvertTo-HerdDeskSdkNumber([string]$text) {
+    if ([string]::IsNullOrWhiteSpace($text)) { return $null }
+    $t = $text.Trim()
+    if ($t -notmatch '^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<pre>[-+].+)?$') {
+        return $null
+    }
+    $patch = [int]$Matches.patch
+    $pre = ''
+    if ($Matches.ContainsKey('pre') -and $null -ne $Matches.pre) {
+        $pre = [string]$Matches.pre
+    }
+    return [pscustomobject]@{
+        Major       = [int]$Matches.major
+        Minor       = [int]$Matches.minor
+        Patch       = $patch
+        FeatureBand = [int][Math]::Floor($patch / 100)
+        Prerelease  = -not [string]::IsNullOrWhiteSpace($pre)
+        Text        = $t
+    }
+}
+
+function Test-HerdDeskSdkAtLeast($installed, $pin) {
+    if ($installed.Major -ne $pin.Major) { return $installed.Major -gt $pin.Major }
+    if ($installed.Minor -ne $pin.Minor) { return $installed.Minor -gt $pin.Minor }
+    return $installed.Patch -ge $pin.Patch
+}
+
+function Test-HerdDeskSdkSatisfiesPin($installed, $pin, [string]$rollForward, [bool]$allowPrerelease) {
+    if ($installed.Prerelease -and -not $allowPrerelease) { return $false }
+    $policy = $rollForward.Trim()
+    switch ($policy) {
+        'disable' {
+            return (-not $installed.Prerelease) -and
+            $installed.Major -eq $pin.Major -and
+            $installed.Minor -eq $pin.Minor -and
+            $installed.Patch -eq $pin.Patch
+        }
+        { $_ -in @('patch', 'latestPatch') } {
+            return $installed.Major -eq $pin.Major -and
+            $installed.Minor -eq $pin.Minor -and
+            $installed.FeatureBand -eq $pin.FeatureBand -and
+            $installed.Patch -ge $pin.Patch
+        }
+        { $_ -in @('feature', 'latestFeature') } {
+            return $installed.Major -eq $pin.Major -and
+            $installed.Minor -eq $pin.Minor -and
+            (Test-HerdDeskSdkAtLeast $installed $pin)
+        }
+        { $_ -in @('minor', 'latestMinor') } {
+            return $installed.Major -eq $pin.Major -and (Test-HerdDeskSdkAtLeast $installed $pin)
+        }
+        { $_ -in @('major', 'latestMajor') } {
+            return Test-HerdDeskSdkAtLeast $installed $pin
+        }
+        default { throw "Unsupported global.json sdk.rollForward '$rollForward'." }
+    }
+}
+
+function Get-SdkPin([string]$RepoRoot) {
     $path = Join-Path $RepoRoot 'global.json'
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing $path" }
     $globalJson = Get-Content -LiteralPath $path -Raw -Encoding utf8 | ConvertFrom-Json
     $version = [string]$globalJson.sdk.version
     if ([string]::IsNullOrWhiteSpace($version)) { throw 'global.json sdk.version is missing.' }
-    return $version
+    $rollForward = 'latestPatch'
+    $rollProp = $globalJson.sdk.PSObject.Properties['rollForward']
+    if ($null -ne $rollProp -and -not [string]::IsNullOrWhiteSpace([string]$rollProp.Value)) {
+        $rollForward = [string]$rollProp.Value
+    }
+    $allowPrerelease = $false
+    $preProp = $globalJson.sdk.PSObject.Properties['allowPrerelease']
+    if ($null -ne $preProp) {
+        $allowPrerelease = [bool]$preProp.Value
+    }
+    $parsed = ConvertTo-HerdDeskSdkNumber $version
+    if ($null -eq $parsed) { throw "global.json sdk.version is not a release SDK version: $version" }
+    return [pscustomobject]@{
+        Version         = $version
+        RollForward     = $rollForward
+        AllowPrerelease = $allowPrerelease
+        Parsed          = $parsed
+    }
 }
 
-function Get-SdkDir([string]$hostDir, [string]$sdkVersion) {
-    return Join-Path $hostDir "sdk\$sdkVersion"
+function Get-PinnedSdkVersion([string]$RepoRoot) {
+    return (Get-SdkPin -RepoRoot $RepoRoot).Version
+}
+
+function Test-HostHasCompatibleSdk([string]$hostDir, $pin) {
+    $sdkRoot = Join-Path $hostDir 'sdk'
+    if (-not (Test-Path -LiteralPath $sdkRoot -PathType Container)) { return $false }
+    foreach ($dir in (Get-ChildItem -LiteralPath $sdkRoot -Directory)) {
+        $parsed = ConvertTo-HerdDeskSdkNumber $dir.Name
+        if ($null -eq $parsed) { continue }
+        if (Test-HerdDeskSdkSatisfiesPin $parsed $pin.Parsed $pin.RollForward $pin.AllowPrerelease) {
+            return $true
+        }
+    }
+    return $false
 }
 
 function Resolve-DotnetHost([string]$hostDir) {
@@ -64,10 +153,10 @@ function Install-PinnedSdk {
     if (-not $winget) {
         throw "SDK $SdkVersion is missing under $MachineHost. Install it from https://dotnet.microsoft.com/en-us/download/dotnet/10.0"
     }
-    Write-Host "Installing .NET SDK $SdkVersion with winget (Microsoft.DotNet.SDK.10)."
-    & $winget.Source install --id Microsoft.DotNet.SDK.10 --version $SdkVersion --exact --disable-interactivity --accept-package-agreements --accept-source-agreements
+    Write-Host "Installing a .NET SDK compatible with $SdkVersion with winget (Microsoft.DotNet.SDK.10)."
+    & $winget.Source install --id Microsoft.DotNet.SDK.10 --disable-interactivity --accept-package-agreements --accept-source-agreements
     if ($LASTEXITCODE -ne 0) {
-        throw "winget failed to install SDK $SdkVersion (exit $LASTEXITCODE). Install it from https://dotnet.microsoft.com/en-us/download/dotnet/10.0"
+        throw "winget failed to install an SDK compatible with $SdkVersion (exit $LASTEXITCODE). Install it from https://dotnet.microsoft.com/en-us/download/dotnet/10.0"
     }
 }
 
@@ -83,7 +172,7 @@ function Set-UserDotnetEnvironment {
     $lookup = [Environment]::GetEnvironmentVariable('DOTNET_MULTILEVEL_LOOKUP', 'User')
     if ($lookup -ne '0') {
         [Environment]::SetEnvironmentVariable('DOTNET_MULTILEVEL_LOOKUP', '0', 'User')
-        Write-Host 'Set User DOTNET_MULTILEVEL_LOOKUP=0 so global.json is exact.'
+        Write-Host 'Set User DOTNET_MULTILEVEL_LOOKUP=0 so this machine host is the only SDK lookup.'
     }
 }
 
@@ -97,7 +186,8 @@ function Invoke-HerdDeskDotnetSetup {
     )
 
     Set-Location -LiteralPath $script:RepoRoot
-    $sdkVersion = Get-PinnedSdkVersion -RepoRoot $script:RepoRoot
+    $pin = Get-SdkPin -RepoRoot $script:RepoRoot
+    $sdkVersion = $pin.Version
     if (-not [string]::IsNullOrWhiteSpace($ExpectedSdk) -and $ExpectedSdk -ne $sdkVersion) {
         throw "global.json sdk.version is $sdkVersion; this script expects $ExpectedSdk."
     }
@@ -105,14 +195,13 @@ function Invoke-HerdDeskDotnetSetup {
 
     Assert-Python
 
-    $sdkDir = Get-SdkDir $MachineHost $sdkVersion
-    if (-not (Test-Path -LiteralPath $sdkDir)) {
+    if (-not (Test-HostHasCompatibleSdk $MachineHost $pin)) {
         if (-not $InstallPinnedSdk) {
             throw "SDK $sdkVersion is missing under $MachineHost. Install it from https://dotnet.microsoft.com/en-us/download/dotnet/10.0 or re-run with -InstallPinnedSdk."
         }
         Install-PinnedSdk -SdkVersion $sdkVersion -MachineHost $MachineHost
-        if (-not (Test-Path -LiteralPath $sdkDir)) {
-            throw "SDK $sdkVersion still missing at $sdkDir after install."
+        if (-not (Test-HostHasCompatibleSdk $MachineHost $pin)) {
+            throw "SDK $sdkVersion still missing under $MachineHost after install."
         }
     }
 
@@ -122,7 +211,8 @@ function Invoke-HerdDeskDotnetSetup {
 
     $dotnet = Resolve-DotnetHost $MachineHost
     $version = (& $dotnet --version).Trim()
-    if ($version -ne $sdkVersion) {
+    $resolved = ConvertTo-HerdDeskSdkNumber $version
+    if ($null -eq $resolved -or -not (Test-HerdDeskSdkSatisfiesPin $resolved $pin.Parsed $pin.RollForward $pin.AllowPrerelease)) {
         throw "dotnet --version is '$version' with host $dotnet; expected $sdkVersion from global.json."
     }
 

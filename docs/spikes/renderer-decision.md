@@ -16,7 +16,7 @@ Rollback: a native fail or an untested native does not rewrite the WinUI shell. 
 
 | Item | Value | Evidence class |
 |---|---|---|
-| .NET SDK pin | `10.0.400`, `rollForward=disable` (`global.json`) | source |
+| .NET SDK pin | `10.0.400` floor, `rollForward=latestMinor` (`global.json`) | source |
 | Target framework | `net10.0` (`Directory.Build.props`) | source |
 | Python | 3.10+ standard library; no third-party packages | source |
 | Windows App SDK | not installed | `UNVERIFIED` |

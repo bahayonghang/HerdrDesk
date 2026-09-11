@@ -2,6 +2,7 @@
 """Structural validation only; this does not compile C# or pass any live gate."""
 from pathlib import Path
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -24,6 +25,7 @@ from herddesk_g0.quality import (
     SOAK_WORKING_SET_REL,
     collect_dpi_overlay,
     collect_narrator_overlay,
+    collect_theme_overlay,
     soak_interrupt_capture_rels,
     soak_start_app_pid,
     validate_dpi_matrix,
@@ -401,6 +403,38 @@ _APP_SHELL_XAML = (
 _APP_BLANK_XAML = _APP_SHELL_XAML
 
 
+_JUST_RECIPE = re.compile(
+    r'(?m)^(?P<name>[a-zA-Z_][a-zA-Z0-9_-]*)(?:[ \t]+[^\n:=]+)?:'
+    r'(?P<rest>[^\n]*)\n(?P<body>(?:[ \t].*\n|\n)*)'
+)
+
+
+def just_recipe_texts(just: str) -> dict[str, str]:
+    found: dict[str, str] = {}
+    for match in _JUST_RECIPE.finditer(just):
+        header = match.group(0).split('\n', 1)[0]
+        if ':=' in header:
+            continue
+        name = match.group('name')
+        text = match.group('rest') + '\n' + match.group('body')
+        found[name] = found.get(name, '') + text
+    return found
+
+
+def assert_justfile_ui_is_opt_in_dev(just: str) -> None:
+    """just ci must not launch WinUI. Opt-in `dev` may pass --ui."""
+    recipes = just_recipe_texts(just)
+    assert 'ci' in recipes
+    assert 'dev' not in recipes['ci'].split()
+    assert '--ui' not in recipes['ci']
+    assert 'dev' in recipes
+    assert '--ui' in recipes['dev']
+    for name, text in recipes.items():
+        if name == 'dev':
+            continue
+        assert '--ui' not in text, name
+
+
 def check_integration_windows_layout(root: Path | None = None) -> None:
     """Allow the HD-011 console runner. Catalog token integration_windows_project stays false."""
     base = Path(root) if root is not None else ROOT
@@ -422,7 +456,7 @@ def check_integration_windows_layout(root: Path | None = None) -> None:
     assert '--ui' not in ci
     assert 'Application.Start' not in ci
     just = (base / 'justfile').read_text(encoding='utf-8')
-    assert '--ui' not in just
+    assert_justfile_ui_is_opt_in_dev(just)
 
 
 def app_source_xaml(root: Path | None = None) -> list[str]:
@@ -1122,6 +1156,7 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert overlay_pointer.get('complete_1_0_claimed') is not True
     assert (ROOT / 'scripts' / 'collect_narrator_overlay.py').is_file()
     assert catalog.get('dpi_overlay_pointer') == 'evidence/quality/dpi-overlay-pointer.json'
+    assert catalog.get('theme_overlay_pointer') == 'evidence/quality/theme-overlay-pointer.json'
     assert catalog.get('soak_start_capture') == 'evidence/quality/live-soak-start.json'
     assert catalog.get('soak_elapsed_capture') == 'evidence/quality/live-soak-elapsed.json'
     assert catalog.get('soak_working_set_capture') == 'evidence/quality/live-soak-working-set.json'
@@ -1246,6 +1281,27 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert dpi_pointer.get('l2_collectors_are_not_live_pass') is True
     assert dpi_pointer.get('complete_1_0_claimed') is not True
     assert (ROOT / 'scripts' / 'collect_dpi_overlay.py').is_file()
+    theme_pointer = json.loads((ROOT / catalog['theme_overlay_pointer']).read_text(encoding='utf-8'))
+    _reject_hd033_pass_claims(theme_pointer)
+    _reject_hd033_invented_timings(theme_pointer)
+    assert theme_pointer.get('document_kind') == 'hd033_theme_overlay_pointer'
+    assert theme_pointer.get('result') == 'not_run'
+    assert theme_pointer.get('live_status') == 'UNVERIFIED'
+    assert theme_pointer.get('live_dpi') is False
+    assert theme_pointer.get('ac38_passed') is False
+    assert theme_pointer.get('l3_dpi') == 'UNVERIFIED'
+    assert theme_pointer.get('theme_matrix_executed') is False
+    assert theme_pointer.get('high_contrast_executed') is False
+    assert theme_pointer.get('multi_monitor_executed') is False
+    assert theme_pointer.get('apps_use_light_theme_changed_by_collector') is False
+    assert theme_pointer.get('high_contrast_changed_by_collector') is False
+    assert theme_pointer.get('single_theme_sample_is_not_matrix') is True
+    assert theme_pointer.get('invented_timings') is False
+    assert theme_pointer.get('committed_raw') is False
+    assert theme_pointer.get('github_required_check') == 'UNVERIFIED'
+    assert theme_pointer.get('l2_collectors_are_not_live_pass') is True
+    assert theme_pointer.get('complete_1_0_claimed') is not True
+    assert (ROOT / 'scripts' / 'collect_theme_overlay.py').is_file()
     redaction = catalog.get('redaction') or {}
     for key in ('host', 'user', 'path', 'credential', 'terminal_body'):
         assert redaction.get(key) == 'omitted', key
@@ -1449,17 +1505,33 @@ def _check_hd033_narrator_product_ui_launch() -> None:
     assert launch.get('ac37_workflow_completed') is False
     assert launch.get('product_ui_started') is True
     assert launch.get('narrator_started_by_this_run') is True
-    assert launch.get('keyboard_chrome') == 'set_foreground_failed'
+    assert launch.get('keyboard_chrome') in {'ctrl_k_sent', 'set_foreground_failed'}
+    assert str(launch.get('keyboard_chrome') or '').lower() not in {
+        'success', 'passed', 'ok', 'completed',
+    }
+    src = (ROOT / 'scripts' / 'record_narrator_product_ui_launch.py').read_text(encoding='utf-8')
+    assert 'AttachThreadInput' in src
+    assert 'AllowSetForegroundWindow' in src
+    assert 'SendInput' in src
+    assert 'keybd_event' not in src
+    assert 'IMAGENAME eq HerdDesk.App.exe' not in src
+    assert "['taskkill', '/PID'" in src
+    assert 'win-x64' in src
     steps = launch.get('ac37_steps')
     assert isinstance(steps, dict)
     for key in ('search', 'request_control', 'release', 'close_confirm'):
         assert steps.get(key) == 'not_completed', key
+    uia = launch.get('uia') or {}
+    assert isinstance(uia.get('names_sample'), list)
+    assert uia.get('names_sample') == []
+    assert isinstance(uia.get('name_count'), int)
+    assert int(uia.get('name_count')) >= 0
     ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
     just = (ROOT / 'justfile').read_text(encoding='utf-8')
     assert 'record_narrator_product_ui_launch.py --record' not in ci
     assert 'record_narrator_product_ui_launch.py --record' not in just
     assert '--ui' not in ci
-    assert '--ui' not in just
+    assert_justfile_ui_is_opt_in_dev(just)
 
 
 def _check_hd033_dpi_overlay() -> None:
@@ -1494,6 +1566,55 @@ def _check_hd033_dpi_overlay() -> None:
     assert live.get('live_dpi') is False
     assert live.get('dpi_matrix_100_150_200_executed') is False
     assert live.get('display_scale_changed_by_collector') is False
+
+
+def _check_hd033_theme_overlay() -> None:
+    """Invoke shipped overlay. Do not change theme or pass AC38."""
+    assert (ROOT / 'scripts' / 'collect_theme_overlay.py').is_file()
+    assert (ROOT / 'evidence' / 'quality' / 'theme-overlay-pointer.json').is_file()
+    src = (ROOT / 'scripts' / 'herddesk_g0' / 'quality.py').read_text(encoding='utf-8')
+    cli = (ROOT / 'scripts' / 'collect_theme_overlay.py').read_text(encoding='utf-8')
+    assert 'SPI_SETHIGHCONTRAST' not in src
+    assert 'SPI_SETHIGHCONTRAST' not in cli
+    assert 'SetValueEx' not in src
+    assert 'DISPLAYCONFIG_DEVICE_INFO_SET_DPI_SCALE' not in src
+    report = collect_theme_overlay(ROOT)
+    assert report.get('document_kind') == 'hd033_theme_overlay'
+    count = report.get('monitor_count')
+    if sys.platform == 'win32':
+        assert isinstance(count, int)
+        assert count >= 1
+        assert report.get('high_contrast') in (True, False)
+    else:
+        assert count is None
+        assert report.get('apps_use_light_theme') is None
+        assert report.get('system_uses_light_theme') is None
+        assert report.get('high_contrast') is None
+    assert report.get('single_theme_sample_is_not_matrix') is True
+    assert report.get('theme_matrix_executed') is False
+    assert report.get('high_contrast_executed') is False
+    assert report.get('multi_monitor_executed') is False
+    assert report.get('apps_use_light_theme_changed_by_collector') is False
+    assert report.get('high_contrast_changed_by_collector') is False
+    assert report.get('ac38_passed') is False
+    assert report.get('live_dpi') is False
+    assert report.get('result') == 'not_run'
+    assert not _is_hd033_success(report.get('result'))
+    assert report.get('l3_dpi') == 'UNVERIFIED'
+    assert report.get('g0_passed') is False
+    assert report.get('phase_gate') != 'passed'
+    assert report.get('herdr_executed') is False
+    assert report.get('invented_timings') is False
+    assert report.get('pointer') == 'evidence/quality/theme-overlay-pointer.json'
+    assert report.get('live_capture') == 'evidence/quality/live-dpi.not-run.json'
+    live = json.loads((ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(encoding='utf-8'))
+    assert live.get('result') == 'not_run'
+    assert not _is_hd033_success(live.get('result'))
+    assert live.get('live_dpi') is False
+    ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    just = (ROOT / 'justfile').read_text(encoding='utf-8')
+    assert 'collect_theme_overlay.py --record' not in ci
+    assert 'collect_theme_overlay.py --record' not in just
 
 
 def _check_hd033_soak_start() -> None:
@@ -2192,7 +2313,7 @@ def _check_hd034_package_files() -> None:
     assert '-Action Sign' not in just
     assert 'new_lab_certificate.ps1' not in just
     assert 'record_lab_msix.py --record' not in just
-    assert '--ui' not in just
+    assert_justfile_ui_is_opt_in_dev(just)
 
 
 def _check_hd034_package_script_contract() -> None:
@@ -4035,6 +4156,7 @@ def validate() -> dict:
     _check_hd033_narrator_overlay()
     _check_hd033_narrator_product_ui_launch()
     _check_hd033_dpi_overlay()
+    _check_hd033_theme_overlay()
     _check_hd033_dpi_matrix()
     _check_hd033_soak_start()
     _check_hd033_soak_working_set()

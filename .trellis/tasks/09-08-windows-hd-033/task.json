@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "Product 671c399: scale-only DPI matrix live-dpi-matrix.json; 100/150/200 applied (96/144/192); original 125%/120 restored; dpi_matrix_100_150_200_executed true on that file only. Pointer/catalog/L2 matrix flags stay false. AC38/live_dpi/l3_dpi not passed. Prior a901774 wall-clock elapsed is not AC46. Do not archive: residual is AC37 Narrator workflow, AC38 theme/monitor/high-contrast, AC46 representative load/100 disconnects. Do not mark G0/1.0.",
+  "notes": "User 2026-09-11 authorized L2 overlay closeout archive. Theme overlay (collect_theme_overlay.py) is not AC38. Keyboard chrome Ctrl+K is not AC37. Scale-only DPI and wall-clock elapsed overlays stay not AC38/AC46. Catalog/L2 live rows stay not_run. Do not mark G0/1.0.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"

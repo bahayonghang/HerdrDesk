@@ -212,7 +212,7 @@ distribution permission.
 | Field | Value |
 |---|---|
 | source | Microsoft .NET SDK; pin in `global.json` |
-| version / hash | 10.0.400; `rollForward=disable` / null |
+| version / hash | 10.0.400; `rollForward=latestMinor` / null |
 | license / notice | SDK/runtime licenses remain upstream; this repository does not ship the SDK / not redistributed |
 | notice_status | not_required |
 | modification | none |

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Xml.Linq;
 using HerdDesk.App;
 using HerdDesk.App.Quality;
@@ -211,8 +212,11 @@ static void Hd033Collectors()
 {
     var root = RepoRoot();
     var manifest = EnvironmentManifestCollector.Collect(root);
+    using var pin = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "global.json")));
+    var sdk = pin.RootElement.GetProperty("sdk");
     Check(manifest.LogicalCpus >= 1);
-    Check(manifest.SdkPinVersion == "10.0.400");
+    Check(manifest.SdkPinVersion == sdk.GetProperty("version").GetString());
+    Check(manifest.SdkPinRollForward == sdk.GetProperty("rollForward").GetString());
     Check(!manifest.NarratorStartedByCollector);
     var search = SearchLatencyCollector.Measure();
     Check(search.ProjectionCount >= SearchLatencyCollector.RequiredProjections);

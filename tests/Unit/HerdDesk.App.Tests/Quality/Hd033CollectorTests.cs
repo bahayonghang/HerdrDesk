@@ -1,3 +1,4 @@
+using System.Text.Json;
 using HerdDesk.App;
 using HerdDesk.App.Quality;
 using HerdDesk.Infrastructure.Quality;
@@ -17,9 +18,11 @@ internal static class Hd033CollectorTests
     {
         var root = FindRepoRoot();
         var manifest = EnvironmentManifestCollector.Collect(root);
+        using var pin = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "global.json")));
+        var sdk = pin.RootElement.GetProperty("sdk");
         AppTestHost.Check(manifest.LogicalCpus >= 1);
-        AppTestHost.Check(manifest.SdkPinVersion == "10.0.400");
-        AppTestHost.Check(manifest.SdkPinRollForward == "disable");
+        AppTestHost.Check(manifest.SdkPinVersion == sdk.GetProperty("version").GetString());
+        AppTestHost.Check(manifest.SdkPinRollForward == sdk.GetProperty("rollForward").GetString());
         AppTestHost.Check(!manifest.NarratorStartedByCollector);
         AppTestHost.Check(manifest.CapturedAtUtc != default);
         if (OperatingSystem.IsWindows())

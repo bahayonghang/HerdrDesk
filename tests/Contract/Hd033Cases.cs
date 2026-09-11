@@ -141,6 +141,10 @@ internal static class Hd033Cases
               == "evidence/quality/dpi-overlay-pointer.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "collect_dpi_overlay.py")));
+        Check(catalog.GetProperty("theme_overlay_pointer").GetString()
+              == "evidence/quality/theme-overlay-pointer.json");
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "theme-overlay-pointer.json")));
+        Check(File.Exists(Path.Combine(root, "scripts", "collect_theme_overlay.py")));
         Check(catalog.GetProperty("dpi_matrix_capture").GetString()
               == "evidence/quality/live-dpi-matrix.json");
         Check(File.Exists(Path.Combine(root, "scripts", "record_dpi_matrix.py")));
@@ -201,9 +205,16 @@ internal static class Hd033Cases
         Check(launch.GetProperty("narrator_started_by_this_run").GetBoolean());
         Check(launch.GetProperty("narrator_started_by_collector").GetBoolean() is false);
         Check(launch.GetProperty("herdr_executed").GetBoolean() is false);
-        Check(launch.GetProperty("keyboard_chrome").GetString() == "set_foreground_failed");
+        var chrome = launch.GetProperty("keyboard_chrome").GetString();
+        Check(chrome == "ctrl_k_sent" || chrome == "set_foreground_failed");
+        Check(chrome != "success");
+        Check(chrome != "passed");
+        Check(chrome != "ok");
+        Check(chrome != "completed");
         foreach (var key in new[] { "search", "request_control", "release", "close_confirm" })
             Check(launch.GetProperty("ac37_steps").GetProperty(key).GetString() == "not_completed");
+        Check(launch.GetProperty("uia").GetProperty("names_sample").GetArrayLength() == 0);
+        Check(launch.GetProperty("uia").GetProperty("name_count").GetInt32() >= 0);
         using var dpiOverlayDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
         var dpiOverlay = dpiOverlayDoc.RootElement;
@@ -217,6 +228,22 @@ internal static class Hd033Cases
         Check(dpiOverlay.GetProperty("display_scale_changed_by_collector").GetBoolean() is false);
         Check(dpiOverlay.GetProperty("single_dpi_sample_is_not_matrix").GetBoolean());
         Check(dpiOverlay.GetProperty("invented_timings").GetBoolean() is false);
+        using var themeOverlayDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "theme-overlay-pointer.json")));
+        var themeOverlay = themeOverlayDoc.RootElement;
+        Check(themeOverlay.GetProperty("document_kind").GetString() == "hd033_theme_overlay_pointer");
+        Check(themeOverlay.GetProperty("result").GetString() == "not_run");
+        Check(themeOverlay.GetProperty("live_status").GetString() == "UNVERIFIED");
+        Check(themeOverlay.GetProperty("live_dpi").GetBoolean() is false);
+        Check(themeOverlay.GetProperty("ac38_passed").GetBoolean() is false);
+        Check(themeOverlay.GetProperty("l3_dpi").GetString() == "UNVERIFIED");
+        Check(themeOverlay.GetProperty("theme_matrix_executed").GetBoolean() is false);
+        Check(themeOverlay.GetProperty("high_contrast_executed").GetBoolean() is false);
+        Check(themeOverlay.GetProperty("multi_monitor_executed").GetBoolean() is false);
+        Check(themeOverlay.GetProperty("apps_use_light_theme_changed_by_collector").GetBoolean() is false);
+        Check(themeOverlay.GetProperty("high_contrast_changed_by_collector").GetBoolean() is false);
+        Check(themeOverlay.GetProperty("single_theme_sample_is_not_matrix").GetBoolean());
+        Check(themeOverlay.GetProperty("invented_timings").GetBoolean() is false);
         using var liveDpiDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-dpi.not-run.json")));
         var liveDpi = liveDpiDoc.RootElement;
