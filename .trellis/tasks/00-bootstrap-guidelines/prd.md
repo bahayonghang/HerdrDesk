@@ -21,9 +21,9 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill backend guidelines
-- [ ] Fill frontend guidelines
-- [ ] Add code examples
+- [x] Fill backend guidelines
+- [x] Fill frontend guidelines
+- [x] Add code examples
 
 ---
 
@@ -115,17 +115,13 @@ is a separate conversation, not a bootstrap concern.
 
 ---
 
-## Ownership handoff (2026-09-08)
+## Ownership handoff
 
-`09-08-harness-context-alignment` (H) is the **sole spec implementer** for this round.
+`09-08-harness-context-alignment` (H) is archived. It filled backend specs from G0 C#/Python and left frontend index deferred.
 
-- H writes `.trellis/spec/backend/*` from real G0 C#/Python, and marks `.trellis/spec/frontend/index.md` as deferred for unimplemented WinUI.
-- This bootstrap task stays `in_progress`. Do not archive it. Do not mark the checklist complete because H deferred frontend templates.
-- This task only consumes H evidence. Do not open a second implementation session that edits the same spec files while H is active.
-- Remaining frontend guideline files stay pending. Index `deferred` text is not a substitute for filling those files later.
-- Protocol (`malformed_terminal_record` latch) and SDK (default-readonly setup) product work is already done; H records those rules. Publication/README serial integration belongs to P2.
+2026-09-11: frontend guideline files are filled from the shipped WinUI/XAML/ViewModel tree (`src/HerdDesk.App`), not React templates. Checklist items above are marked done. This bootstrap task stays `in_progress` until the developer confirms archive. Do not mark G0 or AC01–AC48 passed.
 
-No concurrent spec writer is active as of this handoff.
+H is no longer the sole spec writer. Do not reopen a second session that rewrites these files back to React/deferred placeholders.
 
 ## Completion
 

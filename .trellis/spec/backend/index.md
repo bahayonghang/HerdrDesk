@@ -2,7 +2,7 @@
 
 G0 conventions for the compiled C# libraries and the Python diagnostic protocol. These files describe the code in the tree. They are not a future WinUI, SSH, or database design.
 
-Shared facts: [AGENTS.md](../../../AGENTS.md). Module indexes: nested `CLAUDE.md`. Frontend templates are deferred: [../frontend/index.md](../frontend/index.md).
+Shared facts: [AGENTS.md](../../../AGENTS.md). Module indexes: nested `CLAUDE.md`. Product UI guidelines: [../frontend/index.md](../frontend/index.md).
 
 **Language**: English.
 

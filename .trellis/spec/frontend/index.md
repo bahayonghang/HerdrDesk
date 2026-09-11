@@ -1,16 +1,20 @@
 # Frontend Development Guidelines
 
-**Deferred React templates.** `src/HerdDesk.App` is a net10.0 composition-root host plus HD-011 L1 ViewModels and an HD-007/HD-011 L2 windows TFM `App.xaml` / four-zone `MainWindow` on `Microsoft.WindowsAppSDK.WinUI` 2.3.6. HD-014 L2 adds `Controls/TerminalHost.xaml` (WinUI WebView2) and `web/terminal/` (`@xterm/xterm` 6.0.0 MIT, real npm lock, offline dist). Do not fill React templates. L2 WebView process and L3 IME/DPI stay UNVERIFIED. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`.
+G0 product UI is WinUI 3 on the admitted App windows TFM, not React. These files describe the XAML/ViewModel surface in `src/HerdDesk.App`. Do not implement features from leftover Trellis React/Next/Vue templates.
 
-The Markdown files in this folder are Trellis init templates (component / hook / React-style type safety). They are **not** live implementation contracts. Do not write React, Next.js, Vue, or generic CSS from those templates. Do not treat hook-guidelines or state-management as if a UI exists.
+Shared facts: [AGENTS.md](../../../AGENTS.md). Module index: [src/HerdDesk.App/CLAUDE.md](../../../src/HerdDesk.App/CLAUDE.md). Renderer baseline: `docs/spikes/renderer-decision.md` (WebView2/xterm; native `UNVERIFIED`).
 
-Shared facts: [AGENTS.md](../../../AGENTS.md). Planned UI names (workspace / session, renderer) are in [CLAUDE.md](../../../CLAUDE.md) and `docs/plan/`. Current compiled types for a future UI to consume are in `src/HerdDesk.Contracts`.
+**Language**: English.
 
 ---
 
 ## Overview
 
-Product UI on Windows is WinUI Shell plus the HD-014 L2 local WebView2/xterm host. React/Next/Vue templates in this folder stay unused. Renderer choice is recorded in `docs/spikes/renderer-decision.md`: WebView2/xterm remains the delivery baseline; native is `UNVERIFIED` and not promoted. Filling this index as deferred does **not** complete `.trellis/tasks/00-bootstrap-guidelines`. Remaining frontend guideline files stay placeholders.
+- Four-zone Shell: `App.xaml` / `MainWindow` / `Views/ShellPage.xaml` on `Microsoft.WindowsAppSDK.WinUI` 2.3.6.
+- Terminal surface: `Controls/TerminalHost.xaml` (WinUI WebView2) plus `web/terminal/` (`@xterm/xterm` 6.0.0).
+- ViewModels and coordinators live in the App project and bind to Core Store projections. Many ViewModels still have no XAML page (Devices, Files, paste, attach).
+- `just ci` does not launch a WinUI window. `--ui <temp-root>` is opt-in (`just dev` on Windows).
+- L2 visual/activation, L2 WebView process, and L3 IME/Narrator/DPI stay `UNVERIFIED`. Shipped `AutomationProperties.Name` values are not AC37.
 
 ---
 
@@ -18,30 +22,28 @@ Product UI on Windows is WinUI Shell plus the HD-014 L2 local WebView2/xterm hos
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Trellis React-style template | Deferred / N/A — not a live contract |
-| [Component Guidelines](./component-guidelines.md) | Trellis component template | Deferred / N/A — not a live contract |
-| [Hook Guidelines](./hook-guidelines.md) | Trellis hook template | Deferred / N/A — not a live contract |
-| [State Management](./state-management.md) | Trellis state template | Deferred / N/A — not a live contract |
-| [Quality Guidelines](./quality-guidelines.md) | Trellis frontend quality template | Deferred / N/A — not a live contract |
-| [Type Safety](./type-safety.md) | Trellis TypeScript template | Deferred / N/A — not a live contract |
-
-Do not implement features by “filling” those templates as if they described HerdDesk.
+| [Directory Structure](./directory-structure.md) | App WinUI/ViewModel layout | Filled from G0 App tree |
+| [Component Guidelines](./component-guidelines.md) | XAML pages/controls, automation names | Filled from G0 App tree |
+| [Hook Guidelines](./hook-guidelines.md) | No React hooks; coordinators instead | N/A |
+| [State Management](./state-management.md) | ViewModels + Core Store | Filled from G0 App tree |
+| [Type Safety](./type-safety.md) | C# nullable + Contracts identity | Filled from G0 App tree |
+| [Quality Guidelines](./quality-guidelines.md) | Offline gate, no live WinUI in CI | Filled from G0 App tree |
 
 ---
 
 ## Pre-Development Checklist
 
-- [ ] Confirm an approved task actually asks for UI. HD-007 L2 admits windows TFM `App.xaml` / `MainWindow` and WinUI 2.3.6. HD-011 L2 ships four-zone Shell XAML. Do not fill React templates. Do not PackageReference the WASDK 2.4.0 umbrella.
-- [ ] Read [AGENTS.md](../../../AGENTS.md): no live WinUI writes in the G0 gate.
-- [ ] Use Contracts types (`PaneKey`, `ConnectionEpoch`, `TerminalAccess`, `ControlVerified`) when UI work starts. Do not invent a second identity model.
+- [ ] Read [AGENTS.md](../../../AGENTS.md). Phase is G0. Do not launch live herdr/SSH/WinUI writes unless the user grants them.
+- [ ] Keep UI identity as `DeviceId` / `SessionKey` / `PaneKey` / `ConnectionEpoch`. Pane id, window title, and agent type are not global keys.
+- [ ] Selection, focus, first frame, and process-alive must not set `ControlVerified`.
+- [ ] Do not PackageReference the WASDK 2.4.0 umbrella. Admitted lock is WinUI 2.3.6 on the windows TFM only.
+- [ ] Do not add React, Next.js, Vue, or CSS from Trellis templates.
 
 ---
 
 ## Quality Check
 
-- [ ] No React/TypeScript UI was added from these templates during G0 harness or protocol tasks.
-- [ ] No WinUI XAML or admitted WASDK PackageReference was added by HD-011 L1 ViewModels.
-- [ ] No claim that frontend guidelines are complete because this index says deferred.
-- [ ] Bootstrap task `00-bootstrap-guidelines` remains `in_progress` until remaining frontend files are filled from a real UI, or a later owner changes that task.
-
-**Language**: English.
+- [ ] No React/TypeScript UI was added from these templates.
+- [ ] CI did not start `--ui` or Narrator.
+- [ ] New XAML has `AutomationProperties.Name`; that is not a Narrator/AC37 pass.
+- [ ] Do not mark G0 or AC01–AC48 passed.

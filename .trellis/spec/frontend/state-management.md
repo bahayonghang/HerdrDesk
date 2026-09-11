@@ -1,51 +1,34 @@
 # State Management
 
-> How state is managed in this project.
+ViewModels over Core Store projections. Not Redux, Zustand, or Vuex.
 
 ---
 
 ## Overview
 
-<!--
-Document your project's state management conventions here.
-
-Questions to answer:
-- What state management solution do you use?
-- How is local vs global state decided?
-- How do you handle server state?
-- What are the patterns for derived state?
--->
-
-(To be filled by the team)
+UI state is in-process. There is no server-state library. herdr snapshots travel JSON RPC on the API/bridge plane; terminal frames stay on `herdr terminal session` stdio.
 
 ---
 
 ## State Categories
 
-<!-- Local state, global state, server state, URL state -->
-
-(To be filled by the team)
-
----
-
-## When to Use Global State
-
-<!-- Criteria for promoting state to global -->
-
-(To be filled by the team)
-
----
-
-## Server State
-
-<!-- How server data is cached and synchronized -->
-
-(To be filled by the team)
+| Kind | Where | Notes |
+|------|-------|-------|
+| Identity / projection | `HerdDesk.Core` Store | `DeviceId`, `SessionKey`, `PaneKey`, `ConnectionEpoch` |
+| Shell chrome | `ShellViewModel`, `NavigationCoordinator` | Selection does not grant control |
+| Preferences | `Settings/UiPreferenceStore.cs` | Not user AppData unless an explicit root is passed |
+| Input / lease | `TerminalInputViewModel`, `TerminalControlViewModel` | `RequestControl` does not grant a lease |
+| Notifications | `NotificationCenterViewModel` | Clicks locate `PaneKey` only |
+| Visibility / capacity | `Services/PaneVisibilityCoordinator.cs` | Hidden panes release terminal/renderer |
+| File / paste / attach | `Files/*ViewModel`, `AttachToAgentViewModel`, `PastePreviewViewModel` | No XAML yet |
+| Exit | `Lifetime/AppExitCoordinator.cs` | Kill ledger is owned children only |
 
 ---
 
-## Common Mistakes
+## Rules
 
-<!-- State management mistakes your team has made -->
-
-(To be filled by the team)
+- Compare terminal `seq` only inside the current `ConnectionEpoch`.
+- After disconnect, do not replay input.
+- Closing the GUI releases only this application's child processes (`AppExitCoordinator`).
+- `WindowsNotificationSink.Available` stays false until a later approved toast task.
+- `RequestControl` on `TerminalControlViewModel` does not set `ControlVerified`.

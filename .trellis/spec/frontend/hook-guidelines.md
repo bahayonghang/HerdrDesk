@@ -1,51 +1,14 @@
 # Hook Guidelines
 
-> How hooks are used in this project.
+**N/A.** HerdDesk has no React hooks.
 
----
+Shared stateful UI logic is C# coordinators and ViewModels:
 
-## Overview
+- `src/HerdDesk.App/Services/PaneVisibilityCoordinator.cs`
+- `src/HerdDesk.App/Controls/TerminalFocusCoordinator.cs`
+- `src/HerdDesk.App/ViewModels/TerminalDisplayCoordinator.cs`
+- `src/HerdDesk.App/ViewModels/NavigationCoordinator.cs`
 
-<!--
-Document your project's hook conventions here.
+Do not add `use*` hooks, React Query, or SWR.
 
-Questions to answer:
-- What custom hooks do you have?
-- How do you handle data fetching?
-- What are the naming conventions?
-- How do you share stateful logic?
--->
-
-(To be filled by the team)
-
----
-
-## Custom Hook Patterns
-
-<!-- How to create and structure custom hooks -->
-
-(To be filled by the team)
-
----
-
-## Data Fetching
-
-<!-- How data fetching is handled (React Query, SWR, etc.) -->
-
-(To be filled by the team)
-
----
-
-## Naming Conventions
-
-<!-- Hook naming rules (use*, etc.) -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Hook-related mistakes your team has made -->
-
-(To be filled by the team)
+If a later approved task introduces a web UI beyond the xterm host page, that is a new design. The current `web/terminal/` bundle is a local renderer, not a React app.

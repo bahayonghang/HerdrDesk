@@ -19,7 +19,7 @@
 | 共享工程规则 | [../AGENTS.md](../AGENTS.md)、[../docs/harness-workflows.md](../docs/harness-workflows.md)、`.trellis/spec/` | 适用 Claude Code / Codex / Grok Build / Kimi Code / OMP。五 CLI 新会话加载仍为 UNVERIFIED。 |
 | 历史导入证据 | [../docs/publication.md](../docs/publication.md)、`PUBLICATION_MANIFEST.json`、Actions run `34138627135` | 证明 SHA `629bb01` 的首次导入。日常门禁是 `just ci`。 |
 
-`.trellis/tasks/00-bootstrap-guidelines` 仍为 `in_progress`；本轮不归档它。
+`.trellis/tasks/00-bootstrap-guidelines` 仍为 `in_progress`；frontend 已按 WinUI 填写，未经开发者确认前不归档。
 
 ## 文件
 

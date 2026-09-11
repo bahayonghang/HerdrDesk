@@ -2,7 +2,7 @@
 
 ## 2026-09-09 执行快照
 
-HD-001–036 已完成 L1 产品提交、规划提交与独立归档。父任务仍 `planning`，不归档。AC01–AC48 保持 `not_run`。`phase_gate=not_passed`。完整 1.0 未宣称。
+HD-001–036 已完成 L1 产品提交、规划提交与独立归档（HD-033 为 L2 overlay 收口，产品 SHA `2fbe3c8`）。父任务仍 `planning`，不归档。AC01–AC48 保持 `not_run`。`phase_gate=not_passed`。完整 1.0 未宣称。
 
 规划钉 GitHub v0.9.0 / protocol 22。2026-09-09 将 last-interactor 尺寸、client-local chrome、#3519 detach、dim 缓存、graphics omitted、禁止 `--no-session`、Herdr Cloud 排除写入父 design/ui-blueprint。不新建子任务。不改 `src/`。不 push。live herdr/SSH/WinUI/IME/soak/Publisher 仍缺授权。
 

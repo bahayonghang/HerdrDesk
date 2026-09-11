@@ -2,7 +2,7 @@
 
 This file is the canonical tracked copy of shared working rules, gate, and authorization for Claude Code, Codex, Grok Build, Kimi Code, and OMP (can1357/oh-my-pi).
 
-Module indexes live in [CLAUDE.md](CLAUDE.md) and each nested `CLAUDE.md`. Tool dispatch, permission checks, and CLI fallback live in [docs/harness-workflows.md](docs/harness-workflows.md). Coding rules for current G0 C# and Python live in [.trellis/spec/backend/](.trellis/spec/backend/index.md). Frontend WinUI/React templates are deferred; see [.trellis/spec/frontend/index.md](.trellis/spec/frontend/index.md).
+Module indexes live in [CLAUDE.md](CLAUDE.md) and each nested `CLAUDE.md`. Tool dispatch, permission checks, and CLI fallback live in [docs/harness-workflows.md](docs/harness-workflows.md). Coding rules for current G0 C# and Python live in [.trellis/spec/backend/](.trellis/spec/backend/index.md). Product UI rules for WinUI/XAML/ViewModels live in [.trellis/spec/frontend/](.trellis/spec/frontend/index.md); do not implement leftover React templates.
 
 Do not put durable project facts only inside the Trellis managed block below. A `trellis update` may overwrite that block.
 

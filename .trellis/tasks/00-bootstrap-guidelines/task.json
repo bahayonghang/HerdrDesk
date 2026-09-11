@@ -24,6 +24,6 @@
     ".trellis/spec/backend/",
     ".trellis/spec/frontend/"
   ],
-  "notes": "HANDOFF 2026-09-08: 09-08-harness-context-alignment (H) is the sole spec implementer this round. This bootstrap task stays in_progress and unarchived. It keeps the existing checklist and only consumes H evidence. Do not start a second session that writes .trellis/spec/backend or .trellis/spec/frontend while H is active. Frontend remaining files stay pending/deferred; filling frontend/index.md as deferred does not complete or archive this task. Protocol and SDK product fixes are already archived; H records their stable rules. No concurrent spec writer is active in this session.",
+  "notes": "2026-09-11: backend specs remain filled from G0 C#/Python. Frontend specs rewritten from WinUI/XAML/ViewModel reality (not React templates). This task stays in_progress until the developer confirms archive. Do not mark G0/ACs passed.",
   "meta": {}
 }

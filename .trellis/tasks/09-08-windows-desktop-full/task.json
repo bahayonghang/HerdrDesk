@@ -66,7 +66,7 @@
     "src/HerdDesk.Core/TerminalFrameParser.cs",
     "src/HerdDesk.Core/InputPolicy.cs"
   ],
-  "notes": "Core v1. Planning herdr baseline is GitHub v0.9.0 / PROTOCOL_VERSION 22 / schema 22 (research/herdr-0.9.0.md, 2026-09-09 second web pass). Q1-Q3=A/A/A unchanged. 1.0 path stays API socket + herdr terminal session; no --no-session; no herdr machine catalog; no surface_interest/health_check; no Herdr Cloud. HD-001–036 archived at L1. Parent remains planning. AC01–AC48 not_run. G0 not passed. Complete 1.0 not claimed. 2026-09-09 parent specs add last-interactor vs ControlVerified, client-local chrome, #3519 detach, dim cache, graphics omitted. master #3661/#3755 recorded as drift only. Live herdr/SSH/WinUI/IME/soak/install/Publisher/push unauthorized. EP-01..07 remain conditional in extensions.md.",
+  "notes": "Core v1. Planning herdr baseline is GitHub v0.9.0 / PROTOCOL_VERSION 22 / schema 22. HD-001–036 archived at L1/L2 overlay closeout (HD-033 product 2fbe3c8). Parent remains planning. L3/L4 live herdr/SSH/WinUI/IME/Narrator workflow/DPI-theme matrix/soak-load still UNVERIFIED. AC01–AC48 not_run. G0 not passed. Complete 1.0 not claimed. Live herdr/SSH/WinUI/IME/soak/install/Publisher/push unauthorized.",
   "meta": {
     "baseline_commit": "1cce6e4",
     "source_task_count": 36,

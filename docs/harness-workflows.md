@@ -11,7 +11,7 @@ This document does not claim runtime alignment of the five CLIs. CLI presence is
 1. Read root [AGENTS.md](../AGENTS.md) (walk up from `src/HerdDesk.Core` if that is the working directory).
 2. Read [CLAUDE.md](../CLAUDE.md), then the nested `CLAUDE.md` for the module you edit.
 3. Read the active task `prd.md`, `design.md` if present, `implement.md` if present, and every `file` in `implement.jsonl` / `check.jsonl`.
-4. Follow `.trellis/spec/backend/` for G0 C#/Python. Do not treat `.trellis/spec/frontend/` templates as live UI contracts.
+4. Follow `.trellis/spec/backend/` for G0 C#/Python and `.trellis/spec/frontend/` for WinUI/XAML/ViewModels. Do not implement leftover Trellis React/Next/Vue templates.
 5. Run `just ci` for the offline gate. Do not run live herdr, SSH, WinUI, takeover, or `--publish`.
 6. Implement only after the user approves the plan for that task.
 

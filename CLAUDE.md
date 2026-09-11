@@ -2,7 +2,7 @@
 
 共用项目事实与授权边界以 [AGENTS.md](AGENTS.md) 为准。本文件是模块索引，不是第二份项目事实正文。
 
-五套工具的入口、派发、模型/权限核对与 CLI 缺失回退见 [docs/harness-workflows.md](docs/harness-workflows.md)。G0 C#/Python 规范见 [.trellis/spec/backend/](.trellis/spec/backend/index.md)。WinUI/React 模板为 deferred，见 [.trellis/spec/frontend/index.md](.trellis/spec/frontend/index.md)。流程见 [AGENTS.md](AGENTS.md) 中的 Trellis 块与 `.trellis/workflow.md`。
+五套工具的入口、派发、模型/权限核对与 CLI 缺失回退见 [docs/harness-workflows.md](docs/harness-workflows.md)。G0 C#/Python 规范见 [.trellis/spec/backend/](.trellis/spec/backend/index.md)。产品 UI（WinUI/XAML/ViewModel）规范见 [.trellis/spec/frontend/](.trellis/spec/frontend/index.md)，不要按 leftover React 模板实现。流程见 [AGENTS.md](AGENTS.md) 中的 Trellis 块与 `.trellis/workflow.md`。
 
 独立 Windows 客户端，对接 herdr。GitHub 仓库名 `HerdrDesk`；应用名、solution、C# namespace 为 `HerdDesk`。中文工作名：牧台。
 
