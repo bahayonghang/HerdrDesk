@@ -18,6 +18,7 @@ from herddesk_g0.endpoint import validate_endpoint_matrix
 from herddesk_g0.lease import validate_terminal_lease_matrix
 from herddesk_g0.licensing import audit_admitted_release_inputs, validate_licensing
 from herddesk_g0.quality import (
+    DPI_MATRIX_REL,
     LIVE_WORKING_SET_REL,
     SOAK_ELAPSED_REL,
     SOAK_WORKING_SET_REL,
@@ -25,6 +26,7 @@ from herddesk_g0.quality import (
     collect_narrator_overlay,
     soak_interrupt_capture_rels,
     soak_start_app_pid,
+    validate_dpi_matrix,
     validate_eight_hour_soak_elapsed,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
@@ -1119,6 +1121,8 @@ def _check_hd033_closeout(hd033: dict, catalog: dict, matrix: dict) -> None:
     assert catalog.get('soak_elapsed_capture') == 'evidence/quality/live-soak-elapsed.json'
     assert catalog.get('soak_working_set_capture') == 'evidence/quality/live-soak-working-set.json'
     assert (ROOT / 'scripts' / 'record_soak_working_set.py').is_file()
+    assert catalog.get('dpi_matrix_capture') == 'evidence/quality/live-dpi-matrix.json'
+    assert (ROOT / 'scripts' / 'record_dpi_matrix.py').is_file()
     assert catalog.get('soak_interruption_capture') == 'evidence/quality/live-soak-interrupted.json'
     assert catalog.get('soak_interruption_captures') == [
         'evidence/quality/live-soak-interrupted.json',
@@ -1483,6 +1487,8 @@ def _check_hd033_dpi_overlay() -> None:
     assert live.get('result') == 'not_run'
     assert not _is_hd033_success(live.get('result'))
     assert live.get('live_dpi') is False
+    assert live.get('dpi_matrix_100_150_200_executed') is False
+    assert live.get('display_scale_changed_by_collector') is False
 
 
 def _check_hd033_soak_start() -> None:
@@ -1804,6 +1810,87 @@ def _check_hd033_soak_working_set() -> None:
         if isinstance(sampler, int):
             assert sampler not in start.get('owned_pids')
         assert overlay.get('sampler_added_to_start_owned_pids') is False
+    else:
+        assert report is None
+
+
+def _check_hd033_dpi_matrix() -> None:
+    """Validate optional scale-only DPI matrix. Do not claim AC38 or live_dpi."""
+    assert (ROOT / 'scripts' / 'record_dpi_matrix.py').is_file()
+    src = (ROOT / 'scripts' / 'record_dpi_matrix.py').read_text(encoding='utf-8')
+    assert '--record' in src
+    assert 'DISPLAYCONFIG_DEVICE_INFO_GET_DPI_SCALE' in src
+    assert 'DISPLAYCONFIG_DEVICE_INFO_SET_DPI_SCALE' in src
+    assert 'SetProcessDpiAwarenessContext' in src
+    assert 'GetDpiForMonitor' in src
+    assert 'IMAGENAME eq HerdDesk.App.exe' not in src
+    assert 'RunUiSmoke' not in src
+    assert 'taskkill' in src
+    assert "'/PID'" in src or '"/PID"' in src
+    record_src = src[src.find('def record('):src.find('def _unrecorded_report')]
+    assert "if os.name != 'nt' and not hooks:" in record_src
+    assert (
+        "if os.name != 'nt':\n        raise QualityError('missing_record_field')"
+        not in record_src
+    )
+    ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    just = (ROOT / 'justfile').read_text(encoding='utf-8')
+    assert 'record_dpi_matrix.py --record' not in ci
+    assert 'record_dpi_matrix.py --record' not in just
+    pointer = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'dpi-overlay-pointer.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(pointer)
+    assert pointer.get('dpi_matrix_100_150_200_executed') is False
+    assert pointer.get('display_scale_changed_by_collector') is False
+    assert pointer.get('ac38_passed') is False
+    assert pointer.get('live_dpi') is False
+    live = json.loads(
+        (ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(
+            encoding='utf-8'
+        )
+    )
+    _reject_hd033_pass_claims(live)
+    assert live.get('live_dpi') is False
+    assert live.get('dpi_matrix_100_150_200_executed') is False
+    assert live.get('display_scale_changed_by_collector') is False
+    overlay_path = ROOT / DPI_MATRIX_REL
+    report = validate_dpi_matrix(ROOT)
+    if overlay_path.is_file():
+        assert report is not None
+        assert report.get('ac38_passed') is False
+        assert report.get('live_dpi') is False
+        assert report.get('l3_dpi') == 'UNVERIFIED'
+        assert report.get('g0_passed') is False
+        assert report.get('herdr_executed') is False
+        assert report.get('theme_matrix_executed') is False
+        assert report.get('high_contrast_executed') is False
+        assert report.get('multi_monitor_executed') is False
+        overlay = json.loads(overlay_path.read_text(encoding='utf-8'))
+        # Do not call _reject_hd033_pass_claims(overlay) or
+        # _reject_dpi_pass_claims(overlay): dpi_matrix_100_150_200_executed
+        # and display_scale_changed_by_this_record may be true on this file only.
+        assert overlay.get('ac38_passed') is False
+        assert overlay.get('live_dpi') is False
+        assert overlay.get('l3_dpi') == 'UNVERIFIED'
+        assert overlay.get('g0_passed') is False
+        assert overlay.get('herdr_executed') is False
+        assert overlay.get('theme_matrix_executed') is False
+        assert overlay.get('high_contrast_executed') is False
+        assert overlay.get('multi_monitor_executed') is False
+        assert overlay.get('resize_rate') is None
+        assert overlay.get('result') == 'not_run'
+        assert overlay.get('restore_ok') is True
+        assert overlay.get('display_scale_changed_by_collector') is False
+        for key, value in overlay.items():
+            if isinstance(key, str) and key.endswith('_passed'):
+                assert value is False, key
+        assert pointer.get('dpi_matrix_100_150_200_executed') is False
+        assert pointer.get('display_scale_changed_by_collector') is False
+        assert live.get('dpi_matrix_100_150_200_executed') is False
+        assert live.get('display_scale_changed_by_collector') is False
     else:
         assert report is None
 
@@ -3844,6 +3931,7 @@ def validate() -> dict:
     _check_hd033_narrator_overlay()
     _check_hd033_narrator_product_ui_launch()
     _check_hd033_dpi_overlay()
+    _check_hd033_dpi_matrix()
     _check_hd033_soak_start()
     _check_hd033_soak_working_set()
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)

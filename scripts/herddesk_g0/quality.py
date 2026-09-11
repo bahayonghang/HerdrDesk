@@ -1,4 +1,4 @@
-"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, soak-interruption, optional soak-elapsed, and optional soak-process working-set overlay checks. Not AC37, AC38, AC29, or AC46. Interrupted STARTs are not 8h. Wall-clock elapsed is not AC46. A soak-process sample is not 1/4 pane, not 100 open/close, and not live_working_set."""
+"""HD-033 Narrator overlay, product-UI launch, DPI overlay, soak-start, soak-interruption, optional soak-elapsed, optional soak-process working-set overlay, and optional scale-only DPI matrix overlay checks. Not AC37, AC38, AC29, or AC46. Interrupted STARTs are not 8h. Wall-clock elapsed is not AC46. A soak-process sample is not 1/4 pane, not 100 open/close, and not live_working_set. A scale-only 100/150/200 overlay is not AC38, not theme/monitor/high-contrast, and not L3."""
 from __future__ import annotations
 
 import ctypes
@@ -46,6 +46,27 @@ DPI_FALSE_KEYS = (
     'g0_passed',
 )
 DPI_TRUE_KEYS = ('single_dpi_sample_is_not_matrix',)
+DPI_MATRIX_REL = 'evidence/quality/live-dpi-matrix.json'
+DPI_MATRIX_KIND = 'hd033_dpi_matrix'
+DPI_MATRIX_TARGETS = (100, 150, 200)
+DPI_MATRIX_EXPECTED_DPI = {100: 96, 150: 144, 200: 192}
+DPI_MATRIX_DPI_TOLERANCE = 8
+DPI_MATRIX_REQUIRED_KEYS = (
+    'document_kind', 'result', 'ac38_passed', 'live_dpi', 'l3_dpi',
+    'g0_passed', 'herdr_executed', 'invented_timings', 'git_sha',
+    'started_at_utc', 'captured_at_utc', 'original_scale_percent',
+    'restored_scale_percent', 'samples', 'restore_ok',
+    'dpi_matrix_100_150_200_executed', 'display_scale_changed_by_this_record',
+    'display_scale_changed_by_collector',
+    'theme_matrix_executed', 'high_contrast_executed', 'multi_monitor_executed',
+    'resize_rate',
+)
+DPI_MATRIX_FALSE_KEYS = (
+    'ac38_passed', 'live_dpi', 'herdr_executed', 'invented_timings',
+    'g0_passed', 'theme_matrix_executed', 'high_contrast_executed',
+    'multi_monitor_executed', 'winui_admitted',
+    'display_scale_changed_by_collector',
+)
 # LOGPIXELSX; same fallback index as EnvironmentManifestCollector.ReadWindowsSystemDpi.
 _LOGPIXELSX = 88
 
@@ -1218,6 +1239,150 @@ def validate_soak_working_set(root: Path) -> dict[str, Any] | None:
         'open_close_100': False,
         'result': 'not_run',
         'l4_soak': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'invented_timings': False,
+        'git_sha': git_sha,
+    }
+
+
+def _dpi_matrix_false_key_code(key: str) -> str:
+    if key in {'ac38_passed', 'g0_passed'}:
+        return key
+    if key == 'live_dpi':
+        return 'live_dpi_claimed'
+    if key == 'display_scale_changed_by_collector':
+        return 'collector_changed_display_scale'
+    if key == 'theme_matrix_executed':
+        return 'theme_matrix_claimed'
+    if key == 'high_contrast_executed':
+        return 'high_contrast_claimed'
+    if key == 'multi_monitor_executed':
+        return 'multi_monitor_claimed'
+    return key
+
+
+def _dpi_matches_target(dpi: Any, percent: int) -> bool:
+    expected = DPI_MATRIX_EXPECTED_DPI.get(percent)
+    if expected is None or not isinstance(dpi, int):
+        return False
+    return abs(dpi - expected) <= DPI_MATRIX_DPI_TOLERANCE
+
+
+def _dpi_matrix_sample_applied(sample: Any, percent: int) -> bool:
+    if not isinstance(sample, dict):
+        return False
+    if sample.get('target_percent') != percent:
+        return False
+    if sample.get('applied') is not True:
+        return False
+    return _dpi_matches_target(sample.get('effective_dpi'), percent)
+
+
+def validate_dpi_matrix(root: Path) -> dict[str, Any] | None:
+    """Optional scale-only 100/150/200 overlay. Missing is allowed. Not AC38.
+
+    Do not call _reject_dpi_pass_claims or _reject_hd033_pass_claims on this
+    document: dpi_matrix_100_150_200_executed and
+    display_scale_changed_by_this_record may be true here after a real
+    DisplayConfig change. Catalog, L2, and the current-system-DPI pointer
+    stay false.
+    """
+    root = Path(root)
+    path = root / DPI_MATRIX_REL
+    if not path.is_file():
+        return None
+    doc = _load_json(path)
+    for key in DPI_MATRIX_REQUIRED_KEYS:
+        if key not in doc:
+            raise QualityError('missing_record_field')
+    if doc.get('document_kind') != DPI_MATRIX_KIND:
+        raise QualityError('missing_record_field')
+    if doc.get('result') != 'not_run' or _is_success(doc.get('result')):
+        raise QualityError('live_success_claimed')
+    if doc.get('l3_dpi') != 'UNVERIFIED':
+        raise QualityError('l3_dpi_claimed')
+    if _is_success(doc.get('phase_gate')) or doc.get('phase_gate') == 'passed':
+        raise QualityError('ac38_passed')
+    for key, value in doc.items():
+        if isinstance(key, str) and key.endswith('_passed') and value is not False:
+            raise QualityError(key)
+    for key in DPI_MATRIX_FALSE_KEYS:
+        if key in doc and doc.get(key) is not False:
+            raise QualityError(_dpi_matrix_false_key_code(key))
+    if doc.get('resize_rate') is not None:
+        raise QualityError('invented_timings')
+    if 'soak_hours' in doc and doc.get('soak_hours') is not None:
+        raise QualityError('invented_timings')
+    git_sha = doc.get('git_sha')
+    if not isinstance(git_sha, str) or len(git_sha) < 7:
+        raise QualityError('missing_record_field')
+    _parse_utc(doc.get('started_at_utc'))
+    _parse_utc(doc.get('captured_at_utc'))
+    original = doc.get('original_scale_percent')
+    restored = doc.get('restored_scale_percent')
+    if not isinstance(original, int) or original <= 0:
+        raise QualityError('missing_record_field')
+    if not isinstance(restored, int) or restored <= 0:
+        raise QualityError('missing_record_field')
+    samples = doc.get('samples')
+    if not isinstance(samples, list):
+        raise QualityError('missing_record_field')
+    restore_ok = doc.get('restore_ok')
+    if restore_ok is not True and restore_ok is not False:
+        raise QualityError('missing_record_field')
+    executed = doc.get('dpi_matrix_100_150_200_executed')
+    if executed is not True and executed is not False:
+        raise QualityError('missing_record_field')
+    changed = doc.get('display_scale_changed_by_this_record')
+    if changed is not True and changed is not False:
+        raise QualityError('missing_record_field')
+    applied = {
+        percent: any(_dpi_matrix_sample_applied(sample, percent) for sample in samples)
+        for percent in DPI_MATRIX_TARGETS
+    }
+    honest = (
+        restore_ok is True
+        and restored == original
+        and all(applied[percent] for percent in DPI_MATRIX_TARGETS)
+    )
+    if executed is True:
+        if not honest or changed is not True:
+            raise QualityError('dpi_matrix_claimed')
+    _check_ac_status(root, 'AC38', 'ac38_passed')
+    pointer = _load_json(root / DPI_POINTER_REL) if (root / DPI_POINTER_REL).is_file() else None
+    if pointer is not None:
+        _reject_dpi_pass_claims(pointer)
+        if pointer.get('dpi_matrix_100_150_200_executed') is not False:
+            raise QualityError('dpi_matrix_claimed')
+        if pointer.get('display_scale_changed_by_collector') is not False:
+            raise QualityError('collector_changed_display_scale')
+    live = _load_json(root / LIVE_DPI_REL) if (root / LIVE_DPI_REL).is_file() else None
+    if live is not None:
+        _reject_dpi_pass_claims(live)
+        if live.get('dpi_matrix_100_150_200_executed') is not False:
+            raise QualityError('dpi_matrix_claimed')
+        if live.get('display_scale_changed_by_collector') is not False:
+            raise QualityError('collector_changed_display_scale')
+        if live.get('live_dpi') is not False:
+            raise QualityError('live_dpi_claimed')
+    return {
+        'document_kind': DPI_MATRIX_KIND,
+        'dpi_matrix_capture': DPI_MATRIX_REL,
+        'recorded': True,
+        'dpi_matrix_100_150_200_executed': executed is True,
+        'display_scale_changed_by_this_record': changed is True,
+        'restore_ok': restore_ok is True,
+        'original_scale_percent': original,
+        'restored_scale_percent': restored,
+        'live_dpi': False,
+        'ac38_passed': False,
+        'theme_matrix_executed': False,
+        'high_contrast_executed': False,
+        'multi_monitor_executed': False,
+        'result': 'not_run',
+        'l3_dpi': 'UNVERIFIED',
         'g0_passed': False,
         'phase_gate': 'not_passed',
         'herdr_executed': False,

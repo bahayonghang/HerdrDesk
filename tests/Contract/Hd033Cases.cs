@@ -141,6 +141,10 @@ internal static class Hd033Cases
               == "evidence/quality/dpi-overlay-pointer.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "dpi-overlay-pointer.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "collect_dpi_overlay.py")));
+        Check(catalog.GetProperty("dpi_matrix_capture").GetString()
+              == "evidence/quality/live-dpi-matrix.json");
+        Check(File.Exists(Path.Combine(root, "scripts", "record_dpi_matrix.py")));
+        Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-dpi-matrix.json")));
         Check(catalog.GetProperty("soak_start_capture").GetString()
               == "evidence/quality/live-soak-start.json");
         Check(File.Exists(Path.Combine(root, "evidence", "quality", "live-soak-start.json")));
@@ -213,6 +217,34 @@ internal static class Hd033Cases
         Check(dpiOverlay.GetProperty("display_scale_changed_by_collector").GetBoolean() is false);
         Check(dpiOverlay.GetProperty("single_dpi_sample_is_not_matrix").GetBoolean());
         Check(dpiOverlay.GetProperty("invented_timings").GetBoolean() is false);
+        using var liveDpiDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-dpi.not-run.json")));
+        var liveDpi = liveDpiDoc.RootElement;
+        Check(liveDpi.GetProperty("live_dpi").GetBoolean() is false);
+        Check(liveDpi.GetProperty("dpi_matrix_100_150_200_executed").GetBoolean() is false);
+        Check(liveDpi.GetProperty("display_scale_changed_by_collector").GetBoolean() is false);
+        using var dpiMatrixDoc = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(root, "evidence", "quality", "live-dpi-matrix.json")));
+        var dpiMatrix = dpiMatrixDoc.RootElement;
+        Check(dpiMatrix.GetProperty("document_kind").GetString() == "hd033_dpi_matrix");
+        Check(dpiMatrix.GetProperty("result").GetString() == "not_run");
+        Check(dpiMatrix.GetProperty("live_dpi").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("ac38_passed").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("l3_dpi").GetString() == "UNVERIFIED");
+        Check(dpiMatrix.GetProperty("g0_passed").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("herdr_executed").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("winui_admitted").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("theme_matrix_executed").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("high_contrast_executed").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("multi_monitor_executed").GetBoolean() is false);
+        Check(dpiMatrix.GetProperty("resize_rate").ValueKind == JsonValueKind.Null);
+        Check(dpiMatrix.GetProperty("restore_ok").GetBoolean());
+        Check(dpiMatrix.GetProperty("display_scale_changed_by_collector").GetBoolean() is false);
+        foreach (var key in PassKeys)
+        {
+            if (dpiMatrix.TryGetProperty(key, out var passed))
+                Check(passed.GetBoolean() is false);
+        }
         Check(catalog.GetProperty("redaction").GetProperty("credential").GetString() == "omitted");
         Check(catalog.GetProperty("redaction").GetProperty("host").GetString() == "omitted");
         foreach (var key in PassKeys)
@@ -548,6 +580,7 @@ internal static class Hd033Cases
         Check(root.GetProperty("live_narrator").GetBoolean() is false);
         Check(root.GetProperty("live_dpi").GetBoolean() is false);
         Check(root.GetProperty("eight_hour_soak_executed").GetBoolean() is false);
+        Check(root.GetProperty("missing").GetProperty("dpi_theme_matrix").GetBoolean());
         Check(root.GetProperty("parser_consumed_is_not_presentation").GetBoolean());
         Check(root.GetProperty("parser_callback_cannot_pass_input_to_pixel").GetBoolean());
         Check(root.GetProperty("derive_process_memory_from_q_p").GetBoolean() is false);

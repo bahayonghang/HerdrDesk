@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from herddesk_g0.quality import (
     AC37_STEP_KEYS,
+    DPI_MATRIX_KIND,
+    DPI_MATRIX_REL,
     EMPTY_SHA256,
     LIVE_WORKING_SET_REL,
     QualityError,
@@ -27,12 +29,15 @@ from herddesk_g0.quality import (
     soak_interrupt_capture_rels,
     soak_start_app_pid,
     system_dpi,
+    validate_dpi_matrix,
     validate_eight_hour_soak_elapsed,
     validate_eight_hour_soak_interruption,
     validate_eight_hour_soak_start,
     validate_narrator_product_ui_launch,
     validate_soak_working_set,
+    _reject_dpi_pass_claims,
 )
+import record_dpi_matrix as dpi_matrix_cli
 import record_soak_working_set as working_set_cli
 import start_eight_hour_soak as soak_cli
 import validate_repository as repository
@@ -213,6 +218,11 @@ class Hd033ResidualTests(unittest.TestCase):
         )
         self.assertTrue((ROOT / 'scripts' / 'record_soak_working_set.py').is_file())
         self.assertEqual(
+            catalog['dpi_matrix_capture'],
+            'evidence/quality/live-dpi-matrix.json',
+        )
+        self.assertTrue((ROOT / 'scripts' / 'record_dpi_matrix.py').is_file())
+        self.assertEqual(
             catalog['soak_interruption_capture'],
             'evidence/quality/live-soak-interrupted.json',
         )
@@ -278,6 +288,13 @@ class Hd033ResidualTests(unittest.TestCase):
         self.assertFalse(dpi_overlay_pointer['dpi_matrix_100_150_200_executed'])
         self.assertFalse(dpi_overlay_pointer['display_scale_changed_by_collector'])
         self.assertTrue(dpi_overlay_pointer['single_dpi_sample_is_not_matrix'])
+        live_dpi_not_run = json.loads(
+            (ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json').read_text(
+                encoding='utf-8'
+            )
+        )
+        self.assertFalse(live_dpi_not_run['dpi_matrix_100_150_200_executed'])
+        self.assertFalse(live_dpi_not_run['display_scale_changed_by_collector'])
         self.assertFalse(dpi_overlay_pointer['invented_timings'])
         self.assertFalse(dpi_overlay_pointer['committed_raw'])
         self.assertEqual(dpi_overlay_pointer['github_required_check'], 'UNVERIFIED')
@@ -721,6 +738,16 @@ class Hd033ResidualTests(unittest.TestCase):
 
         bad = deepcopy(catalog)
         bad['soak_working_set_capture'] = 'evidence/quality/live-working-set.not-run.json'
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad.pop('dpi_matrix_capture')
+        with self.assertRaises(AssertionError):
+            repository._check_hd033_closeout(hd033, bad, matrix)
+
+        bad = deepcopy(catalog)
+        bad['dpi_matrix_capture'] = 'evidence/quality/live-dpi.not-run.json'
         with self.assertRaises(AssertionError):
             repository._check_hd033_closeout(hd033, bad, matrix)
 
@@ -1231,6 +1258,8 @@ class Hd033DpiOverlayTests(unittest.TestCase):
         )
         self.assertEqual(live['result'], 'not_run')
         self.assertFalse(live['live_dpi'])
+        self.assertFalse(live['dpi_matrix_100_150_200_executed'])
+        self.assertFalse(live['display_scale_changed_by_collector'])
         self.assertIsNone(live['resize_rate'])
 
     def test_cli_prints_one_json_object(self):
@@ -1381,6 +1410,448 @@ class Hd033DpiOverlayTests(unittest.TestCase):
             )
             with self.assertRaises(QualityError) as ctx:
                 collect_dpi_overlay(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+
+class _FakeDpiDisplay:
+    def __init__(self, *, original=100, available=(100, 150, 200), restore_ok=True):
+        self.percent = original
+        self.original = original
+        self.available = list(available)
+        self.restore_ok = restore_ok
+        self.recommended = 100
+
+    def _dpi(self):
+        return int(round(96 * self.percent / 100.0))
+
+    def _rel(self, percent):
+        table = dpi_matrix_cli.SCALE_TABLE
+        return table.index(percent) - table.index(self.recommended)
+
+    def read(self):
+        rels = [self._rel(item) for item in self.available]
+        return {
+            'min_scale_rel': min(rels) if rels else 0,
+            'cur_scale_rel': self._rel(self.percent),
+            'max_scale_rel': max(rels) if rels else 0,
+            'recommended_idx': dpi_matrix_cli.SCALE_TABLE.index(self.recommended),
+            'recommended_percent': self.recommended,
+            'available_scale_percents': list(self.available),
+            'scale_percent': self.percent,
+            'effective_dpi': self._dpi(),
+            'system_dpi': self._dpi(),
+        }
+
+    def apply(self, percent, _scale_rel):
+        if percent not in self.available:
+            return False
+        self.percent = percent
+        return True
+
+    def wait(self, percent):
+        return {
+            'applied': self.percent == percent,
+            'effective_dpi': self._dpi(),
+            'scale_percent': self.percent,
+        }
+
+    def restore(self, _original_rel):
+        if not self.restore_ok:
+            return False
+        self.percent = self.original
+        return True
+
+
+def _write_dpi_matrix(tmp: Path, *, overlay_overrides=None) -> None:
+    quality = tmp / 'evidence' / 'quality'
+    quality.mkdir(parents=True, exist_ok=True)
+    samples = []
+    for percent, dpi in ((100, 96), (150, 144), (200, 192)):
+        samples.append({
+            'target_percent': percent,
+            'expected_effective_dpi': dpi,
+            'available': True,
+            'applied': True,
+            'effective_dpi': dpi,
+            'scale_percent': percent,
+            'scale_rel': {100: 0, 150: 1, 200: 2}[percent],
+            'product_ui': None,
+        })
+    doc = {
+        'document_kind': DPI_MATRIX_KIND,
+        'template': False,
+        'capture_id': 'hd033-live-dpi-matrix-test',
+        'kind': 'live_dpi_scale_matrix',
+        'started_at_utc': '2026-09-11T00:00:00Z',
+        'captured_at_utc': '2026-09-11T00:01:00Z',
+        'git_sha': 'd' * 40,
+        'result': 'not_run',
+        'live_dpi': False,
+        'ac38_passed': False,
+        'l3_dpi': 'UNVERIFIED',
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'herdr_executed': False,
+        'winui_admitted': False,
+        'invented_timings': False,
+        'dpi_matrix_100_150_200_executed': True,
+        'display_scale_changed_by_this_record': True,
+        'display_scale_changed_by_collector': False,
+        'theme_matrix_executed': False,
+        'high_contrast_executed': False,
+        'multi_monitor_executed': False,
+        'resize_rate': None,
+        'soak_hours': None,
+        'original_scale_percent': 100,
+        'restored_scale_percent': 100,
+        'restore_ok': True,
+        'samples': samples,
+    }
+    if overlay_overrides:
+        doc.update(overlay_overrides)
+    (quality / 'live-dpi-matrix.json').write_text(
+        json.dumps(doc), encoding='utf-8'
+    )
+
+
+class Hd033DpiMatrixTests(unittest.TestCase):
+    def test_overlay_file_is_optional_until_record(self):
+        overlay_path = ROOT / DPI_MATRIX_REL
+        report = validate_dpi_matrix(ROOT)
+        if overlay_path.is_file():
+            self.assertIsNotNone(report)
+            self.assertFalse(report['ac38_passed'])
+            self.assertFalse(report['live_dpi'])
+            self.assertEqual(report['l3_dpi'], 'UNVERIFIED')
+            self.assertFalse(report['g0_passed'])
+            self.assertFalse(report['theme_matrix_executed'])
+            self.assertFalse(report['high_contrast_executed'])
+            self.assertFalse(report['multi_monitor_executed'])
+            overlay = json.loads(overlay_path.read_text(encoding='utf-8'))
+            self.assertFalse(overlay['ac38_passed'])
+            self.assertFalse(overlay['live_dpi'])
+            self.assertEqual(overlay['l3_dpi'], 'UNVERIFIED')
+            self.assertIsNone(overlay['resize_rate'])
+            self.assertFalse(overlay['theme_matrix_executed'])
+            self.assertFalse(overlay['high_contrast_executed'])
+            self.assertFalse(overlay['multi_monitor_executed'])
+            self.assertFalse(overlay['display_scale_changed_by_collector'])
+            self.assertTrue(overlay['restore_ok'])
+            for key, value in overlay.items():
+                if isinstance(key, str) and key.endswith('_passed'):
+                    self.assertIs(value, False, key)
+            if overlay.get('dpi_matrix_100_150_200_executed') is True:
+                with self.assertRaises(QualityError) as ctx:
+                    _reject_dpi_pass_claims(overlay)
+                self.assertEqual(str(ctx.exception), 'dpi_matrix_claimed')
+        else:
+            self.assertIsNone(report)
+
+    def test_cli_validates_without_recording(self):
+        script = ROOT / 'scripts' / 'record_dpi_matrix.py'
+        self.assertTrue(script.is_file())
+        src = script.read_text(encoding='utf-8')
+        self.assertIn('--record', src)
+        self.assertIn('DISPLAYCONFIG_DEVICE_INFO_SET_DPI_SCALE', src)
+        self.assertNotIn('IMAGENAME eq HerdDesk.App.exe', src)
+        self.assertNotIn('RunUiSmoke', src)
+        overlay_path = ROOT / DPI_MATRIX_REL
+        pointer_path = ROOT / 'evidence' / 'quality' / 'dpi-overlay-pointer.json'
+        live_path = ROOT / 'evidence' / 'quality' / 'live-dpi.not-run.json'
+        before_overlay = (
+            overlay_path.read_text(encoding='utf-8') if overlay_path.is_file() else None
+        )
+        before_pointer = pointer_path.read_text(encoding='utf-8')
+        before_live = live_path.read_text(encoding='utf-8')
+        before_dpi = system_dpi()
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertFalse(report['ac38_passed'])
+        self.assertFalse(report['live_dpi'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertEqual(report['l3_dpi'], 'UNVERIFIED')
+        self.assertEqual(pointer_path.read_text(encoding='utf-8'), before_pointer)
+        self.assertEqual(live_path.read_text(encoding='utf-8'), before_live)
+        pointer = json.loads(before_pointer)
+        self.assertFalse(pointer['dpi_matrix_100_150_200_executed'])
+        self.assertFalse(pointer['display_scale_changed_by_collector'])
+        if before_overlay is None:
+            self.assertFalse(overlay_path.is_file())
+            self.assertFalse(report.get('recorded'))
+        else:
+            self.assertEqual(overlay_path.read_text(encoding='utf-8'), before_overlay)
+            self.assertTrue(report.get('recorded'))
+        if os.name == 'nt':
+            self.assertEqual(system_dpi(), before_dpi)
+
+    def test_catalog_keeps_theme_matrix_missing_and_ac38_false(self):
+        catalog = json.loads(CATALOG.read_text(encoding='utf-8'))
+        self.assertTrue(catalog['missing']['dpi_theme_matrix'])
+        self.assertFalse(catalog['ac38_passed'])
+        self.assertFalse(catalog['live_dpi'])
+        self.assertEqual(catalog['l3_dpi'], 'UNVERIFIED')
+        self.assertNotIn('dpi_matrix_100_150_200_executed', catalog)
+        self.assertNotIn('display_scale_changed_by_collector', catalog)
+        cards = {item['id']: item for item in catalog['execution_cards']}
+        self.assertEqual(
+            cards['dpi-100-150-200']['missing_grant'],
+            'no_authorized_dpi_theme_monitor_matrix',
+        )
+        rows = {item['id']: item for item in catalog['live_rows']}
+        self.assertEqual(
+            rows['live-dpi']['missing_grant'],
+            'no_authorized_dpi_theme_monitor_matrix',
+        )
+        self.assertIn('not AC38', catalog['note'])
+        self.assertIn('not theme/monitor/high-contrast', catalog['note'])
+
+    def test_structure_contract_invokes_dpi_matrix(self):
+        repository._check_hd033_dpi_matrix()
+
+    def test_record_applies_100_150_200_and_restore(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            display = _FakeDpiDisplay()
+            spawned = []
+
+            def spawn(percent):
+                spawned.append(percent)
+                return {
+                    'product_ui_started': True,
+                    'window_seen': True,
+                    'pid': 40000 + percent,
+                    'title': 'HerdDesk',
+                    'client_width': 800,
+                    'client_height': 600,
+                }
+
+            doc = dpi_matrix_cli.record(
+                root,
+                set_dpi_awareness=lambda: True,
+                read_display=display.read,
+                apply_scale=display.apply,
+                wait_effective_dpi=display.wait,
+                restore_scale=display.restore,
+                spawn_ui=spawn,
+                git_sha='e' * 40,
+                now='2026-09-11T00:40:00Z',
+                started='2026-09-11T00:39:00Z',
+            )
+            self.assertTrue(doc['dpi_matrix_100_150_200_executed'])
+            self.assertTrue(doc['display_scale_changed_by_this_record'])
+            self.assertFalse(doc['display_scale_changed_by_collector'])
+            self.assertTrue(doc['restore_ok'])
+            self.assertEqual(doc['original_scale_percent'], 100)
+            self.assertEqual(doc['restored_scale_percent'], 100)
+            self.assertEqual(display.percent, 100)
+            self.assertFalse(doc['ac38_passed'])
+            self.assertFalse(doc['live_dpi'])
+            self.assertEqual(doc['l3_dpi'], 'UNVERIFIED')
+            self.assertFalse(doc['theme_matrix_executed'])
+            self.assertFalse(doc['high_contrast_executed'])
+            self.assertFalse(doc['multi_monitor_executed'])
+            self.assertIsNone(doc['resize_rate'])
+            self.assertFalse(doc['herdr_executed'])
+            self.assertEqual(spawned, [100, 150, 200])
+            applied = {
+                item['target_percent']: item for item in doc['samples'] if item.get('applied')
+            }
+            self.assertEqual(set(applied), {100, 150, 200})
+            self.assertEqual(applied[100]['effective_dpi'], 96)
+            self.assertEqual(applied[150]['effective_dpi'], 144)
+            self.assertEqual(applied[200]['effective_dpi'], 192)
+            report = validate_dpi_matrix(root)
+            self.assertIsNotNone(report)
+            self.assertTrue(report['dpi_matrix_100_150_200_executed'])
+            self.assertFalse(report['ac38_passed'])
+
+    def test_record_restores_original_125(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            display = _FakeDpiDisplay(original=125, available=(100, 125, 150, 200))
+            doc = dpi_matrix_cli.record(
+                root,
+                set_dpi_awareness=lambda: True,
+                read_display=display.read,
+                apply_scale=display.apply,
+                wait_effective_dpi=display.wait,
+                restore_scale=display.restore,
+                spawn_ui=lambda percent: None,
+                git_sha='1' * 40,
+                now='2026-09-11T00:50:00Z',
+                started='2026-09-11T00:49:00Z',
+            )
+            self.assertEqual(doc['original_scale_percent'], 125)
+            self.assertEqual(doc['restored_scale_percent'], 125)
+            self.assertTrue(doc['restore_ok'])
+            self.assertTrue(doc['dpi_matrix_100_150_200_executed'])
+            self.assertEqual(display.percent, 125)
+
+    def test_wait_accepts_non_matrix_original_percent(self):
+        waited = dpi_matrix_cli._wait_effective_dpi(
+            {},
+            125,
+            timeout_sec=0,
+            read_display=lambda: {
+                'effective_dpi': 120,
+                'scale_percent': 125,
+            },
+        )
+        self.assertTrue(waited['applied'])
+        self.assertEqual(waited['effective_dpi'], 120)
+        self.assertEqual(waited['scale_percent'], 125)
+
+    def test_record_restore_hook_failure_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            display = _FakeDpiDisplay(restore_ok=False)
+            doc = dpi_matrix_cli.record(
+                root,
+                set_dpi_awareness=lambda: True,
+                read_display=display.read,
+                apply_scale=display.apply,
+                wait_effective_dpi=display.wait,
+                restore_scale=display.restore,
+                spawn_ui=lambda percent: None,
+                git_sha='f' * 40,
+                now='2026-09-11T00:41:00Z',
+                started='2026-09-11T00:39:00Z',
+            )
+            self.assertFalse(doc['restore_ok'])
+            self.assertFalse(doc['dpi_matrix_100_150_200_executed'])
+            self.assertFalse(doc['ac38_passed'])
+            self.assertEqual(doc['blocker'], 'restore_failed')
+            report = validate_dpi_matrix(root)
+            self.assertIsNotNone(report)
+            self.assertFalse(report['dpi_matrix_100_150_200_executed'])
+            self.assertFalse(report['restore_ok'])
+
+    def test_record_unavailable_200_does_not_fake_matrix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            display = _FakeDpiDisplay(available=(100, 150))
+            doc = dpi_matrix_cli.record(
+                root,
+                set_dpi_awareness=lambda: True,
+                read_display=display.read,
+                apply_scale=display.apply,
+                wait_effective_dpi=display.wait,
+                restore_scale=display.restore,
+                spawn_ui=lambda percent: None,
+                git_sha='a' * 40,
+                now='2026-09-11T00:42:00Z',
+                started='2026-09-11T00:39:00Z',
+            )
+            self.assertFalse(doc['dpi_matrix_100_150_200_executed'])
+            self.assertTrue(doc['restore_ok'])
+            by_target = {item['target_percent']: item for item in doc['samples']}
+            self.assertTrue(by_target[100]['applied'])
+            self.assertTrue(by_target[150]['applied'])
+            self.assertFalse(by_target[200]['applied'])
+            self.assertEqual(by_target[200]['effective_dpi'], None)
+            self.assertNotEqual(by_target[200].get('effective_dpi'), 192)
+            report = validate_dpi_matrix(root)
+            self.assertFalse(report['dpi_matrix_100_150_200_executed'])
+
+    def test_record_without_hooks_fails_closed_off_windows(self):
+        if os.name == 'nt':
+            self.skipTest('omitted hooks use live Windows APIs')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            overlay = root / DPI_MATRIX_REL
+            err = StringIO()
+            with patch.object(dpi_matrix_cli, 'ROOT', root), redirect_stderr(err):
+                with self.assertRaises(QualityError) as ctx:
+                    dpi_matrix_cli.record(root)
+                code = dpi_matrix_cli.main(['--record'])
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+            self.assertEqual(code, 2, err.getvalue())
+            self.assertEqual(json.loads(err.getvalue())['error'], 'missing_record_field')
+            self.assertFalse(overlay.is_file())
+
+    def test_executed_without_restore_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(root, overlay_overrides={'restore_ok': False})
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
+            self.assertEqual(str(ctx.exception), 'dpi_matrix_claimed')
+
+    def test_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(root, overlay_overrides={'ac38_passed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
+            self.assertEqual(str(ctx.exception), 'ac38_passed')
+
+    def test_live_dpi_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(root, overlay_overrides={'live_dpi': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
+            self.assertEqual(str(ctx.exception), 'live_dpi_claimed')
+
+    def test_collector_changed_scale_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(
+                root, overlay_overrides={'display_scale_changed_by_collector': True}
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
+            self.assertEqual(str(ctx.exception), 'collector_changed_display_scale')
+
+    def test_live_not_run_missing_matrix_flag_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(root)
+            quality = root / 'evidence' / 'quality'
+            (quality / 'live-dpi.not-run.json').write_text(
+                json.dumps({'result': 'not_run', 'live_dpi': False}),
+                encoding='utf-8',
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
+            self.assertEqual(str(ctx.exception), 'dpi_matrix_claimed')
+
+    def test_theme_matrix_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(root, overlay_overrides={'theme_matrix_executed': True})
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
+            self.assertEqual(str(ctx.exception), 'theme_matrix_claimed')
+
+    def test_resize_rate_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(root, overlay_overrides={'resize_rate': 1})
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
+            self.assertEqual(str(ctx.exception), 'invented_timings')
+
+    def test_acceptance_ac38_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_dpi_matrix(root)
+            planning = root / 'planning'
+            planning.mkdir()
+            (planning / 'acceptance.json').write_text(
+                json.dumps({'criteria': [{'id': 'AC38', 'status': 'passed'}]}),
+                encoding='utf-8',
+            )
+            with self.assertRaises(QualityError) as ctx:
+                validate_dpi_matrix(root)
             self.assertEqual(str(ctx.exception), 'ac38_passed')
 
 
