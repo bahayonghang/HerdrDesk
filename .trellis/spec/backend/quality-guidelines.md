@@ -71,7 +71,7 @@ Renderer tests in `tests/python/test_renderer.py` must call `herddesk_g0.rendere
 
 ADR tests in `tests/python/test_adr.py` must call `herddesk_g0.adr` and load `docs/adr/approved-baseline.json` plus the markdown freeze. A blocked or unknown ledger row cannot be recorded as passed. G0 and AC44 cannot be claimed passed. R5 phase-rule sync stays not executed. Cited `input_evidence` and gate attachments must exist. `AGENTS.md` G0 prohibitions stay while R5 is not executed. Structural validation does not pass AC44.
 
-Release tests in `tests/python/test_hd036.py` must call `herddesk_g0.release.bind_release_candidate` and the CLI `scripts/bind_release_candidate.py`. A hosted workflow run is not a required-check ruleset. `github_required_check` stays UNVERIFIED. `published` and `complete_1_0_claimed` stay false. A git HEAD mismatch with the bound SHA is reported and does not pass AC40. Structural validation does not pass AC39/AC40/AC45/AC47/AC48.
+Release tests in `tests/python/test_hd036.py` must call `herddesk_g0.release.bind_release_candidate` and the CLI `scripts/bind_release_candidate.py`. A hosted workflow run is not a required-check ruleset. `github_required_check` stays UNVERIFIED. `published` and `complete_1_0_claimed` stay false. A git HEAD mismatch with the bound SHA is reported and does not pass AC40. A matching HEAD also does not pass AC40. Structural validation does not pass AC39/AC40/AC45/AC47/AC48.
 
 Protocol regressions for unpaired surrogates must assert the exact C# code `malformed_terminal_record`, then `terminal_stream_not_active` on the next valid frame, and must keep a valid surrogate pair accepted. Python uses the same fixture names.
 
