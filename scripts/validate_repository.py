@@ -3659,8 +3659,11 @@ def _check_hd036_release_candidate_bind() -> None:
     assert (ROOT / 'scripts' / 'bind_release_candidate.py').is_file()
     report = bind_release_candidate(ROOT)
     assert report.get('document_kind') == 'hd036_hosted_workflow_pointer'
-    assert report.get('bound_sha') == '602c252ae10303b63c6d8fc584e193e1ed5654c4'
-    assert report.get('hosted_workflow_run_id') == '34438599236'
+    assert report.get('bound_sha') == 'd8347522d80ccbf190623f688ab1abe602a7b0f8'
+    assert report.get('hosted_workflow_run_id') == '34549580783'
+    assert report.get('hosted_workflow_url') == (
+        'https://github.com/bahayonghang/HerdrDesk/actions/runs/34549580783'
+    )
     assert report.get('hosted_workflow_conclusion') == 'success'
     assert report.get('github_required_check') == 'UNVERIFIED'
     assert not _is_hd036_success(report.get('github_required_check'))
@@ -3698,6 +3701,12 @@ def _check_hd036_release_candidate_bind() -> None:
         assert report.get('ac40_passed') is False
         assert report.get('github_required_check') == 'UNVERIFIED'
         assert report.get('complete_1_0_claimed') is False
+    else:
+        assert report.get('head_equals_bound_sha') is True
+        assert report.get('ac40_passed') is False
+        assert report.get('github_required_check') == 'UNVERIFIED'
+        assert report.get('complete_1_0_claimed') is False
+        assert report.get('published') is False
 
 
 def _check_hd007_package_admission(packages: dict) -> None:

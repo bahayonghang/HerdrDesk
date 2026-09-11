@@ -130,8 +130,8 @@ internal static class Hd036Cases
         var pointer = pointerDoc.RootElement;
         Check(pointer.GetProperty("document_kind").GetString() == "hd036_hosted_workflow_pointer");
         Check(pointer.GetProperty("result").GetString() == "not_run");
-        Check(pointer.GetProperty("bound_sha").GetString() == "602c252ae10303b63c6d8fc584e193e1ed5654c4");
-        Check(pointer.GetProperty("hosted_workflow_run_id").GetString() == "34438599236");
+        Check(pointer.GetProperty("bound_sha").GetString() == "d8347522d80ccbf190623f688ab1abe602a7b0f8");
+        Check(pointer.GetProperty("hosted_workflow_run_id").GetString() == "34549580783");
         Check(pointer.GetProperty("hosted_workflow_conclusion").GetString() == "success");
         Check(pointer.GetProperty("github_required_check").GetString() == "UNVERIFIED");
         Check(pointer.GetProperty("hosted_workflow_is_not_required_check_ruleset").GetBoolean());

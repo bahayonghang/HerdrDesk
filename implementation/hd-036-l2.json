@@ -87,5 +87,5 @@
     "no_authorized_external_publish",
     "no_authorized_signed_msix_hash"
   ],
-  "note": "HD-036 ships an L1 P5 release-docs closeout catalog that indexes HD-001–035 L1 artifacts plus an L2 hosted-workflow pointer overlay. A hosted workflow run is not a GitHub required-check ruleset. Independent-user walkthrough, live platform matrix, final SHA bind, clean-machine restore, GitHub required-check on HEAD, final module-graph rerun, external publish, and signed MSIX hash stay UNVERIFIED. Unpublished. Not a complete 1.0. This file is not AC pass evidence. tests/Integration.Windows is not admitted."
+  "note": "HD-036 ships an L1 P5 release-docs closeout catalog that indexes HD-001–035 L1 artifacts plus an L2 hosted-workflow pointer overlay bound to SHA d8347522d80ccbf190623f688ab1abe602a7b0f8 run 34549580783. A hosted workflow run is not a GitHub required-check ruleset. Independent-user walkthrough, live platform matrix, final SHA bind, clean-machine restore, GitHub required-check on HEAD, final module-graph rerun, external publish, and signed MSIX hash stay UNVERIFIED. Unpublished. Not a complete 1.0. This file is not AC pass evidence. tests/Integration.Windows is not admitted."
 }

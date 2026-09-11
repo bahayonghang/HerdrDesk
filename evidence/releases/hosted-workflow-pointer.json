@@ -4,9 +4,9 @@
   "template": false,
   "live_status": "UNVERIFIED",
   "result": "not_run",
-  "bound_sha": "602c252ae10303b63c6d8fc584e193e1ed5654c4",
-  "hosted_workflow_run_id": "34438599236",
-  "hosted_workflow_url": "https://github.com/bahayonghang/HerdrDesk/actions/runs/34438599236",
+  "bound_sha": "d8347522d80ccbf190623f688ab1abe602a7b0f8",
+  "hosted_workflow_run_id": "34549580783",
+  "hosted_workflow_url": "https://github.com/bahayonghang/HerdrDesk/actions/runs/34549580783",
   "hosted_workflow_conclusion": "success",
   "github_required_check": "UNVERIFIED",
   "hosted_workflow_is_not_required_check_ruleset": true,
@@ -35,9 +35,9 @@
   "candidate_sha": null,
   "hosted_check_run_id": null,
   "limitations": [
-    "Hosted workflow run 34438599236 concluded success on SHA 602c252ae10303b63c6d8fc584e193e1ed5654c4 (ubuntu validation, windows-desktop including Unsigned local packaging layout, windows validation).",
+    "Hosted workflow run 34549580783 concluded success on SHA d8347522d80ccbf190623f688ab1abe602a7b0f8 (ubuntu-latest, windows-latest, windows-desktop).",
     "A workflow run is not a GitHub required-check ruleset. github_required_check stays UNVERIFIED.",
-    "Hosted Actions on an older SHA is not HEAD proof. This pointer is not AC40.",
+    "Hosted Actions on an older or other SHA is not HEAD proof. This pointer is not AC40.",
     "Not a complete 1.0. Unpublished."
   ]
 }

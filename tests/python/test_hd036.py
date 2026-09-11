@@ -1,5 +1,6 @@
 from copy import deepcopy
 from pathlib import Path
+from unittest.mock import patch
 import json
 import subprocess
 import sys
@@ -8,7 +9,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from herddesk_g0.release import ReleaseError, bind_release_candidate
+from herddesk_g0.release import ADMITTED_BOUND_SHA, ReleaseError, bind_release_candidate
+import herddesk_g0.release as release_mod
 import validate_repository as repository
 
 L2 = ROOT / 'implementation' / 'hd-036-l2.json'
@@ -162,8 +164,8 @@ class Hd036ResidualTests(unittest.TestCase):
         )
         self.assertEqual(pointer['document_kind'], 'hd036_hosted_workflow_pointer')
         self.assertEqual(pointer['result'], 'not_run')
-        self.assertEqual(pointer['bound_sha'], '602c252ae10303b63c6d8fc584e193e1ed5654c4')
-        self.assertEqual(pointer['hosted_workflow_run_id'], '34438599236')
+        self.assertEqual(pointer['bound_sha'], 'd8347522d80ccbf190623f688ab1abe602a7b0f8')
+        self.assertEqual(pointer['hosted_workflow_run_id'], '34549580783')
         self.assertEqual(pointer['hosted_workflow_conclusion'], 'success')
         self.assertEqual(pointer['github_required_check'], 'UNVERIFIED')
         self.assertNotIn(str(pointer['github_required_check']).lower(), SUCCESS)
@@ -534,11 +536,11 @@ class Hd036ReleaseCandidateBindTests(unittest.TestCase):
     def test_shipped_function_binds_hosted_workflow_pointer(self):
         report = bind_release_candidate(ROOT)
         self.assertEqual(report['document_kind'], 'hd036_hosted_workflow_pointer')
-        self.assertEqual(report['bound_sha'], '602c252ae10303b63c6d8fc584e193e1ed5654c4')
-        self.assertEqual(report['hosted_workflow_run_id'], '34438599236')
+        self.assertEqual(report['bound_sha'], 'd8347522d80ccbf190623f688ab1abe602a7b0f8')
+        self.assertEqual(report['hosted_workflow_run_id'], '34549580783')
         self.assertEqual(
             report['hosted_workflow_url'],
-            'https://github.com/bahayonghang/HerdrDesk/actions/runs/34438599236',
+            'https://github.com/bahayonghang/HerdrDesk/actions/runs/34549580783',
         )
         self.assertEqual(report['hosted_workflow_conclusion'], 'success')
         self.assertEqual(report['github_required_check'], 'UNVERIFIED')
@@ -577,6 +579,11 @@ class Hd036ReleaseCandidateBindTests(unittest.TestCase):
         if git_head != report['bound_sha']:
             self.assertFalse(report['ac40_passed'])
             self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+        else:
+            self.assertTrue(report['head_equals_bound_sha'])
+            self.assertFalse(report['ac40_passed'])
+            self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+            self.assertFalse(report['complete_1_0_claimed'])
 
     def test_cli_prints_one_json_object(self):
         script = ROOT / 'scripts' / 'bind_release_candidate.py'
@@ -593,8 +600,8 @@ class Hd036ReleaseCandidateBindTests(unittest.TestCase):
         report = json.loads(completed.stdout)
         self.assertIsInstance(report, dict)
         self.assertEqual(report['document_kind'], 'hd036_hosted_workflow_pointer')
-        self.assertEqual(report['bound_sha'], '602c252ae10303b63c6d8fc584e193e1ed5654c4')
-        self.assertEqual(report['hosted_workflow_run_id'], '34438599236')
+        self.assertEqual(report['bound_sha'], 'd8347522d80ccbf190623f688ab1abe602a7b0f8')
+        self.assertEqual(report['hosted_workflow_run_id'], '34549580783')
         self.assertEqual(report['hosted_workflow_conclusion'], 'success')
         self.assertEqual(report['github_required_check'], 'UNVERIFIED')
         self.assertNotIn(str(report['github_required_check']).lower(), SUCCESS)
@@ -614,6 +621,21 @@ class Hd036ReleaseCandidateBindTests(unittest.TestCase):
         if git_head != report['bound_sha']:
             self.assertFalse(report['ac40_passed'])
             self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+        else:
+            self.assertFalse(report['ac40_passed'])
+            self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+
+    def test_matching_head_does_not_pass_ac40(self):
+        with patch.object(release_mod, '_git_head', return_value=ADMITTED_BOUND_SHA):
+            report = bind_release_candidate(ROOT)
+        self.assertEqual(report['git_head'], ADMITTED_BOUND_SHA)
+        self.assertTrue(report['head_equals_bound_sha'])
+        self.assertFalse(report['ac40_passed'])
+        self.assertEqual(report['github_required_check'], 'UNVERIFIED')
+        self.assertFalse(report['published'])
+        self.assertFalse(report['complete_1_0_claimed'])
+        self.assertFalse(report['g0_passed'])
+        self.assertEqual(report['result'], 'not_run')
 
     def test_structure_contract_invokes_shipped_binder(self):
         repository._check_hd036_release_candidate_bind()

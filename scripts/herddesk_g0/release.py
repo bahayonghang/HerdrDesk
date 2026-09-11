@@ -13,8 +13,8 @@ class ReleaseError(ValueError):
 
 POINTER_REL = 'evidence/releases/hosted-workflow-pointer.json'
 DOCUMENT_KIND = 'hd036_hosted_workflow_pointer'
-ADMITTED_BOUND_SHA = '602c252ae10303b63c6d8fc584e193e1ed5654c4'
-ADMITTED_RUN_ID = '34438599236'
+ADMITTED_BOUND_SHA = 'd8347522d80ccbf190623f688ab1abe602a7b0f8'
+ADMITTED_RUN_ID = '34549580783'
 ADMITTED_CONCLUSION = 'success'
 SUCCESS = frozenset({'passed', 'verified', 'compatible', 'success', 'ok', 'pass'})
 NULL_KEYS = (
