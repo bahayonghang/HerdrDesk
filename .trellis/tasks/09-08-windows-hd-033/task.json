@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-08-windows-desktop-full",
   "relatedFiles": [],
-  "notes": "Product a901774: wall-clock elapsed overlay live-soak-elapsed.json elapsed_at_utc=2026-09-10T21:30:52Z owned_pids 76508/85848; eight_hour_soak_executed true on that file only. START/catalog/L2 stay false. Sampler 46176 still running. AC29/AC46/G0 not passed. Do not archive: residual is representative 30-pane load, 100 disconnects, DPI 100/150/200 after user confirms scale, Narrator AC37 workflow. Do not kill soak PIDs. Do not change display scale.",
+  "notes": "Product 671c399: scale-only DPI matrix live-dpi-matrix.json; 100/150/200 applied (96/144/192); original 125%/120 restored; dpi_matrix_100_150_200_executed true on that file only. Pointer/catalog/L2 matrix flags stay false. AC38/live_dpi/l3_dpi not passed. Prior a901774 wall-clock elapsed is not AC46. Do not archive: residual is AC37 Narrator workflow, AC38 theme/monitor/high-contrast, AC46 representative load/100 disconnects. Do not mark G0/1.0.",
   "meta": {
     "source_task": "HD-033",
     "phase": "P5"
