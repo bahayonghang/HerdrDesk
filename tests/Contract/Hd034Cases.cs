@@ -101,6 +101,7 @@ internal static class Hd034Cases
         Check(File.Exists(Path.Combine(root, "packaging", "runtime.json")));
         Check(File.Exists(Path.Combine(root, "scripts", "package_release.ps1")));
         Check(File.Exists(Path.Combine(root, "scripts", "new_lab_certificate.ps1")));
+        Check(File.Exists(Path.Combine(root, "scripts", "record_lab_msix.py")));
         Check(File.Exists(Path.Combine(root, "evidence", "packaging", "lab-sign-overlay-pointer.json")));
         Check(File.Exists(Path.Combine(root, "src", "HerdDesk.App", "App.xaml")));
         Check(!File.Exists(Path.Combine(root, "packaging", "HerdDesk.Package.wapproj")));
@@ -131,6 +132,8 @@ internal static class Hd034Cases
         Check(catalog.GetProperty("packaging_project").GetBoolean() is false);
         Check(catalog.GetProperty("lab_sign_overlay_pointer").GetString()
               == "evidence/packaging/lab-sign-overlay-pointer.json");
+        Check(catalog.GetProperty("lab_msix_capture").GetString()
+              == "evidence/packaging/live-lab-msix.json");
         using var pointerDoc = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "evidence", "packaging", "lab-sign-overlay-pointer.json")));
         var pointer = pointerDoc.RootElement;
@@ -147,6 +150,31 @@ internal static class Hd034Cases
         Check(pointer.GetProperty("pfx_in_git").GetBoolean() is false);
         Check(pointer.GetProperty("pfx_written").GetBoolean() is false);
         Check(pointer.GetProperty("lab_certificate_script_is_not_signed_release_msix").GetBoolean());
+        Check(pointer.GetProperty("live_sign").GetBoolean() is false);
+        Check(pointer.GetProperty("pfx_written").GetBoolean() is false);
+        var overlayPath = Path.Combine(root, "evidence", "packaging", "live-lab-msix.json");
+        if (File.Exists(overlayPath))
+        {
+            using var overlayDoc = JsonDocument.Parse(File.ReadAllText(overlayPath));
+            var overlay = overlayDoc.RootElement;
+            Check(overlay.GetProperty("document_kind").GetString() == "hd034_lab_msix");
+            Check(overlay.GetProperty("result").GetString() == "not_run");
+            Check(overlay.GetProperty("ac41_passed").GetBoolean() is false);
+            Check(overlay.GetProperty("ac42_passed").GetBoolean() is false);
+            Check(overlay.GetProperty("g0_passed").GetBoolean() is false);
+            Check(overlay.GetProperty("signed_msix_built").GetBoolean() is false);
+            Check(overlay.GetProperty("live_sign").GetBoolean() is false);
+            Check(overlay.GetProperty("live_install").GetBoolean() is false);
+            Check(overlay.GetProperty("lab_msix_packed").GetBoolean());
+            Check(overlay.GetProperty("lab_signature_applied").GetBoolean());
+            Check(overlay.GetProperty("publisher").ValueKind == JsonValueKind.Null);
+            Check(overlay.GetProperty("msix_sha256").ValueKind == JsonValueKind.Null);
+            Check(overlay.GetProperty("package_sha256").ValueKind == JsonValueKind.Null);
+            Check(overlay.GetProperty("certificate_subject").ValueKind == JsonValueKind.Null);
+            Check(overlay.GetProperty("certificate_thumbprint").ValueKind == JsonValueKind.Null);
+            Check(overlay.GetProperty("timestamp_url").ValueKind == JsonValueKind.Null);
+        }
+
         Check(catalog.GetProperty("redaction").GetProperty("credential").GetString() == "omitted");
         Check(catalog.GetProperty("redaction").GetProperty("host").GetString() == "omitted");
         Check(catalog.GetProperty("publisher").ValueKind == JsonValueKind.Null);

@@ -37,6 +37,11 @@ from herddesk_g0.release import bind_release_candidate
 from herddesk_g0.project_graph import ADMITTED_LOCK_REL, ADMITTED_NPM_LOCK_REL, validate_project_graph
 import run_windows_desktop_gate as desktop_gate
 from herddesk_g0.renderer import validate_renderer_matrix
+from record_lab_msix import (
+    LAB_MSIX_KIND,
+    LAB_MSIX_REL,
+    validate_lab_msix,
+)
 
 _HD026_PASS_KEYS = (
     'ac13_passed', 'ac14_passed', 'ac15_passed', 'ac19_passed',
@@ -2015,6 +2020,7 @@ _HD034_LAB_PUBLISHER = 'CN=HerdDesk Lab (not release)'
 _HD034_SCRIPT = ROOT / 'scripts' / 'package_release.ps1'
 _HD034_CERT_SCRIPT = ROOT / 'scripts' / 'new_lab_certificate.ps1'
 _HD034_LAB_SIGN_POINTER = 'evidence/packaging/lab-sign-overlay-pointer.json'
+_HD034_LAB_MSIX_REL = LAB_MSIX_REL
 _HD034_VALID_LAYOUT = 'tests/fixtures/packaging/layout-valid'
 _HD034_STORE_LAYOUT = 'tests/fixtures/packaging/layout-store-identity'
 _HD034_PRIVATE_KEY_SUFFIXES = ('.pfx', '.p12', '.pem', '.key', '.snk')
@@ -2143,6 +2149,7 @@ def _check_hd034_package_files() -> None:
     assert (packaging / 'Assets' / 'Square150x150Logo.png').is_file()
     assert _HD034_SCRIPT.is_file()
     assert _HD034_CERT_SCRIPT.is_file()
+    assert (ROOT / 'scripts' / 'record_lab_msix.py').is_file()
     assert (ROOT / _HD034_LAB_SIGN_POINTER).is_file()
     assert (ROOT / _HD034_VALID_LAYOUT / 'AppxManifest.xml').is_file()
     assert (ROOT / _HD034_STORE_LAYOUT / 'AppxManifest.xml').is_file()
@@ -2178,11 +2185,13 @@ def _check_hd034_package_files() -> None:
     assert '-Action Build' not in validation_job
     assert '-Action Sign' not in ci
     assert 'new_lab_certificate.ps1' not in ci
+    assert 'record_lab_msix.py --record' not in ci
     assert '--ui' not in ci
     just = (ROOT / 'justfile').read_text(encoding='utf-8')
     assert '-Action Build' not in just
     assert '-Action Sign' not in just
     assert 'new_lab_certificate.ps1' not in just
+    assert 'record_lab_msix.py --record' not in just
     assert '--ui' not in just
 
 
@@ -2254,6 +2263,90 @@ def _check_hd034_lab_sign_pointer(doc: dict) -> None:
     assert doc.get('fake_publisher_cannot_pass_ac41') is True
     assert doc.get('unsigned_local_build_cannot_pass_release_install') is True
     assert (_HD034_CERT_SCRIPT).is_file()
+
+
+def _assert_hd034_gitignored(rel: str) -> None:
+    completed = subprocess.run(
+        ['git', 'check-ignore', '-q', rel],
+        cwd=str(ROOT),
+        check=False,
+    )
+    assert completed.returncode == 0, rel
+
+
+def _check_hd034_lab_msix() -> None:
+    """Validate optional lab pack+sign overlay. Do not claim AC41."""
+    script = ROOT / 'scripts' / 'record_lab_msix.py'
+    assert script.is_file()
+    src = script.read_text(encoding='utf-8')
+    assert '--record' in src
+    assert 'new_lab_certificate.ps1' in src
+    assert '-Action' in src
+    assert 'Build' in src
+    assert 'Sign' in src
+    assert 'DISPLAYCONFIG' not in src
+    assert "['--ui'" not in src and '"--ui"' not in src
+    record_src = src[src.find('def record(') : src.find('def _unrecorded_report')]
+    assert "if os.name != 'nt' and not hooks:" in record_src
+    assert 'Add-AppxPackage' not in record_src
+    ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+    just = (ROOT / 'justfile').read_text(encoding='utf-8')
+    assert 'record_lab_msix.py --record' not in ci
+    assert 'record_lab_msix.py --record' not in just
+    assert '-Action Sign' not in ci
+    assert '-Action Sign' not in just
+    assert 'new_lab_certificate.ps1' not in ci
+    assert 'new_lab_certificate.ps1' not in just
+    pointer = json.loads((ROOT / _HD034_LAB_SIGN_POINTER).read_text(encoding='utf-8'))
+    _check_hd034_lab_sign_pointer(pointer)
+    overlay_path = ROOT / _HD034_LAB_MSIX_REL
+    report = validate_lab_msix(ROOT)
+    if overlay_path.is_file():
+        assert report is not None
+        overlay = json.loads(overlay_path.read_text(encoding='utf-8'))
+        # Do not call _reject_hd034_pass_claims(overlay) or
+        # _reject_hd034_invented_identity(overlay): lab_msix_packed and
+        # lab_signature_applied may be true on this file only.
+        assert overlay.get('document_kind') == LAB_MSIX_KIND
+        assert overlay.get('result') == 'not_run'
+        assert overlay.get('ac41_passed') is False
+        assert overlay.get('ac42_passed') is False
+        assert overlay.get('g0_passed') is False
+        assert overlay.get('phase_gate') != 'passed'
+        assert overlay.get('signed_msix_built') is False
+        assert overlay.get('live_sign') is False
+        assert overlay.get('live_install') is False
+        assert overlay.get('publisher_identity_confirmed') is False
+        assert overlay.get('is_release_install') is False
+        assert overlay.get('herdr_executed') is False
+        assert overlay.get('lab_msix_packed') is True
+        assert overlay.get('lab_signature_applied') is True
+        assert overlay.get('makeappx_found') is True
+        assert overlay.get('signtool_found') is True
+        assert overlay.get('fake_publisher_cannot_pass_ac41') is True
+        assert overlay.get('unsigned_local_build_cannot_pass_release_install') is True
+        digest = overlay.get('lab_msix_sha256')
+        assert isinstance(digest, str) and len(digest) == 64
+        for key in _HD034_NULL_KEYS:
+            if key in overlay:
+                assert overlay.get(key) is None, key
+        assert pointer.get('signed_msix_built') is False
+        assert pointer.get('live_sign') is False
+        assert pointer.get('pfx_written') is False
+        assert report.get('ac41_passed') is False
+        assert report.get('signed_msix_built') is False
+        assert report.get('lab_msix_packed') is True
+        assert report.get('lab_signature_applied') is True
+    else:
+        assert report is None
+    for rel in (
+        'artifacts/certs',
+        'artifacts/certs/HerdDesk.Lab.pfx',
+        'artifacts/packaging',
+        'artifacts/packaging/HerdDesk.Lab.msix',
+        'probe-results/hd034-lab-msix.json',
+    ):
+        _assert_hd034_gitignored(rel)
 
 
 def _check_hd034_lab_certificate_script_contract() -> None:
@@ -2578,6 +2671,8 @@ def _check_hd034_closeout(hd034: dict, catalog: dict, matrix: dict) -> None:
     assert hd034.get('lab_sign_overlay_pointer') == pointer_rel
     pointer = json.loads((ROOT / pointer_rel).read_text(encoding='utf-8'))
     _check_hd034_lab_sign_pointer(pointer)
+    assert catalog.get('lab_msix_capture') == _HD034_LAB_MSIX_REL
+    assert (ROOT / 'scripts' / 'record_lab_msix.py').is_file()
     _check_hd034_package_files()
     check_integration_windows_layout(ROOT)
     assert not (ROOT / 'packaging' / 'HerdDesk.Package.wapproj').exists()
@@ -3945,6 +4040,7 @@ def validate() -> dict:
     _check_hd033_soak_working_set()
     _check_hd034_closeout(hd034, packaging_catalog, packaging_matrix)
     _check_hd034_package_script_contract()
+    _check_hd034_lab_msix()
     _check_hd035_closeout(hd035, security_catalog, security_matrix, security_inventory)
     _check_hd035_release_input_audit()
     _check_hd036_closeout(hd036, release_catalog, release_matrix, release_index)

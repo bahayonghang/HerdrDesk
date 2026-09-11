@@ -71,7 +71,9 @@ function Test-PathUnder([string]$child, [string]$parent) {
 function Invoke-External {
     param(
         [Parameter(Mandatory = $true)][string]$FilePath,
-        [Parameter(Mandatory = $true)][string[]]$ArgumentList
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string[]]$ArgumentList
     )
     & $FilePath @ArgumentList 2>&1 | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) {
@@ -252,12 +254,31 @@ function Get-TreeSha256([string]$dir) {
     finally { $sha.Dispose() }
 }
 
-function Find-MakeAppx {
-    $cmd = Get-Command makeappx -ErrorAction SilentlyContinue
-    if ($cmd) { return [string]$cmd.Source }
-    $kits = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
-    if (Test-Path -LiteralPath $kits) {
-        $found = Get-ChildItem -LiteralPath $kits -Recurse -Filter makeappx.exe -ErrorAction SilentlyContinue |
+function Get-WindowsKitsBinRoots {
+    $candidates = @(
+        [Environment]::GetFolderPath('ProgramFilesX86'),
+        [Environment]::GetFolderPath('ProgramFiles'),
+        ${env:ProgramFiles(x86)},
+        ${env:ProgramFiles},
+        ${env:ProgramW6432}
+    )
+    $roots = New-Object System.Collections.Generic.List[string]
+    foreach ($pf in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($pf)) { continue }
+        $kits = Join-Path $pf 'Windows Kits\10\bin'
+        if (Test-Path -LiteralPath $kits) { [void]$roots.Add($kits) }
+    }
+    return @($roots | Select-Object -Unique)
+}
+
+function Find-SdkTool([string]$exeName) {
+    $commandName = [IO.Path]::GetFileNameWithoutExtension($exeName)
+    $cmd = Get-Command $commandName -ErrorAction SilentlyContinue
+    if ($cmd -and -not [string]::IsNullOrWhiteSpace([string]$cmd.Source)) {
+        return [string]$cmd.Source
+    }
+    foreach ($kits in @(Get-WindowsKitsBinRoots)) {
+        $found = Get-ChildItem -LiteralPath $kits -Recurse -Filter $exeName -ErrorAction SilentlyContinue |
             Where-Object { $_.Directory.Name -eq 'x64' } |
             Sort-Object FullName -Descending |
             Select-Object -First 1
@@ -266,18 +287,12 @@ function Find-MakeAppx {
     return $null
 }
 
+function Find-MakeAppx {
+    return Find-SdkTool -exeName 'makeappx.exe'
+}
+
 function Find-SignTool {
-    $cmd = Get-Command signtool -ErrorAction SilentlyContinue
-    if ($cmd) { return [string]$cmd.Source }
-    $kits = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
-    if (Test-Path -LiteralPath $kits) {
-        $found = Get-ChildItem -LiteralPath $kits -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |
-            Where-Object { $_.Directory.Name -eq 'x64' } |
-            Sort-Object FullName -Descending |
-            Select-Object -First 1
-        if ($found) { return [string]$found.FullName }
-    }
-    return $null
+    return Find-SdkTool -exeName 'signtool.exe'
 }
 
 function Copy-PackagingOverlay([string]$layout) {
@@ -438,6 +453,14 @@ function Invoke-ActionSign([string]$outputRoot, [string]$layout) {
         if (Test-PathUnder -child $certFull -parent $outputRoot) {
             throw 'CertificatePath must not live under the packaging output root.'
         }
+        $packagingDir = Join-Path $script:RepoRoot 'packaging'
+        if (Test-PathUnder -child $certFull -parent $packagingDir) {
+            throw 'CertificatePath must not live under packaging/.'
+        }
+        $fixturesDir = Join-Path $script:RepoRoot 'tests\fixtures'
+        if (Test-PathUnder -child $certFull -parent $fixturesDir) {
+            throw 'CertificatePath must not live under tests/fixtures.'
+        }
         $msix = $PackagePath
         if ([string]::IsNullOrWhiteSpace($msix)) {
             $candidate = Join-Path $outputRoot 'HerdDesk.Lab.msix'
@@ -449,7 +472,11 @@ function Invoke-ActionSign([string]$outputRoot, [string]$layout) {
         $signTool = Find-SignTool
         if (-not $signTool) { throw 'signtool.exe not found. Sign failed closed.' }
         $msixFull = (Resolve-Path -LiteralPath $msix).Path
-        Invoke-External -FilePath $signTool -ArgumentList @('sign', '/fd', 'SHA256', '/f', $certFull, $msixFull)
+        # Empty-password lab PFX from new_lab_certificate.ps1. /p with empty
+        # string fails closed without prompting. Not a production timestamp.
+        Invoke-External -FilePath $signTool -ArgumentList @(
+            'sign', '/fd', 'SHA256', '/f', $certFull, '/p', [string]::Empty, $msixFull
+        )
         $report['package_path'] = $msixFull
         $report['signed'] = $true
         $report['signature'] = 'lab_cert'

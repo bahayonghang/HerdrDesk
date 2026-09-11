@@ -36,6 +36,7 @@
     "Lab identity is not a Store identity and is not a release Publisher.",
     "This pointer is not a live sign success row. l2_live_sign stays UNVERIFIED.",
     "A lab cert script is not a signed release MSIX. Not AC41/AC42.",
-    "Certificate export stays gitignored. Do not write private key material under packaging/ or tests/fixtures."
+    "Certificate export stays gitignored. Do not write private key material under packaging/ or tests/fixtures.",
+    "An optional lab MakeAppx/SignTool overlay may live at evidence/packaging/live-lab-msix.json. This pointer still keeps signed_msix_built, live_sign, and pfx_written false. Lab pack+sign is not AC41."
   ]
 }

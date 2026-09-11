@@ -1,14 +1,26 @@
 from copy import deepcopy
+from contextlib import redirect_stderr
+from io import StringIO
 from pathlib import Path
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import validate_repository as repository
+import record_lab_msix as lab_msix_cli
+from record_lab_msix import (
+    LAB_MSIX_KIND,
+    LAB_MSIX_NULL_KEYS,
+    LAB_MSIX_REL,
+    LabMsixError,
+    validate_lab_msix,
+)
 
 L2 = ROOT / 'implementation' / 'hd-034-l2.json'
 CATALOG = ROOT / 'evidence' / 'packaging' / 'catalog.json'
@@ -178,6 +190,10 @@ class Hd034ResidualTests(unittest.TestCase):
         self.assertEqual(
             catalog['lab_sign_overlay_pointer'],
             'evidence/packaging/lab-sign-overlay-pointer.json',
+        )
+        self.assertEqual(
+            catalog['lab_msix_capture'],
+            'evidence/packaging/live-lab-msix.json',
         )
         for key in NULL_KEYS:
             self.assertIsNone(catalog[key], key)
@@ -623,6 +639,53 @@ class Hd034PackageScriptTests(unittest.TestCase):
         self.assertFalse(report.get('ac41_passed', False))
         self.assertFalse(report.get('ac42_passed', False))
 
+    def test_sign_rejects_certificate_under_packaging_and_fixtures(self):
+        code, report = repository.run_package_release(
+            'Sign',
+            certificate_path='packaging/Package.appxmanifest',
+        )
+        self.assertNotEqual(code, 0)
+        self.assertIsNot(report.get('ok'), True)
+        self.assertIsNot(report.get('signed'), True)
+        self.assertFalse(report.get('ac41_passed', False))
+        self.assertFalse(report.get('signed_msix_built', False))
+        error = str(report.get('error') or '')
+        self.assertIn('packaging', error.lower())
+        fixture_code, fixture_report = repository.run_package_release(
+            'Sign',
+            certificate_path='tests/fixtures/packaging/layout-valid/AppxManifest.xml',
+        )
+        self.assertNotEqual(fixture_code, 0)
+        self.assertIsNot(fixture_report.get('ok'), True)
+        self.assertIsNot(fixture_report.get('signed'), True)
+        fixture_error = str(fixture_report.get('error') or '')
+        self.assertIn('fixtures', fixture_error.lower())
+
+    def test_find_sdk_tools_skip_null_programfiles_and_search_kits_x64(self):
+        src = (ROOT / 'scripts' / 'package_release.ps1').read_text(encoding='utf-8')
+        find_fn = src[src.find('function Get-WindowsKitsBinRoots') : src.find('function Copy-PackagingOverlay')]
+        self.assertIn("GetFolderPath('ProgramFilesX86')", find_fn)
+        self.assertIn('Windows Kits\\10\\bin', find_fn)
+        self.assertIn("Directory.Name -eq 'x64'", find_fn)
+        self.assertIn('IsNullOrWhiteSpace', find_fn)
+        self.assertIn('makeappx.exe', find_fn)
+        self.assertIn('signtool.exe', find_fn)
+        self.assertNotIn('10.0.26100.0', find_fn)
+
+    def test_sign_script_passes_empty_lab_password_without_weakening_fail_closed(self):
+        src = (ROOT / 'scripts' / 'package_release.ps1').read_text(encoding='utf-8')
+        sign_fn = src[src.find('function Invoke-ActionSign') : src.find("switch ($Action)")]
+        self.assertIn('/p', sign_fn)
+        self.assertIn('[string]::Empty', sign_fn)
+        self.assertIn('AllowEmptyString', src[src.find('function Invoke-External') : src.find('function New-BaseReport')])
+        self.assertIn('CertificatePath is required', sign_fn)
+        self.assertIn('Sign requires an MSIX', sign_fn)
+        self.assertIn('CertificatePath must not live under packaging/', sign_fn)
+        self.assertIn('CertificatePath must not live under tests/fixtures.', sign_fn)
+        code, report = repository.run_package_release('Sign')
+        self.assertNotEqual(code, 0)
+        self.assertIsNot(report.get('signed'), True)
+
     def test_structure_contract_invokes_shipped_script(self):
         repository._HD034_SCRIPT_CONTRACT_OK = False
         repository._check_hd034_package_script_contract()
@@ -717,5 +780,307 @@ class Hd034LabCertificateTests(unittest.TestCase):
             self.assertFalse(sign_report.get('publisher_identity_confirmed', False))
 
 
+def _lab_msix_doc(**overrides):
+    doc = {
+        'document_kind': LAB_MSIX_KIND,
+        'template': False,
+        'capture_id': 'hd034-live-lab-msix-test',
+        'kind': 'lab_msix_pack_sign',
+        'started_at_utc': '2026-09-11T01:00:00Z',
+        'captured_at_utc': '2026-09-11T01:01:00Z',
+        'git_sha': 'c' * 40,
+        'result': 'not_run',
+        'ac41_passed': False,
+        'ac42_passed': False,
+        'g0_passed': False,
+        'phase_gate': 'not_passed',
+        'signed_msix_built': False,
+        'live_sign': False,
+        'live_install': False,
+        'publisher_identity_confirmed': False,
+        'is_release_install': False,
+        'herdr_executed': False,
+        'pfx_in_git': False,
+        'winui_admitted': False,
+        'fake_publisher_cannot_pass_ac41': True,
+        'unsigned_local_build_cannot_pass_release_install': True,
+        'lab_msix_packed': True,
+        'lab_signature_applied': True,
+        'makeappx_found': True,
+        'signtool_found': True,
+        'lab_msix_sha256': 'a' * 64,
+        'publisher': None,
+        'package_sha256': None,
+        'msix_sha256': None,
+        'certificate_subject': None,
+        'certificate_thumbprint': None,
+        'timestamp_url': None,
+    }
+    doc.update(overrides)
+    return doc
+
+
+def _write_lab_msix(root: Path, **overrides) -> Path:
+    dest = root / LAB_MSIX_REL
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(_lab_msix_doc(**overrides)), encoding='utf-8')
+    return dest
+
+
+class Hd034LabMsixTests(unittest.TestCase):
+    def test_overlay_file_is_optional_until_record(self):
+        overlay_path = ROOT / LAB_MSIX_REL
+        report = validate_lab_msix(ROOT)
+        if overlay_path.is_file():
+            self.assertIsNotNone(report)
+            overlay = json.loads(overlay_path.read_text(encoding='utf-8'))
+            self.assertEqual(overlay['document_kind'], LAB_MSIX_KIND)
+            self.assertFalse(overlay['ac41_passed'])
+            self.assertFalse(overlay['ac42_passed'])
+            self.assertFalse(overlay['signed_msix_built'])
+            self.assertFalse(overlay['live_sign'])
+            self.assertFalse(overlay['live_install'])
+            self.assertTrue(overlay['lab_msix_packed'])
+            self.assertTrue(overlay['lab_signature_applied'])
+            self.assertTrue(overlay['makeappx_found'])
+            self.assertTrue(overlay['signtool_found'])
+            self.assertEqual(overlay['result'], 'not_run')
+            for key in LAB_MSIX_NULL_KEYS:
+                if key in overlay:
+                    self.assertIsNone(overlay[key], key)
+            self.assertFalse(report['ac41_passed'])
+            self.assertFalse(report['signed_msix_built'])
+            self.assertTrue(report['lab_msix_packed'])
+            self.assertTrue(report['lab_signature_applied'])
+        else:
+            self.assertIsNone(report)
+
+    def test_cli_validates_without_recording(self):
+        script = ROOT / 'scripts' / 'record_lab_msix.py'
+        self.assertTrue(script.is_file())
+        src = script.read_text(encoding='utf-8')
+        self.assertIn('--record', src)
+        self.assertNotIn('Add-AppxPackage', src[src.find('def record(') : src.find('def _unrecorded_report')])
+        self.assertNotIn('DISPLAYCONFIG', src)
+        overlay_path = ROOT / LAB_MSIX_REL
+        pointer_path = ROOT / 'evidence' / 'packaging' / 'lab-sign-overlay-pointer.json'
+        before_overlay = (
+            overlay_path.read_text(encoding='utf-8') if overlay_path.is_file() else None
+        )
+        before_pointer = pointer_path.read_text(encoding='utf-8')
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        report = json.loads(completed.stdout)
+        self.assertFalse(report['ac41_passed'])
+        self.assertFalse(report['signed_msix_built'])
+        self.assertEqual(report['result'], 'not_run')
+        self.assertEqual(pointer_path.read_text(encoding='utf-8'), before_pointer)
+        pointer = json.loads(before_pointer)
+        self.assertFalse(pointer['signed_msix_built'])
+        self.assertFalse(pointer['live_sign'])
+        self.assertFalse(pointer['pfx_written'])
+        if before_overlay is None:
+            self.assertFalse(overlay_path.is_file())
+            self.assertFalse(report.get('recorded'))
+        else:
+            self.assertEqual(overlay_path.read_text(encoding='utf-8'), before_overlay)
+            self.assertTrue(report.get('recorded'))
+
+    def test_catalog_keeps_missing_grants_and_ac41_false(self):
+        catalog = json.loads(CATALOG.read_text(encoding='utf-8'))
+        self.assertEqual(
+            catalog['lab_msix_capture'],
+            'evidence/packaging/live-lab-msix.json',
+        )
+        self.assertFalse(catalog['ac41_passed'])
+        self.assertFalse(catalog['signed_msix_built'])
+        self.assertFalse(catalog['live_sign'])
+        self.assertTrue(catalog['missing']['signing_service'])
+        cards = {item['id']: item for item in catalog['execution_cards']}
+        self.assertEqual(
+            cards['unsigned-local-build']['missing_grant'],
+            'no_authorized_signing_service',
+        )
+        self.assertIn('not AC41', catalog['note'])
+        self.assertIn('not a production Publisher', catalog['note'])
+
+    def test_structure_contract_invokes_lab_msix(self):
+        repository._check_hd034_lab_msix()
+
+    def test_record_packs_and_signs_with_hooks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            created = []
+
+            def create_certificate(_root, cert):
+                created.append(Path(cert))
+                Path(cert).parent.mkdir(parents=True, exist_ok=True)
+                Path(cert).write_bytes(b'lab-pfx')
+                return {'ok': True, 'document_kind': 'hd034_lab_certificate'}
+
+            def run_build(_root, output_root):
+                out = Path(output_root)
+                out.mkdir(parents=True, exist_ok=True)
+                msix = out / 'HerdDesk.Lab.msix'
+                msix.write_bytes(b'lab-msix-bytes')
+                return {'ok': True, 'action': 'Build', 'package_path': str(msix)}
+
+            def run_sign(_root, output_root, cert):
+                self.assertEqual(Path(cert), created[0])
+                return {'ok': True, 'signed': True, 'signature': 'lab_cert'}
+
+            doc = lab_msix_cli.record(
+                root,
+                create_certificate=create_certificate,
+                run_build=run_build,
+                run_sign=run_sign,
+                git_sha='d' * 40,
+                now='2026-09-11T02:00:00Z',
+            )
+            self.assertTrue(doc['lab_msix_packed'])
+            self.assertTrue(doc['lab_signature_applied'])
+            self.assertTrue(doc['makeappx_found'])
+            self.assertTrue(doc['signtool_found'])
+            self.assertFalse(doc['ac41_passed'])
+            self.assertFalse(doc['signed_msix_built'])
+            self.assertFalse(doc['live_sign'])
+            self.assertFalse(doc['live_install'])
+            self.assertIsNone(doc['msix_sha256'])
+            self.assertIsNone(doc['publisher'])
+            self.assertEqual(len(doc['lab_msix_sha256']), 64)
+            self.assertEqual(created[0].name, 'HerdDesk.Lab.pfx')
+            report = validate_lab_msix(root)
+            self.assertIsNotNone(report)
+            self.assertTrue(report['lab_msix_packed'])
+            self.assertTrue(report['lab_signature_applied'])
+            self.assertFalse(report['ac41_passed'])
+
+    def test_record_does_not_treat_leftover_msix_as_packed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            leftover = root / 'artifacts' / 'packaging' / 'HerdDesk.Lab.msix'
+            leftover.parent.mkdir(parents=True)
+            leftover.write_bytes(b'old-msix')
+            signed = []
+
+            def create_certificate(_root, cert):
+                Path(cert).parent.mkdir(parents=True, exist_ok=True)
+                Path(cert).write_bytes(b'lab-pfx')
+                return {'ok': True}
+
+            def run_build(_root, output_root):
+                return {'ok': False, 'error': 'MakeAppx failed'}
+
+            def run_sign(_root, output_root, cert):
+                signed.append(cert)
+                return {'ok': True, 'signed': True}
+
+            doc = lab_msix_cli.record(
+                root,
+                create_certificate=create_certificate,
+                run_build=run_build,
+                run_sign=run_sign,
+                git_sha='d' * 40,
+                now='2026-09-11T02:00:00Z',
+            )
+            self.assertFalse(doc['lab_msix_packed'])
+            self.assertFalse(doc['lab_signature_applied'])
+            self.assertFalse(doc['signed_msix_built'])
+            self.assertFalse(doc['ac41_passed'])
+            self.assertIsNone(doc['lab_msix_sha256'])
+            self.assertEqual(signed, [])
+            report = validate_lab_msix(root)
+            self.assertIsNotNone(report)
+            self.assertFalse(report['lab_msix_packed'])
+            self.assertFalse(report['lab_signature_applied'])
+
+    def test_record_without_hooks_fails_closed_off_windows(self):
+        if os.name == 'nt':
+            self.skipTest('omitted hooks use live Windows pack and sign')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            overlay = root / LAB_MSIX_REL
+            err = StringIO()
+            with patch.object(lab_msix_cli, 'ROOT', root), redirect_stderr(err):
+                with self.assertRaises(LabMsixError) as ctx:
+                    lab_msix_cli.record(root)
+                code = lab_msix_cli.main(['--record'])
+            self.assertEqual(str(ctx.exception), 'missing_record_field')
+            self.assertEqual(code, 2, err.getvalue())
+            self.assertEqual(json.loads(err.getvalue())['error'], 'missing_record_field')
+            self.assertFalse(overlay.is_file())
+
+    def test_ac41_passed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_lab_msix(root, ac41_passed=True)
+            with self.assertRaises(LabMsixError) as ctx:
+                validate_lab_msix(root)
+            self.assertEqual(str(ctx.exception), 'ac41_passed')
+
+    def test_signed_msix_built_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_lab_msix(root, signed_msix_built=True)
+            with self.assertRaises(LabMsixError) as ctx:
+                validate_lab_msix(root)
+            self.assertEqual(str(ctx.exception), 'signed_msix_built_claimed')
+
+    def test_live_sign_true_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_lab_msix(root, live_sign=True)
+            with self.assertRaises(LabMsixError) as ctx:
+                validate_lab_msix(root)
+            self.assertEqual(str(ctx.exception), 'live_sign_claimed')
+
+    def test_invented_msix_sha256_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_lab_msix(root, msix_sha256='b' * 64)
+            with self.assertRaises(LabMsixError) as ctx:
+                validate_lab_msix(root)
+            self.assertEqual(str(ctx.exception), 'invented_identity')
+
+    def test_packed_without_hash_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_lab_msix(root, lab_msix_sha256=None)
+            with self.assertRaises(LabMsixError) as ctx:
+                validate_lab_msix(root)
+            self.assertEqual(str(ctx.exception), 'lab_msix_claimed')
+
+    def test_signature_without_pack_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_lab_msix(
+                root,
+                lab_msix_packed=False,
+                lab_signature_applied=True,
+                lab_msix_sha256=None,
+            )
+            with self.assertRaises(LabMsixError) as ctx:
+                validate_lab_msix(root)
+            self.assertEqual(str(ctx.exception), 'lab_signature_claimed')
+
+    def test_ci_and_justfile_do_not_record(self):
+        ci = (ROOT / '.github' / 'workflows' / 'ci.yml').read_text(encoding='utf-8')
+        just = (ROOT / 'justfile').read_text(encoding='utf-8')
+        self.assertNotIn('record_lab_msix.py --record', ci)
+        self.assertNotIn('record_lab_msix.py --record', just)
+        self.assertNotIn('-Action Sign', ci)
+        self.assertNotIn('-Action Sign', just)
+        self.assertNotIn('new_lab_certificate.ps1', ci)
+        self.assertNotIn('new_lab_certificate.ps1', just)
+
+
 if __name__ == '__main__':
     unittest.main()
+
