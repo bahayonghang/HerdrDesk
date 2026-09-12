@@ -15,7 +15,7 @@ UI state is in-process. There is no server-state library. herdr snapshots travel
 | Kind | Where | Notes |
 |------|-------|-------|
 | Identity / projection | `HerdDesk.Core` Store | `DeviceId`, `SessionKey`, `PaneKey`, `ConnectionEpoch` |
-| Shell chrome | `ShellViewModel`, `NavigationCoordinator` | Selection does not grant control |
+| Shell chrome | `ShellViewModel`, `ShellChrome`, `NavigationCoordinator` | Selection does not grant control; chrome uses Chinese `ShellStrings` |
 | Preferences | `Settings/UiPreferenceStore.cs` | Not user AppData unless an explicit root is passed |
 | Input / lease | `TerminalInputViewModel`, `TerminalControlViewModel` | `RequestControl` does not grant a lease |
 | Notifications | `NotificationCenterViewModel` | Clicks locate `PaneKey` only |
@@ -32,3 +32,5 @@ UI state is in-process. There is no server-state library. herdr snapshots travel
 - Closing the GUI releases only this application's child processes (`AppExitCoordinator`).
 - `WindowsNotificationSink.Available` stays false until a later approved toast task.
 - `RequestControl` on `TerminalControlViewModel` does not set `ControlVerified`.
+- `ShellHost` may attach an in-memory `TerminalControlViewModel` via `WorkbenchControlFactory` so the control bar renders without RPC. That factory is not live observe. `AppServices.CreateProduction` stays on `UnavailableAdapter`.
+- `SettingsViewModel.RequestConnect` only appends `PendingConnects`. Do not treat it as a started session.

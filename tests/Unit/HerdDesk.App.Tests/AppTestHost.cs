@@ -1,4 +1,5 @@
 using HerdDesk.App;
+using HerdDesk.App.Composition;
 using HerdDesk.Contracts;
 using HerdDesk.Core;
 using HerdDesk.Infrastructure.Configuration;
@@ -189,6 +190,7 @@ internal static class AppTestHost
         INotificationSink? notifications = null,
         DiagnosticAliasProjector? aliases = null,
         TerminalInputViewModel? input = null,
+        TerminalControlViewModel? control = null,
         GlobalProjectionStore? aggregate = null)
     {
         paths ??= AppDataPaths.FromRoot(TempRoot());
@@ -206,6 +208,7 @@ internal static class AppTestHost
             NotificationSink = notifications,
             Aliases = aliases,
             TerminalInput = input,
+            TerminalControl = control ?? WorkbenchControlFactory.Create(),
             Aggregate = aggregate,
             Unavailable =
             [

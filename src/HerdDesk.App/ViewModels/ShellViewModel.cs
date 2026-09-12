@@ -83,6 +83,7 @@ public sealed class ShellViewModel
         Route = ShellRoute.Welcome;
         CurrentFocus = new FocusToken("title");
         Layout = LayoutBreakpoint.Wide;
+        UpdateChrome();
     }
 
     public ProjectionCatalog Catalog { get; }
@@ -126,6 +127,11 @@ public sealed class ShellViewModel
     public bool ContentFocused => _navigation.ContentFocused;
     public string Breadcrumb { get; private set; } = ProductInfo.Name;
     public string TitleSummary { get; private set; } = ProductInfo.Name;
+    public string ConnectionLabel { get; private set; } = ShellStrings.Offline;
+    public string AgentLabel { get; private set; } = ShellStrings.Unknown;
+    public string UnreadLabel { get; private set; } = ShellChrome.Unread(0);
+    public string AccessLabel { get; private set; } = ShellStrings.Disconnected;
+    public string StatusLine { get; private set; } = "";
     public ConnectionPhase ConnectionStatus { get; private set; } = ConnectionPhase.Offline;
     public WireEnum<AgentStatusKind> AgentStatus { get; private set; } =
         new("unknown", AgentStatusKind.Unknown);
@@ -329,6 +335,15 @@ public sealed class ShellViewModel
     {
         Route = ShellRoute.About;
         CurrentFocus = new FocusToken("about");
+    }
+
+    public void ReturnToWorkbench()
+    {
+        Route = Selection.Kind == SelectionKind.Pane && Selection.Pane is not null && !Selection.IsExpired
+            ? ShellRoute.Pane
+            : ShellRoute.Welcome;
+        CurrentFocus = new FocusToken("content");
+        FocusedRegion = FocusRegion.Content;
     }
 
     public void OpenNotifications()
@@ -646,19 +661,12 @@ public sealed class ShellViewModel
                 ]),
                 _ => selected.Label
             };
-            TitleSummary = string.Join(" · ",
-            [
-                selected.Label,
-                selected.Connection.ToString(),
-                selected.AgentStatus.Known?.ToString() ?? ShellStrings.Unknown,
-                "unread:" + selected.UnreadCount.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                selected.Access.ToString()
-            ]);
+            TitleSummary = selected.Label;
         }
         else
         {
             Breadcrumb = ProductInfo.Name;
-            TitleSummary = ProductInfo.Name;
+            TitleSummary = ShellChrome.Lifecycle(Lifecycle);
             ConnectionStatus = Catalog.Snapshot.Phase;
             AgentStatus = new WireEnum<AgentStatusKind>("unknown", AgentStatusKind.Unknown);
             UnreadCount = 0;
@@ -666,8 +674,11 @@ public sealed class ShellViewModel
             ControlVerified = false;
         }
 
-        if (Lifecycle == ShellLifecycle.NoDevices)
-            TitleSummary = ShellStrings.NoDevices;
+        ConnectionLabel = ShellChrome.Connection(ConnectionStatus);
+        AgentLabel = ShellChrome.Agent(AgentStatus.Known);
+        UnreadLabel = ShellChrome.Unread(UnreadCount);
+        AccessLabel = ShellChrome.Access(Access);
+        StatusLine = ShellChrome.StatusLine(ConnectionStatus, AgentStatus.Known, UnreadCount, Access);
     }
 
     private ResourceKey? ResourceKeyFromSelection()

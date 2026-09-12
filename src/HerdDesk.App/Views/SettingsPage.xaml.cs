@@ -36,7 +36,8 @@ public sealed partial class SettingsPage : UserControl
         SessionList.ItemsSource = draft.Sessions
             .Select(item => item.SessionName ?? item.CanonicalLocation ?? item.Kind.ToString())
             .ToArray();
-        StatusText.Text = shell.Settings.ErrorCode ?? shell.Settings.Lifecycle.ToString();
+        StatusText.Text = shell.Settings.ErrorCode ?? shell.Settings.LifecycleLabel;
+        ConnectStatus.Text = shell.Settings.ConnectExplanation;
         var ssh = shell.SshAvailability;
         SshBanner.Text = ssh.ReasonText ?? ShellStrings.SshPending;
         SshBanner.Opacity = ssh.Kind == RouteAvailabilityKind.Enabled ? 1 : 0.7;
@@ -50,7 +51,7 @@ public sealed partial class SettingsPage : UserControl
             return;
         _shell.Settings.SetDeviceLabel(LabelBox.Text ?? "");
         _shell.Settings.SetHerdrPath(PathBox.Text ?? "");
-        StatusText.Text = _shell.Settings.Lifecycle.ToString();
+        StatusText.Text = _shell.Settings.LifecycleLabel;
     }
 
     private void OnAddNamed(object sender, RoutedEventArgs args)
@@ -98,7 +99,7 @@ public sealed partial class SettingsPage : UserControl
             FontBox.Text ?? "Cascadia Mono",
             size,
             zoom));
-        StatusText.Text = _shell.Settings.ErrorCode ?? _shell.Settings.Lifecycle.ToString();
+        StatusText.Text = _shell.Settings.ErrorCode ?? _shell.Settings.LifecycleLabel;
     }
 
     private async void OnSave(object sender, RoutedEventArgs args)
@@ -121,6 +122,15 @@ public sealed partial class SettingsPage : UserControl
         if (_shell is null)
             return;
         _shell.Settings.Discard();
+        Bind(_shell);
+    }
+
+    private void OnConnect(object sender, RoutedEventArgs args)
+    {
+        _ = (sender, args);
+        if (_shell is null)
+            return;
+        _shell.Settings.RequestConnect(0);
         Bind(_shell);
     }
 }

@@ -17,10 +17,10 @@ src/HerdDesk.App/
 ├── App.xaml / App.xaml.cs
 ├── MainWindow.xaml / MainWindow.xaml.cs
 ├── Program.cs
-├── Composition/          AppServices, ShellHost
+├── Composition/          AppServices, ShellHost, WorkbenchControlFactory
 ├── Activation/           WinUI activation host, intents
 ├── Views/                ShellPage, Settings, Diagnostics, About
-├── Controls/             TerminalHost, SearchPalette, rails/trees
+├── Controls/             TerminalHost, SearchPalette, ControlBar, rails/trees
 ├── ViewModels/           Shell, search, input, control, notifications
 ├── Devices/              EditDevice, HelperInstall, connection status
 ├── Files/                Dual-pane file workspace ViewModels (no XAML)
@@ -59,6 +59,7 @@ src/HerdDesk.App/
 
 - Four-zone Shell: `src/HerdDesk.App/Views/ShellPage.xaml`
 - Device rail: `src/HerdDesk.App/Controls/DeviceSessionRail.xaml`
+- Control bar: `src/HerdDesk.App/Controls/ControlBar.xaml`
 - Terminal host: `src/HerdDesk.App/Controls/TerminalHost.xaml`
 - Search chrome: `src/HerdDesk.App/Controls/SearchPalette.xaml`
 - Composition root: `src/HerdDesk.App/Composition/AppServices.cs`

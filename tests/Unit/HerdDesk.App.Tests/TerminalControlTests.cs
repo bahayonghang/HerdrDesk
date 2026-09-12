@@ -8,7 +8,8 @@ internal static class TerminalControlTests
 {
     public static (string Name, Action Run)[] All =>
     [
-        ("control bar labels stay explainable without always-takeover", LabelsAndNoBypass)
+        ("control bar labels stay explainable without always-takeover", LabelsAndNoBypass),
+        ("control bar stays disabled without a pane", NoPaneDisablesActions)
     ];
 
     static void LabelsAndNoBypass()
@@ -26,15 +27,51 @@ internal static class TerminalControlTests
             AppTestHost.Check(!vm.AlwaysTakeoverEnabled);
             AppTestHost.Check(!vm.HasGlobalSkip);
             AppTestHost.Check(vm.PrimaryActionName == ShellStrings.RequestControl);
+            AppTestHost.Check(vm.SecondaryActionName is null);
             coordinator.OpenPaneAsync(pane).AsTask().GetAwaiter().GetResult();
             Wait(coordinator, state => state.ObserveBinding is not null);
             AppTestHost.Check(vm.AccessLabel == ShellStrings.Observing);
+            AppTestHost.Check(vm.PrimaryActionName == ShellStrings.RequestControl);
+            AppTestHost.Check(vm.SecondaryActionName is null);
+            AppTestHost.Check(vm.PrimaryActionEnabled);
             vm.RequestControlFromScreenReader();
             Wait(coordinator, state => state.Access == TerminalAccess.Acquiring);
             AppTestHost.Check(vm.PrimaryActionName == ShellStrings.CancelAcquire);
             AppTestHost.Check(!vm.State.ControlVerified);
+            AppTestHost.Check(vm.SecondaryActionName is null);
             AppTestHost.Check(vm.TakeoverWarning == ShellStrings.TakeoverReplacesController);
             AppTestHost.Check(vm.RequestControlAutomationName == ShellStrings.RequestControl);
+            vm.KeepObserving();
+            Wait(coordinator, state => state.Access == TerminalAccess.Observing);
+            AppTestHost.Check(vm.PrimaryActionName == ShellStrings.RequestControl);
+            AppTestHost.Check(vm.SecondaryActionName is null);
+            AppTestHost.Check(!vm.State.ControlVerified);
+        }
+        finally
+        {
+            coordinator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    static void NoPaneDisablesActions()
+    {
+        var pane = new PaneKey(
+            new SessionKey(new DeviceId(Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")), "endpoint", "dev"),
+            "ws", "p1");
+        var store = new AppLeaseStore(pane);
+        var host = new AppLeaseHost();
+        var renderer = new AppLeaseRenderer();
+        var coordinator = new ControlLeaseCoordinator(store, host, renderer);
+        try
+        {
+            var vm = new TerminalControlViewModel(coordinator);
+            AppTestHost.Check(!vm.PrimaryActionEnabled);
+            AppTestHost.Check(vm.DisabledReason == ShellStrings.ControlRequiresPane);
+            AppTestHost.Check(vm.PrimaryActionName == ShellStrings.RequestControl);
+            AppTestHost.Check(vm.SecondaryActionName is null);
+            vm.InvokePrimary();
+            AppTestHost.Check(vm.State.Access == TerminalAccess.Disconnected);
+            AppTestHost.Check(!vm.State.ControlVerified);
         }
         finally
         {

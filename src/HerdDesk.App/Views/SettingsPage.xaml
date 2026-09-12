@@ -55,7 +55,16 @@
                     x:Name="DiscardButton"
                     Click="OnDiscard"
                     Content="放弃" />
+                <Button
+                    x:Name="ConnectButton"
+                    AutomationProperties.Name="连接"
+                    Click="OnConnect"
+                    Content="连接" />
             </StackPanel>
+            <TextBlock
+                x:Name="ConnectStatus"
+                AutomationProperties.Name="连接说明"
+                TextWrapping="Wrap" />
             <TextBlock
                 x:Name="SshBanner"
                 AutomationProperties.Name="SSH 由 HD-020 提供"

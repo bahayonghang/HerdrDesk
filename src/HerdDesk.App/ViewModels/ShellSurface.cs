@@ -8,6 +8,7 @@ public static class ShellSurface
     public static readonly string[] Pages =
     [
         "App.xaml",
+        "Controls/ControlBar.xaml",
         "Controls/DeviceSessionRail.xaml",
         "Controls/SearchPalette.xaml",
         "Controls/TerminalHost.xaml",
@@ -23,7 +24,18 @@ public static class ShellSurface
     [
         ShellStrings.DeviceRail,
         ShellStrings.WorkspaceTree,
+        ShellStrings.WorkspaceHeader,
         ShellStrings.TerminalHost,
+        ShellStrings.TerminalPlaceholder,
+        ShellStrings.ControlBar,
+        ShellStrings.RequestControl,
+        ShellStrings.TakeOver,
+        ShellStrings.Connect,
+        ShellStrings.ConnectStatus,
+        ShellStrings.ReturnToWorkbench,
+        ShellStrings.EmptyBanner,
+        ShellStrings.EmptyWorkspace,
+        ShellStrings.NoDevices,
         ShellStrings.Details,
         ShellStrings.Search,
         ShellStrings.ConnectionStatus,

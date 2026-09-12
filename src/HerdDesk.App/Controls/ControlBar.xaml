@@ -1,0 +1,31 @@
+<UserControl
+    x:Class="HerdDesk.App.Controls.ControlBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    AutomationProperties.Name="观察与控制">
+    <StackPanel
+        Padding="8,4"
+        Orientation="Horizontal"
+        Spacing="8">
+        <TextBlock
+            x:Name="AccessText"
+            VerticalAlignment="Center" />
+        <Button
+            x:Name="PrimaryButton"
+            AutomationProperties.Name="请求控制"
+            Click="OnPrimary"
+            Content="请求控制"
+            IsEnabled="False" />
+        <Button
+            x:Name="SecondaryButton"
+            AutomationProperties.Name="接管…"
+            Click="OnSecondary"
+            Content="接管…"
+            Visibility="Collapsed" />
+        <TextBlock
+            x:Name="DisabledReason"
+            VerticalAlignment="Center"
+            Opacity="0.7"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

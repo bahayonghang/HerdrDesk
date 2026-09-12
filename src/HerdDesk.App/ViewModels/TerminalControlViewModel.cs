@@ -57,8 +57,50 @@ public sealed class TerminalControlViewModel
     public string? SecondaryActionName =>
         State.Challenge is not null ? ShellStrings.TakeOver : null;
 
+    public bool PrimaryActionEnabled => State.Target is not null;
+
+    public string? DisabledReason =>
+        State.Target is null ? ShellStrings.ControlRequiresPane : null;
+
     public void HandleSelectionChanged(PaneKey pane) =>
         coordinator.SelectPaneAsync(pane).AsTask().GetAwaiter().GetResult();
+
+    public void InvokePrimary()
+    {
+        if (!PrimaryActionEnabled)
+            return;
+        if (State.LastAttempt == ControlAttemptOutcome.Busy && State.Access == TerminalAccess.Observing)
+        {
+            KeepObserving();
+            return;
+        }
+
+        switch (State.Access)
+        {
+            case TerminalAccess.Acquiring:
+                KeepObserving();
+                break;
+            case TerminalAccess.Controlling:
+                ReleaseControl();
+                break;
+            case TerminalAccess.Unknown:
+                RecoverObserve();
+                break;
+            case TerminalAccess.Observing:
+            case TerminalAccess.Disconnected:
+                RequestControl();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(State.Access), State.Access, null);
+        }
+    }
+
+    public void InvokeSecondary()
+    {
+        if (State.Challenge is null)
+            return;
+        ConfirmTakeover();
+    }
 
     public void RequestControl() =>
         coordinator.RequestControlAsync().AsTask().GetAwaiter().GetResult();

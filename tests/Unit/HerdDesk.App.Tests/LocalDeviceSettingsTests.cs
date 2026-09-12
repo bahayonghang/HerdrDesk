@@ -32,6 +32,8 @@ internal static class LocalDeviceSettingsTests
             shell.Settings.AddExplicitEndpoint(AppTestHost.ExplicitLocation(), AppTestHost.ExplicitKind());
             shell.Settings.SaveLocalDeviceAsync().AsTask().GetAwaiter().GetResult();
             AppTestHost.Check(shell.Settings.Lifecycle == SettingsLifecycle.Saved);
+            AppTestHost.Check(shell.Settings.LifecycleLabel == ShellStrings.Saved);
+            AppTestHost.Check(shell.Settings.ConnectExplanation == ShellStrings.ConnectUnauthorized);
             AppTestHost.Check(shell.Settings.CommittedDevice is not null);
             AppTestHost.Check(shell.Settings.CommittedDevice!.Sessions.Count == 2);
             var named = shell.Settings.CommittedDevice.Sessions[0].ToSessionKey(device);

@@ -21,7 +21,8 @@ public static class ShellHost
             Aliases = services.Aliases,
             Unavailable = services.Unavailable,
             Activation = activation,
-            DiagnosticSink = services.Diagnostics
+            DiagnosticSink = services.Diagnostics,
+            TerminalControl = WorkbenchControlFactory.Create()
         });
     }
 }

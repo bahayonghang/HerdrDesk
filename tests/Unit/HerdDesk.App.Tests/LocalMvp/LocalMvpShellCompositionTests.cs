@@ -48,7 +48,7 @@ internal static class LocalMvpShellCompositionTests
         using var env = new LocalMvpShellEnv();
         env.Start();
         env.Control.RequestControlFromScreenReader();
-        env.WaitLease(state => state.Access == TerminalAccess.Acquiring);
+        env.WaitLease(state => state.Access == TerminalAccess.Acquiring && state.CandidateBinding is not null);
         AppTestHost.Check(env.Host.NoTakeoverCount == 1);
         AppTestHost.Check(env.Host.TakeoverCount == 0);
         AppTestHost.Check(!env.Control.State.ControlVerified);

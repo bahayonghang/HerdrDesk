@@ -21,8 +21,15 @@ public sealed partial class ShellPage : UserControl
         KeyboardAccelerators.Add(search);
         DeviceRail.ItemChosen += OnRailChosen;
         OverlayRail.ItemChosen += OnRailChosen;
+        DeviceRail.AddDeviceRequested += OnRailAddDevice;
+        DeviceRail.DiagnosticsRequested += OnRailDiagnostics;
+        OverlayRail.AddDeviceRequested += OnRailAddDevice;
+        OverlayRail.DiagnosticsRequested += OnRailDiagnostics;
         PaneTree.ItemChosen += OnTreeChosen;
+        PaneTree.AddDeviceRequested += OnRailAddDevice;
+        PaneTree.DiagnosticsRequested += OnRailDiagnostics;
         SearchControl.Activated += OnSearchActivated;
+        ControlBar.Changed += OnControlBarChanged;
     }
 
     public ShellViewModel? Shell { get; private set; }
@@ -47,7 +54,7 @@ public sealed partial class ShellPage : UserControl
             return;
         TitleText.Text = Shell.TitleSummary;
         BreadcrumbText.Text = Shell.Breadcrumb;
-        StatusText.Text = StatusLine(Shell);
+        StatusText.Text = Shell.StatusLine;
         var selected = Shell.Selection.Kind == SelectionKind.None
             ? null
             : Shell.VisibleItems.FirstOrDefault(item =>
@@ -64,10 +71,10 @@ public sealed partial class ShellPage : UserControl
             Shell.VisibleItems.Where(item =>
                 item.Kind is NavigationKind.Device or NavigationKind.Session),
             selected);
+        var treeSelected = TreeSelectedKey(Shell, selected);
         PaneTree.SetItems(
-            Shell.VisibleItems.Where(item =>
-                item.Kind is NavigationKind.Workspace or NavigationKind.Pane),
-            selected);
+            Shell.VisibleItems.Where(item => item.Kind == NavigationKind.Workspace),
+            treeSelected);
         SearchHost.Visibility = Shell.Search.IsOpen ? Visibility.Visible : Visibility.Collapsed;
         if (Shell.Search.IsOpen)
         {
@@ -77,12 +84,15 @@ public sealed partial class ShellPage : UserControl
 
         ApplyLayout();
         ShowRoute();
-        DetailsText.Text = Shell.Breadcrumb + " · " + Shell.Access;
+        DetailsText.Text = Shell.Breadcrumb + " · " + Shell.AccessLabel;
         DetailsToggle.Content = Shell.Details == DetailsPaneKind.Collapsed
             ? ShellStrings.ExpandDetails
             : ShellStrings.CollapseDetails;
         AddDeviceButton.Content = Shell.AddDeviceLabel;
         WelcomeText.Text = WelcomeMessage(Shell);
+        var paneSelected = Shell.Selection.Kind == SelectionKind.Pane && !Shell.Selection.IsExpired;
+        ControlBar.Bind(Shell.TerminalControl, paneSelected);
+        ReturnButton.Visibility = OverlayVisible(Shell.Route) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ApplyLayout()
@@ -111,7 +121,10 @@ public sealed partial class ShellPage : UserControl
     {
         if (Shell is null)
             return;
-        WelcomePanel.Visibility = Visibility.Collapsed;
+        EmptyBanner.Visibility = Shell.Route == ShellRoute.Welcome ? Visibility.Visible : Visibility.Collapsed;
+        TerminalPlaceholder.Visibility = Shell.Route == ShellRoute.Pane
+            ? Visibility.Collapsed
+            : Visibility.Visible;
         if (Shell.Route != ShellRoute.Pane)
             TerminalSurface.SetVisible(false);
         SettingsHost.Visibility = Visibility.Collapsed;
@@ -134,9 +147,6 @@ public sealed partial class ShellPage : UserControl
                 TerminalSurface.SetVisible(true);
                 BindTerminal();
                 break;
-            default:
-                WelcomePanel.Visibility = Visibility.Visible;
-                break;
         }
     }
 
@@ -158,17 +168,18 @@ public sealed partial class ShellPage : UserControl
             _ => ProductInfo.Name
         };
 
-    private static string StatusLine(ShellViewModel shell)
+    private static bool OverlayVisible(ShellRoute route) =>
+        route is ShellRoute.Settings or ShellRoute.Diagnostics or ShellRoute.About;
+
+    private static string? TreeSelectedKey(ShellViewModel shell, string? selected)
     {
-        var agent = shell.AgentStatus.Known?.ToString() ?? ShellStrings.Unknown;
-        return string.Join(" · ",
-        [
-            shell.Lifecycle.ToString(),
-            shell.ConnectionStatus.ToString(),
-            agent,
-            shell.Access.ToString(),
-            "unread:" + shell.UnreadCount.ToString(System.Globalization.CultureInfo.InvariantCulture)
-        ]);
+        if (shell.Selection.Kind != SelectionKind.Pane ||
+            shell.Selection.Device is not { } device ||
+            shell.Selection.Session is not { } session ||
+            string.IsNullOrWhiteSpace(shell.Selection.WorkspaceId))
+            return selected;
+        return NavigationIdentity.Format(
+            NavigationKind.Workspace, device, session, shell.Selection.WorkspaceId, null);
     }
 
     private static NavigationKind ToKind(SelectionKind kind) => kind switch
@@ -280,6 +291,34 @@ public sealed partial class ShellPage : UserControl
     {
         _ = (sender, args);
         Shell?.OpenAbout();
+        Refresh();
+    }
+
+    private void OnReturnToWorkbench(object sender, RoutedEventArgs args)
+    {
+        _ = (sender, args);
+        Shell?.ReturnToWorkbench();
+        Refresh();
+    }
+
+    private void OnControlBarChanged(object? sender, EventArgs args)
+    {
+        _ = (sender, args);
+        Refresh();
+    }
+
+    private void OnRailAddDevice(object? sender, EventArgs args)
+    {
+        _ = sender;
+        _ = args;
+        Shell?.RequestAddDevice();
+        Refresh();
+    }
+
+    private void OnRailDiagnostics(object? sender, EventArgs args)
+    {
+        _ = (sender, args);
+        Shell?.OpenDiagnostics();
         Refresh();
     }
 

@@ -36,6 +36,8 @@ public sealed class SettingsViewModel
     public UiPreferences CommittedUi { get; private set; } = UiPreferences.Default;
     public RouteAvailability SshAvailability { get; }
     public IReadOnlyList<SessionKey> PendingConnects { get; private set; } = [];
+    public string ConnectExplanation { get; private set; } = ShellStrings.ConnectNeedsDevice;
+    public string LifecycleLabel => ShellChrome.Settings(Lifecycle);
     public int SaveCalls { get; private set; }
     public TerminalDisplayCoordinator Display => _display;
 
@@ -67,6 +69,10 @@ public sealed class SettingsViewModel
             Lifecycle = SettingsLifecycle.Ready;
             ErrorCode = null;
         }
+
+        ConnectExplanation = HasConnectableSession()
+            ? ShellStrings.ConnectUnauthorized
+            : ShellStrings.ConnectNeedsDevice;
 
         if (_ui is not null)
         {
@@ -172,6 +178,9 @@ public sealed class SettingsViewModel
         Draft = ToDraft(CommittedDevice);
         Lifecycle = SettingsLifecycle.Saved;
         ErrorCode = null;
+        ConnectExplanation = HasConnectableSession()
+            ? ShellStrings.ConnectUnauthorized
+            : ShellStrings.ConnectNeedsDevice;
     }
 
     public async ValueTask SaveUiPreferencesAsync(CancellationToken cancellationToken = default)
@@ -259,15 +268,26 @@ public sealed class SettingsViewModel
         _display.RestoreCommitted();
         Lifecycle = SettingsLifecycle.Ready;
         ErrorCode = null;
+        ConnectExplanation = HasConnectableSession()
+            ? ShellStrings.ConnectUnauthorized
+            : ShellStrings.ConnectNeedsDevice;
     }
 
     public void RequestConnect(int sessionIndex)
     {
-        if (CommittedDevice is null || sessionIndex < 0 || sessionIndex >= CommittedDevice.Sessions.Count)
+        if (!HasConnectableSession() || sessionIndex < 0 || sessionIndex >= CommittedDevice!.Sessions.Count)
+        {
+            ConnectExplanation = ShellStrings.ConnectNeedsDevice;
             return;
+        }
+
         var key = CommittedDevice.Sessions[sessionIndex].ToSessionKey(CommittedDevice.Device);
         PendingConnects = [.. PendingConnects, key];
+        ConnectExplanation = ShellStrings.ConnectUnauthorized;
     }
+
+    private bool HasConnectableSession() =>
+        CommittedDevice is { Sessions.Count: > 0 };
 
     private void RestoreDraftFromCommitted()
     {

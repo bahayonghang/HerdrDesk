@@ -390,6 +390,7 @@ def _check_hd028(hd028: dict, packages: dict) -> None:
 _APP_XAML_SKIP = frozenset({'bin', 'obj'})
 _APP_SHELL_XAML = (
     'App.xaml',
+    'Controls/ControlBar.xaml',
     'Controls/DeviceSessionRail.xaml',
     'Controls/SearchPalette.xaml',
     'Controls/TerminalHost.xaml',

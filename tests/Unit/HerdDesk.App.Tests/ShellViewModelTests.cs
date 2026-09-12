@@ -11,7 +11,8 @@ internal static class ShellViewModelTests
         ("daemon unavailable does not pretend online", DaemonUnavailable),
         ("settings diagnostics about stay available when providers missing", RoutesWhenUnavailable),
         ("narrow overlay keeps breadcrumb", NarrowOverlay),
-        ("status fields stay independent", IndependentStatus)
+        ("status fields stay independent", IndependentStatus),
+        ("control bar follows access without takeover", ControlBar)
     ];
 
     static void EmptyConfigShell()
@@ -30,6 +31,24 @@ internal static class ShellViewModelTests
             AppTestHost.Check(shell.DiagnosticsLabel == ShellStrings.Diagnostics);
             AppTestHost.Check(shell.SettingsAvailability.Kind == RouteAvailabilityKind.Enabled);
             AppTestHost.Check(shell.HiddenTerminalBridgeCount == 0);
+            AppTestHost.Check(shell.TitleSummary == ShellStrings.NoDevices);
+            AppTestHost.Check(shell.ConnectionLabel == ShellStrings.Offline);
+            AppTestHost.Check(shell.AgentLabel == ShellStrings.Unknown);
+            AppTestHost.Check(shell.AccessLabel == ShellStrings.Disconnected);
+            AppTestHost.Check(shell.StatusLine.Contains(ShellStrings.Offline, StringComparison.Ordinal));
+            AppTestHost.Check(shell.StatusLine.Contains(ShellStrings.Disconnected, StringComparison.Ordinal));
+            AppTestHost.Check(shell.StatusLine.Contains(ShellChrome.Unread(0), StringComparison.Ordinal));
+            AppTestHost.Check(!shell.StatusLine.Contains("NoDevices ·", StringComparison.Ordinal));
+            AppTestHost.Check(!shell.TitleSummary.Contains("NoDevices ·", StringComparison.Ordinal));
+            AppTestHost.Check(!shell.StatusLine.Contains("unread:", StringComparison.Ordinal));
+            AppTestHost.Check(!shell.StatusLine.Contains("Offline", StringComparison.Ordinal));
+            AppTestHost.Check(!shell.StatusLine.Contains("Disconnected", StringComparison.Ordinal));
+            AppTestHost.Check(!shell.StatusLine.Contains("Unknown", StringComparison.Ordinal));
+            AppTestHost.Check(shell.Settings.ConnectExplanation == ShellStrings.ConnectNeedsDevice);
+            AppTestHost.Check(shell.Settings.LifecycleLabel == ShellStrings.Ready);
+            AppTestHost.Check(shell.TerminalControl is not null);
+            AppTestHost.Check(!shell.TerminalControl!.PrimaryActionEnabled);
+            AppTestHost.Check(shell.TerminalControl.DisabledReason == ShellStrings.ControlRequiresPane);
         }
         finally
         {
@@ -74,6 +93,18 @@ internal static class ShellViewModelTests
         AppTestHost.Check(shell.Lifecycle == ShellLifecycle.DaemonUnavailable);
         AppTestHost.Check(!shell.DaemonOnline);
         AppTestHost.Check(shell.CanRetry);
+        AppTestHost.Check(shell.TitleSummary == ShellStrings.DaemonUnavailable);
+        AppTestHost.Check(shell.Settings.LifecycleLabel == ShellStrings.Ready);
+        AppTestHost.Check(shell.Settings.ConnectExplanation == ShellStrings.ConnectUnauthorized);
+        AppTestHost.Check(!shell.StatusLine.Contains("NoDevices ·", StringComparison.Ordinal));
+        AppTestHost.Check(!shell.StatusLine.Contains("DaemonUnavailable ·", StringComparison.Ordinal));
+        var ownedBefore = shell.Exit.OwnedIds.Count;
+        shell.Settings.RequestConnect(0);
+        AppTestHost.Check(shell.Settings.PendingConnects.Count == 1);
+        AppTestHost.Check(shell.Settings.ConnectExplanation == ShellStrings.ConnectUnauthorized);
+        AppTestHost.Check(shell.Exit.OwnedIds.Count == ownedBefore);
+        AppTestHost.Check(shell.Exit.OwnedIds.Count == 0);
+        AppTestHost.Check(shell.HiddenTerminalBridgeCount == 0);
         shell.RetryProjection();
         AppTestHost.Check(shell.RetryCount == 1);
     }
@@ -92,6 +123,8 @@ internal static class ShellViewModelTests
         AppTestHost.Check(shell.Diagnostics.AboutStatement == ProductInfo.IndependentClientStatement);
         AppTestHost.Check(shell.FilesAvailability.Kind == RouteAvailabilityKind.Disabled);
         AppTestHost.Check(shell.Settings.SaveCalls == 0);
+        shell.ReturnToWorkbench();
+        AppTestHost.Check(shell.Route == ShellRoute.Welcome);
     }
 
     static void NarrowOverlay()
@@ -143,6 +176,10 @@ internal static class ShellViewModelTests
         shell.Select(shell.VisibleItems.First(item => item.Pane == pane));
         AppTestHost.Check(shell.UnreadCount == 0);
         AppTestHost.Check(shell.Access == TerminalAccess.Observing);
+        AppTestHost.Check(shell.AccessLabel == ShellStrings.Observing);
+        AppTestHost.Check(shell.AgentLabel == ShellStrings.NotificationIdle);
+        AppTestHost.Check(shell.StatusLine.Contains(ShellStrings.Observing, StringComparison.Ordinal));
+        AppTestHost.Check(!shell.StatusLine.Contains("NoDevices ·", StringComparison.Ordinal));
         AppTestHost.Check(!shell.ControlVerified);
         AppTestHost.Check(shell.AgentStatus.Known == AgentStatusKind.Idle);
         catalog.Snapshot = AppTestHost.WithAgentStatus(snapshot, pane, AppTestHost.Blocked());
@@ -154,13 +191,56 @@ internal static class ShellViewModelTests
         AppTestHost.Check(shell.Access == TerminalAccess.Observing);
         AppTestHost.Check(!shell.ControlVerified);
         AppTestHost.Check(shell.AgentStatus.Known == AgentStatusKind.Blocked);
+        AppTestHost.Check(shell.AgentLabel == ShellStrings.NotificationBlocked);
         catalog.SetAccess(pane, TerminalAccess.Controlling, true);
         shell.RefreshFromCatalog();
         shell.Select(shell.VisibleItems.First(item => item.Pane == pane));
         AppTestHost.Check(shell.ControlVerified);
         AppTestHost.Check(shell.Access == TerminalAccess.Controlling);
+        AppTestHost.Check(shell.AccessLabel == ShellStrings.Controlling);
         shell.Select(shell.VisibleItems.First(item => item.Kind == NavigationKind.Device));
         AppTestHost.Check(!shell.ControlVerified);
         AppTestHost.Check(shell.Access == TerminalAccess.Disconnected);
+        AppTestHost.Check(shell.AccessLabel == ShellStrings.Disconnected);
+        AppTestHost.Check(!shell.StatusLine.Contains("NoDevices ·", StringComparison.Ordinal));
+        AppTestHost.Check(!shell.StatusLine.Contains("unread:", StringComparison.Ordinal));
+    }
+
+    static void ControlBar()
+    {
+        var snapshot = AppTestHost.TwoNamedPanes();
+        var pane = snapshot.Devices[0].Sessions[0].Panes[0].Key;
+        var catalog = new ProjectionCatalog { Snapshot = snapshot, DaemonAvailable = true };
+        catalog.SetAccess(pane, TerminalAccess.Observing, false);
+        var shell = AppTestHost.Shell(new MemoryDeviceProfileStore
+        {
+            Snapshot = new ConfigurationSnapshot(
+                1, 1,
+                [
+                    new DeviceProfile(
+                        AppTestHost.DeviceA, "lab", ConnectionKinds.Local, "/tmp/herdr",
+                        [SessionProfile.Named("dev")])
+                ])
+        }, catalog);
+        shell.StartAsync().AsTask().GetAwaiter().GetResult();
+        var control = shell.TerminalControl;
+        AppTestHost.Check(control is not null);
+        AppTestHost.Check(control!.PrimaryActionName == ShellStrings.RequestControl);
+        AppTestHost.Check(control.SecondaryActionName is null);
+        AppTestHost.Check(!control.PrimaryActionEnabled);
+        AppTestHost.Check(!shell.ControlVerified);
+        shell.ExpandAll();
+        shell.Select(shell.VisibleItems.First(item => item.Pane == pane));
+        AppTestHost.Check(!shell.ControlVerified);
+        AppTestHost.Check(control.PrimaryActionEnabled);
+        AppTestHost.Check(control.AccessLabel == ShellStrings.Observing);
+        AppTestHost.Check(control.PrimaryActionName == ShellStrings.RequestControl);
+        AppTestHost.Check(control.SecondaryActionName is null);
+        control.RequestControl();
+        AppTestHost.Check(control.PrimaryActionName == ShellStrings.RequestControl);
+        AppTestHost.Check(control.State.Access == TerminalAccess.Observing);
+        AppTestHost.Check(!control.State.ControlVerified);
+        AppTestHost.Check(!shell.ControlVerified);
+        AppTestHost.Check(control.SecondaryActionName is null);
     }
 }

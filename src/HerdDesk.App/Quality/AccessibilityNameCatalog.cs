@@ -8,7 +8,14 @@ public static class AccessibilityNameCatalog
     [
         ShellStrings.DeviceRail,
         ShellStrings.WorkspaceTree,
+        ShellStrings.WorkspaceHeader,
         ShellStrings.TerminalHost,
+        ShellStrings.TerminalPlaceholder,
+        ShellStrings.ControlBar,
+        ShellStrings.Connect,
+        ShellStrings.ConnectStatus,
+        ShellStrings.ReturnToWorkbench,
+        ShellStrings.EmptyBanner,
         ShellStrings.Details,
         ShellStrings.Search,
         ShellStrings.ConnectionStatus,
@@ -19,6 +26,7 @@ public static class AccessibilityNameCatalog
         ShellStrings.OpenNavigation,
         ShellStrings.ExpandDetails,
         ShellStrings.RequestControl,
+        ShellStrings.TakeOver,
         ShellStrings.ReleaseControl,
         ShellStrings.ConfirmClose,
         ShellStrings.Loading,
@@ -28,7 +36,8 @@ public static class AccessibilityNameCatalog
         ShellStrings.Expired,
         ShellStrings.PermissionDenied,
         ShellStrings.Stale,
-        ShellStrings.NoDevices
+        ShellStrings.NoDevices,
+        ShellStrings.EmptyWorkspace
     ];
 
     public static string JoinedXaml(string repoRoot)
