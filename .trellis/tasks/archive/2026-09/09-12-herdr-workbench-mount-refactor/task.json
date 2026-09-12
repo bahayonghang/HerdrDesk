@@ -1,0 +1,29 @@
+{
+  "id": "herdr-workbench-mount-refactor",
+  "name": "herdr-workbench-mount-refactor",
+  "title": "herdr 工作台排版与进程挂载优化重构",
+  "description": "基于用户截图与源码证据，重构 HerdDesk 四区工作台空态/布局，并在显式授权下接入现有 herdr daemon 的 RPC 与 terminal stdio 链路。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-12",
+  "completedAt": "2026-09-12",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-12-workbench-layout",
+    "09-12-herdr-transport-mount"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
