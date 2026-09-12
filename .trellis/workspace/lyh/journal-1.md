@@ -69,3 +69,37 @@ HD-033 archived; frontend specs rewritten from App WinUI/XAML; bootstrap stays i
 ### Next Steps
 
 - Do not archive bootstrap until developer confirms. Do not start parent 09-08-windows-desktop-full. No new HD-037 without consent. No live AC37/38/46.
+
+
+## Session 3: 工作台壳：中文状态与控制栏
+
+**Date**: 2026-09-12
+**Task**: 工作台壳：中文状态与控制栏
+**Branch**: `main`
+
+### Summary
+
+归档 workbench-chrome。四区骨架改为中文状态、观察栏与 Settings 连接意图；未接 live herdr。下一刀 tab-mosaic。
+
+### Main Changes
+
+- 四区空壳不再用整页欢迎表和枚举 dump
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `170ac4e` | (see git log) |
+| `b2f88fc` | (see git log) |
+
+### Testing
+
+- [OK] App unit 147/147；just ci 未启动 --ui
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 实施 09-12-tab-mosaic
