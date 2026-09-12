@@ -112,7 +112,9 @@ public sealed class ShellViewModel
     public RouteAvailability AboutAvailability { get; }
     public RouteAvailability FilesAvailability { get; }
     public RouteAvailability SshAvailability => Settings.SshAvailability;
-    public DetailsPaneKind Details { get; private set; } = DetailsPaneKind.Collapsed;
+    // Keep the fourth zone visible on the default wide shell so the workbench
+    // geometry remains discoverable even before a device is selected.
+    public DetailsPaneKind Details { get; private set; } = DetailsPaneKind.Info;
     public LayoutBreakpoint Layout { get; private set; }
     public bool NavigationOverlayOpen { get; private set; }
     public FocusToken CurrentFocus { get; private set; }

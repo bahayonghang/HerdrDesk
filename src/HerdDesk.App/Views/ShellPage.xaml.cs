@@ -92,6 +92,11 @@ public sealed partial class ShellPage : UserControl
         DetailsToggle.Content = Shell.Details == DetailsPaneKind.Collapsed
             ? ShellStrings.ExpandDetails
             : ShellStrings.CollapseDetails;
+        AutomationProperties.SetName(
+            DetailsToggle,
+            Shell.Details == DetailsPaneKind.Collapsed
+                ? ShellStrings.ExpandDetails
+                : ShellStrings.CollapseDetails);
         AddDeviceButton.Content = Shell.AddDeviceLabel;
         WelcomeText.Text = WelcomeMessage(Shell);
         var paneSelected = Shell.Selection.Kind == SelectionKind.Pane && !Shell.Selection.IsExpired;
@@ -114,8 +119,8 @@ public sealed partial class ShellPage : UserControl
         NavOverlay.Visibility = narrow && Shell.NavigationOverlayOpen
             ? Visibility.Visible
             : Visibility.Collapsed;
-        DeviceRail.Visibility = narrow ? Visibility.Collapsed : Visibility.Visible;
-        PaneTree.Visibility = narrow ? Visibility.Collapsed : Visibility.Visible;
+        RailHost.Visibility = narrow ? Visibility.Collapsed : Visibility.Visible;
+        TreeHost.Visibility = narrow ? Visibility.Collapsed : Visibility.Visible;
         DetailsHost.Visibility = wide && Shell.Details != DetailsPaneKind.Collapsed
             ? Visibility.Visible
             : Visibility.Collapsed;

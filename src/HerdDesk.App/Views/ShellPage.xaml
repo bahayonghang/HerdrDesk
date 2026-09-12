@@ -69,6 +69,7 @@
         <Grid
             x:Name="Zones"
             Grid.Row="1"
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
             ColumnSpacing="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="RailColumn" Width="220" />
@@ -76,11 +77,30 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition x:Name="DetailsColumn" Width="280" />
             </Grid.ColumnDefinitions>
-            <controls:DeviceSessionRail x:Name="DeviceRail" />
-            <controls:WorkspacePaneTree
-                x:Name="PaneTree"
-                Grid.Column="1" />
-            <Grid Grid.Column="2">
+            <Border
+                x:Name="RailHost"
+                BorderBrush="{ThemeResource ControlElevationBorderBrush}"
+                BorderThickness="0,0,1,0"
+                Padding="4,0"
+                AutomationProperties.Name="设备与会话栏">
+                <controls:DeviceSessionRail x:Name="DeviceRail" />
+            </Border>
+            <Border
+                x:Name="TreeHost"
+                Grid.Column="1"
+                BorderBrush="{ThemeResource ControlElevationBorderBrush}"
+                BorderThickness="0,0,1,0"
+                Padding="4,0"
+                AutomationProperties.Name="工作区栏">
+                <controls:WorkspacePaneTree x:Name="PaneTree" />
+            </Border>
+            <Border
+                Grid.Column="2"
+                BorderBrush="{ThemeResource ControlElevationBorderBrush}"
+                BorderThickness="0,0,1,0"
+                Padding="4,0"
+                AutomationProperties.Name="中央工作区">
+                <Grid>
                 <Grid x:Name="WorkbenchHost">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -100,37 +120,18 @@
                         x:Name="MosaicHost"
                         Grid.Row="2"
                         AutomationProperties.Name="分栏">
-                        <Canvas
-                            x:Name="MosaicCanvas"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            SizeChanged="OnMosaicSizeChanged">
-                            <controls:TerminalHost
-                                x:Name="TerminalSlot0"
-                                Visibility="Collapsed" />
-                            <controls:TerminalHost
-                                x:Name="TerminalSlot1"
-                                Visibility="Collapsed" />
-                            <controls:TerminalHost
-                                x:Name="TerminalSlot2"
-                                Visibility="Collapsed" />
-                            <controls:TerminalHost
-                                x:Name="TerminalSlot3"
-                                Visibility="Collapsed" />
-                        </Canvas>
-                        <TextBlock
-                            x:Name="TerminalPlaceholder"
-                            Margin="24"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="终端尚未接入。选择窗格后观察，不获得控制。"
-                            Opacity="0.7"
-                            Text="终端尚未接入。选择窗格后观察，不获得控制。"
-                            TextWrapping="Wrap" />
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
                         <Border
                             x:Name="EmptyBanner"
+                            Grid.Row="0"
+                            Margin="8,8,8,4"
+                            Background="{ThemeResource ControlAltFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource ControlElevationBorderBrush}"
+                            BorderThickness="1"
                             Padding="12,8"
-                            VerticalAlignment="Top"
                             AutomationProperties.Name="空工作台">
                             <StackPanel
                                 Orientation="Horizontal"
@@ -150,16 +151,49 @@
                                     Content="诊断" />
                             </StackPanel>
                         </Border>
+                        <Grid Grid.Row="1">
+                            <Canvas
+                                x:Name="MosaicCanvas"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                SizeChanged="OnMosaicSizeChanged">
+                                <controls:TerminalHost
+                                    x:Name="TerminalSlot0"
+                                    Visibility="Collapsed" />
+                                <controls:TerminalHost
+                                    x:Name="TerminalSlot1"
+                                    Visibility="Collapsed" />
+                                <controls:TerminalHost
+                                    x:Name="TerminalSlot2"
+                                    Visibility="Collapsed" />
+                                <controls:TerminalHost
+                                    x:Name="TerminalSlot3"
+                                    Visibility="Collapsed" />
+                            </Canvas>
+                            <TextBlock
+                                x:Name="TerminalPlaceholder"
+                                Margin="24"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="终端尚未接入。选择窗格后观察，不获得控制。"
+                                Opacity="0.7"
+                                Text="终端尚未接入。选择窗格后观察，不获得控制。"
+                                TextWrapping="Wrap" />
+                        </Grid>
                     </Grid>
                 </Grid>
                 <views:SettingsPage x:Name="SettingsHost" Visibility="Collapsed" />
                 <views:DiagnosticsPage x:Name="DiagnosticsHost" Visibility="Collapsed" />
                 <views:AboutPage x:Name="AboutHost" Visibility="Collapsed" />
-            </Grid>
+                </Grid>
+            </Border>
             <Border
                 x:Name="DetailsHost"
                 Grid.Column="3"
                 Padding="12"
+                Background="{ThemeResource ControlAltFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource ControlElevationBorderBrush}"
+                BorderThickness="1"
                 AutomationProperties.Name="详情">
                 <StackPanel Spacing="8">
                     <TextBlock x:Name="DetailsText" TextWrapping="Wrap" />

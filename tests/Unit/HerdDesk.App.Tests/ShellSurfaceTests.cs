@@ -34,8 +34,16 @@ internal static class ShellSurfaceTests
         AppTestHost.Check(!shellXaml.Contains("x:Name=\"TerminalSlot4\"", StringComparison.Ordinal));
         AppTestHost.Check(shellXaml.Contains("x:Name=\"TabStrip\"", StringComparison.Ordinal));
         AppTestHost.Check(shellXaml.Contains("x:Name=\"MosaicHost\"", StringComparison.Ordinal));
+        AppTestHost.Check(shellXaml.Contains("x:Name=\"RailHost\"", StringComparison.Ordinal));
+        AppTestHost.Check(shellXaml.Contains("x:Name=\"TreeHost\"", StringComparison.Ordinal));
+        AppTestHost.Check(shellXaml.Contains("x:Name=\"DetailsHost\"", StringComparison.Ordinal));
+        AppTestHost.Check(shellXaml.Contains("x:Name=\"EmptyBanner\"", StringComparison.Ordinal));
+        AppTestHost.Check(shellXaml.Contains("x:Name=\"MosaicCanvas\"", StringComparison.Ordinal));
         var doc = XDocument.Load(Path.Combine(app, "Views", "ShellPage.xaml"));
         AppTestHost.Check(doc.Root is not null);
+        var emptyBanner = doc.Descendants().FirstOrDefault(item =>
+            (string?)item.Attribute(XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml")) == "EmptyBanner");
+        AppTestHost.Check(emptyBanner?.Attribute("Grid.Row")?.Value == "0");
     }
 
     static int CountNamed(string xaml, string token)
