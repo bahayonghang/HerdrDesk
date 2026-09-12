@@ -20,10 +20,10 @@ Parent: `.trellis/tasks/09-12-herdr-workbench-gap`. Depends on `workbench-chrome
 
 ## Acceptance Criteria
 
-- [ ] **AC1**：两 tab、同一 tab 两个不重叠矩形 → 两条 tab、两槽；focused tab/pane 与投影一致。
-- [ ] **AC2**：五个 pane 的 layout → 至多 4 个 Visible，其余 WaitingForCapacity 文案。
-- [ ] **AC3**：选 tab 后 `ControlVerified` 仍为 false。
-- [ ] **AC4**：产品 AC 保持 `not_run`。
+- [x] **AC1**：两 tab、同一 tab 两个不重叠矩形 → 两条 tab、两槽；focused tab/pane 与投影一致。
+- [x] **AC2**：五个 pane 的 layout → 至多 4 个 Visible，其余 WaitingForCapacity 文案。
+- [x] **AC3**：选 tab 后 `ControlVerified` 仍为 false。
+- [x] **AC4**：产品 AC 保持 `not_run`。
 
 ## Out of scope
 

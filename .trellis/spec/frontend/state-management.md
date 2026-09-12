@@ -19,7 +19,7 @@ UI state is in-process. There is no server-state library. herdr snapshots travel
 | Preferences | `Settings/UiPreferenceStore.cs` | Not user AppData unless an explicit root is passed |
 | Input / lease | `TerminalInputViewModel`, `TerminalControlViewModel` | `RequestControl` does not grant a lease |
 | Notifications | `NotificationCenterViewModel` | Clicks locate `PaneKey` only |
-| Visibility / capacity | `Services/PaneVisibilityCoordinator.cs` | Hidden panes release terminal/renderer |
+| Visibility / capacity | `Services/PaneVisibilityCoordinator.cs`, `ViewModels/WorkbenchLayout.cs` | Hidden panes release terminal/renderer; mosaic Show/Hide; NoOp host does not fake Ready |
 | File / paste / attach | `Files/*ViewModel`, `AttachToAgentViewModel`, `PastePreviewViewModel` | No XAML yet |
 | Exit | `Lifetime/AppExitCoordinator.cs` | Kill ledger is owned children only |
 
@@ -32,5 +32,6 @@ UI state is in-process. There is no server-state library. herdr snapshots travel
 - Closing the GUI releases only this application's child processes (`AppExitCoordinator`).
 - `WindowsNotificationSink.Available` stays false until a later approved toast task.
 - `RequestControl` on `TerminalControlViewModel` does not set `ControlVerified`.
+- `WorkbenchLayout` projects tabs and `LayoutProjection` rects through `PaneVisibilityCoordinator`. `NoOpPaneVisibilityHost.BeginObserve` returns the same epoch and must not set renderer Ready or `ControlVerified`.
 - `ShellHost` may attach an in-memory `TerminalControlViewModel` via `WorkbenchControlFactory` so the control bar renders without RPC. That factory is not live observe. `AppServices.CreateProduction` stays on `UnavailableAdapter`.
 - `SettingsViewModel.RequestConnect` only appends `PendingConnects`. Do not treat it as a started session.

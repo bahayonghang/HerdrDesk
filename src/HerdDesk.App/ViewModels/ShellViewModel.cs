@@ -71,6 +71,7 @@ public sealed class ShellViewModel
         TerminalInput = dependencies.TerminalInput;
         TerminalControl = dependencies.TerminalControl;
         ResourceCommands = dependencies.ResourceCommands;
+        Workbench = WorkbenchLayout.CreateProduct();
         FocusRestore = new TerminalFocusCoordinator();
         Exit = dependencies.Exit;
         FilesAvailability = new RouteAvailability(
@@ -97,6 +98,7 @@ public sealed class ShellViewModel
     public TerminalInputViewModel? TerminalInput { get; }
     public TerminalControlViewModel? TerminalControl { get; }
     public ResourceCommandViewModel? ResourceCommands { get; }
+    public WorkbenchLayout Workbench { get; }
     public TerminalFocusCoordinator FocusRestore { get; }
     public TerminalDisplayCoordinator Display { get; }
     public AppExitCoordinator Exit { get; }
@@ -139,6 +141,7 @@ public sealed class ShellViewModel
     public int NotificationUnread => Notifications.UnreadCount;
     public TerminalAccess Access { get; private set; } = TerminalAccess.Disconnected;
     public bool ControlVerified { get; private set; }
+    public bool ShowsWorkbench => Route == ShellRoute.Pane && HasWorkbenchSelection;
     public string AddDeviceLabel => ShellStrings.AddDevice;
     public string DiagnosticsLabel => ShellStrings.Diagnostics;
 
@@ -194,6 +197,7 @@ public sealed class ShellViewModel
         ResourceCommands?.Coordinator.NotifyProjectionAsync().AsTask().GetAwaiter().GetResult();
         ApplyPendingFocus();
         CompleteNotificationFocus();
+        ProjectWorkbench();
         UpdateChrome();
     }
 
@@ -201,25 +205,37 @@ public sealed class ShellViewModel
     {
         ArgumentNullException.ThrowIfNull(item);
         _navigation.Select(item);
+        ApplyWorkbenchRoute(item.Kind);
+
         if (item.Kind == NavigationKind.Pane && item.Pane is { } pane && !_navigation.Selection.IsExpired)
         {
+            Workbench.ClearTabOverride();
             _deps.Recents.Record(new RecentEntry(
                 item.Device, item.Session, item.WorkspaceId, pane, item.Epoch, _deps.Clock.UtcNow,
                 item.Label));
-            Route = ShellRoute.Pane;
             TryFocusPane(pane, item.Epoch);
             TerminalControl?.HandleSelectionChanged(pane);
         }
 
         ResourceCommands?.HandleSelectionChanged(ResourceKeyFromSelection());
+        ProjectWorkbench();
+        UpdateChrome();
+    }
+
+    public void SelectTab(string tabId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tabId);
+        Workbench.SelectTab(tabId);
         UpdateChrome();
     }
 
     public bool MoveTree(TreeMove move)
     {
         var moved = _navigation.Move(move);
+        ApplyWorkbenchRoute(ToNavigationKind(Selection.Kind));
         if (move == TreeMove.Activate && Selection.Kind == SelectionKind.Pane && Selection.Pane is { } pane)
             TryFocusPane(pane, Selection.Epoch);
+        ProjectWorkbench();
         UpdateChrome();
         return moved;
     }
@@ -339,11 +355,11 @@ public sealed class ShellViewModel
 
     public void ReturnToWorkbench()
     {
-        Route = Selection.Kind == SelectionKind.Pane && Selection.Pane is not null && !Selection.IsExpired
-            ? ShellRoute.Pane
-            : ShellRoute.Welcome;
+        Route = HasWorkbenchSelection ? ShellRoute.Pane : ShellRoute.Welcome;
         CurrentFocus = new FocusToken("content");
         FocusedRegion = FocusRegion.Content;
+        ProjectWorkbench();
+        UpdateChrome();
     }
 
     public void OpenNotifications()
@@ -680,6 +696,45 @@ public sealed class ShellViewModel
         AccessLabel = ShellChrome.Access(Access);
         StatusLine = ShellChrome.StatusLine(ConnectionStatus, AgentStatus.Known, UnreadCount, Access);
     }
+
+    private void ApplyWorkbenchRoute(NavigationKind kind)
+    {
+        if (Route is ShellRoute.Settings or ShellRoute.Diagnostics or ShellRoute.About
+            or ShellRoute.Notifications)
+            return;
+        Route = kind is NavigationKind.Pane or NavigationKind.Workspace
+            ? ShellRoute.Pane
+            : ShellRoute.Welcome;
+    }
+
+    private static NavigationKind ToNavigationKind(SelectionKind kind) => kind switch
+    {
+        SelectionKind.Device => NavigationKind.Device,
+        SelectionKind.Session => NavigationKind.Session,
+        SelectionKind.Workspace => NavigationKind.Workspace,
+        SelectionKind.Pane => NavigationKind.Pane,
+        _ => NavigationKind.Device
+    };
+
+    private void ProjectWorkbench()
+    {
+        if (!HasWorkbenchSelection || Selection.Session is not { } session)
+        {
+            Workbench.Clear();
+            return;
+        }
+
+        Workbench.Project(
+            Catalog.FindSession(session),
+            Selection.WorkspaceId,
+            Selection.Pane,
+            Catalog.RendererReadyFor);
+    }
+
+    private bool HasWorkbenchSelection =>
+        !Selection.IsExpired &&
+        Selection.Session is not null &&
+        !string.IsNullOrWhiteSpace(Selection.WorkspaceId);
 
     private ResourceKey? ResourceKeyFromSelection()
     {

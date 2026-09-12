@@ -21,12 +21,12 @@ src/HerdDesk.App/
 ├── Activation/           WinUI activation host, intents
 ├── Views/                ShellPage, Settings, Diagnostics, About
 ├── Controls/             TerminalHost, SearchPalette, ControlBar, rails/trees
-├── ViewModels/           Shell, search, input, control, notifications
+├── ViewModels/           Shell, WorkbenchLayout, search, input, control, notifications
 ├── Devices/              EditDevice, HelperInstall, connection status
 ├── Files/                Dual-pane file workspace ViewModels (no XAML)
 ├── Recovery/             RecoveryBindings
 ├── Notifications/        INotificationSink; Windows toast UNVERIFIED
-├── Services/             PaneVisibilityCoordinator
+├── Services/             PaneVisibilityCoordinator, NoOpPaneVisibilityHost
 ├── Settings/             UiPreferenceStore
 ├── Search/               RecentAccessStore
 ├── Lifetime/             AppExitCoordinator

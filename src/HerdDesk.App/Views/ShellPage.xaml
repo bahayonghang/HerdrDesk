@@ -84,13 +84,40 @@
                 <Grid x:Name="WorkbenchHost">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <controls:ControlBar x:Name="ControlBar" />
-                    <Grid Grid.Row="1">
-                        <controls:TerminalHost
-                            x:Name="TerminalSurface"
-                            Visibility="Collapsed" />
+                    <StackPanel
+                        x:Name="TabStrip"
+                        Height="40"
+                        Orientation="Horizontal"
+                        AutomationProperties.Name="标签栏"
+                        Visibility="Collapsed" />
+                    <controls:ControlBar
+                        x:Name="ControlBar"
+                        Grid.Row="1" />
+                    <Grid
+                        x:Name="MosaicHost"
+                        Grid.Row="2"
+                        AutomationProperties.Name="分栏">
+                        <Canvas
+                            x:Name="MosaicCanvas"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            SizeChanged="OnMosaicSizeChanged">
+                            <controls:TerminalHost
+                                x:Name="TerminalSlot0"
+                                Visibility="Collapsed" />
+                            <controls:TerminalHost
+                                x:Name="TerminalSlot1"
+                                Visibility="Collapsed" />
+                            <controls:TerminalHost
+                                x:Name="TerminalSlot2"
+                                Visibility="Collapsed" />
+                            <controls:TerminalHost
+                                x:Name="TerminalSlot3"
+                                Visibility="Collapsed" />
+                        </Canvas>
                         <TextBlock
                             x:Name="TerminalPlaceholder"
                             Margin="24"

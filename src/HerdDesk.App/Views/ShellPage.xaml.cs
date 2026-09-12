@@ -1,5 +1,7 @@
+using HerdDesk.App.Controls;
 using HerdDesk.Contracts;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Windows.System;
@@ -8,6 +10,8 @@ namespace HerdDesk.App.Views;
 
 public sealed partial class ShellPage : UserControl
 {
+    private readonly List<TextBlock> _capacityTiles = [];
+
     public ShellPage()
     {
         InitializeComponent();
@@ -121,12 +125,18 @@ public sealed partial class ShellPage : UserControl
     {
         if (Shell is null)
             return;
+        var overlay = OverlayVisible(Shell.Route);
+        var workbench = Shell.ShowsWorkbench;
         EmptyBanner.Visibility = Shell.Route == ShellRoute.Welcome ? Visibility.Visible : Visibility.Collapsed;
-        TerminalPlaceholder.Visibility = Shell.Route == ShellRoute.Pane
-            ? Visibility.Collapsed
-            : Visibility.Visible;
-        if (Shell.Route != ShellRoute.Pane)
-            TerminalSurface.SetVisible(false);
+        TabStrip.Visibility = workbench && Shell.Workbench.Tabs.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        if (workbench && Shell.Workbench.Tabs.Count > 0)
+            BindTabs();
+        var placeholder = workbench &&
+            (Shell.Workbench.Slots.Count == 0 ||
+             (!Shell.Workbench.HasLayout && Shell.Workbench.Slots.Any(slot => slot.NeedsPlaceholder)));
+        TerminalPlaceholder.Visibility = placeholder ? Visibility.Visible : Visibility.Collapsed;
         SettingsHost.Visibility = Visibility.Collapsed;
         DiagnosticsHost.Visibility = Visibility.Collapsed;
         AboutHost.Visibility = Visibility.Collapsed;
@@ -143,19 +153,152 @@ public sealed partial class ShellPage : UserControl
             case ShellRoute.About:
                 AboutHost.Visibility = Visibility.Visible;
                 break;
-            case ShellRoute.Pane:
-                TerminalSurface.SetVisible(true);
-                BindTerminal();
-                break;
+        }
+
+        if (workbench && !overlay)
+            ApplyMosaic();
+        else
+            HideMosaic();
+    }
+
+    private void BindTabs()
+    {
+        if (Shell is null)
+            return;
+        TabStrip.Children.Clear();
+        foreach (var tab in Shell.Workbench.Tabs)
+        {
+            var button = new Button
+            {
+                Content = tab.Display,
+                Tag = tab.TabId,
+                Padding = new Thickness(12, 4, 12, 4),
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            AutomationProperties.SetName(button, tab.Display);
+            if (tab.Selected)
+                button.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
+            button.Click += OnTabButtonClick;
+            TabStrip.Children.Add(button);
         }
     }
 
-    private void BindTerminal()
+    private void ApplyMosaic()
     {
-        if (Shell is null || Shell.Selection.Pane is not { } pane)
+        if (Shell is null)
             return;
-        var readOnly = Shell.Access != TerminalAccess.Controlling || !Shell.ControlVerified;
-        TerminalSurface.Bind(pane, Shell.Selection.Epoch, readOnly, Shell.Display.Preview);
+        var hosts = Hosts();
+        var visible = Shell.Workbench.Slots.Where(item => item.BindHost).Take(hosts.Length).ToArray();
+        var assigned = new bool[hosts.Length];
+        var map = new TerminalHost?[visible.Length];
+        for (var i = 0; i < visible.Length; i++)
+        {
+            for (var h = 0; h < hosts.Length; h++)
+            {
+                if (assigned[h] || hosts[h].Session.Pane != visible[i].Pane)
+                    continue;
+                map[i] = hosts[h];
+                assigned[h] = true;
+                break;
+            }
+        }
+
+        for (var i = 0; i < visible.Length; i++)
+        {
+            if (map[i] is not null)
+                continue;
+            for (var h = 0; h < hosts.Length; h++)
+            {
+                if (assigned[h])
+                    continue;
+                map[i] = hosts[h];
+                assigned[h] = true;
+                break;
+            }
+        }
+
+        for (var h = 0; h < hosts.Length; h++)
+        {
+            if (!assigned[h])
+                hosts[h].SetVisible(false);
+        }
+
+        ClearCapacityTiles();
+        var width = MosaicCanvas.ActualWidth;
+        var height = MosaicCanvas.ActualHeight;
+        for (var i = 0; i < visible.Length; i++)
+        {
+            if (map[i] is not { } host)
+                continue;
+            var slot = visible[i];
+            var access = Shell.Catalog.AccessFor(slot.Pane);
+            var readOnly = access != TerminalAccess.Controlling ||
+                           !Shell.Catalog.ControlVerifiedFor(slot.Pane);
+            host.Bind(slot.Pane, slot.Epoch, readOnly, Shell.Display.Preview);
+            host.SetVisible(true);
+            Place(host, slot.Rect, width, height);
+        }
+
+        foreach (var slot in Shell.Workbench.Slots.Where(item => !item.BindHost))
+        {
+            var tile = new TextBlock
+            {
+                Text = slot.StatusText,
+                TextWrapping = TextWrapping.Wrap,
+                Opacity = 0.8,
+                Margin = new Thickness(8)
+            };
+            AutomationProperties.SetName(tile, slot.StatusText);
+            MosaicCanvas.Children.Add(tile);
+            _capacityTiles.Add(tile);
+            Place(tile, slot.Rect, width, height);
+        }
+    }
+
+    private void HideMosaic()
+    {
+        foreach (var host in Hosts())
+            host.SetVisible(false);
+        ClearCapacityTiles();
+    }
+
+    private void ClearCapacityTiles()
+    {
+        foreach (var tile in _capacityTiles)
+            MosaicCanvas.Children.Remove(tile);
+        _capacityTiles.Clear();
+    }
+
+    private TerminalHost[] Hosts() =>
+        [TerminalSlot0, TerminalSlot1, TerminalSlot2, TerminalSlot3];
+
+    private bool AnyHostComposing() => Hosts().Any(host => host.Session.IsComposing);
+
+    private static void Place(FrameworkElement element, MosaicRect rect, double width, double height)
+    {
+        if (width <= 0 || height <= 0)
+            return;
+        Canvas.SetLeft(element, rect.X * width);
+        Canvas.SetTop(element, rect.Y * height);
+        element.Width = Math.Max(0, rect.Width * width);
+        element.Height = Math.Max(0, rect.Height * height);
+    }
+
+    private void OnMosaicSizeChanged(object sender, SizeChangedEventArgs args)
+    {
+        _ = sender;
+        _ = args;
+        if (Shell?.ShowsWorkbench == true && !OverlayVisible(Shell.Route))
+            ApplyMosaic();
+    }
+
+    private void OnTabButtonClick(object sender, RoutedEventArgs args)
+    {
+        _ = args;
+        if (Shell is null || sender is not Button button || button.Tag is not string tabId)
+            return;
+        Shell.SelectTab(tabId);
+        Refresh();
     }
 
     private static string WelcomeMessage(ShellViewModel shell) =>
@@ -220,7 +363,7 @@ public sealed partial class ShellPage : UserControl
             return;
         }
 
-        if (TerminalSurface.Session.IsComposing)
+        if (AnyHostComposing())
         {
             args.Handled = true;
             return;
@@ -243,7 +386,7 @@ public sealed partial class ShellPage : UserControl
             return;
         }
 
-        if (args.Key == VirtualKey.Escape && TerminalSurface.Session.IsComposing)
+        if (args.Key == VirtualKey.Escape && AnyHostComposing())
         {
             args.Handled = true;
             return;

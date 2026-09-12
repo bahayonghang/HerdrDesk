@@ -38,7 +38,7 @@
 实施验收（由子任务完成；父任务集成时复核）：
 
 - [x] **AC1（R2, R3, R7）chrome**：`NoDevices` / `DaemonUnavailable` 下四区骨架可见；状态为中文；中央不是单独 Welcome 表。App 单测覆盖状态文案与 `!DaemonOnline`。
-- [ ] **AC2（R4, R5）mosaic**：合成 snapshot 含两个 tab、同一 tab 两个 pane 矩形时，ViewModel 产出 tab 条与两槽 mosaic；第 5 个可见 pane 为 WaitingForCapacity。选择 tab/pane 不置 `ControlVerified`。不启动 herdr。
+- [x] **AC2（R4, R5）mosaic**：合成 snapshot 含两个 tab、同一 tab 两个 pane 矩形时，ViewModel 产出 tab 条与两槽 mosaic；第 5 个可见 pane 为 WaitingForCapacity。选择 tab/pane 不置 `ControlVerified`。不启动 herdr。
 - [x] **AC3（R6）control bar**：操作栏主键随 `TerminalAccess` 切换（请求控制 / 取消 / 释放）；无 challenge 时无接管。单测不发输入。
 - [ ] **AC4（R1, R8）observe-opt-in**：无授权时组合根仍 Unavailable 且 UI 不显示绿色就绪。授权开关的测试只断言工厂选择与 `PendingConnects` 消费，CI 不启动 herdr/`--ui`。
 - [ ] **AC5（R7）**：不新增 herdr 键位或壁纸资源；产品 AC 保持 `not_run`。

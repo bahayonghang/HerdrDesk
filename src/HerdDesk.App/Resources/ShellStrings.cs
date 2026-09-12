@@ -12,6 +12,8 @@ public static class ShellStrings
     public const string EmptyWorkspace = "没有工作区";
     public const string TerminalHost = "终端";
     public const string ControlBar = "观察与控制";
+    public const string TabStrip = "标签栏";
+    public const string MosaicHost = "分栏";
     public const string Connect = "连接";
     public const string ConnectStatus = "连接说明";
     public const string ReturnToWorkbench = "返回工作台";

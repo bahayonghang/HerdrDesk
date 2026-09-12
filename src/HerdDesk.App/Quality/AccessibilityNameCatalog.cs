@@ -11,6 +11,8 @@ public static class AccessibilityNameCatalog
         ShellStrings.WorkspaceHeader,
         ShellStrings.TerminalHost,
         ShellStrings.TerminalPlaceholder,
+        ShellStrings.TabStrip,
+        ShellStrings.MosaicHost,
         ShellStrings.ControlBar,
         ShellStrings.Connect,
         ShellStrings.ConnectStatus,

@@ -21,6 +21,7 @@ cases =
     .. PartialStateTests.All,
     .. SharedResolverTests.All,
     .. PaneVisibilityBudgetTests.All,
+    .. WorkbenchLayoutTests.All,
     .. FilePaneGenerationTests.All,
     .. TransferTargetLeaseTests.All,
     .. TransferQueueProjectionTests.All,

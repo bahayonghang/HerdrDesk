@@ -29,8 +29,26 @@ internal static class ShellSurfaceTests
         AppTestHost.Check(!joined.Contains("EditDevicePage", StringComparison.Ordinal));
         AppTestHost.Check(!File.Exists(Path.Combine(app, "Devices", "EditDevicePage.xaml")));
         AppTestHost.Check(!File.Exists(Path.Combine(app, "Files", "FileWorkspaceView.xaml")));
+        var shellXaml = File.ReadAllText(Path.Combine(app, "Views", "ShellPage.xaml"));
+        AppTestHost.Check(CountNamed(shellXaml, "<controls:TerminalHost") == 4);
+        AppTestHost.Check(!shellXaml.Contains("x:Name=\"TerminalSlot4\"", StringComparison.Ordinal));
+        AppTestHost.Check(shellXaml.Contains("x:Name=\"TabStrip\"", StringComparison.Ordinal));
+        AppTestHost.Check(shellXaml.Contains("x:Name=\"MosaicHost\"", StringComparison.Ordinal));
         var doc = XDocument.Load(Path.Combine(app, "Views", "ShellPage.xaml"));
         AppTestHost.Check(doc.Root is not null);
+    }
+
+    static int CountNamed(string xaml, string token)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = xaml.IndexOf(token, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += token.Length;
+        }
+
+        return count;
     }
 
     static void SelectionNoControl()

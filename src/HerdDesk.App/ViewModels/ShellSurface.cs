@@ -27,6 +27,8 @@ public static class ShellSurface
         ShellStrings.WorkspaceHeader,
         ShellStrings.TerminalHost,
         ShellStrings.TerminalPlaceholder,
+        ShellStrings.TabStrip,
+        ShellStrings.MosaicHost,
         ShellStrings.ControlBar,
         ShellStrings.RequestControl,
         ShellStrings.TakeOver,

@@ -39,14 +39,16 @@ internal static class AppTestHost
         PaneKey key,
         string? label = null,
         string? agentRaw = null,
-        KnownAgentKind? agentKind = KnownAgentKind.Claude)
+        KnownAgentKind? agentKind = KnownAgentKind.Claude,
+        string tabId = "t1",
+        bool focused = false)
     {
         var display = agentKind?.ToString();
         return new(
             key,
             "term-" + key.PaneId,
-            "t1",
-            false,
+            tabId,
+            focused,
             label,
             agentRaw ?? display?.ToLowerInvariant(),
             agentKind,
@@ -58,16 +60,122 @@ internal static class AppTestHost
     public static WorkspaceProjection Workspace(SessionKey session, string id, string label, ulong panes) =>
         new(session, id, 1, label, false, panes, 1, "t1", Idle(), null);
 
+    public static TabProjection Tab(
+        SessionKey session,
+        string tabId,
+        string workspaceId,
+        ulong number,
+        string label,
+        bool focused,
+        ulong paneCount = 1) =>
+        new(session, tabId, workspaceId, number, label, focused, paneCount, Idle());
+
+    public static LayoutPaneProjection LayoutPane(
+        string paneId,
+        bool focused,
+        ushort x,
+        ushort y,
+        ushort width,
+        ushort height) =>
+        new(paneId, focused, x, y, width, height);
+
+    public static LayoutProjection Layout(
+        SessionKey session,
+        string workspaceId,
+        string tabId,
+        bool zoomed,
+        string focusedPaneId,
+        params LayoutPaneProjection[] panes) =>
+        new(session, workspaceId, tabId, zoomed, focusedPaneId, panes);
+
     public static SessionProjection SessionState(
         SessionKey session,
         IReadOnlyList<WorkspaceProjection> workspaces,
-        IReadOnlyList<PaneProjection> panes)
+        IReadOnlyList<PaneProjection> panes) =>
+        SessionState(session, workspaces, panes, [], []);
+
+    public static SessionProjection SessionState(
+        SessionKey session,
+        IReadOnlyList<WorkspaceProjection> workspaces,
+        IReadOnlyList<PaneProjection> panes,
+        IReadOnlyList<TabProjection> tabs,
+        IReadOnlyList<LayoutProjection> layouts)
     {
         var agents = panes.Select(pane => new AgentProjection(
             session, pane.TerminalId, pane.TabId, pane.Key, pane.Label, pane.AgentRaw, pane.AgentKind,
             pane.DisplayAgent, pane.AgentStatus, pane.Focused, pane.Revision)).ToArray();
-        return new(session, "0.9.0", 22, workspaces.FirstOrDefault()?.WorkspaceId, "t1",
-            panes.FirstOrDefault()?.Key.PaneId, workspaces, [], panes, [], agents);
+        var focusedTab = tabs.FirstOrDefault(item => item.Focused)?.TabId
+            ?? panes.FirstOrDefault(item => item.Focused)?.TabId
+            ?? panes.FirstOrDefault()?.TabId
+            ?? "t1";
+        var focusedPane = panes.FirstOrDefault(item => item.Focused)?.Key.PaneId
+            ?? panes.FirstOrDefault()?.Key.PaneId;
+        return new(
+            session, "0.9.0", 22, workspaces.FirstOrDefault()?.WorkspaceId, focusedTab,
+            focusedPane, workspaces, tabs, panes, layouts, agents);
+    }
+
+    public static DeviceProjectionSnapshot TwoTabSplitSnapshot()
+    {
+        var session = SessionOf(DeviceA);
+        var pane1 = new PaneKey(session, "ws", "p1");
+        var pane2 = new PaneKey(session, "ws", "p2");
+        var pane3 = new PaneKey(session, "ws", "p3");
+        var workspace = Workspace(session, "ws", "lab", 3) with { TabCount = 2, ActiveTabId = "t1" };
+        return Snapshot(
+            new ConnectionEpoch(1),
+            ConnectionPhase.Ready,
+            Projected(
+                DeviceA,
+                Compatible(),
+                SessionState(
+                    session,
+                    [workspace],
+                    [
+                        Pane(pane1, "left", tabId: "t1", focused: true),
+                        Pane(pane2, "right", tabId: "t1"),
+                        Pane(pane3, "other", tabId: "t2")
+                    ],
+                    [
+                        Tab(session, "t1", "ws", 1, "main", true, 2),
+                        Tab(session, "t2", "ws", 2, "second", false, 1)
+                    ],
+                    [
+                        Layout(
+                            session, "ws", "t1", false, "p1",
+                            LayoutPane("p1", true, 0, 0, 40, 24),
+                            LayoutPane("p2", false, 40, 0, 40, 24)),
+                        Layout(
+                            session, "ws", "t2", false, "p3",
+                            LayoutPane("p3", true, 0, 0, 80, 24))
+                    ])));
+    }
+
+    public static DeviceProjectionSnapshot FivePaneLayoutSnapshot()
+    {
+        var session = SessionOf(DeviceA);
+        var workspace = Workspace(session, "ws", "lab", 5) with { TabCount = 1, ActiveTabId = "t1" };
+        var panes = new PaneProjection[5];
+        var cells = new LayoutPaneProjection[5];
+        for (var i = 0; i < 5; i++)
+        {
+            var id = "p" + (i + 1);
+            panes[i] = Pane(new PaneKey(session, "ws", id), id, tabId: "t1", focused: i == 0);
+            cells[i] = LayoutPane(id, i == 0, (ushort)(i * 10), 0, 10, 24);
+        }
+
+        return Snapshot(
+            new ConnectionEpoch(1),
+            ConnectionPhase.Ready,
+            Projected(
+                DeviceA,
+                Compatible(),
+                SessionState(
+                    session,
+                    [workspace],
+                    panes,
+                    [Tab(session, "t1", "ws", 1, "main", true, 5)],
+                    [Layout(session, "ws", "t1", false, "p1", cells)])));
     }
 
     public static DeviceProjectionSnapshot WithAgentStatus(
