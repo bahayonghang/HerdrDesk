@@ -1,0 +1,28 @@
+{
+  "id": "tab-mosaic",
+  "name": "tab-mosaic",
+  "title": "Tab 条与分栏 mosaic",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-12",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-12-herdr-workbench-gap",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "Tab 条与 LayoutProjection mosaic，最多 4 槽；合成投影验收。"
+  }
+}

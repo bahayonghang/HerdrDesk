@@ -1,0 +1,5 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/frontend/index.md", "reason": "WinUI product UI spec index"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Shipped Shell/XAML vs missing pages"}
+{"file": ".trellis/tasks/09-12-herdr-workbench-gap/research/screenshot-gap.md", "reason": "Screenshot and composition-root gap evidence"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "ViewModels over Core Store; no ControlVerified from focus"}

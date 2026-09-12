@@ -1,0 +1,38 @@
+{
+  "id": "herdr-workbench-gap",
+  "name": "herdr-workbench-gap",
+  "title": "HerdDesk 工作台相对 herdr TUI 的差距",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-12",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-12-workbench-chrome",
+    "09-12-tab-mosaic",
+    "09-12-observe-opt-in"
+  ],
+  "parent": null,
+  "relatedFiles": [
+    "src/HerdDesk.App/Views/ShellPage.xaml",
+    "src/HerdDesk.App/Composition/AppServices.cs",
+    "src/HerdDesk.App/Composition/ShellHost.cs",
+    "docs/plan/docs/02_产品定义与名称.md",
+    ".trellis/tasks/09-08-windows-desktop-full/ui-blueprint.md"
+  ],
+  "notes": "Planning ready. Visual language A. Start child workbench-chrome only after user approves this summary. Live herdr unauthorized.",
+  "meta": {
+    "description": "对照原版 herdr TUI 与当前 WinUI 空壳，记录工作台视觉/连接缺口并规划后续实施。"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "workbench-chrome",
+  "name": "workbench-chrome",
+  "title": "工作台壳：状态条与空骨架",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-12",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-12-herdr-workbench-gap",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "四区骨架、中文状态、控制栏、Settings 连接意图；不接 herdr。"
+  }
+}
