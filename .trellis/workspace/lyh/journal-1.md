@@ -103,3 +103,36 @@ HD-033 archived; frontend specs rewritten from App WinUI/XAML; bootstrap stays i
 ### Next Steps
 
 - 实施 09-12-tab-mosaic
+
+
+## Session 4: 归档全部活动 Trellis 任务
+
+**Date**: 2026-09-12
+**Task**: 归档全部活动 Trellis 任务
+**Branch**: `main`
+
+### Summary
+
+提交 tab-mosaic 后归档全部活动任务。chrome/mosaic 已交付；observe-opt-in 未实施，仅作规划归档。未授予 live herdr。
+
+### Main Changes
+
+- 归档 tab-mosaic、observe-opt-in、herdr-workbench-gap、bootstrap、windows-desktop-full
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `08c73a4` | (see git log) |
+
+### Testing
+
+- [OK] mosaic 已在 08c73a4 提交；App 单测此前 156/156
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- observe-opt-in 需另行授予 live herdr 观察后再开新任务
