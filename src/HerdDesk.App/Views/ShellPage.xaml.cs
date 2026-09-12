@@ -11,6 +11,7 @@ namespace HerdDesk.App.Views;
 public sealed partial class ShellPage : UserControl
 {
     private readonly List<TextBlock> _capacityTiles = [];
+    private readonly HashSet<(PaneKey Pane, ConnectionEpoch Epoch)> _openedObserve = [];
 
     public ShellPage()
     {
@@ -242,6 +243,7 @@ public sealed partial class ShellPage : UserControl
             host.Bind(slot.Pane, slot.Epoch, readOnly, Shell.Display.Preview);
             host.SetVisible(true);
             Place(host, slot.Rect, width, height);
+            OpenObserveTransport(host, slot.Pane, slot.Epoch);
         }
 
         foreach (var slot in Shell.Workbench.Slots.Where(item => !item.BindHost))
@@ -265,6 +267,26 @@ public sealed partial class ShellPage : UserControl
         foreach (var host in Hosts())
             host.SetVisible(false);
         ClearCapacityTiles();
+    }
+
+    private async void OpenObserveTransport(TerminalHost host, PaneKey pane, ConnectionEpoch epoch)
+    {
+        var shell = Shell;
+        if (shell is null || !_openedObserve.Add((pane, epoch)))
+            return;
+
+        var transport = shell.ObserveTransport;
+        var executable = shell.HerdrPathFor(pane.Session.Device);
+        if (transport is null || string.IsNullOrWhiteSpace(executable))
+        {
+            _openedObserve.Remove((pane, epoch));
+            return;
+        }
+
+        var result = await transport.OpenAsync(pane, epoch, executable, pane.PaneId, host.Session)
+            .ConfigureAwait(true);
+        if (!result.Succeeded)
+            _openedObserve.Remove((pane, epoch));
     }
 
     private void ClearCapacityTiles()

@@ -286,6 +286,16 @@ public sealed class SettingsViewModel
         ConnectExplanation = ShellStrings.ConnectUnauthorized;
     }
 
+    /// <summary>Returns explicitly requested sessions once for the app connection orchestrator.</summary>
+    public IReadOnlyList<SessionKey> ConsumePendingConnects()
+    {
+        if (PendingConnects.Count == 0)
+            return [];
+        var pending = PendingConnects;
+        PendingConnects = [];
+        return pending;
+    }
+
     private bool HasConnectableSession() =>
         CommittedDevice is { Sessions.Count: > 0 };
 

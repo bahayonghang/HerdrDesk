@@ -6,7 +6,7 @@ using HerdDesk.Infrastructure.Process;
 
 namespace HerdDesk.Infrastructure.Terminal;
 
-public sealed class TerminalCliTransport : ITerminalTransport
+public sealed class TerminalCliTransport : ITerminalTransport, IChildProcessIdentity
 {
     private readonly OwnedChildProcess _child;
     private readonly TerminalOpenRequest _request;

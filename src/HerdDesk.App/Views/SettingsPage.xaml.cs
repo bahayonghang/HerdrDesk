@@ -131,6 +131,7 @@ public sealed partial class SettingsPage : UserControl
         if (_shell is null)
             return;
         _shell.Settings.RequestConnect(0);
+        _ = _shell.ConnectPendingAsync();
         Bind(_shell);
     }
 }

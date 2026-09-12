@@ -205,6 +205,42 @@ var cases = new (string Name, Action Run)[]
             Directory.Delete(root, true);
         }
     }),
+    ("authorized production composition selects explicit observe adapters", () =>
+    {
+        var root = Path.Combine(Path.GetTempPath(), "herddesk-hd013-authorized-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var bridge = Path.Combine(root, "bridge");
+        var terminal = Path.Combine(root, "herdr");
+        File.WriteAllText(bridge, "fake bridge fixture");
+        File.WriteAllText(terminal, "fake terminal fixture");
+        var oldBridge = Environment.GetEnvironmentVariable("HERDDESK_BRIDGE_EXECUTABLE");
+        var oldTerminal = Environment.GetEnvironmentVariable("HERDDESK_TERMINAL_EXECUTABLE");
+        try
+        {
+            Environment.SetEnvironmentVariable("HERDDESK_BRIDGE_EXECUTABLE", bridge);
+            Environment.SetEnvironmentVariable("HERDDESK_TERMINAL_EXECUTABLE", terminal);
+            var services = AppServices.CreateProduction(
+                AppDataPaths.FromRoot(root), authorizeObserve: true);
+            try
+            {
+                Check(services.ObserveAuthorized);
+                Check(services.RpcConnections.Available);
+                Check(services.TerminalTransports.Available);
+                Check(services.Unavailable.All(item =>
+                    item.Name is not "rpc-connection" and not "terminal-transport"));
+            }
+            finally
+            {
+                services.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HERDDESK_BRIDGE_EXECUTABLE", oldBridge);
+            Environment.SetEnvironmentVariable("HERDDESK_TERMINAL_EXECUTABLE", oldTerminal);
+            Directory.Delete(root, true);
+        }
+    }),
 };
 
 cases = [.. cases, .. RpcSchemaCases.All, .. Hd007Cases.All, .. Hd011Cases.All, .. Hd012Cases.All, .. Hd014Cases.All, .. Hd015Cases.All, .. Hd016Cases.All, .. Hd017Cases.All, .. Hd018Cases.All, .. Hd019Cases.All, .. Hd020Cases.All, .. Hd021Cases.All, .. Hd022Cases.All, .. Hd023Cases.All, .. Hd024Cases.All, .. Hd025Cases.All, .. Hd026Cases.All, .. Hd027Cases.All, .. Hd028Cases.All, .. Hd029Cases.All, .. Hd030Cases.All, .. Hd031Cases.All, .. Hd032Cases.All, .. Hd033Cases.All, .. Hd034Cases.All, .. Hd035Cases.All, .. Hd036Cases.All, .. FileBridgeProtocolVectorTests.All, .. FileBridgeClientTests.All, .. BridgeReleaseManifestTests.All, .. ResourceCommandSchemaTests.All, .. TerminalWireCases.All, .. RemoteRpcStreamContractTests.All, .. RemoteTerminalStreamContractTests.All];

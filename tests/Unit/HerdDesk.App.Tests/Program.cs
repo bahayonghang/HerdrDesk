@@ -31,7 +31,8 @@ cases =
     .. PastePreviewViewModelTests.All,
     .. TerminalHostSessionTests.All,
     .. Hd033CollectorTests.All,
-    .. SoakLaunchPolicyTests.All
+    .. SoakLaunchPolicyTests.All,
+    .. ObserveConnectionOrchestratorTests.All
 ];
 
 var failed = 0;

@@ -19,3 +19,8 @@ public interface ITerminalTransport : IAsyncDisposable
     ValueTask<TerminalWriteReceipt> ReleaseAsync(
         CancellationToken cancellationToken = default);
 }
+
+public interface IChildProcessIdentity
+{
+    int ChildProcessId { get; }
+}

@@ -2,7 +2,9 @@ using HerdDesk.Contracts;
 using HerdDesk.Infrastructure.Configuration;
 using HerdDesk.Infrastructure.Diagnostics;
 using HerdDesk.Infrastructure.Host;
+using HerdDesk.Infrastructure.Rpc;
 using HerdDesk.Infrastructure.Ssh;
+using HerdDesk.Infrastructure.Terminal;
 using HerdDesk.Terminal.Web;
 
 namespace HerdDesk.App.Composition;
@@ -20,7 +22,8 @@ public sealed class AppServices : IAsyncDisposable
         DiagnosticAliasProjector aliases,
         IReadOnlyList<UnavailableCapability> unavailable,
         ISshConnectionTester? sshTester = null,
-        IHelperDeploymentService? helperDeployment = null)
+        IHelperDeploymentService? helperDeployment = null,
+        bool observeAuthorized = false)
     {
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(clock);
@@ -42,6 +45,7 @@ public sealed class AppServices : IAsyncDisposable
         Unavailable = unavailable;
         SshTester = sshTester;
         HelperDeployment = helperDeployment;
+        ObserveAuthorized = observeAuthorized;
         HasFakeSuccessAdapter =
             rpcConnections.IsFakeSuccess ||
             terminalTransports.IsFakeSuccess ||
@@ -60,8 +64,12 @@ public sealed class AppServices : IAsyncDisposable
     public ISshConnectionTester? SshTester { get; }
     public IHelperDeploymentService? HelperDeployment { get; }
     public bool HasFakeSuccessAdapter { get; }
+    public bool ObserveAuthorized { get; }
 
-    public static AppServices CreateProduction(AppDataPaths paths, IClock? clock = null)
+    public static AppServices CreateProduction(
+        AppDataPaths paths,
+        IClock? clock = null,
+        bool authorizeObserve = false)
     {
         ArgumentNullException.ThrowIfNull(paths);
         Directory.CreateDirectory(paths.SettingsDirectory);
@@ -71,20 +79,40 @@ public sealed class AppServices : IAsyncDisposable
         var aliases = DiagnosticAliasProjector.LoadOrCreate(paths.DiagnosticSaltFile);
         var diagnostics = new JsonlDiagnosticSink(paths.DiagnosticLogFile);
         var store = new AtomicConfigurationStore(paths);
-        var rpc = new UnavailableAdapter("rpc-connection", "rpc_bridge_unavailable");
-        var transports = new UnavailableAdapter("terminal-transport", "terminal_transport_unavailable");
+        var bridgePath = Environment.GetEnvironmentVariable("HERDDESK_BRIDGE_EXECUTABLE");
+        var terminalPath = Environment.GetEnvironmentVariable("HERDDESK_TERMINAL_EXECUTABLE");
+        var canUseObserveAdapters = authorizeObserve &&
+            !string.IsNullOrWhiteSpace(bridgePath) &&
+            !string.IsNullOrWhiteSpace(terminalPath) &&
+            File.Exists(bridgePath) && File.Exists(terminalPath);
+        IRpcConnectionFactory rpc = canUseObserveAdapters
+            ? new RpcStdioConnectionFactory(bridgePath!, diagnostics)
+            : new UnavailableAdapter("rpc-connection", authorizeObserve
+                ? "rpc_bridge_configuration_incomplete"
+                : "rpc_bridge_unavailable");
+        ITerminalTransportFactory transports = canUseObserveAdapters
+            ? new TerminalCliProcessFactory(terminalPath!, diagnostics)
+            : new UnavailableAdapter("terminal-transport", authorizeObserve
+                ? "terminal_transport_configuration_incomplete"
+                : "terminal_transport_unavailable");
         var renderers = new UnavailableAdapter("terminal-renderer", "renderer_host_windows_only");
-        UnavailableCapability[] unavailable =
-        [
-            rpc.Capability,
-            transports.Capability,
-            renderers.Capability,
-            WebRendererHost.Capability
-        ];
+        var unavailableList = new List<UnavailableCapability>();
+        if (!rpc.Available)
+            unavailableList.Add(new UnavailableCapability(rpc.Name, authorizeObserve
+                ? "rpc_bridge_configuration_incomplete"
+                : "rpc_bridge_unavailable"));
+        if (!transports.Available)
+            unavailableList.Add(new UnavailableCapability(transports.Name, authorizeObserve
+                ? "terminal_transport_configuration_incomplete"
+                : "terminal_transport_unavailable"));
+        unavailableList.Add(new UnavailableCapability(renderers.Name, "renderer_host_windows_only"));
+        unavailableList.Add(WebRendererHost.Capability);
+        IReadOnlyList<UnavailableCapability> unavailable = unavailableList;
         var ssh = new SshConnectionTestService(paths, clock);
         var helper = new RemoteHelperDeploymentService(paths, ProductInfo.Version, clock);
         return new AppServices(
-            paths, clock, store, diagnostics, rpc, transports, renderers, aliases, unavailable, ssh, helper);
+            paths, clock, store, diagnostics, rpc, transports, renderers, aliases, unavailable, ssh, helper,
+            canUseObserveAdapters);
     }
 
     public async ValueTask DisposeAsync()

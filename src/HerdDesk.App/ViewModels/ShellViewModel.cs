@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using HerdDesk.App.Composition;
 using HerdDesk.Contracts;
 using HerdDesk.Core;
 using HerdDesk.Infrastructure.Diagnostics;
@@ -26,6 +27,8 @@ public sealed class ShellDependencies
     public ResourceCommandViewModel? ResourceCommands { get; init; }
     public GlobalProjectionStore? Aggregate { get; init; }
     public IReconnectRequestor? Reconnect { get; init; }
+    public ObserveConnectionOrchestrator? ObserveConnections { get; init; }
+    public ObserveTransportOrchestrator? ObserveTransport { get; init; }
 }
 
 public sealed class ShellViewModel
@@ -144,6 +147,10 @@ public sealed class ShellViewModel
     public TerminalAccess Access { get; private set; } = TerminalAccess.Disconnected;
     public bool ControlVerified { get; private set; }
     public bool ShowsWorkbench => Route == ShellRoute.Pane && HasWorkbenchSelection;
+    public ObserveTransportOrchestrator? ObserveTransport => _deps.ObserveTransport;
+
+    public string? HerdrPathFor(DeviceId device) =>
+        Settings.CommittedSnapshot.Devices.FirstOrDefault(item => item.Device == device)?.VerifiedHerdrPath;
     public string AddDeviceLabel => ShellStrings.AddDevice;
     public string DiagnosticsLabel => ShellStrings.Diagnostics;
 
@@ -187,6 +194,25 @@ public sealed class ShellViewModel
         ResourceCommands?.HandleSelectionChanged(ResourceKeyFromSelection());
         watch.Stop();
         LastStartMs = watch.Elapsed.TotalMilliseconds;
+    }
+
+    public async ValueTask ConnectPendingAsync(CancellationToken cancellationToken = default)
+    {
+        var orchestrator = _deps.ObserveConnections;
+        if (orchestrator is null)
+            return;
+
+        var pending = Settings.ConsumePendingConnects();
+        foreach (var key in pending)
+        {
+            var profile = Settings.CommittedSnapshot.Devices.FirstOrDefault(item => item.Device == key.Device);
+            var session = profile?.Sessions.FirstOrDefault(item => item.ToSessionKey(key.Device) == key);
+            if (profile is null || session is null)
+                continue;
+            await orchestrator.ConnectAsync(profile, session, cancellationToken).ConfigureAwait(false);
+        }
+
+        RefreshFromCatalog();
     }
 
     public void RefreshFromCatalog()
@@ -498,7 +524,12 @@ public sealed class ShellViewModel
         return Display.TryRequestResize(columns, rows, context, capabilities);
     }
 
-    public ValueTask ExitAsync() => Exit.ExitAsync();
+    public async ValueTask ExitAsync()
+    {
+        if (_deps.ObserveConnections is not null)
+            await _deps.ObserveConnections.DisposeAsync().ConfigureAwait(false);
+        await Exit.ExitAsync().ConfigureAwait(false);
+    }
 
     private void SyncAttention()
     {

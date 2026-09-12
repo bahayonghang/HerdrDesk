@@ -22,6 +22,7 @@ public sealed partial class MainWindow : Window
     }
 
     public ShellViewModel? Shell { get; private set; }
+    private AppServices? Services { get; set; }
 
     public void Bind(ShellViewModel shell)
     {
@@ -42,7 +43,10 @@ public sealed partial class MainWindow : Window
     private void BindRoot(string root)
     {
         var paths = AppDataPaths.FromRoot(root);
-        var services = AppServices.CreateProduction(paths);
+        // Observe is the default read-only mode; no session is opened until the
+        // user presses Connect and the pending session is consumed by Shell.
+        var services = AppServices.CreateProduction(paths, authorizeObserve: true);
+        Services = services;
         var shell = ShellHost.Create(services, App.Activation);
         shell.StartAsync().AsTask().GetAwaiter().GetResult();
         Bind(shell);
@@ -75,6 +79,8 @@ public sealed partial class MainWindow : Window
         _ = (sender, args);
         if (Shell is not null)
             await Shell.ExitAsync().ConfigureAwait(true);
+        if (Services is not null)
+            await Services.DisposeAsync().ConfigureAwait(true);
         App.Activation?.Dispose();
     }
 
